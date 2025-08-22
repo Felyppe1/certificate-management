@@ -1,0 +1,20 @@
+services:
+  database:
+    image: postgres
+    container_name: certificate-management-db
+    ports:
+        - 5433:5432
+    environment:
+        - POSTGRES_USER=${DB_USER}
+        - POSTGRES_PASSWORD=${DB_PASSWORD}
+        - POSTGRES_DB=${DB_NAME}
+    volumes:
+        - certificate-management:/var/lib/postgresql/data
+    networks:
+        - certificate-management
+
+volumes:
+  certificate-management:
+
+networks:
+  certificate-management:
