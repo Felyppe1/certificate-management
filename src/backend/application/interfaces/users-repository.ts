@@ -1,4 +1,4 @@
-interface User {
+export interface User {
     id: string
     email: string
     name: string
@@ -8,4 +8,5 @@ interface User {
 export interface UsersRepository {
     getById(id: string): Promise<User | null>;
     getByEmail(email: string): Promise<User | null>;
+    save(user: User): Promise<void>;
 }

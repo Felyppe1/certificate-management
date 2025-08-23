@@ -1,4 +1,4 @@
-import { UsersRepository } from "@/backend/application/interfaces/users-repository";
+import { User, UsersRepository } from "@/backend/application/interfaces/users-repository";
 import { prisma } from ".";
 
 export class PrismaUsersRepository implements UsersRepository {
@@ -34,5 +34,16 @@ export class PrismaUsersRepository implements UsersRepository {
             name: user.name,
             passwordHash: user.password_hash
         }
+    }
+
+    async save(user: User) {
+        await prisma.user.create({
+            data: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                password_hash: user.passwordHash
+            }
+        })
     }
 } 
