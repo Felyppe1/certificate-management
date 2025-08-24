@@ -25,4 +25,12 @@ export class PrismaSessionsRepository implements SessionsRepository {
             }
         });
     }
+
+    async deleteById(tokenId: string) {
+        await prisma.session.delete({
+            where: {
+                token: tokenId
+            }
+        })
+    }
 }

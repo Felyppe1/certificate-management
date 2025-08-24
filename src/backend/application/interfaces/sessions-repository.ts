@@ -6,4 +6,5 @@ export interface Session {
 export interface SessionsRepository {
     save(session: Session): Promise<void>
     getById(token: string): Promise<Session | null>
+    deleteById(token: string): Promise<void>
 }

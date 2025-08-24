@@ -19,7 +19,7 @@ const loginSchema = z.object({
 })
 
 export async function loginAction(_: unknown, formData: FormData): Promise<ActionResponse<LoginActionInput>> {
-    await new Promise((resolve) => setTimeout(resolve, 3000))
+    // await new Promise((resolve) => setTimeout(resolve, 3000))
 
     const rawData: LoginActionInput = {
         email: formData.get('email') as string,
@@ -38,7 +38,6 @@ export async function loginAction(_: unknown, formData: FormData): Promise<Actio
 
         const cookie = await cookies()
 
-        console.log('RESULT', result)
         cookie.set(
             'session_token',
             result.token,
