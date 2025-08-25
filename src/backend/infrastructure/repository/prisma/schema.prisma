@@ -11,9 +11,10 @@ model User {
     id            String @id @default(cuid())
     email         String @unique
     name          String
-    password_hash String
+    password_hash String?
 
-    Sessions Session[]
+    Session             Session[]
+    ExternalUserAccount ExternalUserAccount[]
 
     @@map("users")
 }
@@ -25,4 +26,21 @@ model Session {
     User User @relation(fields: [user_id], references: [id])
 
     @@map("sessions")
+}
+
+model ExternalUserAccount {
+    user_id          String
+    provider         String // "GOOGLE" | "GITHUB" | "FACEBOOK" | ...
+    provider_user_id String
+
+    access_token                  String
+    refresh_token                 String?
+    access_token_expiry_datetime  DateTime?
+    refresh_token_expiry_datetime DateTime?
+
+    User User @relation(fields: [user_id], references: [id])
+
+    @@id([user_id, provider])
+    @@unique([provider, provider_user_id])
+    @@map("external_user_accounts")
 }

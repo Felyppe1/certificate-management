@@ -2,7 +2,7 @@ export interface User {
     id: string
     email: string
     name: string
-    passwordHash: string
+    passwordHash: string | null
 }
 
 export interface UsersRepository {

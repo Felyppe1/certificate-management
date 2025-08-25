@@ -1,27 +1,23 @@
-import { OAuth2Client } from "google-auth-library";
+import { NextResponse } from "next/server";
 
-const oAuth2Client = new OAuth2Client(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    'postmessage'
-    // process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI
-);
+export async function GET() {
+  const rootUrl = "https://accounts.google.com/o/oauth2/v2/auth";
 
-export async function POST(request: Request) {
-    const { code } = await request.json()
+  const options = {
+    client_id: process.env.GOOGLE_CLIENT_ID!,
+    redirect_uri: process.env.NEXT_PUBLIC_BASE_URL! + '/api/auth/google/callback',
+    response_type: "code",
+    access_type: "offline",
+    prompt: "select_account",
+    scope: [
+      "openid",
+      "email",
+      "profile",
+      "https://www.googleapis.com/auth/drive.file"
+    ].join(" "),
+  };
 
-    const { tokens } = await oAuth2Client.getToken(code);
-    
-    console.log('Tokens received:', tokens);
+  const qs = new URLSearchParams(options);
 
-    const ticket = await oAuth2Client.verifyIdToken({
-        idToken: tokens.id_token!,
-        audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload()
-
-    console.log('Payload:', payload)
-
-    // oAuth2Client.setCredentials(tokens);
+  return NextResponse.redirect(`${rootUrl}?${qs.toString()}`);
 }

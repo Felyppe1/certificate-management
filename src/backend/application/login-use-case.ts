@@ -13,7 +13,8 @@ export class LoginUseCase {
             throw new Error('Unauthorized');
         }
 
-        const isPasswordValid = await bcrypt.compare(password, user.passwordHash)
+        // TODO: check if ''compared to '' passes
+        const isPasswordValid = await bcrypt.compare(password, user.passwordHash ?? '')
 
         if (!isPasswordValid) {
             throw new Error('Unauthorized')
