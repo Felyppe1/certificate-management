@@ -1,10 +1,10 @@
 'use server'
 
-import { LoginUseCase } from "@/backend/application/login-use-case"
-import { PrismaSessionsRepository } from "@/backend/infrastructure/repository/prisma/prisma-sessions-repository"
-import { PrismaUsersRepository } from "@/backend/infrastructure/repository/prisma/prisma-users-repository"
-import { cookies } from "next/headers"
-import { NextResponse } from "next/server"
+import { LoginUseCase } from '@/backend/application/login-use-case'
+import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { cookies } from 'next/headers'
+import { NextResponse } from 'next/server'
 
 export async function GET() {
     const cookie = await cookies()
@@ -16,7 +16,9 @@ export async function GET() {
         // return new NextResponse('No session token', { status: 401 })
     }
 
-    const session = await new PrismaSessionsRepository().getById(sessionToken.value)
+    const session = await new PrismaSessionsRepository().getById(
+        sessionToken.value,
+    )
 
     if (!session) {
         throw new Error('Unauthorized')
@@ -25,14 +27,15 @@ export async function GET() {
     return NextResponse.json(session)
 }
 
-
 interface LoginResponse {
     id: string
     email: string
     name: string
 }
 
-export async function POST(request: Request): Promise<NextResponse<LoginResponse>> {
+export async function POST(
+    request: Request,
+): Promise<NextResponse<LoginResponse>> {
     const { email, password } = await request.json()
 
     const usersRepository = new PrismaUsersRepository()
@@ -44,16 +47,12 @@ export async function POST(request: Request): Promise<NextResponse<LoginResponse
 
     const cookie = await cookies()
 
-    cookie.set(
-        'session_token',
-        result.token,
-        {
-            // secure: true,
-            httpOnly: true,
-            path: "/",
-            // sameSite: "strict"
-        }
-    )
+    cookie.set('session_token', result.token, {
+        // secure: true,
+        httpOnly: true,
+        path: '/',
+        // sameSite: "strict"
+    })
 
     return NextResponse.json(result.user)
 }

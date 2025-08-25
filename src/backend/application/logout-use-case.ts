@@ -1,4 +1,4 @@
-import { SessionsRepository } from "./interfaces/sessions-repository";
+import { SessionsRepository } from './interfaces/sessions-repository'
 
 export class LogoutUseCase {
     constructor(private readonly sessionsRepository: SessionsRepository) {}
@@ -9,7 +9,7 @@ export class LogoutUseCase {
         if (!session) {
             throw new Error('Not found')
         }
-        
+
         await this.sessionsRepository.deleteById(tokenId)
     }
 }

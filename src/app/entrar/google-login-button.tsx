@@ -22,7 +22,7 @@ export function GoogleLoginButton() {
     //     select_account: true,
     //     // redirect_uri: process.env.NEXT_PUBLIC_BASE_URL + '/api/auth/google/callback',
     // });
-    
+
     return (
         <>
             <a

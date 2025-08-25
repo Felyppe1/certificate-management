@@ -1,4 +1,4 @@
-import { UsersRepository } from "./interfaces/users-repository";
+import { UsersRepository } from './interfaces/users-repository'
 import bcrypt from 'bcrypt'
 
 interface SignUpInput {
@@ -11,13 +11,13 @@ export class SignUpUseCase {
     constructor(private usersRepository: UsersRepository) {}
 
     async execute(data: SignUpInput) {
-        const userExists = await this.usersRepository.getByEmail(data.email);
+        const userExists = await this.usersRepository.getByEmail(data.email)
 
         if (userExists) {
-            throw new Error('Conflict');
+            throw new Error('Conflict')
         }
 
-        const passwordHash = await bcrypt.hash(data.password, 10);
+        const passwordHash = await bcrypt.hash(data.password, 10)
 
         const userId = crypto.randomUUID()
 
@@ -25,8 +25,8 @@ export class SignUpUseCase {
             id: userId,
             name: data.name,
             email: data.email,
-            passwordHash
-        });
+            passwordHash,
+        })
 
         return { userId }
     }

@@ -1,19 +1,21 @@
-import { SignUpUseCase } from "@/backend/application/sign-up-use-case";
-import { PrismaUsersRepository } from "@/backend/infrastructure/repository/prisma/prisma-users-repository";
-import { NextResponse } from "next/server";
+import { SignUpUseCase } from '@/backend/application/sign-up-use-case'
+import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { NextResponse } from 'next/server'
 
 interface SignUpRequestBody {
-    name: string;
-    email: string;
-    password: string;
+    name: string
+    email: string
+    password: string
 }
 
 interface SignUpResponse {
-    userId: string;
+    userId: string
 }
 
-export async function POST(request: Request): Promise<NextResponse<SignUpResponse>> {
-    const body = await request.json() as SignUpRequestBody;
+export async function POST(
+    request: Request,
+): Promise<NextResponse<SignUpResponse>> {
+    const body = (await request.json()) as SignUpRequestBody
 
     const usersRepository = new PrismaUsersRepository()
 
@@ -21,5 +23,5 @@ export async function POST(request: Request): Promise<NextResponse<SignUpRespons
 
     const result = await signUpUseCase.execute(body)
 
-    return NextResponse.json(result, { status: 201 });
+    return NextResponse.json(result, { status: 201 })
 }

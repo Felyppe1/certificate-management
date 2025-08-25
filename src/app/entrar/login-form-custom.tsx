@@ -1,18 +1,20 @@
 'use client'
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { loginAction } from "@/server-actions/login-raw-action"
-import { useForms } from "@/custom-hooks/use-forms"
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { loginAction } from '@/server-actions/login-raw-action'
+import { useForms } from '@/custom-hooks/use-forms'
 
 export function LoginFormCustom() {
     const { state, handleSubmit, isLoading } = useForms(loginAction)
-    
+
     return (
         <form onSubmit={handleSubmit}>
-            {state.success === false && state.message && <span>{state.message}</span>}
+            {state.success === false && state.message && (
+                <span>{state.message}</span>
+            )}
 
-            <div className='flex flex-col gap-2'>
+            <div className="flex flex-col gap-2">
                 <label htmlFor="email">Email</label>
                 <Input
                     type="email"
@@ -22,7 +24,11 @@ export function LoginFormCustom() {
                     required
                     className={`${state.errors?.email ? 'border-destructive' : ''}`}
                 />
-                {state.errors?.email && <span className="text-destructive">{state.errors.email}</span>}
+                {state.errors?.email && (
+                    <span className="text-destructive">
+                        {state.errors.email}
+                    </span>
+                )}
 
                 <label htmlFor="password">Senha</label>
                 <Input
@@ -33,10 +39,16 @@ export function LoginFormCustom() {
                     required
                     className={`${state.errors?.password ? 'border-destructive' : ''}`}
                 />
-                {state.errors?.password && <span className="text-destructive">{state.errors.password}</span>}
+                {state.errors?.password && (
+                    <span className="text-destructive">
+                        {state.errors.password}
+                    </span>
+                )}
             </div>
 
-            <Button type="submit" disabled={isLoading}>Entrar</Button>
+            <Button type="submit" disabled={isLoading}>
+                Entrar
+            </Button>
         </form>
     )
 }

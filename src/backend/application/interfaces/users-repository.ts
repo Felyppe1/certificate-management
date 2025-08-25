@@ -6,7 +6,7 @@ export interface User {
 }
 
 export interface UsersRepository {
-    getById(id: string): Promise<User | null>;
-    getByEmail(email: string): Promise<User | null>;
-    save(user: User): Promise<void>;
+    getById(id: string): Promise<User | null>
+    getByEmail(email: string): Promise<User | null>
+    save(user: User): Promise<void>
 }

@@ -3,12 +3,15 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 async function verifySession(token: string) {
-    const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/api/auth/sessions', {
-        method: 'GET',
-        headers: {
-            'Cookie': `session_token=${token}`
+    const response = await fetch(
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/auth/sessions',
+        {
+            method: 'GET',
+            headers: {
+                Cookie: `session_token=${token}`,
+            },
         },
-    })
+    )
 
     if (!response.ok) {
         return null
@@ -43,7 +46,7 @@ export async function middleware(request: NextRequest) {
     if (!sessionToken) {
         return NextResponse.redirect(new URL('/entrar', request.url))
     }
-    
+
     const session = await verifySession(sessionToken)
 
     if (!session) {
@@ -56,5 +59,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/', "/api/:path*", "/entrar/:path*",]
+    matcher: ['/', '/api/:path*', '/entrar/:path*'],
 }
