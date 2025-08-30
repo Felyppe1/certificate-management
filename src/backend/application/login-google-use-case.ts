@@ -87,7 +87,8 @@ export class LoginGoogleUseCase {
             await this.externalUserAccountsRepository.save(newExternalAccount)
         } else {
             externalAccount.accessToken = tokens.access_token!
-            externalAccount.refreshToken = tokens.refresh_token ?? null
+            externalAccount.refreshToken =
+                tokens.refresh_token ?? externalAccount.refreshToken
             externalAccount.accessTokenExpiryDateTime = null
             externalAccount.refreshTokenExpiryDateTime = null
 
