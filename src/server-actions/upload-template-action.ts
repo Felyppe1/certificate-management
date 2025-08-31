@@ -6,39 +6,43 @@ import { Readable } from 'stream'
 import { cookies } from 'next/headers'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
+import { redirect } from 'next/navigation'
+import { revalidateTag } from 'next/cache'
 
 interface UploadTemplateActionOutput {
-    filename: string
-    id: string
-    variables: string[]
+    id?: string
     success: boolean
+    message?: string
 }
 
 export async function uploadTemplateAction(
     _: unknown,
     formData: FormData,
 ): Promise<UploadTemplateActionOutput> {
+    // TODO: talvez não precise revalidar a sessão, teoricamente, se ele entrou na página, a sessão dele é válida
     const cookie = await cookies()
 
     const userSession = cookie.get('session_token')?.value
 
     if (!userSession) {
-        throw new Error('Unauthorized')
+        redirect(`/entrar`)
     }
 
     const file = formData.get('file') as File
 
     if (!file) {
-        throw new Error('Bad Request')
+        return {
+            success: false,
+            message: 'Nenhum arquivo enviado',
+        }
     }
 
-    // if (file.type)
-    console.log(file)
+    // console.log(file)
 
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    console.log(buffer)
+    // console.log(buffer)
     const oAuthClient = new OAuth2Client({
         clientId: process.env.GOOGLE_CLIENT_ID!,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
@@ -63,7 +67,7 @@ export async function uploadTemplateAction(
         throw new Error('Unauthorized')
     }
 
-    console.log(externalAccount)
+    // console.log(externalAccount)
 
     let mimeType: string
     // TODO: melhorar segurança
@@ -141,19 +145,13 @@ export async function uploadTemplateAction(
         variables = await extractFromSlides(oAuthClient, fileId)
     }
 
-    console.log(variables)
+    // TODO: save template
+    // TODO: revalidate fetch
 
     return {
-        filename: file.name,
         id: fileId,
-        variables,
         success: true,
     }
-    // return {
-    //     ok: true,
-    //     id: uploaded.data.id,
-    //     link: uploaded.data.webViewLink,
-    // }
 }
 
 async function extractFromDocs(auth: OAuth2Client, fileId: string) {

@@ -1,7 +1,7 @@
 import { GoogleLoginButton } from './google-login-button'
 import { LoginForm } from './login-form'
 
-export default function Entrar() {
+export default async function Entrar() {
     return (
         <div>
             <h1>Entrar</h1>

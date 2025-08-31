@@ -22,6 +22,7 @@ export async function logoutAction() {
         await logoutUseCase.execute(sessionToken)
     } catch (error) {
         console.log('Error during logout:', error)
+        // TODO: enviar para acompanhamento
     } finally {
         cookie.delete('session_token')
 

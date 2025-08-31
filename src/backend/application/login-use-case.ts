@@ -2,6 +2,7 @@ import { UsersRepository } from './interfaces/users-repository'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import { SessionsRepository } from './interfaces/sessions-repository'
+import { UnauthorizedError } from '../domain/error/unauthorized-error'
 
 export class LoginUseCase {
     constructor(
@@ -13,7 +14,7 @@ export class LoginUseCase {
         const user = await this.usersRepository.getByEmail(email)
 
         if (!user) {
-            throw new Error('Unauthorized')
+            throw new UnauthorizedError()
         }
 
         // TODO: check if ''compared to '' passes
@@ -23,7 +24,7 @@ export class LoginUseCase {
         )
 
         if (!isPasswordValid) {
-            throw new Error('Unauthorized')
+            throw new UnauthorizedError()
         }
 
         const sessionToken = crypto.randomBytes(32).toString('hex')
