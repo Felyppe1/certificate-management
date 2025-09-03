@@ -16,6 +16,7 @@
     "src/**/*.{ts,tsx}": "prettier --write --ignore-unknown"
   },
   "dependencies": {
+    "@paralleldrive/cuid2": "^2.2.2",
     "@prisma/client": "^6.14.0",
     "@radix-ui/react-slot": "^1.2.3",
     "@react-oauth/google": "^0.12.2",
@@ -26,6 +27,7 @@
     "googleapis": "^159.0.0",
     "lucide-react": "^0.541.0",
     "next": "15.4.6",
+    "officeparser": "^5.2.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "tailwind-merge": "^3.3.1",

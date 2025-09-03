@@ -8,13 +8,14 @@ generator client {
 }
 
 model User {
-    id            String @id @default(cuid())
-    email         String @unique
+    id            String  @id @default(cuid())
+    email         String  @unique
     name          String
     password_hash String?
 
     Session             Session[]
     ExternalUserAccount ExternalUserAccount[]
+    Certification       Certification[]
 
     @@map("users")
 }
@@ -43,4 +44,38 @@ model ExternalUserAccount {
     @@id([user_id, provider])
     @@unique([provider, provider_user_id])
     @@map("external_user_accounts")
+}
+
+model Certification {
+    id      String @id @default(cuid())
+    user_id String
+    title   String
+
+    User     User      @relation(fields: [user_id], references: [id])
+    Template Template?
+
+    @@map("certifications")
+}
+
+model Template {
+    id String @id @default(cuid())
+
+    storage_url      String?
+    google_drive_id  String?
+    google_drive_url String?
+
+    Certification    Certification      @relation(fields: [id], references: [id])
+    TemplateVariable TemplateVariable[]
+
+    @@map("templates")
+}
+
+model TemplateVariable {
+    id          String @id @default(cuid())
+    name        String
+    template_id String
+
+    Template Template @relation(fields: [template_id], references: [id])
+
+    @@map("template_variables")
 }
