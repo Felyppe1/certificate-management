@@ -23,7 +23,7 @@ export async function GET(
         })
 
         return Response.json({ certificate })
-    } catch (error) {
+    } catch (error: any) {
         console.log(error.message)
         return Response.json({ message: 'Ocorreu um erro' }, { status: 500 })
     }

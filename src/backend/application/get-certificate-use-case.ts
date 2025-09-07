@@ -13,7 +13,6 @@ export class GetCertificateUseCase {
     constructor(private sessionsRepository: SessionsRepository) {}
 
     async execute({ certificateId, sessionToken }: GetCertificateUseCaseInput) {
-        console.log(sessionToken)
         const session = await this.sessionsRepository.getById(sessionToken)
 
         if (!session) {
@@ -25,7 +24,11 @@ export class GetCertificateUseCase {
                 id: certificateId,
             },
             include: {
-                Template: true,
+                Template: {
+                    include: {
+                        TemplateVariable: true,
+                    },
+                },
             },
         })
 
@@ -33,7 +36,6 @@ export class GetCertificateUseCase {
             throw new NotFoundError('Certificate not found')
         }
 
-        console.log(certificate.user_id, session.userId)
         if (certificate.user_id !== session.userId) {
             throw new ForbiddenError(
                 'You do not have permission to view this certificate',
@@ -50,6 +52,9 @@ export class GetCertificateUseCase {
                       fileId: certificate.Template.file_id,
                       bucketUrl: certificate.Template.bucket_url,
                       type: certificate.Template.type,
+                      variables: certificate.Template.TemplateVariable.map(
+                          variable => variable.name,
+                      ),
                   }
                 : null,
         }

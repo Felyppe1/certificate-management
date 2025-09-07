@@ -24,15 +24,20 @@ export default async function CertificatePage({
     )
 
     const certificate = await response.json()
+    // TODO: what to do when it does not exist
 
     console.log(certificate)
 
     return (
         <div>
-            {certificate.certificate.title}
+            <p>Título: {certificate.certificate.title}</p>
             {certificate.certificate.template && (
-                <div>{certificate.certificate.template.fileId}</div>
+                <p>Id do arquivo: {certificate.certificate.template.fileId}</p>
             )}
+            <p>
+                Variáveis:{' '}
+                {certificate.certificate.template.variables.join(', ')}
+            </p>
             <UploadTemplateForm />
             <SetFileUrlForm certificateId={certificateId} />
         </div>

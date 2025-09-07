@@ -15,8 +15,6 @@ export class PrismaCertificatesRepository implements CertificatesRepository {
                 ...(template && {
                     Template: {
                         create: {
-                            // TODO
-                            // id: template.id,
                             id: template.id,
                             file_id: template.fileId,
                             bucket_url: template.bucketUrl,
@@ -44,33 +42,57 @@ export class PrismaCertificatesRepository implements CertificatesRepository {
                 title,
                 Template: {
                     ...(template && {
-                        upsert: {
-                            create: {
-                                id: template.id,
-                                file_id: template.fileId,
-                                bucket_url: template.bucketUrl,
-                                type: template.type as TEMPLATE_TYPE,
-                                TemplateVariable: {
-                                    createMany: {
-                                        data: template.variables.map(
-                                            variable => ({
-                                                name: variable,
-                                            }),
-                                        ),
-                                    },
+                        delete: true,
+                        create: {
+                            id: template.id,
+                            file_id: template.fileId,
+                            bucket_url: template.bucketUrl,
+                            type: template.type as TEMPLATE_TYPE,
+                            TemplateVariable: {
+                                createMany: {
+                                    data: template.variables.map(variable => ({
+                                        name: variable,
+                                    })),
                                 },
                             },
-                            update: {
-                                bucket_url: template.bucketUrl,
-                                file_id: template.fileId,
-                                type: template.type as TEMPLATE_TYPE,
-                            },
-                            where: { id: template.id },
                         },
                     }),
                 },
             },
         })
+        // await prisma.certification.update({
+        //     where: { id },
+        //     data: {
+        //         title,
+        //         Template: {
+        //             ...(template && {
+        //                 upsert: {
+        //                     create: {
+        //                         id: template.id,
+        //                         file_id: template.fileId,
+        //                         bucket_url: template.bucketUrl,
+        //                         type: template.type as TEMPLATE_TYPE,
+        //                         TemplateVariable: {
+        //                             createMany: {
+        //                                 data: template.variables.map(
+        //                                     variable => ({
+        //                                         name: variable,
+        //                                     }),
+        //                                 ),
+        //                             },
+        //                         },
+        //                     },
+        //                     update: {
+        //                         bucket_url: template.bucketUrl,
+        //                         file_id: template.fileId,
+        //                         type: template.type as TEMPLATE_TYPE,
+        //                     },
+        //                     where: { id: template.id }, // TODO: must be the id of the previous template, not the new one
+        //                 },
+        //             }),
+        //         },
+        //     },
+        // })
     }
 
     async getById(id: string): Promise<Certificate | null> {

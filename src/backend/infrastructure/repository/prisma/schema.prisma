@@ -75,7 +75,7 @@ model TemplateVariable {
     template_id String
     name        String
 
-    Template Template @relation(fields: [template_id], references: [id])
+    Template Template @relation(fields: [template_id], references: [id], onDelete: Cascade)
 
     @@id([name, template_id])
     @@map("template_variables")

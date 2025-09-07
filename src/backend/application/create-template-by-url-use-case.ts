@@ -21,7 +21,6 @@ export class CreateTemplateByUrlUseCase {
     ) {}
 
     async execute(input: CreateTemplateByUrlUseCaseInput) {
-        console.log('oi')
         const certificate = await this.certificatesRepository.getById(
             input.certificateId,
         )
