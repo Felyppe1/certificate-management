@@ -58,24 +58,25 @@ model Certification {
 }
 
 model Template {
-    id String @id @default(cuid())
+    id String @id
 
-    storage_url      String?
-    google_drive_id  String?
-    google_drive_url String?
+    file_id        String?
+    bucket_url     String?
+    type           String // "URL" | "GOOGLE_DRIVE" | "UPLOAD"
+    certificate_id String  @unique
 
-    Certification    Certification      @relation(fields: [id], references: [id])
+    Certification    Certification      @relation(fields: [certificate_id], references: [id])
     TemplateVariable TemplateVariable[]
 
     @@map("templates")
 }
 
 model TemplateVariable {
-    id          String @id @default(cuid())
-    name        String
     template_id String
+    name        String
 
     Template Template @relation(fields: [template_id], references: [id])
 
+    @@id([name, template_id])
     @@map("template_variables")
 }

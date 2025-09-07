@@ -10,7 +10,6 @@ export async function GET() {
     const cookie = await cookies()
 
     const sessionToken = cookie.get('session_token')
-    console.log('sessionToken', sessionToken)
     if (!sessionToken) {
         throw new Error('Unauthorized')
         // return new NextResponse('No session token', { status: 401 })
