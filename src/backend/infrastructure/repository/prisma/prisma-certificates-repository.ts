@@ -37,31 +37,25 @@ export class PrismaCertificatesRepository implements CertificatesRepository {
     async update(certificate: Certificate) {
         const { id, title, template } = certificate.serialize()
 
-        // await prisma.certification.update({
-        //     where: { id },
-        //     data: {
-        //         title,
-        //         Template: {
-        //             ...(template && {
-        //                 delete: true,
-        //                 create: {
-        //                     id: template.id,
-        //                     file_id: template.fileId,
-        //                     bucket_url: template.bucketUrl,
-        //                     type: template.type as TEMPLATE_TYPE,
-        //                     file_name: template.fileName,
-        //                     TemplateVariable: {
-        //                         createMany: {
-        //                             data: template.variables.map(variable => ({
-        //                                 name: variable,
-        //                             })),
-        //                         },
-        //                     },
-        //                 },
-        //             }),
-        //         },
-        //     },
-        // })
+        if (!template) {
+            const certificate = await prisma.certification.findUnique({
+                where: { id },
+                include: {
+                    Template: {
+                        select: {
+                            id: true,
+                        },
+                    },
+                },
+            })
+
+            if (certificate?.Template) {
+                await prisma.template.delete({
+                    where: { id: certificate.Template.id },
+                })
+            }
+        }
+
         await prisma.certification.update({
             where: { id },
             data: {

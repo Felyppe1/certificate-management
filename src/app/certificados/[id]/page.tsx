@@ -26,19 +26,28 @@ export default async function CertificatePage({
     const certificate = await response.json()
     // TODO: what to do when it does not exist
 
-    console.log(certificate)
+    // console.log(certificate)
 
     return (
-        <div>
-            <p>Título: {certificate.certificate.title}</p>
-            <p>Id do arquivo: {certificate.certificate.template?.fileId}</p>
-            <p>Nome do arquivo: {certificate.certificate.template?.fileName}</p>
-            <p>
-                Variáveis:{' '}
-                {certificate.certificate.template?.variables?.join(', ')}
-            </p>
-            <UploadTemplateForm />
-            <SetFileUrlForm certificateId={certificateId} />
+        <div className="container mx-auto py-8 px-4 max-w-4xl">
+            <div className="mb-8">
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                    {certificate.certificate.title}
+                </h1>
+                <p className="text-gray-600">
+                    Configure o template e os dados para gerar certificados
+                </p>
+            </div>
+
+            <div className="space-y-8">
+                <SetFileUrlForm
+                    certificateId={certificateId}
+                    template={certificate.certificate.template}
+                />
+
+                {/* Outros componentes podem ser adicionados aqui */}
+                <UploadTemplateForm />
+            </div>
         </div>
     )
 }
