@@ -1,7 +1,7 @@
 import Redis from 'redis'
 
 const redisClient = await Redis.createClient({
-    url: 'redis://localhost:6379',
+    url: process.env.REDIS_URL,
 })
     .on('error', err => console.log('Redis Client Error', err))
     .connect()

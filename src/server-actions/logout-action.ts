@@ -1,7 +1,7 @@
 'use server'
 
 import { LogoutUseCase } from '@/backend/application/logout-use-case'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
@@ -15,7 +15,7 @@ export async function logoutAction() {
     }
 
     try {
-        const sessionsRepository = new PrismaSessionsRepository()
+        const sessionsRepository = new RedisSessionsRepository()
 
         const logoutUseCase = new LogoutUseCase(sessionsRepository)
 

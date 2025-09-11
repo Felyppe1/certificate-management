@@ -52,6 +52,7 @@ export class GetCertificateUseCase {
                       fileId: certificate.Template.file_id,
                       bucketUrl: certificate.Template.bucket_url,
                       type: certificate.Template.type,
+                      fileName: certificate.Template.file_name,
                       variables: certificate.Template.TemplateVariable.map(
                           variable => variable.name,
                       ),

@@ -1,9 +1,9 @@
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { NextResponse } from 'next/server'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { cookies } from 'next/headers'
 import { LoginGoogleUseCase } from '@/backend/application/login-google-use-case'
+import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     const usersRepository = new PrismaUsersRepository()
     const externalUserAccountsRepository =
         new PrismaExternalUserAccountsRepository()
-    const sessionsRepository = new PrismaSessionsRepository()
+    const sessionsRepository = new RedisSessionsRepository()
 
     const loginGoogleUseCase = new LoginGoogleUseCase(
         usersRepository,

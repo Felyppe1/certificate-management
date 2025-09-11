@@ -4,10 +4,10 @@ import { google } from 'googleapis'
 import { OAuth2Client } from 'google-auth-library'
 import { Readable } from 'stream'
 import { cookies } from 'next/headers'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { redirect } from 'next/navigation'
 import { revalidateTag } from 'next/cache'
+import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
 
 interface UploadTemplateActionOutput {
     id?: string
@@ -50,7 +50,7 @@ export async function uploadTemplateAction(
             process.env.NEXT_PUBLIC_BASE_URL! + '/api/auth/google/callback',
     })
 
-    const sessionsRepository = new PrismaSessionsRepository()
+    const sessionsRepository = new RedisSessionsRepository()
     const externalUserAccountsRepository =
         new PrismaExternalUserAccountsRepository()
 

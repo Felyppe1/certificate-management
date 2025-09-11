@@ -31,12 +31,11 @@ export default async function CertificatePage({
     return (
         <div>
             <p>Título: {certificate.certificate.title}</p>
-            {certificate.certificate.template && (
-                <p>Id do arquivo: {certificate.certificate.template.fileId}</p>
-            )}
+            <p>Id do arquivo: {certificate.certificate.template?.fileId}</p>
+            <p>Nome do arquivo: {certificate.certificate.template?.fileName}</p>
             <p>
                 Variáveis:{' '}
-                {certificate.certificate.template.variables.join(', ')}
+                {certificate.certificate.template?.variables?.join(', ')}
             </p>
             <UploadTemplateForm />
             <SetFileUrlForm certificateId={certificateId} />

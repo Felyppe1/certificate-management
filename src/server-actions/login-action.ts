@@ -2,8 +2,8 @@
 
 import { LoginUseCase } from '@/backend/application/login-use-case'
 import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
 import { ActionResponse } from '@/types'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -37,7 +37,7 @@ export async function loginAction(
         const parsedData = loginSchema.parse(rawData)
 
         const usersRepository = new PrismaUsersRepository()
-        const sessionsRepository = new PrismaSessionsRepository()
+        const sessionsRepository = new RedisSessionsRepository()
 
         const loginUseCase = new LoginUseCase(
             usersRepository,

@@ -1,5 +1,5 @@
 import { GetAllCertificatesUseCase } from '@/backend/application/get-all-certificates-use-case'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
@@ -12,7 +12,7 @@ export async function GET(/*request: Request, { params }: { params: Promise<{ id
     try {
         const sessionToken = cookie.get('session_token')!.value
 
-        const sessionsRepository = new PrismaSessionsRepository()
+        const sessionsRepository = new RedisSessionsRepository()
 
         const getAllCertificatesUseCase = new GetAllCertificatesUseCase(
             sessionsRepository,
