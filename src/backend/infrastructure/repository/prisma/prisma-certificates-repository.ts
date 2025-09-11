@@ -19,6 +19,7 @@ export class PrismaCertificatesRepository implements CertificatesRepository {
                             file_id: template.fileId,
                             bucket_url: template.bucketUrl,
                             type: template.type,
+                            file_name: template.fileName,
                             TemplateVariable: {
                                 createMany: {
                                     data: template.variables.map(variable => ({
@@ -48,6 +49,7 @@ export class PrismaCertificatesRepository implements CertificatesRepository {
                             file_id: template.fileId,
                             bucket_url: template.bucketUrl,
                             type: template.type as TEMPLATE_TYPE,
+                            file_name: template.fileName,
                             TemplateVariable: {
                                 createMany: {
                                     data: template.variables.map(variable => ({
@@ -117,6 +119,7 @@ export class PrismaCertificatesRepository implements CertificatesRepository {
                   fileId: certificate.Template.file_id,
                   bucketUrl: certificate.Template.bucket_url,
                   type: certificate.Template.type as TEMPLATE_TYPE,
+                  fileName: certificate.Template.file_name,
                   variables: certificate.Template.TemplateVariable.map(
                       variable => variable.name,
                   ),

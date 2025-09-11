@@ -62,6 +62,7 @@ model Template {
 
     file_id        String?
     bucket_url     String?
+    file_name      String
     type           String // "URL" | "GOOGLE_DRIVE" | "UPLOAD"
     certificate_id String  @unique
 

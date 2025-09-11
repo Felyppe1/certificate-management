@@ -12,6 +12,7 @@ interface TemplateInput {
     fileId: string | null
     bucketUrl: string | null
     type: TEMPLATE_TYPE
+    fileName: string
     variables: string[]
 }
 
@@ -22,19 +23,25 @@ export class Template {
     private fileId: string | null
     private bucketUrl: string | null
     private type: TEMPLATE_TYPE
+    private fileName: string
     private variables: string[]
 
     constructor(data: TemplateInput) {
         if (!data.id) {
-            throw new ValidationError('ID template is required')
+            throw new ValidationError('Template ID is required')
         }
 
         if (!data.type) {
-            throw new ValidationError('Type template is required')
+            throw new ValidationError('Template type is required')
         }
 
         if (!data.variables) {
-            throw new ValidationError('Variables template is required')
+            throw new ValidationError('Template variables is required')
+        }
+
+        if (!data.fileName) {
+            // TODO: validate regex for file name
+            throw new ValidationError('Template file name is required')
         }
 
         if (data.type === TEMPLATE_TYPE.URL && !data.fileId) {
@@ -57,6 +64,7 @@ export class Template {
         this.fileId = data.fileId
         this.bucketUrl = data.bucketUrl
         this.type = data.type
+        this.fileName = data.fileName
         this.variables = data.variables
     }
 
@@ -80,12 +88,13 @@ export class Template {
         return uniqueVariables
     }
 
-    serialize() {
+    serialize(): TemplateInput {
         return {
             id: this.id,
             fileId: this.fileId,
             bucketUrl: this.bucketUrl,
             type: this.type,
+            fileName: this.fileName,
             variables: this.variables,
         }
     }

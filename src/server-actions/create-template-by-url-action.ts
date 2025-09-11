@@ -1,9 +1,9 @@
 'use server'
 
 import { CreateTemplateByUrlUseCase } from '@/backend/application/create-template-by-url-use-case'
+import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { HttpGoogleDriveGateway } from '@/backend/infrastructure/gateway/http-google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
@@ -33,11 +33,13 @@ export async function createTemplateByUrlAction(
         const sessionsRepository = new PrismaSessionsRepository()
         const certificatesRepository = new PrismaCertificatesRepository()
         const googleDriveGateway = new HttpGoogleDriveGateway()
+        const fileContentExtractorFactory = new FileContentExtractorFactory()
 
         const createTemplateByUrlUseCase = new CreateTemplateByUrlUseCase(
             certificatesRepository,
             sessionsRepository,
             googleDriveGateway,
+            fileContentExtractorFactory,
         )
 
         await createTemplateByUrlUseCase.execute({

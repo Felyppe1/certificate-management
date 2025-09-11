@@ -2,7 +2,7 @@ import { OAuth2Client } from 'google-auth-library'
 import {
     ExternalUserAccount,
     ExternalUserAccountsRepository,
-} from './interfaces/external-user-account'
+} from './interfaces/external-user-account-repository'
 import { SessionsRepository } from './interfaces/sessions-repository'
 import { User, UsersRepository } from './interfaces/users-repository'
 import crypto from 'crypto'

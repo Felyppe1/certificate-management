@@ -2,7 +2,7 @@ import {
     ExternalUserAccount,
     ExternalUserAccountsRepository,
     Provider,
-} from '@/backend/application/interfaces/external-user-account'
+} from '@/backend/application/interfaces/external-user-account-repository'
 import { prisma } from '.'
 
 export class PrismaExternalUserAccountsRepository

@@ -12,7 +12,7 @@ export default async function CertificatePage({
     const sessionToken = (await cookies()).get('session_token')!.value
 
     const response = await fetch(
-        `http://localhost:3000/api/certificates/${certificateId}`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/certificates/${certificateId}`,
         {
             headers: {
                 Cookie: `session_token=${sessionToken}`,

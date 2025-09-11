@@ -1,4 +1,3 @@
-import officeParser from 'officeparser'
 import { Template, TEMPLATE_TYPE } from '../domain/template'
 import { ValidationError } from '../domain/error/validation-error'
 import { CertificatesRepository } from './interfaces/certificates-repository'
@@ -6,6 +5,8 @@ import { NotFoundError } from '../domain/error/not-found-error'
 import { SessionsRepository } from './interfaces/sessions-repository'
 import { ForbiddenError } from '../domain/error/forbidden-error'
 import { GoogleDriveGateway } from './interfaces/google-drive-gateway'
+import { FileContentExtractorFactory } from './interfaces/file-content-extractor'
+import { UnauthorizedError } from '../domain/error/unauthorized-error'
 
 interface CreateTemplateByUrlUseCaseInput {
     certificateId: string
@@ -18,23 +19,24 @@ export class CreateTemplateByUrlUseCase {
         private certificatesRepository: CertificatesRepository,
         private sessionsRepository: SessionsRepository,
         private googleDriveGateway: GoogleDriveGateway,
+        private fileContentExtractorFactory: FileContentExtractorFactory,
     ) {}
 
     async execute(input: CreateTemplateByUrlUseCaseInput) {
+        const session = await this.sessionsRepository.getById(
+            input.sessionToken,
+        )
+
+        if (!session) {
+            throw new UnauthorizedError('Session not found')
+        }
+
         const certificate = await this.certificatesRepository.getById(
             input.certificateId,
         )
 
         if (!certificate) {
             throw new NotFoundError('Certificate not found')
-        }
-
-        const session = await this.sessionsRepository.getById(
-            input.sessionToken,
-        )
-
-        if (!session) {
-            throw new Error('Unauthorized')
         }
 
         if (certificate.getUserId() !== session.userId) {
@@ -49,12 +51,18 @@ export class CreateTemplateByUrlUseCase {
             throw new ValidationError('Invalid file URL')
         }
 
+        const { name, mimeType } =
+            await this.googleDriveGateway.getFileMetadata(fileId)
+
         const buffer = await this.googleDriveGateway.downloadFile({
             fileId,
-            mimeType: 'docx',
+            mimeType: mimeType,
         })
 
-        const content = await officeParser.parseOfficeAsync(buffer)
+        const contentExtractor =
+            this.fileContentExtractorFactory.create(mimeType)
+
+        const content = await contentExtractor.extractText(buffer)
 
         const uniqueVariables = Template.extractVariablesFromContent(content)
 
@@ -62,6 +70,7 @@ export class CreateTemplateByUrlUseCase {
             fileId,
             bucketUrl: null,
             type: TEMPLATE_TYPE.URL,
+            fileName: name,
             variables: uniqueVariables,
         })
 
