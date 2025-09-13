@@ -1,6 +1,6 @@
 'use server'
 
-import { CreateTemplateByUrlUseCase } from '@/backend/application/create-template-by-url-use-case'
+import { AddTemplateByUrlUseCase } from '@/backend/application/add-template-by-url-use-case'
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { HttpGoogleDriveGateway } from '@/backend/infrastructure/gateway/http-google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
@@ -9,15 +9,12 @@ import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z, { ZodError } from 'zod'
 
-const createTemplateByUrlActionSchema = z.object({
+const addTemplateByUrlActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
     fileUrl: z.url('URL do arquivo inválida'),
 })
 
-export async function createTemplateByUrlAction(
-    _: unknown,
-    formData: FormData,
-) {
+export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
     const cookie = await cookies()
 
     const rawData = {
@@ -28,21 +25,21 @@ export async function createTemplateByUrlAction(
     try {
         const sessionToken = cookie.get('session_token')!.value
 
-        const parsedData = createTemplateByUrlActionSchema.parse(rawData)
+        const parsedData = addTemplateByUrlActionSchema.parse(rawData)
 
         const sessionsRepository = new RedisSessionsRepository()
         const certificatesRepository = new PrismaCertificatesRepository()
         const googleDriveGateway = new HttpGoogleDriveGateway()
         const fileContentExtractorFactory = new FileContentExtractorFactory()
 
-        const createTemplateByUrlUseCase = new CreateTemplateByUrlUseCase(
+        const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificatesRepository,
             sessionsRepository,
             googleDriveGateway,
             fileContentExtractorFactory,
         )
 
-        await createTemplateByUrlUseCase.execute({
+        await addTemplateByUrlUseCase.execute({
             ...parsedData,
             sessionToken,
         })

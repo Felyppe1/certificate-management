@@ -8,13 +8,13 @@ import { GoogleDriveGateway } from './interfaces/google-drive-gateway'
 import { FileContentExtractorFactory } from './interfaces/file-content-extractor'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
 
-interface CreateTemplateByUrlUseCaseInput {
+interface AddTemplateByUrlUseCaseInput {
     certificateId: string
     fileUrl: string
     sessionToken: string
 }
 
-export class CreateTemplateByUrlUseCase {
+export class AddTemplateByUrlUseCase {
     constructor(
         private certificatesRepository: CertificatesRepository,
         private sessionsRepository: SessionsRepository,
@@ -22,7 +22,7 @@ export class CreateTemplateByUrlUseCase {
         private fileContentExtractorFactory: FileContentExtractorFactory,
     ) {}
 
-    async execute(input: CreateTemplateByUrlUseCaseInput) {
+    async execute(input: AddTemplateByUrlUseCaseInput) {
         const session = await this.sessionsRepository.getById(
             input.sessionToken,
         )

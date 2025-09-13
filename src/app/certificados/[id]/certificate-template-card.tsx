@@ -13,7 +13,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { RefreshCw, Upload, Link, FileText, X } from 'lucide-react'
 import { useActionState } from 'react'
-import { createTemplateByUrlAction } from '@/server-actions/create-template-by-url-action'
+import { addTemplateByUrlAction } from '@/server-actions/add-template-by-url-action'
 import { deleteTemplateAction } from '@/server-actions/delete-template-action'
 
 interface CertificateTemplateCardProps {
@@ -31,7 +31,7 @@ export function CertificateTemplateCard({
 }: CertificateTemplateCardProps) {
     const [isUrlMode, setIsUrlMode] = useState(false)
     const [state, action, isPending] = useActionState(
-        createTemplateByUrlAction,
+        addTemplateByUrlAction,
         null,
     )
 
