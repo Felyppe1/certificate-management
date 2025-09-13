@@ -44,20 +44,20 @@ export class Template {
             throw new ValidationError('Template file name is required')
         }
 
-        if (data.type === TEMPLATE_TYPE.URL && !data.fileId) {
-            throw new ValidationError('File ID is required for URL templates')
+        if (data.fileId) {
+            if (data.type === TEMPLATE_TYPE.UPLOAD) {
+                throw new ValidationError(
+                    'File ID should not be provided for UPLOAD templates',
+                )
+            }
         }
 
-        if (data.type === TEMPLATE_TYPE.GOOGLE_DRIVE && !data.fileId) {
-            throw new ValidationError(
-                'File ID is required for GOOGLE_DRIVE templates',
-            )
-        }
-
-        if (data.type === TEMPLATE_TYPE.UPLOAD && !data.bucketUrl) {
-            throw new ValidationError(
-                'Bucket URL is required for UPLOAD templates',
-            )
+        if (data.bucketUrl) {
+            if (data.type !== TEMPLATE_TYPE.UPLOAD) {
+                throw new ValidationError(
+                    'Bucket URL should only be provided for UPLOAD templates',
+                )
+            }
         }
 
         this.id = data.id
