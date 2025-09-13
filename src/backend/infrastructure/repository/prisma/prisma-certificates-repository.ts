@@ -5,37 +5,51 @@ import { Template, TEMPLATE_TYPE } from '@/backend/domain/template'
 
 export class PrismaCertificatesRepository implements CertificatesRepository {
     async save(certificate: Certificate) {
-        const { id, title, userId, template } = certificate.serialize()
+        const { id, title, userId, template, domainEvents } =
+            certificate.serialize()
 
-        await prisma.certification.create({
-            data: {
-                id,
-                title,
-                user_id: userId,
-                ...(template && {
-                    Template: {
-                        create: {
-                            id: template.id,
-                            file_id: template.fileId,
-                            bucket_url: template.bucketUrl,
-                            type: template.type,
-                            file_name: template.fileName,
-                            TemplateVariable: {
-                                createMany: {
-                                    data: template.variables.map(variable => ({
-                                        name: variable,
-                                    })),
+        await prisma.$transaction([
+            prisma.certification.create({
+                data: {
+                    id,
+                    title,
+                    user_id: userId,
+                    ...(template && {
+                        Template: {
+                            create: {
+                                id: template.id,
+                                file_id: template.fileId,
+                                bucket_url: template.bucketUrl,
+                                type: template.type,
+                                file_name: template.fileName,
+                                TemplateVariable: {
+                                    createMany: {
+                                        data: template.variables.map(
+                                            variable => ({
+                                                name: variable,
+                                            }),
+                                        ),
+                                    },
                                 },
                             },
                         },
-                    },
-                }),
-            },
-        })
+                    }),
+                },
+            }),
+
+            prisma.outbox.createMany({
+                data: domainEvents.map(event => ({
+                    id: event.id,
+                    event_type: event.name,
+                    created_at: event.ocurredOn,
+                    payload: JSON.stringify(event),
+                })),
+            }),
+        ])
     }
 
     async update(certificate: Certificate) {
-        const { id, title, template } = certificate.serialize()
+        const { id, title, template, domainEvents } = certificate.serialize()
 
         if (!template) {
             const certificate = await prisma.certification.findUnique({
@@ -56,51 +70,62 @@ export class PrismaCertificatesRepository implements CertificatesRepository {
             }
         }
 
-        await prisma.certification.update({
-            where: { id },
-            data: {
-                title,
-                Template: {
-                    ...(template && {
-                        upsert: {
-                            create: {
-                                id: template.id,
-                                file_id: template.fileId,
-                                bucket_url: template.bucketUrl,
-                                type: template.type as TEMPLATE_TYPE,
-                                file_name: template.fileName,
-                                TemplateVariable: {
-                                    createMany: {
-                                        data: template.variables.map(
-                                            variable => ({
-                                                name: variable,
-                                            }),
-                                        ),
+        await prisma.$transaction([
+            prisma.certification.update({
+                where: { id },
+                data: {
+                    title,
+                    Template: {
+                        ...(template && {
+                            upsert: {
+                                create: {
+                                    id: template.id,
+                                    file_id: template.fileId,
+                                    bucket_url: template.bucketUrl,
+                                    type: template.type as TEMPLATE_TYPE,
+                                    file_name: template.fileName,
+                                    TemplateVariable: {
+                                        createMany: {
+                                            data: template.variables.map(
+                                                variable => ({
+                                                    name: variable,
+                                                }),
+                                            ),
+                                        },
                                     },
                                 },
-                            },
-                            update: {
-                                file_id: template.fileId,
-                                bucket_url: template.bucketUrl,
-                                file_name: template.fileName,
-                                type: template.type as TEMPLATE_TYPE,
-                                TemplateVariable: {
-                                    deleteMany: {},
-                                    createMany: {
-                                        data: template.variables.map(
-                                            variable => ({
-                                                name: variable,
-                                            }),
-                                        ),
+                                update: {
+                                    file_id: template.fileId,
+                                    bucket_url: template.bucketUrl,
+                                    file_name: template.fileName,
+                                    type: template.type as TEMPLATE_TYPE,
+                                    TemplateVariable: {
+                                        deleteMany: {},
+                                        createMany: {
+                                            data: template.variables.map(
+                                                variable => ({
+                                                    name: variable,
+                                                }),
+                                            ),
+                                        },
                                     },
                                 },
+                                // where: { id: template.id }, // TODO: must be the id of the previous template, not the new one
                             },
-                            // where: { id: template.id }, // TODO: must be the id of the previous template, not the new one
-                        },
-                    }),
+                        }),
+                    },
                 },
-            },
-        })
+            }),
+
+            prisma.outbox.createMany({
+                data: domainEvents.map(event => ({
+                    id: event.id,
+                    event_type: event.name,
+                    created_at: event.ocurredOn,
+                    payload: JSON.stringify(event),
+                })),
+            }),
+        ])
     }
 
     async getById(id: string): Promise<Certificate | null> {

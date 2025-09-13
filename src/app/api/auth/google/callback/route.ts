@@ -41,6 +41,7 @@ export async function GET(request: Request) {
 
         return NextResponse.redirect(process.env.NEXT_PUBLIC_BASE_URL + '/')
     } catch (error) {
+        console.error(error)
         return NextResponse.redirect(
             process.env.NEXT_PUBLIC_BASE_URL + '/entrar',
         )

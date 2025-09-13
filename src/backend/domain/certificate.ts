@@ -2,6 +2,7 @@ import { createId } from '@paralleldrive/cuid2'
 import { ValidationError } from './error/validation-error'
 import { Template } from './template'
 import { AggregateRoot } from './primitives/aggregate-root'
+import { TemplateAddedDomainEvent } from './events/template-added-domain-event'
 
 interface CertificateInput {
     id: string
@@ -64,6 +65,9 @@ export class Certificate extends AggregateRoot {
 
     addTemplate(template: Template) {
         this.template = template
+
+        const event = new TemplateAddedDomainEvent(template.getId())
+        this.addDomainEvent(event)
     }
 
     serialize() {
@@ -72,6 +76,7 @@ export class Certificate extends AggregateRoot {
             title: this.title,
             template: this.template ? this.template.serialize() : null,
             userId: this.userId,
+            domainEvents: this.getDomainEvents(),
         }
     }
 }

@@ -49,7 +49,6 @@ export async function createTemplateByUrlAction(
 
         revalidateTag('certificate')
 
-        console.log('chegou')
         return {
             success: true,
         }
