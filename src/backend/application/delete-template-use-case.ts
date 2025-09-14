@@ -1,43 +1,38 @@
 import { NotFoundError } from '../domain/error/not-found-error'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
-import { CertificatesRepository } from './interfaces/certificates-repository'
 import { SessionsRepository } from './interfaces/sessions-repository'
+import { TemplatesRepository } from './interfaces/templates-repository'
 
 interface DeleteTemplateUseCaseInput {
-    certificateId: string
+    templateId: string
     sessionToken: string
 }
 
 export class DeleteTemplateUseCase {
     constructor(
-        private certificatesRepository: CertificatesRepository,
+        private templatesRepository: TemplatesRepository,
         private sessionsRepository: SessionsRepository,
     ) {}
 
-    async execute({ certificateId, sessionToken }: DeleteTemplateUseCaseInput) {
+    async execute({ templateId, sessionToken }: DeleteTemplateUseCaseInput) {
         const session = await this.sessionsRepository.getById(sessionToken)
 
         if (!session) {
             throw new UnauthorizedError('Session not found')
         }
 
-        const certificate =
-            await this.certificatesRepository.getById(certificateId)
+        const template = await this.templatesRepository.getById(templateId)
 
-        if (!certificate) {
-            throw new NotFoundError('Certificate not found')
+        if (!template) {
+            throw new NotFoundError('Template not found')
         }
 
-        if (certificate.getUserId() !== session.userId) {
+        if (template.getUserId() !== session.userId) {
             throw new UnauthorizedError(
                 'You do not have permission to delete this template',
             )
         }
 
-        if (!certificate.hasTemplate()) return
-
-        certificate.removeTemplate()
-
-        await this.certificatesRepository.update(certificate)
+        await this.templatesRepository.deleteById(templateId)
     }
 }

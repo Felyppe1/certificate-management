@@ -2,6 +2,7 @@
 
 import { DeleteTemplateUseCase } from '@/backend/application/delete-template-use-case'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
+import { PrismaTemplatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-templates-repository'
 import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
@@ -11,7 +12,7 @@ export async function deleteTemplateAction(_: unknown, formData: FormData) {
     const cookie = await cookies()
 
     const rawData = {
-        certificateId: formData.get('certificateId') as string,
+        templateId: formData.get('templateId') as string,
     }
 
     try {
@@ -19,22 +20,20 @@ export async function deleteTemplateAction(_: unknown, formData: FormData) {
 
         const parsedData = z
             .object({
-                certificateId: z
-                    .string()
-                    .min(1, 'ID do certificado é obrigatório'),
+                templateId: z.string().min(1, 'ID do template é obrigatório'),
             })
             .parse(rawData)
 
         const sessionsRepository = new RedisSessionsRepository()
-        const certificatesRepository = new PrismaCertificatesRepository()
+        const templatesRepository = new PrismaTemplatesRepository()
 
         const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificatesRepository,
+            templatesRepository,
             sessionsRepository,
         )
 
         await deleteTemplateUseCase.execute({
-            certificateId: parsedData.certificateId,
+            templateId: parsedData.templateId,
             sessionToken,
         })
 

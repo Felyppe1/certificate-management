@@ -1,4 +1,4 @@
-import { GetAllCertificatesUseCase } from '@/backend/application/get-all-certificates-use-case'
+import { GetAllCertificateEmissionsUseCase } from '@/backend/application/get-all-certificate-emissions-use-case'
 import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -14,7 +14,7 @@ export async function GET(/*request: Request, { params }: { params: Promise<{ id
 
         const sessionsRepository = new RedisSessionsRepository()
 
-        const getAllCertificatesUseCase = new GetAllCertificatesUseCase(
+        const getAllCertificatesUseCase = new GetAllCertificateEmissionsUseCase(
             sessionsRepository,
         )
 

@@ -1,28 +1,29 @@
-import { Template, TEMPLATE_TYPE } from '../domain/template'
+import {
+    INPUT_METHOD,
+    Template,
+    TEMPLATE_FILE_EXTENSION,
+} from '../domain/template'
 import { ValidationError } from '../domain/error/validation-error'
-import { CertificatesRepository } from './interfaces/certificates-repository'
-import { NotFoundError } from '../domain/error/not-found-error'
 import { SessionsRepository } from './interfaces/sessions-repository'
-import { ForbiddenError } from '../domain/error/forbidden-error'
 import { GoogleDriveGateway } from './interfaces/google-drive-gateway'
 import { FileContentExtractorFactory } from './interfaces/file-content-extractor'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
+import { TemplatesRepository } from './interfaces/templates-repository'
 
-interface AddTemplateByUrlUseCaseInput {
-    certificateId: string
+interface CreateTemplateByUrlUseCaseInput {
     fileUrl: string
     sessionToken: string
 }
 
-export class AddTemplateByUrlUseCase {
+export class CreateTemplateByUrlUseCase {
     constructor(
-        private certificatesRepository: CertificatesRepository,
+        private templatesRepository: TemplatesRepository,
         private sessionsRepository: SessionsRepository,
         private googleDriveGateway: GoogleDriveGateway,
         private fileContentExtractorFactory: FileContentExtractorFactory,
     ) {}
 
-    async execute(input: AddTemplateByUrlUseCaseInput) {
+    async execute(input: CreateTemplateByUrlUseCaseInput) {
         const session = await this.sessionsRepository.getById(
             input.sessionToken,
         )
@@ -31,31 +32,19 @@ export class AddTemplateByUrlUseCase {
             throw new UnauthorizedError('Session not found')
         }
 
-        const certificate = await this.certificatesRepository.getById(
-            input.certificateId,
-        )
+        // TODO: check if template with fileUrl already exists
 
-        if (!certificate) {
-            throw new NotFoundError('Certificate not found')
-        }
+        const driveFileId = Template.getFileIdFromUrl(input.fileUrl)
 
-        if (certificate.getUserId() !== session.userId) {
-            throw new ForbiddenError(
-                'You do not have permission to update this certificate',
-            )
-        }
-
-        const fileId = Template.getFileIdFromUrl(input.fileUrl)
-
-        if (!fileId) {
+        if (!driveFileId) {
             throw new ValidationError('Invalid file URL')
         }
 
         const { name, mimeType } =
-            await this.googleDriveGateway.getFileMetadata(fileId)
+            await this.googleDriveGateway.getFileMetadata(driveFileId)
 
         const buffer = await this.googleDriveGateway.downloadFile({
-            fileId,
+            driveFileId,
             mimeType: mimeType,
         })
 
@@ -67,15 +56,15 @@ export class AddTemplateByUrlUseCase {
         const uniqueVariables = Template.extractVariablesFromContent(content)
 
         const newTemplate = Template.create({
-            fileId,
-            bucketUrl: null,
-            type: TEMPLATE_TYPE.URL,
+            userId: session.userId,
+            driveFileId,
+            storageFileUrl: null,
+            inputMethod: INPUT_METHOD.URL,
             fileName: name,
             variables: uniqueVariables,
+            fileExtension: TEMPLATE_FILE_EXTENSION.DOCX, // TODO: determine file extension based on mimeType
         })
 
-        certificate.addTemplate(newTemplate)
-
-        await this.certificatesRepository.update(certificate)
+        this.templatesRepository.save(newTemplate)
     }
 }

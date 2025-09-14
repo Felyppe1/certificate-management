@@ -1,4 +1,4 @@
-import { GetCertificateUseCase } from '@/backend/application/get-certificate-use-case'
+import { GetCertificateEmissionUseCase } from '@/backend/application/get-certificate-emission-use-case'
 import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
 import { cookies } from 'next/headers'
 
@@ -12,7 +12,9 @@ export async function GET(
 
     const sessionsRepository = new RedisSessionsRepository()
 
-    const getCertificateUseCase = new GetCertificateUseCase(sessionsRepository)
+    const getCertificateUseCase = new GetCertificateEmissionUseCase(
+        sessionsRepository,
+    )
 
     try {
         const sessionToken = cookie.get('session_token')!.value

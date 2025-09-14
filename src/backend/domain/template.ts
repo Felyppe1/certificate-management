@@ -1,18 +1,27 @@
 import { createId } from '@paralleldrive/cuid2'
 import { ValidationError } from './error/validation-error'
 
-export enum TEMPLATE_TYPE {
+export enum INPUT_METHOD {
     URL = 'URL',
     GOOGLE_DRIVE = 'GOOGLE_DRIVE',
     UPLOAD = 'UPLOAD',
 }
 
+export enum TEMPLATE_FILE_EXTENSION {
+    DOCX = 'DOCX',
+    GOOGLE_DOCS = 'GOOGLE_DOCS',
+    PPTX = 'PPTX',
+    GOOGLE_SLIDES = 'GOOGLE_SLIDES',
+}
+
 interface TemplateInput {
     id: string
-    fileId: string | null
-    bucketUrl: string | null
-    type: TEMPLATE_TYPE
+    userId: string
+    driveFileId: string | null
+    storageFileUrl: string | null
+    inputMethod: INPUT_METHOD
     fileName: string
+    fileExtension: TEMPLATE_FILE_EXTENSION
     variables: string[]
 }
 
@@ -20,19 +29,32 @@ interface CreateTemplateInput extends Omit<TemplateInput, 'id'> {}
 
 export class Template {
     private id: string
-    private fileId: string | null
-    private bucketUrl: string | null
-    private type: TEMPLATE_TYPE
+    private userId: string
+    private driveFileId: string | null
+    private storageFileUrl: string | null
+    private inputMethod: INPUT_METHOD
     private fileName: string
+    private fileExtension: TEMPLATE_FILE_EXTENSION
     private variables: string[]
+
+    static create(data: CreateTemplateInput): Template {
+        return new Template({
+            id: createId(),
+            ...data,
+        })
+    }
 
     constructor(data: TemplateInput) {
         if (!data.id) {
             throw new ValidationError('Template ID is required')
         }
 
-        if (!data.type) {
-            throw new ValidationError('Template type is required')
+        if (!data.userId) {
+            throw new ValidationError('Template user ID is required')
+        }
+
+        if (!data.inputMethod) {
+            throw new ValidationError('Template input method is required')
         }
 
         if (!data.variables) {
@@ -44,43 +66,46 @@ export class Template {
             throw new ValidationError('Template file name is required')
         }
 
-        if (data.fileId) {
-            if (data.type === TEMPLATE_TYPE.UPLOAD) {
+        if (!data.fileExtension) {
+            throw new ValidationError('Template file extension is required')
+        }
+
+        if (data.driveFileId) {
+            if (data.inputMethod === INPUT_METHOD.UPLOAD) {
                 throw new ValidationError(
-                    'File ID should not be provided for UPLOAD templates',
+                    'Drive file ID should not be provided for UPLOAD input method',
                 )
             }
         }
 
-        if (data.bucketUrl) {
-            if (data.type !== TEMPLATE_TYPE.UPLOAD) {
+        if (data.storageFileUrl) {
+            if (data.inputMethod !== INPUT_METHOD.UPLOAD) {
                 throw new ValidationError(
-                    'Bucket URL should only be provided for UPLOAD templates',
+                    'File storage URL should only be provided for UPLOAD input method',
                 )
             }
         }
 
         this.id = data.id
-        this.fileId = data.fileId
-        this.bucketUrl = data.bucketUrl
-        this.type = data.type
+        this.userId = data.userId
+        this.driveFileId = data.driveFileId
+        this.storageFileUrl = data.storageFileUrl
+        this.inputMethod = data.inputMethod
         this.fileName = data.fileName
+        this.fileExtension = data.fileExtension
         this.variables = data.variables
-    }
-
-    static create(data: CreateTemplateInput): Template {
-        return new Template({
-            id: createId(),
-            ...data,
-        })
     }
 
     getId() {
         return this.id
     }
 
-    getFileId() {
-        return this.fileId
+    getDriveFileId() {
+        return this.driveFileId
+    }
+
+    getUserId() {
+        return this.userId
     }
 
     static getFileIdFromUrl(url: string): string | null {
@@ -99,10 +124,12 @@ export class Template {
     serialize(): TemplateInput {
         return {
             id: this.id,
-            fileId: this.fileId,
-            bucketUrl: this.bucketUrl,
-            type: this.type,
+            userId: this.userId,
+            driveFileId: this.driveFileId,
+            storageFileUrl: this.storageFileUrl,
+            inputMethod: this.inputMethod,
             fileName: this.fileName,
+            fileExtension: this.fileExtension,
             variables: this.variables,
         }
     }

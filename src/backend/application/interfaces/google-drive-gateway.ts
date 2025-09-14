@@ -1,5 +1,5 @@
 export interface DownloadFileInput {
-    fileId: string
+    driveFileId: string
     mimeType: 'docx' | 'pptx'
 }
 

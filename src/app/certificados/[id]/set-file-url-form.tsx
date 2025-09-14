@@ -1,24 +1,22 @@
-'use client'
+// 'use client'
 
-import { CertificateTemplateCard } from './certificate-template-card'
+// import { CertificateTemplateCard } from './certificate-template-card'
 
-interface SetFileUrlFormProps {
-    certificateId: string
-    template: {
-        fileId: string
-        fileName: string
-        variables: string[]
-    } | null
-}
+// interface SetFileUrlFormProps {
+//     template: {
+//         fileId: string
+//         fileName: string
+//         variables: string[]
+//         id: string
+//     }
+// }
 
-export function SetFileUrlForm({
-    certificateId,
-    template,
-}: SetFileUrlFormProps) {
-    return (
-        <CertificateTemplateCard
-            certificateId={certificateId}
-            template={template}
-        />
-    )
-}
+// export function SetFileUrlForm({
+//     template,
+// }: SetFileUrlFormProps) {
+//     return (
+//         <CertificateTemplateCard
+//             template={template}
+//         />
+//     )
+// }

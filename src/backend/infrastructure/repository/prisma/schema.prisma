@@ -15,7 +15,7 @@ model User {
 
     Session             Session[]
     ExternalUserAccount ExternalUserAccount[]
-    Certification       Certification[]
+    Template            Template[]
 
     @@map("users")
 }
@@ -46,28 +46,31 @@ model ExternalUserAccount {
     @@map("external_user_accounts")
 }
 
-model Certification {
-    id      String @id @default(cuid())
-    user_id String
-    title   String
+model CertificateEmission {
+    id    String @id @default(cuid())
+    title String
 
-    User     User      @relation(fields: [user_id], references: [id])
-    Template Template?
+    template_id String
 
-    @@map("certifications")
+    Template Template @relation(fields: [template_id], references: [id])
+
+    @@map("certificate_emissions")
 }
 
 model Template {
-    id String @id
+    id String @id @default(cuid())
 
-    file_id        String?
-    bucket_url     String?
-    file_name      String
-    type           String // "URL" | "GOOGLE_DRIVE" | "UPLOAD"
-    certificate_id String  @unique
+    drive_file_id    String?
+    storage_file_url String?
+    file_name        String
+    input_method     String // "URL" | "GOOGLE_DRIVE" | "UPLOAD"
+    file_extension   String
 
-    Certification    Certification      @relation(fields: [certificate_id], references: [id])
-    TemplateVariable TemplateVariable[]
+    user_id String
+
+    CertificateEmission CertificateEmission[]
+    TemplateVariable    TemplateVariable[]
+    User                User                  @relation(fields: [user_id], references: [id])
 
     @@map("templates")
 }

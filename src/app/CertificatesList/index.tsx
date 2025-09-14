@@ -5,7 +5,7 @@ export async function CertificatesList() {
     const sessionToken = (await cookies()).get('session_token')!.value
 
     const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/certificates`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/certificate-emissions`,
         {
             headers: {
                 Cookie: `session_token=${sessionToken}`,
