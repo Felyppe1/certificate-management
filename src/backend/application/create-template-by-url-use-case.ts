@@ -65,6 +65,8 @@ export class CreateTemplateByUrlUseCase {
             fileExtension: TEMPLATE_FILE_EXTENSION.DOCX, // TODO: determine file extension based on mimeType
         })
 
-        this.templatesRepository.save(newTemplate)
+        await this.templatesRepository.save(newTemplate)
+
+        return newTemplate.getId()
     }
 }

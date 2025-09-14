@@ -7,10 +7,10 @@ import { PrismaTemplatesRepository } from '@/backend/infrastructure/repository/p
 import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import z, { ZodError } from 'zod'
 
 const createTemplateByUrlActionSchema = z.object({
-    templateId: z.string().min(1, 'ID do template é obrigatório'),
     fileUrl: z.url('URL do arquivo inválida'),
 })
 
@@ -21,9 +21,10 @@ export async function createTemplateByUrlAction(
     const cookie = await cookies()
 
     const rawData = {
-        templateId: formData.get('templateId') as string,
         fileUrl: formData.get('fileUrl') as string,
     }
+
+    let newTemplateId: string
 
     try {
         const sessionToken = cookie.get('session_token')!.value
@@ -42,16 +43,12 @@ export async function createTemplateByUrlAction(
             fileContentExtractorFactory,
         )
 
-        await addTemplateByUrlUseCase.execute({
-            ...parsedData,
+        newTemplateId = await addTemplateByUrlUseCase.execute({
+            fileUrl: parsedData.fileUrl,
             sessionToken,
         })
 
-        revalidateTag('certificate')
-
-        return {
-            success: true,
-        }
+        revalidateTag('templates')
     } catch (error) {
         console.error(error)
         return {
@@ -62,4 +59,6 @@ export async function createTemplateByUrlAction(
 
         // }
     }
+
+    redirect('/templates/' + newTemplateId)
 }

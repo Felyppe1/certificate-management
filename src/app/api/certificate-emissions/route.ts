@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function GET(/*request: Request, { params }: { params: Promise<{ id: string}>}*/) {
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    await new Promise(resolve => setTimeout(resolve, 3000))
 
     const cookie = await cookies()
     // const { id: userId } = await params
@@ -18,12 +18,12 @@ export async function GET(/*request: Request, { params }: { params: Promise<{ id
             sessionsRepository,
         )
 
-        const certificates = await getAllCertificatesUseCase.execute({
+        const certificateEmissions = await getAllCertificatesUseCase.execute({
             sessionToken,
             // userId,
         })
 
-        return NextResponse.json({ certificates })
+        return NextResponse.json({ certificateEmissions })
     } catch (error: any) {
         return NextResponse.json({ message: error.message }, { status: 500 })
     }

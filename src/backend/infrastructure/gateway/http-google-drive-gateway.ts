@@ -16,8 +16,10 @@ export class HttpGoogleDriveGateway implements GoogleDriveGateway {
     async getFileMetadata(fileId: string) {
         const file = await drive.files.get({
             fileId: fileId,
-            fields: 'id, name, mimeType, size, webViewLink, webContentLink',
+            fields: 'id, name, mimeType, size, webViewLink, webContentLink, thumbnailLink',
         })
+
+        console.log(file.data)
 
         let mimeType: 'docx' | 'pptx'
 
@@ -43,11 +45,11 @@ export class HttpGoogleDriveGateway implements GoogleDriveGateway {
         }
     }
 
-    async downloadFile({ fileId, mimeType }: DownloadFileInput) {
+    async downloadFile({ driveFileId, mimeType }: DownloadFileInput) {
         const url =
             mimeType === 'docx'
-                ? `https://docs.google.com/document/d/${fileId}/export?format=${mimeType}`
-                : `https://docs.google.com/presentation/d/${fileId}/export?format=${mimeType}`
+                ? `https://docs.google.com/document/d/${driveFileId}/export?format=${mimeType}`
+                : `https://docs.google.com/presentation/d/${driveFileId}/export?format=${mimeType}`
 
         const res = await fetch(url)
 
