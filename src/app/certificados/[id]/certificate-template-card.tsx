@@ -15,6 +15,7 @@ import { RefreshCw, Upload, Link, FileText, X } from 'lucide-react'
 import { useActionState } from 'react'
 import { addTemplateByUrlAction } from '@/server-actions/add-template-by-url-action'
 import { deleteTemplateAction } from '@/server-actions/delete-template-action'
+import { refreshTemplateByUrlAction } from '@/server-actions/refresh-template-by-url-action'
 
 interface CertificateTemplateCardProps {
     certificateId: string
@@ -40,10 +41,18 @@ export function CertificateTemplateCard({
         null,
     )
 
-    const handleRefresh = async () => {
-        // Implementar ação de refresh do template
-        console.log('Refresh template content')
-        // TODO: Implementar server action para verificar novamente o conteúdo do arquivo
+    const [refreshState, refreshAction, isRefreshing] = useActionState(
+        refreshTemplateByUrlAction,
+        null,
+    )
+
+    const handleRefreshTemplate = async () => {
+        const formData = new FormData()
+        formData.append('certificateId', certificateId)
+
+        startTransition(() => {
+            refreshAction(formData)
+        })
     }
 
     const handleRemoveTemplate = () => {
@@ -65,7 +74,7 @@ export function CertificateTemplateCard({
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={handleRefresh}
+                            onClick={handleRefreshTemplate}
                             className="ml-auto"
                         >
                             <RefreshCw className="h-4 w-4" />

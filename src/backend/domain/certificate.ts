@@ -55,6 +55,10 @@ export class Certificate extends AggregateRoot {
         return this.userId
     }
 
+    getTemplateFileId() {
+        return this.template?.getFileId()
+    }
+
     hasTemplate() {
         return this.template !== null
     }
