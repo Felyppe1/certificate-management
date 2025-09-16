@@ -41,7 +41,7 @@ export class GetCertificateEmissionUseCase {
             throw new NotFoundError('Certificate not found')
         }
 
-        if (certificateEmission.Template.user_id !== session.userId) {
+        if (certificateEmission.user_id !== session.userId) {
             throw new ForbiddenError(
                 'You do not have permission to view this certificate emission',
             )
@@ -49,8 +49,8 @@ export class GetCertificateEmissionUseCase {
 
         return {
             id: certificateEmission.id,
-            title: certificateEmission.title,
-            userId: certificateEmission.Template.user_id,
+            name: certificateEmission.title,
+            userId: certificateEmission.user_id,
             template: certificateEmission.Template
                 ? {
                       id: certificateEmission.Template.id,

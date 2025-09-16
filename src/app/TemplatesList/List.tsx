@@ -10,7 +10,7 @@ export async function List() {
 
     return (
         <ul className="flex gap-6 flex-wrap">
-            {data.templates.map((template: any) => (
+            {data.templates.slice(0, 4).map((template: any) => (
                 <li key={template.id}>
                     <Link href={`/templates/${template.id}`}>
                         {template.fileName}

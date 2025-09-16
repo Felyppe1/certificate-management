@@ -15,7 +15,8 @@ model User {
 
     Session             Session[]
     ExternalUserAccount ExternalUserAccount[]
-    Template            Template[]
+
+    CertificateEmission CertificateEmission[]
 
     @@map("users")
 }
@@ -50,9 +51,10 @@ model CertificateEmission {
     id    String @id @default(cuid())
     title String
 
-    template_id String
-
-    Template Template @relation(fields: [template_id], references: [id])
+    user_id     String
+    
+    User     User      @relation(fields: [user_id], references: [id])
+    Template Template?
 
     @@map("certificate_emissions")
 }
@@ -66,11 +68,10 @@ model Template {
     input_method     String // "URL" | "GOOGLE_DRIVE" | "UPLOAD"
     file_extension   String
 
-    user_id String
+    certificate_emission_id String  @unique
 
-    CertificateEmission CertificateEmission[]
     TemplateVariable    TemplateVariable[]
-    User                User                  @relation(fields: [user_id], references: [id])
+    CertificateEmission    CertificateEmission      @relation(fields: [certificate_emission_id], references: [id])
 
     @@map("templates")
 }

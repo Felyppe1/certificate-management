@@ -3,6 +3,7 @@ import {
     GoogleDriveGateway,
 } from '@/backend/application/interfaces/google-drive-gateway'
 import { ValidationError } from '@/backend/domain/error/validation-error'
+import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { google } from 'googleapis'
 
 const auth = new google.auth.GoogleAuth({
@@ -21,20 +22,20 @@ export class HttpGoogleDriveGateway implements GoogleDriveGateway {
 
         console.log(file.data)
 
-        let mimeType: 'docx' | 'pptx'
+        let mimeType: TEMPLATE_FILE_EXTENSION
 
         if (
             file.data.mimeType ===
                 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
             file.data.mimeType === 'application/vnd.google-apps.presentation'
         ) {
-            mimeType = 'pptx'
+            mimeType = TEMPLATE_FILE_EXTENSION.PPTX
         } else if (
             file.data.mimeType === 'application/vnd.google-apps.document' ||
             file.data.mimeType ===
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         ) {
-            mimeType = 'docx'
+            mimeType = TEMPLATE_FILE_EXTENSION.DOCX
         } else {
             throw new ValidationError('Unsupported file type')
         }
@@ -47,7 +48,7 @@ export class HttpGoogleDriveGateway implements GoogleDriveGateway {
 
     async downloadFile({ driveFileId, mimeType }: DownloadFileInput) {
         const url =
-            mimeType === 'docx'
+            mimeType === TEMPLATE_FILE_EXTENSION.DOCX
                 ? `https://docs.google.com/document/d/${driveFileId}/export?format=${mimeType}`
                 : `https://docs.google.com/presentation/d/${driveFileId}/export?format=${mimeType}`
 

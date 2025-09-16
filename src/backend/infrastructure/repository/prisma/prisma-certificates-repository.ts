@@ -1,27 +1,32 @@
 import { CertificatesRepository } from '@/backend/application/interfaces/certificates-repository'
 import { Certificate } from '@/backend/domain/certificate'
 import { prisma } from '.'
-import { Template, TEMPLATE_TYPE } from '@/backend/domain/template'
+import {
+    INPUT_METHOD,
+    Template,
+    TEMPLATE_FILE_EXTENSION,
+} from '@/backend/domain/template'
 
 export class PrismaCertificatesRepository implements CertificatesRepository {
     async save(certificate: Certificate) {
-        const { id, title, userId, template, domainEvents } =
+        const { id, name, userId, template, domainEvents } =
             certificate.serialize()
 
         await prisma.$transaction([
-            prisma.certification.create({
+            prisma.certificateEmission.create({
                 data: {
                     id,
-                    title,
+                    title: name,
                     user_id: userId,
                     ...(template && {
                         Template: {
                             create: {
                                 id: template.id,
-                                file_id: template.fileId,
-                                bucket_url: template.bucketUrl,
-                                type: template.type,
+                                drive_file_id: template.driveFileId,
+                                storage_file_url: template.storageFileUrl,
+                                input_method: template.inputMethod,
                                 file_name: template.fileName,
+                                file_extension: template.fileExtension,
                                 TemplateVariable: {
                                     createMany: {
                                         data: template.variables.map(
@@ -49,10 +54,10 @@ export class PrismaCertificatesRepository implements CertificatesRepository {
     }
 
     async update(certificate: Certificate) {
-        const { id, title, template, domainEvents } = certificate.serialize()
+        const { id, name, template, domainEvents } = certificate.serialize()
 
         if (!template) {
-            const certificate = await prisma.certification.findUnique({
+            const certificate = await prisma.certificateEmission.findUnique({
                 where: { id },
                 include: {
                     Template: {
@@ -71,19 +76,20 @@ export class PrismaCertificatesRepository implements CertificatesRepository {
         }
 
         await prisma.$transaction([
-            prisma.certification.update({
+            prisma.certificateEmission.update({
                 where: { id },
                 data: {
-                    title,
+                    title: name,
                     Template: {
                         ...(template && {
                             upsert: {
                                 create: {
                                     id: template.id,
-                                    file_id: template.fileId,
-                                    bucket_url: template.bucketUrl,
-                                    type: template.type as TEMPLATE_TYPE,
+                                    drive_file_id: template.driveFileId,
+                                    storage_file_url: template.storageFileUrl,
+                                    input_method: template.inputMethod,
                                     file_name: template.fileName,
+                                    file_extension: template.fileExtension,
                                     TemplateVariable: {
                                         createMany: {
                                             data: template.variables.map(
@@ -95,10 +101,11 @@ export class PrismaCertificatesRepository implements CertificatesRepository {
                                     },
                                 },
                                 update: {
-                                    file_id: template.fileId,
-                                    bucket_url: template.bucketUrl,
+                                    drive_file_id: template.driveFileId,
+                                    storage_file_url: template.storageFileUrl,
                                     file_name: template.fileName,
-                                    type: template.type as TEMPLATE_TYPE,
+                                    input_method: template.inputMethod,
+                                    file_extension: template.fileExtension,
                                     TemplateVariable: {
                                         deleteMany: {},
                                         createMany: {
@@ -129,7 +136,7 @@ export class PrismaCertificatesRepository implements CertificatesRepository {
     }
 
     async getById(id: string): Promise<Certificate | null> {
-        const certificate = await prisma.certification.findUnique({
+        const certificate = await prisma.certificateEmission.findUnique({
             where: { id },
             include: {
                 Template: {
@@ -147,10 +154,13 @@ export class PrismaCertificatesRepository implements CertificatesRepository {
         const template = certificate.Template
             ? new Template({
                   id: certificate.Template.id,
-                  fileId: certificate.Template.file_id,
-                  bucketUrl: certificate.Template.bucket_url,
-                  type: certificate.Template.type as TEMPLATE_TYPE,
+                  driveFileId: certificate.Template.drive_file_id,
+                  storageFileUrl: certificate.Template.storage_file_url,
+                  inputMethod: certificate.Template
+                      .input_method as INPUT_METHOD,
                   fileName: certificate.Template.file_name,
+                  fileExtension: certificate.Template
+                      .file_extension as TEMPLATE_FILE_EXTENSION,
                   variables: certificate.Template.TemplateVariable.map(
                       variable => variable.name,
                   ),
@@ -159,7 +169,7 @@ export class PrismaCertificatesRepository implements CertificatesRepository {
 
         return new Certificate({
             id: certificate.id,
-            title: certificate.title,
+            name: certificate.title,
             userId: certificate.user_id,
             template: template,
         })

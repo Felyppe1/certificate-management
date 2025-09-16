@@ -13,5 +13,6 @@ export abstract class DomainEvent {
         )
     }
 
+    // TODO: change to serialize
     abstract toPrimitives(): Record<string, any>
 }

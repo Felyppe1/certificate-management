@@ -19,9 +19,7 @@ export class GetAllCertificateEmissionsUseCase {
 
         const certificateEmissions = await prisma.certificateEmission.findMany({
             where: {
-                Template: {
-                    user_id: session.userId,
-                },
+                user_id: session.userId,
             },
         })
 

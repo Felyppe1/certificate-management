@@ -9,21 +9,24 @@ import { GoogleDriveGateway } from './interfaces/google-drive-gateway'
 import { FileContentExtractorFactory } from './interfaces/file-content-extractor'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
 import { TemplatesRepository } from './interfaces/templates-repository'
+import { CertificatesRepository } from './interfaces/certificates-repository'
+import { NotFoundError } from '../domain/error/not-found-error'
 
-interface CreateTemplateByUrlUseCaseInput {
+interface AddTemplateByUrlUseCaseInput {
+    certificateId: string
     fileUrl: string
     sessionToken: string
 }
 
-export class CreateTemplateByUrlUseCase {
+export class AddTemplateByUrlUseCase {
     constructor(
-        private templatesRepository: TemplatesRepository,
+        private certificateEmissionsRepository: CertificatesRepository,
         private sessionsRepository: SessionsRepository,
         private googleDriveGateway: GoogleDriveGateway,
         private fileContentExtractorFactory: FileContentExtractorFactory,
     ) {}
 
-    async execute(input: CreateTemplateByUrlUseCaseInput) {
+    async execute(input: AddTemplateByUrlUseCaseInput) {
         const session = await this.sessionsRepository.getById(
             input.sessionToken,
         )
@@ -32,7 +35,13 @@ export class CreateTemplateByUrlUseCase {
             throw new UnauthorizedError('Session not found')
         }
 
-        // TODO: check if template with fileUrl already exists
+        const certificate = await this.certificateEmissionsRepository.getById(
+            input.certificateId,
+        )
+
+        if (!certificate) {
+            throw new NotFoundError('Certificate not found')
+        }
 
         const driveFileId = Template.getFileIdFromUrl(input.fileUrl)
 
@@ -56,17 +65,16 @@ export class CreateTemplateByUrlUseCase {
         const uniqueVariables = Template.extractVariablesFromContent(content)
 
         const newTemplate = Template.create({
-            userId: session.userId,
             driveFileId,
             storageFileUrl: null,
             inputMethod: INPUT_METHOD.URL,
             fileName: name,
             variables: uniqueVariables,
-            fileExtension: TEMPLATE_FILE_EXTENSION.DOCX, // TODO: determine file extension based on mimeType
+            fileExtension: mimeType,
         })
 
-        await this.templatesRepository.save(newTemplate)
+        certificate.addTemplate(newTemplate)
 
-        return newTemplate.getId()
+        await this.certificateEmissionsRepository.save(certificate)
     }
 }

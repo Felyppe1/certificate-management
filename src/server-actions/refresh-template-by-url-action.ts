@@ -3,14 +3,14 @@
 import { RefreshTemplateByUrlUseCase } from '@/backend/application/refresh-template-by-url-use-case'
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { HttpGoogleDriveGateway } from '@/backend/infrastructure/gateway/http-google-drive-gateway'
-import { PrismaTemplatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-templates-repository'
+import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z, { ZodError } from 'zod'
 
 const refreshTemplateByUrlActionSchema = z.object({
-    templateId: z.string().min(1, 'ID do certificado é obrigatório'),
+    certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
 })
 
 export async function refreshTemplateByUrlAction(
@@ -20,7 +20,7 @@ export async function refreshTemplateByUrlAction(
     const cookie = await cookies()
 
     const rawData = {
-        templateId: formData.get('templateId') as string,
+        certificateId: formData.get('certificateId') as string,
     }
 
     try {
@@ -29,12 +29,12 @@ export async function refreshTemplateByUrlAction(
         const parsedData = refreshTemplateByUrlActionSchema.parse(rawData)
 
         const sessionsRepository = new RedisSessionsRepository()
-        const templatesRepository = new PrismaTemplatesRepository()
+        const certificatesRepository = new PrismaCertificatesRepository()
         const googleDriveGateway = new HttpGoogleDriveGateway()
         const fileContentExtractorFactory = new FileContentExtractorFactory()
 
         const refreshTemplateByUrlUseCase = new RefreshTemplateByUrlUseCase(
-            templatesRepository,
+            certificatesRepository,
             sessionsRepository,
             googleDriveGateway,
             fileContentExtractorFactory,
@@ -42,7 +42,7 @@ export async function refreshTemplateByUrlAction(
 
         await refreshTemplateByUrlUseCase.execute({
             sessionToken,
-            templateId: parsedData.templateId,
+            certificateId: parsedData.certificateId,
         })
 
         revalidateTag('template')
@@ -54,7 +54,7 @@ export async function refreshTemplateByUrlAction(
         console.error(error)
         return {
             success: false,
-            message: 'Erro ao adicionar template',
+            message: 'Erro ao atualizar os dados do template',
         }
         // if (error instanceof ZodError) {
 

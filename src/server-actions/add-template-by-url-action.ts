@@ -1,26 +1,24 @@
 'use server'
 
-import { CreateTemplateByUrlUseCase } from '@/backend/application/create-template-by-url-use-case'
+import { AddTemplateByUrlUseCase } from '@/backend/application/add-template-by-url-use-case'
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { HttpGoogleDriveGateway } from '@/backend/infrastructure/gateway/http-google-drive-gateway'
-import { PrismaTemplatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-templates-repository'
+import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import z, { ZodError } from 'zod'
 
-const createTemplateByUrlActionSchema = z.object({
+const addTemplateByUrlActionSchema = z.object({
     fileUrl: z.url('URL do arquivo inválida'),
 })
 
-export async function createTemplateByUrlAction(
-    _: unknown,
-    formData: FormData,
-) {
+export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
     const cookie = await cookies()
 
     const rawData = {
+        certificateId: formData.get('certificateId') as string,
         fileUrl: formData.get('fileUrl') as string,
     }
 
@@ -29,21 +27,23 @@ export async function createTemplateByUrlAction(
     try {
         const sessionToken = cookie.get('session_token')!.value
 
-        const parsedData = createTemplateByUrlActionSchema.parse(rawData)
+        const parsedData = addTemplateByUrlActionSchema.parse(rawData)
 
         const sessionsRepository = new RedisSessionsRepository()
-        const templatesRepository = new PrismaTemplatesRepository()
+        const certificateEmissionsRepository =
+            new PrismaCertificatesRepository()
         const googleDriveGateway = new HttpGoogleDriveGateway()
         const fileContentExtractorFactory = new FileContentExtractorFactory()
 
-        const addTemplateByUrlUseCase = new CreateTemplateByUrlUseCase(
-            templatesRepository,
+        const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
+            certificateEmissionsRepository,
             sessionsRepository,
             googleDriveGateway,
             fileContentExtractorFactory,
         )
 
-        newTemplateId = await addTemplateByUrlUseCase.execute({
+        await addTemplateByUrlUseCase.execute({
+            certificateId: rawData.certificateId,
             fileUrl: parsedData.fileUrl,
             sessionToken,
         })
@@ -60,5 +60,5 @@ export async function createTemplateByUrlAction(
         // }
     }
 
-    redirect('/templates/' + newTemplateId)
+    // redirect('/templates/' + newTemplateId)
 }

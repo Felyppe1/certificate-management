@@ -7,6 +7,7 @@ import {
     Template,
     TEMPLATE_FILE_EXTENSION,
 } from '../domain/template'
+import { CertificatesRepository } from './interfaces/certificates-repository'
 import { FileContentExtractorFactory } from './interfaces/file-content-extractor'
 import { GoogleDriveGateway } from './interfaces/google-drive-gateway'
 import { SessionsRepository } from './interfaces/sessions-repository'
@@ -14,12 +15,12 @@ import { TemplatesRepository } from './interfaces/templates-repository'
 
 interface RefreshTemplateByUrlUseCaseInput {
     sessionToken: string
-    templateId: string
+    certificateId: string
 }
 
 export class RefreshTemplateByUrlUseCase {
     constructor(
-        private templatesRepository: TemplatesRepository,
+        private certificateEmissionsRepository: CertificatesRepository,
         private sessionsRepository: SessionsRepository,
         private googleDriveGateway: GoogleDriveGateway,
         private fileContentExtractorFactory: FileContentExtractorFactory,
@@ -34,24 +35,26 @@ export class RefreshTemplateByUrlUseCase {
             throw new UnauthorizedError('Session not found')
         }
 
-        const template = await this.templatesRepository.getById(
-            input.templateId,
+        const certificate = await this.certificateEmissionsRepository.getById(
+            input.certificateId,
         )
 
-        if (!template) {
-            throw new NotFoundError('Template not found')
+        if (!certificate) {
+            throw new NotFoundError('Certificate not found')
         }
 
-        if (template.getUserId() !== session.userId) {
+        if (certificate.getUserId() !== session.userId) {
             throw new ForbiddenError(
-                'You do not have permission to update this template',
+                'You do not have permission to update this certificate',
             )
         }
 
-        const driveFileId = template.getDriveFileId()
+        const driveFileId = certificate.getDriveFileId()
 
         if (!driveFileId) {
-            throw new ValidationError('Template does not have a drive file ID')
+            throw new ValidationError(
+                'Certificate does not have a drive file ID',
+            )
         }
 
         // TODO: should it be a domain service?
@@ -72,14 +75,15 @@ export class RefreshTemplateByUrlUseCase {
 
         const newTemplate = Template.create({
             driveFileId,
-            userId: session.userId,
             storageFileUrl: null,
-            fileExtension: TEMPLATE_FILE_EXTENSION.DOCX, // TODO: determine file extension based on mimeType
+            fileExtension: mimeType,
             inputMethod: INPUT_METHOD.URL,
             fileName: name,
             variables: uniqueVariables,
         })
 
-        await this.templatesRepository.update(newTemplate)
+        certificate.addTemplate(newTemplate)
+
+        await this.certificateEmissionsRepository.update(certificate)
     }
 }

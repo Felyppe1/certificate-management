@@ -16,7 +16,6 @@ export enum TEMPLATE_FILE_EXTENSION {
 
 interface TemplateInput {
     id: string
-    userId: string
     driveFileId: string | null
     storageFileUrl: string | null
     inputMethod: INPUT_METHOD
@@ -29,7 +28,6 @@ interface CreateTemplateInput extends Omit<TemplateInput, 'id'> {}
 
 export class Template {
     private id: string
-    private userId: string
     private driveFileId: string | null
     private storageFileUrl: string | null
     private inputMethod: INPUT_METHOD
@@ -47,10 +45,6 @@ export class Template {
     constructor(data: TemplateInput) {
         if (!data.id) {
             throw new ValidationError('Template ID is required')
-        }
-
-        if (!data.userId) {
-            throw new ValidationError('Template user ID is required')
         }
 
         if (!data.inputMethod) {
@@ -87,7 +81,6 @@ export class Template {
         }
 
         this.id = data.id
-        this.userId = data.userId
         this.driveFileId = data.driveFileId
         this.storageFileUrl = data.storageFileUrl
         this.inputMethod = data.inputMethod
@@ -102,10 +95,6 @@ export class Template {
 
     getDriveFileId() {
         return this.driveFileId
-    }
-
-    getUserId() {
-        return this.userId
     }
 
     static getFileIdFromUrl(url: string): string | null {
@@ -124,7 +113,6 @@ export class Template {
     serialize(): TemplateInput {
         return {
             id: this.id,
-            userId: this.userId,
             driveFileId: this.driveFileId,
             storageFileUrl: this.storageFileUrl,
             inputMethod: this.inputMethod,

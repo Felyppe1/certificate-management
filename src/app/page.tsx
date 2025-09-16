@@ -14,7 +14,7 @@ export default function Home() {
                     height={38}
                     // priority
                 /> */}
-                <TemplatesList />
+                {/* <TemplatesList /> */}
                 <CertificateEmissionsList />
             </main>
         </div>
