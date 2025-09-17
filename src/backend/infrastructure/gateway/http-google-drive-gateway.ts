@@ -60,15 +60,7 @@ export class HttpGoogleDriveGateway implements GoogleDriveGateway {
         const res = await fetch(url)
 
         if (!res.ok) {
-            const errorMessage = 'Error downloading file from Google Drive'
-
-            globalThis.logger?.error({
-                message: errorMessage,
-                status: res.status,
-                statusText: res.statusText,
-            })
-
-            throw new Error(errorMessage)
+            throw new Error('Error downloading file from Google Drive')
         }
 
         const buffer = Buffer.from(await res.arrayBuffer())

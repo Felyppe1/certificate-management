@@ -1,6 +1,7 @@
 'use server'
 
 import { AddTemplateByUrlUseCase } from '@/backend/application/add-template-by-url-use-case'
+import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { HttpGoogleDriveGateway } from '@/backend/infrastructure/gateway/http-google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
@@ -17,6 +18,8 @@ const addTemplateByUrlActionSchema = z.object({
 export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
     const cookie = await cookies()
 
+    const sessionToken = cookie.get('session_token')?.value
+
     const rawData = {
         certificateId: formData.get('certificateId') as string,
         fileUrl: formData.get('fileUrl') as string,
@@ -25,7 +28,9 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
     let newTemplateId: string
 
     try {
-        const sessionToken = cookie.get('session_token')!.value
+        if (!sessionToken) {
+            throw new UnauthorizedError('Session token not present')
+        }
 
         const parsedData = addTemplateByUrlActionSchema.parse(rawData)
 
@@ -53,9 +58,9 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
         globalThis.logger?.error({
             err: error,
             message: 'Error adding template by URL',
+            certificateId: rawData.certificateId,
         })
 
-        console.error(error)
         return {
             success: false,
             message: 'Erro ao adicionar template',
