@@ -19,12 +19,12 @@ export async function GET(
     try {
         const sessionToken = cookie.get('session_token')!.value
 
-        const certificate = await getCertificateUseCase.execute({
+        const certificateEmission = await getCertificateUseCase.execute({
             certificateId,
             sessionToken,
         })
 
-        return Response.json({ certificate })
+        return Response.json({ certificateEmission })
     } catch (error: any) {
         console.log(error.message)
         return Response.json({ message: 'Ocorreu um erro' }, { status: 500 })

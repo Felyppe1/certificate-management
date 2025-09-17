@@ -7,10 +7,10 @@ import { PrismaCertificatesRepository } from '@/backend/infrastructure/repositor
 import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
 import z, { ZodError } from 'zod'
 
 const addTemplateByUrlActionSchema = z.object({
+    certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
     fileUrl: z.url('URL do arquivo inválida'),
 })
 
@@ -48,8 +48,13 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
             sessionToken,
         })
 
-        revalidateTag('templates')
+        revalidateTag('certificate')
     } catch (error) {
+        globalThis.logger?.error({
+            err: error,
+            message: 'Error adding template by URL',
+        })
+
         console.error(error)
         return {
             success: false,

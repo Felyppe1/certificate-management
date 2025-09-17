@@ -20,8 +20,35 @@ services:
     networks:
         - certificate-management
 
+  grafana:
+    container_name: certificate-management-grafana
+    image: grafana/grafana
+    ports:
+      - 3005:3000
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    depends_on:
+      - database
+    networks:
+      - certificate-management
+    volumes:
+      - certificate-management-grafana:/var/lib/grafana
+  
+  loki:
+    container_name: certificate-management-loki
+    image: grafana/loki
+    ports:
+      - 3100:3100
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+    networks:
+      - certificate-management
+
 volumes:
   certificate-management-db:
+  certificate-management-grafana:
 
 networks:
   certificate-management:

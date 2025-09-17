@@ -58,16 +58,16 @@ export class RefreshTemplateByUrlUseCase {
         }
 
         // TODO: should it be a domain service?
-        const { name, mimeType } =
+        const { name, fileExtension } =
             await this.googleDriveGateway.getFileMetadata(driveFileId)
 
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
-            mimeType: mimeType,
+            fileExtension: fileExtension,
         })
 
         const contentExtractor =
-            this.fileContentExtractorFactory.create(mimeType)
+            this.fileContentExtractorFactory.create(fileExtension)
 
         const content = await contentExtractor.extractText(buffer)
 
@@ -76,7 +76,7 @@ export class RefreshTemplateByUrlUseCase {
         const newTemplate = Template.create({
             driveFileId,
             storageFileUrl: null,
-            fileExtension: mimeType,
+            fileExtension: fileExtension,
             inputMethod: INPUT_METHOD.URL,
             fileName: name,
             variables: uniqueVariables,

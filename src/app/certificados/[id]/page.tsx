@@ -1,7 +1,6 @@
 import { cookies } from 'next/headers'
-import { FileSelector } from '@/components/FileSelector'
-import { addTemplateByUrlAction } from '@/server-actions/add-template-by-url-action'
 import { GoBackButton } from '@/components/GoBackButton'
+import { TemplateSection } from './template-section'
 
 export default async function CertificatePage({
     params,
@@ -24,7 +23,7 @@ export default async function CertificatePage({
         },
     )
 
-    const certificate = await response.json()
+    const data = await response.json()
     // TODO: what to do when it does not exist
 
     return (
@@ -32,16 +31,14 @@ export default async function CertificatePage({
             <GoBackButton />
             <div className="mb-8">
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                    {certificate.certificate.name}
+                    {data.certificateEmission.name}
                 </h1>
                 <p className="text-gray-600">
                     Configure o template e os dados para gerar certificados
                 </p>
             </div>
 
-            <div className="space-y-8">
-                <FileSelector urlAction={addTemplateByUrlAction} />
-            </div>
+            <TemplateSection certificateId={certificateId} />
         </div>
     )
 }

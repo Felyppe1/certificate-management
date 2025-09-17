@@ -2,12 +2,12 @@ import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 
 export interface DownloadFileInput {
     driveFileId: string
-    mimeType: TEMPLATE_FILE_EXTENSION.DOCX | TEMPLATE_FILE_EXTENSION.PPTX
+    fileExtension: TEMPLATE_FILE_EXTENSION
 }
 
 export interface GetFileMetadataOutput {
     name: string
-    mimeType: TEMPLATE_FILE_EXTENSION.DOCX | TEMPLATE_FILE_EXTENSION.PPTX
+    fileExtension: TEMPLATE_FILE_EXTENSION
 }
 
 export interface GoogleDriveGateway {

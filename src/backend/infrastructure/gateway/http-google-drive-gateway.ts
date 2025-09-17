@@ -20,42 +20,55 @@ export class HttpGoogleDriveGateway implements GoogleDriveGateway {
             fields: 'id, name, mimeType, size, webViewLink, webContentLink, thumbnailLink',
         })
 
-        console.log(file.data)
-
-        let mimeType: TEMPLATE_FILE_EXTENSION
+        let fileExtension: TEMPLATE_FILE_EXTENSION
 
         if (
             file.data.mimeType ===
-                'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+        ) {
+            fileExtension = TEMPLATE_FILE_EXTENSION.PPTX
+        } else if (
             file.data.mimeType === 'application/vnd.google-apps.presentation'
         ) {
-            mimeType = TEMPLATE_FILE_EXTENSION.PPTX
+            fileExtension = TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES
         } else if (
-            file.data.mimeType === 'application/vnd.google-apps.document' ||
-            file.data.mimeType ===
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            file.data.mimeType === 'application/vnd.google-apps.document'
         ) {
-            mimeType = TEMPLATE_FILE_EXTENSION.DOCX
+            fileExtension = TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS
+        } else if (
+            file.data.mimeType ===
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ) {
+            fileExtension = TEMPLATE_FILE_EXTENSION.DOCX
         } else {
             throw new ValidationError('Unsupported file type')
         }
 
         return {
             name: file.data.name!,
-            mimeType,
+            fileExtension,
         }
     }
 
-    async downloadFile({ driveFileId, mimeType }: DownloadFileInput) {
+    async downloadFile({ driveFileId, fileExtension }: DownloadFileInput) {
         const url =
-            mimeType === TEMPLATE_FILE_EXTENSION.DOCX
-                ? `https://docs.google.com/document/d/${driveFileId}/export?format=${mimeType}`
-                : `https://docs.google.com/presentation/d/${driveFileId}/export?format=${mimeType}`
+            fileExtension === TEMPLATE_FILE_EXTENSION.DOCX ||
+            fileExtension === TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS
+                ? `https://docs.google.com/document/d/${driveFileId}/export?format=docx`
+                : `https://docs.google.com/presentation/d/${driveFileId}/export?format=pptx`
 
         const res = await fetch(url)
 
         if (!res.ok) {
-            throw new Error('Erro ao baixar do Google Docs')
+            const errorMessage = 'Error downloading file from Google Drive'
+
+            globalThis.logger?.error({
+                message: errorMessage,
+                status: res.status,
+                statusText: res.statusText,
+            })
+
+            throw new Error(errorMessage)
         }
 
         const buffer = Buffer.from(await res.arrayBuffer())

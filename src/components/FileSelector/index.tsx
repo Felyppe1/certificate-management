@@ -11,20 +11,21 @@ import {
 import { FileText, Link, Upload } from 'lucide-react'
 import { Input } from '../ui/input'
 import { Button } from '../ui/button'
-import { useActionState, useState } from 'react'
+import { startTransition, useActionState, useState } from 'react'
 
 type SelectOption = 'upload' | 'link' | 'drive'
 
 interface FileSelectorProps {
-    urlAction: (_: unknown, formData: FormData) => Promise<any> // TODO: improve this type
+    isLoading: boolean
+    onSubmitUrl: (formData: FormData) => void
+    // urlAction: (_: unknown, formData: FormData) => Promise<any> // TODO: improve this type
 }
 
-export function FileSelector({ urlAction }: FileSelectorProps) {
+export function FileSelector({ onSubmitUrl, isLoading }: FileSelectorProps) {
     const [selectedOption, setSelectedOption] = useState<SelectOption | null>(
         null,
     )
     const [fileUrl, setFileUrl] = useState('')
-    const [state, action, isLoading] = useActionState(urlAction, null)
 
     const handleOptionSelect = (value: SelectOption) => {
         setSelectedOption(value)
@@ -32,6 +33,12 @@ export function FileSelector({ urlAction }: FileSelectorProps) {
         if (value !== 'link') {
             setFileUrl('')
         }
+    }
+
+    const handleSubmitUrl = async (e: React.FormEvent) => {
+        e.preventDefault()
+        const formData = new FormData(e.currentTarget as HTMLFormElement)
+        onSubmitUrl(formData)
     }
 
     return (
@@ -44,7 +51,7 @@ export function FileSelector({ urlAction }: FileSelectorProps) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     {/* Upload Local */}
                     <Card
-                        className={`cursor-pointer transition-colors hover:border-primary focus-within:ring-2 focus-within:ring-ring focus-within:border-primary ${
+                        className={`cursor-pointer transition-colors hover:border-primary focus-within:ring-3 focus-within:ring-ring/50 focus-within:border-ring ${
                             selectedOption === 'upload'
                                 ? 'border-primary bg-primary/5'
                                 : ''
@@ -71,7 +78,7 @@ export function FileSelector({ urlAction }: FileSelectorProps) {
 
                     {/* Google Drive */}
                     <Card
-                        className={`cursor-pointer transition-colors hover:border-primary focus-within:ring-2 focus-within:ring-ring focus-within:border-ring ${
+                        className={`cursor-pointer transition-colors hover:border-primary focus-within:ring-3 focus-within:ring-ring/50 focus-within:border-ring ${
                             selectedOption === 'drive'
                                 ? 'border-primary bg-primary/5'
                                 : ''
@@ -98,7 +105,7 @@ export function FileSelector({ urlAction }: FileSelectorProps) {
 
                     {/* Link de compartilhamento */}
                     <Card
-                        className={`cursor-pointer transition-colors hover:border-primary focus-within:ring-2 focus-within:ring-ring focus-within:border-primary ${
+                        className={`cursor-pointer transition-colors hover:border-primary focus-within:ring-3 focus-within:ring-ring/50 focus-within:border-ring ${
                             selectedOption === 'link'
                                 ? 'border-primary bg-primary/5'
                                 : ''
@@ -138,7 +145,7 @@ export function FileSelector({ urlAction }: FileSelectorProps) {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <form action={action} className="flex gap-3">
+                        <form onSubmit={handleSubmitUrl} className="flex gap-3">
                             <Input
                                 type="url"
                                 name="fileUrl"
