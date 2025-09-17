@@ -10,7 +10,7 @@ export async function fetchCertificateEmissions() {
                 Cookie: `session_token=${sessionToken}`,
             },
             next: {
-                tags: ['certificates'],
+                tags: ['certificate-emissions'],
             },
         },
     )

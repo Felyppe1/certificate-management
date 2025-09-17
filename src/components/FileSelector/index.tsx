@@ -1,74 +1,41 @@
 'use client'
 
-import { startTransition, useActionState, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Upload, FileText, Link, ArrowLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { RadioGroup, RadioGroupItem } from '@radix-ui/react-radio-group'
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { addTemplateByUrlAction } from '@/server-actions/add-template-by-url-action'
+} from '../ui/card'
+import { FileText, Link, Upload } from 'lucide-react'
+import { Input } from '../ui/input'
+import { Button } from '../ui/button'
+import { useActionState, useState } from 'react'
 
-export default function CreateTemplatePage() {
-    const router = useRouter()
-    const [selectedOption, setSelectedOption] = useState<string | null>(null)
-    const [fileUrl, setFileUrl] = useState('')
-    const [state, action, isLoading] = useActionState(
-        addTemplateByUrlAction,
+type SelectOption = 'upload' | 'link' | 'drive'
+
+interface FileSelectorProps {
+    urlAction: (_: unknown, formData: FormData) => Promise<any> // TODO: improve this type
+}
+
+export function FileSelector({ urlAction }: FileSelectorProps) {
+    const [selectedOption, setSelectedOption] = useState<SelectOption | null>(
         null,
     )
+    const [fileUrl, setFileUrl] = useState('')
+    const [state, action, isLoading] = useActionState(urlAction, null)
 
-    const handleOptionSelect = (value: string) => {
+    const handleOptionSelect = (value: SelectOption) => {
         setSelectedOption(value)
+
         if (value !== 'link') {
             setFileUrl('')
         }
     }
 
-    // const handleConfirm = () => {
-    //     if (selectedOption === "link" && fileUrl.trim()) {
-    //         const formData = new FormData()
-    //         formData.append("fileUrl", fileUrl.trim())
-
-    //         try {
-    //             startTransition(() => {
-    //                 action(formData)
-    //             })
-    //         } catch (error) {
-
-    //         }
-    //     }
-    // }
-
-    const handleGoBack = () => {
-        router.back()
-    }
-
     return (
-        <div className="container mx-auto py-8 px-4 max-w-4xl">
-            <div className="mb-8">
-                <div className="flex items-center gap-4 mb-4">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleGoBack}
-                        className="flex items-center gap-2"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Voltar
-                    </Button>
-                </div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                    Template do Certificado
-                </h1>
-            </div>
-
+        <div className="flex flex-col">
             {/* Options Grid */}
             <RadioGroup
                 value={selectedOption || ''}
