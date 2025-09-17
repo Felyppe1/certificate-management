@@ -44,9 +44,9 @@ export function FileSelector({ urlAction }: FileSelectorProps) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     {/* Upload Local */}
                     <Card
-                        className={`cursor-pointer transition-colors hover:border-blue-300 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 ${
+                        className={`cursor-pointer transition-colors hover:border-primary focus-within:ring-2 focus-within:ring-ring focus-within:border-primary ${
                             selectedOption === 'upload'
-                                ? 'border-blue-500 bg-blue-50'
+                                ? 'border-primary bg-primary/5'
                                 : ''
                         }`}
                         onClick={() => handleOptionSelect('upload')}
@@ -58,7 +58,9 @@ export function FileSelector({ urlAction }: FileSelectorProps) {
                                     value="upload"
                                     className="sr-only"
                                 />
-                                <Upload className="w-12 h-12 text-blue-500" />
+                                <Upload
+                                    className={`w-12 h-12 ${selectedOption === 'upload' ? 'text-primary' : 'text-muted-foreground'}`}
+                                />
                             </div>
                             <CardTitle className="mb-2">Upload Local</CardTitle>
                             <CardDescription>
@@ -69,9 +71,9 @@ export function FileSelector({ urlAction }: FileSelectorProps) {
 
                     {/* Google Drive */}
                     <Card
-                        className={`cursor-pointer transition-colors hover:border-blue-300 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 ${
+                        className={`cursor-pointer transition-colors hover:border-primary focus-within:ring-2 focus-within:ring-ring focus-within:border-ring ${
                             selectedOption === 'drive'
-                                ? 'border-blue-500 bg-blue-50'
+                                ? 'border-primary bg-primary/5'
                                 : ''
                         }`}
                         onClick={() => handleOptionSelect('drive')}
@@ -83,7 +85,9 @@ export function FileSelector({ urlAction }: FileSelectorProps) {
                                     value="drive"
                                     className="sr-only"
                                 />
-                                <FileText className="w-12 h-12 text-blue-500" />
+                                <FileText
+                                    className={`w-12 h-12 ${selectedOption === 'drive' ? 'text-primary' : 'text-muted-foreground'}`}
+                                />
                             </div>
                             <CardTitle className="mb-2">Google Drive</CardTitle>
                             <CardDescription>
@@ -94,9 +98,9 @@ export function FileSelector({ urlAction }: FileSelectorProps) {
 
                     {/* Link de compartilhamento */}
                     <Card
-                        className={`cursor-pointer transition-colors hover:border-blue-300 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 ${
+                        className={`cursor-pointer transition-colors hover:border-primary focus-within:ring-2 focus-within:ring-ring focus-within:border-primary ${
                             selectedOption === 'link'
-                                ? 'border-blue-500 bg-blue-50'
+                                ? 'border-primary bg-primary/5'
                                 : ''
                         }`}
                         onClick={() => handleOptionSelect('link')}
@@ -108,7 +112,9 @@ export function FileSelector({ urlAction }: FileSelectorProps) {
                                     value="link"
                                     className="sr-only"
                                 />
-                                <Link className="w-12 h-12 text-blue-500" />
+                                <Link
+                                    className={`w-12 h-12 ${selectedOption === 'link' ? 'text-primary' : 'text-muted-foreground'}`}
+                                />
                             </div>
                             <CardTitle className="mb-2">
                                 Link de compartilhamento
