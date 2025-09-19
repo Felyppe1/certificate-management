@@ -9,7 +9,7 @@ services:
         - POSTGRES_PASSWORD=${DB_PASSWORD}
         - POSTGRES_DB=${DB_NAME}
     volumes:
-        - certificate-management-db:/var/lib/postgresql/data
+        - database:/var/lib/postgresql/data
     networks:
         - certificate-management
   cache:
@@ -33,7 +33,7 @@ services:
     networks:
       - certificate-management
     volumes:
-      - certificate-management-grafana:/var/lib/grafana
+      - grafana:/var/lib/grafana
   
   loki:
     container_name: certificate-management-loki
@@ -45,10 +45,23 @@ services:
       - ./loki-config.yaml:/etc/loki/local-config.yaml
     networks:
       - certificate-management
+  
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4318:4318"
+      - "4317:4317"
+    depends_on:
+      - loki
+    networks:
+      - certificate-management
 
 volumes:
-  certificate-management-db:
-  certificate-management-grafana:
+  database:
+  grafana:
 
 networks:
   certificate-management:

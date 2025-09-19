@@ -44,6 +44,7 @@ schema_config:
 limits_config:
   # Keep logs for 28 days before deletion
   retention_period: 672h
+  allow_structured_metadata: true
 
 ruler:
   storage:

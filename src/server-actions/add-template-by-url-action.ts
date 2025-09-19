@@ -54,11 +54,15 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
         })
 
         revalidateTag('certificate')
-    } catch (error) {
-        globalThis.logger?.error({
-            err: error,
-            message: 'Error adding template by URL',
-            certificateId: rawData.certificateId,
+    } catch (error: any) {
+        globalThis.logger?.emit({
+            severityText: 'ERROR',
+            body: 'Error adding template by URL',
+            attributes: {
+                err: error,
+                message: 'Error adding template by URL',
+                certificateId: rawData.certificateId,
+            },
         })
 
         return {

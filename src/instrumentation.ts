@@ -1,4 +1,13 @@
-import type { Logger } from 'pino'
+import { registerOTel } from '@vercel/otel'
+import { Logger, logs } from '@opentelemetry/api-logs'
+import {
+    ConsoleLogRecordExporter,
+    LoggerProvider,
+    SimpleLogRecordProcessor,
+} from '@opentelemetry/sdk-logs'
+import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http'
+import { Resource } from '@opentelemetry/resources'
+import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions'
 
 declare global {
     var logger: Logger | undefined
@@ -14,18 +23,37 @@ export async function register() {
 
         await getPostgresListener()
 
-        const pino = (await import('pino')).default
+        registerOTel('certificate-management')
 
-        const pinoLoki = (await import('pino-loki')).default
+        // const exporter = new ConsoleLogRecordExporter()
 
-        const transporter = pinoLoki({
-            host: process.env.LOKI_URL!,
-            interval: 5,
-            batching: true,
-            labels: { app: 'certificate-management' },
+        // Send to loki
+        const exporter = new OTLPLogExporter({
+            url: process.env.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
         })
 
-        const logger = pino(transporter)
+        const resource = new Resource({
+            [ATTR_SERVICE_NAME]: 'certificate-management',
+        })
+
+        const loggerProvider = new LoggerProvider({
+            resource: resource,
+            // processors: [
+            //     new SimpleLogRecordProcessor(exporter),
+            // ]
+        })
+
+        loggerProvider.addLogRecordProcessor(
+            new SimpleLogRecordProcessor(new ConsoleLogRecordExporter()),
+        )
+
+        loggerProvider.addLogRecordProcessor(
+            new SimpleLogRecordProcessor(exporter),
+        )
+
+        const logger = loggerProvider.getLogger('certificate-management')
+
+        logs.setGlobalLoggerProvider(loggerProvider)
 
         globalThis.logger = logger
     }
