@@ -2,7 +2,7 @@
 
 // import { DeleteTemplateUseCase } from '@/backend/application/delete-template-use-case'
 // import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-// import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
+// import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 // import { revalidateTag } from 'next/cache'
 // import { cookies } from 'next/headers'
 // import z from 'zod'
@@ -23,7 +23,7 @@
 //             })
 //             .parse(rawData)
 
-//         const sessionsRepository = new RedisSessionsRepository()
+//         const sessionsRepository = new PrismaSessionsRepository()
 //         const certificateEmissionsRepository = new PrismaCertificatesRepository()
 
 //         const deleteTemplateUseCase = new DeleteTemplateUseCase(

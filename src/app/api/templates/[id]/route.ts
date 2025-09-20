@@ -1,6 +1,6 @@
 // import { NextRequest, NextResponse } from 'next/server'
 // // import { PrismaTemplatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-templates-repository'
-// import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
+// import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 // import { cookies } from 'next/headers'
 // import { z } from 'zod'
 // import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
@@ -12,8 +12,8 @@
 // })
 
 export async function GET() {
-// request: NextRequest,
-// { params }: { params: Promise<{ id: string }> },
+    // request: NextRequest,
+    // { params }: { params: Promise<{ id: string }> },
     // const cookie = await cookies()
     // const { id: templateId } = await params
     // try {
@@ -22,7 +22,7 @@ export async function GET() {
     //         throw new UnauthorizedError('Session token not present')
     //     }
     //     const parsedData = getTemplateByIdSchema.parse({ templateId })
-    //     const sessionsRepository = new RedisSessionsRepository()
+    //     const sessionsRepository = new PrismaSessionsRepository()
     //     const templatesRepository = new PrismaTemplatesRepository()
     //     const session = await sessionsRepository.getById(sessionToken)
     //     if (!session) {

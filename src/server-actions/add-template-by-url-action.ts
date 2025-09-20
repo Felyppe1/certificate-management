@@ -5,7 +5,7 @@ import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { HttpGoogleDriveGateway } from '@/backend/infrastructure/gateway/http-google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
+import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
@@ -34,7 +34,7 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
 
         const parsedData = addTemplateByUrlActionSchema.parse(rawData)
 
-        const sessionsRepository = new RedisSessionsRepository()
+        const sessionsRepository = new PrismaSessionsRepository()
         const certificateEmissionsRepository =
             new PrismaCertificatesRepository()
         const googleDriveGateway = new HttpGoogleDriveGateway()

@@ -3,7 +3,7 @@
 import { CreateCertificateEmissionUseCase } from '@/backend/application/create-certificate-emission-use-case'
 import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
+import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -40,7 +40,7 @@ export async function createCertificateEmissionAction(
         const parsedData = createCertificateEmissionActionSchema.parse(rawData)
 
         const certificatesRepository = new PrismaCertificatesRepository()
-        const sessionsRepository = new RedisSessionsRepository()
+        const sessionsRepository = new PrismaSessionsRepository()
 
         const createCertificateEmissionUseCase =
             new CreateCertificateEmissionUseCase(

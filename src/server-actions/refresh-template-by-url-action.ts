@@ -4,7 +4,7 @@ import { RefreshTemplateByUrlUseCase } from '@/backend/application/refresh-templ
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { HttpGoogleDriveGateway } from '@/backend/infrastructure/gateway/http-google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
+import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
@@ -28,7 +28,7 @@ export async function refreshTemplateByUrlAction(
 
         const parsedData = refreshTemplateByUrlActionSchema.parse(rawData)
 
-        const sessionsRepository = new RedisSessionsRepository()
+        const sessionsRepository = new PrismaSessionsRepository()
         const certificatesRepository = new PrismaCertificatesRepository()
         const googleDriveGateway = new HttpGoogleDriveGateway()
         const fileContentExtractorFactory = new FileContentExtractorFactory()

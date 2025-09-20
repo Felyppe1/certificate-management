@@ -1,5 +1,5 @@
 import { GetCertificateEmissionUseCase } from '@/backend/application/get-certificate-emission-use-case'
-import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
+import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { cookies } from 'next/headers'
 
 export async function GET(
@@ -10,7 +10,7 @@ export async function GET(
 
     const { id: certificateId } = await params
 
-    const sessionsRepository = new RedisSessionsRepository()
+    const sessionsRepository = new PrismaSessionsRepository()
 
     const getCertificateUseCase = new GetCertificateEmissionUseCase(
         sessionsRepository,

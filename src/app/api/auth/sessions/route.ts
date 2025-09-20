@@ -2,7 +2,7 @@
 
 import { LoginUseCase } from '@/backend/application/login-use-case'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
-import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
+import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
@@ -15,7 +15,7 @@ export async function GET() {
         // return new NextResponse('No session token', { status: 401 })
     }
 
-    const session = await new RedisSessionsRepository().getById(
+    const session = await new PrismaSessionsRepository().getById(
         sessionToken.value,
     )
 
@@ -38,7 +38,7 @@ export async function POST(
     const { email, password } = await request.json()
 
     const usersRepository = new PrismaUsersRepository()
-    const sessionsRepository = new RedisSessionsRepository()
+    const sessionsRepository = new PrismaSessionsRepository()
 
     const loginUseCase = new LoginUseCase(usersRepository, sessionsRepository)
 

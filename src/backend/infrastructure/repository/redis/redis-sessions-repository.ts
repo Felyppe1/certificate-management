@@ -4,7 +4,7 @@ import {
 } from '@/backend/application/interfaces/sessions-repository'
 import { redisClient } from '.'
 
-export class RedisSessionsRepository implements SessionsRepository {
+export class PrismaSessionsRepository implements SessionsRepository {
     async save(session: Session) {
         await redisClient.set(session.token, session.userId)
     }

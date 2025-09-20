@@ -6,7 +6,7 @@ import { Readable } from 'stream'
 import { cookies } from 'next/headers'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { redirect } from 'next/navigation'
-import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
+import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 
 interface UploadTemplateActionOutput {
     id?: string
@@ -49,7 +49,7 @@ export async function uploadTemplateAction(
             process.env.NEXT_PUBLIC_BASE_URL! + '/api/auth/google/callback',
     })
 
-    const sessionsRepository = new RedisSessionsRepository()
+    const sessionsRepository = new PrismaSessionsRepository()
     const externalUserAccountsRepository =
         new PrismaExternalUserAccountsRepository()
 
