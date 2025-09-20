@@ -2,16 +2,11 @@ import { ForbiddenError } from '../domain/error/forbidden-error'
 import { NotFoundError } from '../domain/error/not-found-error'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
 import { ValidationError } from '../domain/error/validation-error'
-import {
-    INPUT_METHOD,
-    Template,
-    TEMPLATE_FILE_EXTENSION,
-} from '../domain/template'
+import { INPUT_METHOD, Template } from '../domain/template'
 import { CertificatesRepository } from './interfaces/certificates-repository'
 import { FileContentExtractorFactory } from './interfaces/file-content-extractor'
 import { GoogleDriveGateway } from './interfaces/google-drive-gateway'
 import { SessionsRepository } from './interfaces/sessions-repository'
-import { TemplatesRepository } from './interfaces/templates-repository'
 
 interface RefreshTemplateByUrlUseCaseInput {
     sessionToken: string

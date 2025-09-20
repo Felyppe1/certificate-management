@@ -1,6 +1,6 @@
-import Redis from 'redis'
+import { createClient } from 'redis'
 
-const redisClient = await Redis.createClient({
+const redisClient = createClient({
     url: process.env.REDIS_URL,
     socket: {
         reconnectStrategy: retries => {
@@ -12,7 +12,9 @@ const redisClient = await Redis.createClient({
         },
     },
 })
-    .on('error', err => console.log('Redis Client Error', err))
-    .connect()
+
+redisClient.on('error', err => console.log('Redis Client Error', err))
+
+await redisClient.connect()
 
 export { redisClient }

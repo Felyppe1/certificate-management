@@ -3,7 +3,6 @@
 import { CreateCertificateEmissionUseCase } from '@/backend/application/create-certificate-emission-use-case'
 import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'

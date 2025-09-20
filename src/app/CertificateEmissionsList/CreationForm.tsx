@@ -11,10 +11,7 @@ import { createCertificateEmissionAction } from '@/server-actions/create-certifi
 import { useActionState } from 'react'
 
 export function CreationForm() {
-    const [state, action, isLoading] = useActionState(
-        createCertificateEmissionAction,
-        null,
-    )
+    const [, action] = useActionState(createCertificateEmissionAction, null)
 
     return (
         <Popover>

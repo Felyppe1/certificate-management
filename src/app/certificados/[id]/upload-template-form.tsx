@@ -4,13 +4,10 @@ import { uploadTemplateAction } from '@/server-actions/upload-template-action'
 import { useActionState, useRef } from 'react'
 
 export default function UploadTemplateForm() {
-    const [state, action, isPending] = useActionState(
-        uploadTemplateAction,
-        null,
-    )
+    const [, action, isPending] = useActionState(uploadTemplateAction, null)
     const formRef = useRef<HTMLFormElement>(null)
 
-    function onChange(_: React.ChangeEvent<HTMLInputElement>) {
+    function onChange() {
         formRef?.current?.requestSubmit()
     }
 

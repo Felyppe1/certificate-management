@@ -6,7 +6,6 @@ import { Readable } from 'stream'
 import { cookies } from 'next/headers'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { redirect } from 'next/navigation'
-import { revalidateTag } from 'next/cache'
 import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
 
 interface UploadTemplateActionOutput {
@@ -105,7 +104,15 @@ export async function uploadTemplateAction(
             },
             fields: 'id',
         })
-    } catch (error) {
+    } catch (error: any) {
+        globalThis.logger?.emit({
+            severityText: 'ERROR',
+            body: 'Error adding template by URL',
+            attributes: {
+                err: error,
+            },
+        })
+
         // TODO: e se o refresh token tiver expirado?
         const { credentials } = await oAuthClient.refreshAccessToken()
 
@@ -144,6 +151,8 @@ export async function uploadTemplateAction(
     } else {
         variables = await extractFromSlides(oAuthClient, fileId)
     }
+
+    console.log(variables)
 
     // TODO: save template
     // TODO: revalidate fetch

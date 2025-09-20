@@ -9,10 +9,7 @@ interface TemplateSectionProps {
 }
 
 export function TemplateSection({ certificateId }: TemplateSectionProps) {
-    const [state, action, isLoading] = useActionState(
-        addTemplateByUrlAction,
-        null,
-    )
+    const [, action, isLoading] = useActionState(addTemplateByUrlAction, null)
 
     const handleSubmitUrl = async (formData: FormData) => {
         formData.append('certificateId', certificateId)

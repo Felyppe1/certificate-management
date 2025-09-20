@@ -1,6 +1,6 @@
 'use client'
 
-import { startTransition, useActionState, useState } from 'react'
+import { useActionState, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Upload, FileText, Link, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -19,10 +19,7 @@ export default function CreateTemplatePage() {
     const router = useRouter()
     const [selectedOption, setSelectedOption] = useState<string | null>(null)
     const [fileUrl, setFileUrl] = useState('')
-    const [state, action, isLoading] = useActionState(
-        addTemplateByUrlAction,
-        null,
-    )
+    const [, action, isLoading] = useActionState(addTemplateByUrlAction, null)
 
     const handleOptionSelect = (value: string) => {
         setSelectedOption(value)

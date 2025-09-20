@@ -1,4 +1,3 @@
-import { fetchTemplates } from '@/api-calls/fetch-templates'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import Link from 'next/link'

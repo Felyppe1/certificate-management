@@ -7,7 +7,7 @@ import { PrismaCertificatesRepository } from '@/backend/infrastructure/repositor
 import { RedisSessionsRepository } from '@/backend/infrastructure/repository/redis/redis-sessions-repository'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
-import z, { ZodError } from 'zod'
+import z from 'zod'
 
 const refreshTemplateByUrlActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),

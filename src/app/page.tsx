@@ -1,6 +1,5 @@
 import { LogoutButton } from './logout-button'
 import { CertificateEmissionsList } from './CertificateEmissionsList'
-import { TemplatesList } from './TemplatesList'
 
 export default function Home() {
     return (

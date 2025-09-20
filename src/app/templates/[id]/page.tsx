@@ -6,17 +6,9 @@ import {
     CardDescription,
     CardContent,
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { notFound } from 'next/navigation'
-import {
-    FileText,
-    Image as ImageIcon,
-    Tag,
-    User,
-    ArrowLeft,
-} from 'lucide-react'
-import Link from 'next/link'
+import { Tag, User } from 'lucide-react'
 import { TemplateActions } from './template-actions'
 import Image from 'next/image'
 import { GoBackButton } from '@/components/GoBackButton'
@@ -63,18 +55,18 @@ function getInputMethodLabel(method: string) {
     }
 }
 
-function getFileTypeIcon(extension: string) {
-    switch (extension) {
-        case 'DOCX':
-        case 'GOOGLE_DOCS':
-            return <FileText className="h-5 w-5" />
-        case 'PPTX':
-        case 'GOOGLE_SLIDES':
-            return <ImageIcon className="h-5 w-5" />
-        default:
-            return <FileText className="h-5 w-5" />
-    }
-}
+// function getFileTypeIcon(extension: string) {
+//     switch (extension) {
+//         case 'DOCX':
+//         case 'GOOGLE_DOCS':
+//             return <FileText className="h-5 w-5" />
+//         case 'PPTX':
+//         case 'GOOGLE_SLIDES':
+//             return <ImageIcon className="h-5 w-5" />
+//         default:
+//             return <FileText className="h-5 w-5" />
+//     }
+// }
 
 export default async function TemplateDetailsPage({
     params,
