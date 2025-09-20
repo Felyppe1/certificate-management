@@ -23,17 +23,18 @@ export async function register() {
 
         await getPostgresListener()
 
-        registerOTel('certificate-management')
+        // TODO: It's either registerOtel or manual setup, not both
+        // registerOTel('certificate-management')
+
+        const resource = new Resource({
+            [ATTR_SERVICE_NAME]: 'certificate-management',
+        })
 
         // const exporter = new ConsoleLogRecordExporter()
 
         // Send to loki
         const exporter = new OTLPLogExporter({
             url: process.env.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
-        })
-
-        const resource = new Resource({
-            [ATTR_SERVICE_NAME]: 'certificate-management',
         })
 
         const loggerProvider = new LoggerProvider({
