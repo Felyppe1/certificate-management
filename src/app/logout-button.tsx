@@ -4,5 +4,11 @@ import { Button } from '@/components/ui/button'
 import { logoutAction } from '@/server-actions/logout-action'
 
 export function LogoutButton() {
-    return <Button onClick={logoutAction}>Sair</Button>
+    const handleLogout = async () => {
+        window.gtag('set', 'user_id', null)
+
+        await logoutAction()
+    }
+
+    return <Button onClick={handleLogout}>Sair</Button>
 }
