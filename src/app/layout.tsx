@@ -41,7 +41,7 @@ export default async function RootLayout({
 
                     ${data?.userId ? `gtag('set', 'user_id', '${data.userId}');` : ''}
 
-                    gtag('config', '${process.env.GA_ID}', { 'debug_mode': true });
+                    gtag('config', '${process.env.GA_ID}');
                 `}
             </Script>
 
