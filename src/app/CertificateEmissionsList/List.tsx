@@ -13,14 +13,16 @@ export async function List() {
     }
 
     return (
-        <ul>
-            {data.certificateEmissions.map((certificate: any) => (
-                <li key={certificate.id}>
-                    <Link href={`/certificados/${certificate.id}`}>
-                        {certificate.title}
-                    </Link>
-                </li>
-            ))}
-        </ul>
+        <>
+            <ul>
+                {data.certificateEmissions.map((certificate: any) => (
+                    <li key={certificate.id}>
+                        <Link href={`/certificados/${certificate.id}`}>
+                            {certificate.title}
+                        </Link>
+                    </li>
+                ))}
+            </ul>
+        </>
     )
 }

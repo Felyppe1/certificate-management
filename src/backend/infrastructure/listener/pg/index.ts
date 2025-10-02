@@ -14,10 +14,14 @@ export async function getPostgresListener() {
         port: Number(process.env.DB_PORT),
         database: process.env.DB_NAME,
         application_name: 'certificate-management-listener',
-        ssl: {
-            rejectUnauthorized: true,
-            ca: process.env.DB_CA?.replace(/\\n/g, '\n'),
-        },
+        ...(process.env.NODE_ENV === 'production'
+            ? {
+                  ssl: {
+                      rejectUnauthorized: true,
+                      ca: process.env.DB_CA?.replace(/\\n/g, '\n'),
+                  },
+              }
+            : {}),
     })
 
     await client.connect()

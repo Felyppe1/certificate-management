@@ -2,11 +2,8 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { GoogleOAuthProvider } from '@react-oauth/google'
-import Script from 'next/script'
 import { fetchUserBySessionToken } from '@/api-calls/fetch-user-by-session-token'
-import { GoogleAnalytics, sendGAEvent } from '@next/third-parties/google'
-import { send } from 'node:process'
-import { Analytics } from '@/components/Analytics'
+import { GoogleAnalytics } from './GoogleAnalytics'
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -32,28 +29,9 @@ export default async function RootLayout({
 
     return (
         <html lang="pt-BR">
-            {/* {process.env.NODE_ENV !== 'development' && process.env.GA_ID && (
-                <Analytics
-                    GA_ID={process.env.GA_ID}
-                    userEmail={data?.userId || null}
-                />
-            )} */}
-
-            <Script
-                src={`https://www.googletagmanager.com/gtag/js?id=${process.env.GA_ID}`}
-                strategy="afterInteractive"
-            />
-            <Script id="google-analytics" strategy="afterInteractive">
-                {`
-                    window.dataLayer = window.dataLayer || [];
-                    function gtag(){dataLayer.push(arguments);}
-                    gtag('js', new Date());
-
-                    ${data?.userId ? `gtag('set', 'user_id', '${data.userId}');` : ''}
-
-                    gtag('config', '${process.env.GA_ID}');
-                `}
-            </Script>
+            {process.env.NODE_ENV !== 'development' && process.env.GA_ID && (
+                <GoogleAnalytics userId={data?.userId} />
+            )}
 
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}

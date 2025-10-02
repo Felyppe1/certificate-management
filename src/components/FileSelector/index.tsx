@@ -53,7 +53,7 @@ export function FileSelector({ onSubmitUrl, isLoading }: FileSelectorProps) {
                     <Card
                         className={`cursor-pointer transition-colors hover:border-primary focus-within:ring-3 focus-within:ring-ring/50 focus-within:border-ring ${
                             selectedOption === 'upload'
-                                ? 'border-primary bg-primary/5'
+                                ? 'border-primary bg-primary/4'
                                 : ''
                         }`}
                         onClick={() => handleOptionSelect('upload')}
@@ -80,7 +80,7 @@ export function FileSelector({ onSubmitUrl, isLoading }: FileSelectorProps) {
                     <Card
                         className={`cursor-pointer transition-colors hover:border-primary focus-within:ring-3 focus-within:ring-ring/50 focus-within:border-ring ${
                             selectedOption === 'drive'
-                                ? 'border-primary bg-primary/5'
+                                ? 'border-primary bg-primary/4'
                                 : ''
                         }`}
                         onClick={() => handleOptionSelect('drive')}
@@ -107,7 +107,7 @@ export function FileSelector({ onSubmitUrl, isLoading }: FileSelectorProps) {
                     <Card
                         className={`cursor-pointer transition-colors hover:border-primary focus-within:ring-3 focus-within:ring-ring/50 focus-within:border-ring ${
                             selectedOption === 'link'
-                                ? 'border-primary bg-primary/5'
+                                ? 'border-primary bg-primary/4'
                                 : ''
                         }`}
                         onClick={() => handleOptionSelect('link')}

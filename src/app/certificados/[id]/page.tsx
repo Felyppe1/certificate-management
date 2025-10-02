@@ -29,7 +29,7 @@ export default async function CertificatePage({
     return (
         <div className="container mx-auto py-8 px-4 max-w-4xl">
             <GoBackButton />
-            <div className="mb-8">
+            <div className="my-8">
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">
                     {data.certificateEmission.name}
                 </h1>
@@ -38,7 +38,10 @@ export default async function CertificatePage({
                 </p>
             </div>
 
-            <TemplateSection certificateId={certificateId} />
+            <TemplateSection
+                certificateId={certificateId}
+                template={data.certificateEmission.template}
+            />
         </div>
     )
 }

@@ -1,51 +1,62 @@
-// 'use server'
+'use server'
 
-// import { DeleteTemplateUseCase } from '@/backend/application/delete-template-use-case'
-// import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-// import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
-// import { revalidateTag } from 'next/cache'
-// import { cookies } from 'next/headers'
-// import z from 'zod'
+import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
+import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { revalidateTag } from 'next/cache'
+import { cookies } from 'next/headers'
+import z from 'zod'
 
-// export async function deleteTemplateAction(_: unknown, formData: FormData) {
-//     const cookie = await cookies()
+export async function deleteTemplateAction(_: unknown, formData: FormData) {
+    const cookie = await cookies()
 
-//     const rawData = {
-//         certificateId: formData.get('certificateId') as string,
-//     }
+    const rawData = {
+        certificateId: formData.get('certificateId') as string,
+    }
 
-//     try {
-//         const sessionToken = cookie.get('session_token')!.value
+    try {
+        const sessionToken = cookie.get('session_token')!.value
 
-//         const parsedData = z
-//             .object({
-//                 certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
-//             })
-//             .parse(rawData)
+        const parsedData = z
+            .object({
+                certificateId: z
+                    .string()
+                    .min(1, 'ID do certificado é obrigatório'),
+            })
+            .parse(rawData)
 
-//         const sessionsRepository = new PrismaSessionsRepository()
-//         const certificateEmissionsRepository = new PrismaCertificatesRepository()
+        const sessionsRepository = new PrismaSessionsRepository()
+        const certificateEmissionsRepository =
+            new PrismaCertificatesRepository()
 
-//         const deleteTemplateUseCase = new DeleteTemplateUseCase(
-//             certificateEmissionsRepository,
-//             sessionsRepository,
-//         )
+        // Buscar o certificado para remover o template
+        const certificate = await certificateEmissionsRepository.getById(
+            parsedData.certificateId,
+        )
 
-//         await deleteTemplateUseCase.execute({
-//             certificateId: parsedData.certificateId,
-//             sessionToken,
-//         })
+        if (!certificate) {
+            throw new Error('Certificate not found')
+        }
 
-//         revalidateTag('certificate')
+        // Verificar se o usuário tem permissão
+        const session = await sessionsRepository.getById(sessionToken)
+        if (!session || certificate.getUserId() !== session.userId) {
+            throw new Error('Unauthorized')
+        }
 
-//         return { success: true }
-//     } catch (error) {
-//         // TODO: tratar erros
-//         console.error('Error deleting template:', error)
+        // Remover o template definindo como null
+        certificate.addTemplate(null as any) // TODO: implementar método removeTemplate no domain
 
-//         return {
-//             success: false,
-//             message: 'Ocorreu um erro ao deletar o template',
-//         }
-//     }
-// }
+        await certificateEmissionsRepository.update(certificate)
+
+        revalidateTag('certificate')
+
+        return { success: true }
+    } catch (error) {
+        console.error('Error deleting template:', error)
+
+        return {
+            success: false,
+            message: 'Ocorreu um erro ao deletar o template',
+        }
+    }
+}
