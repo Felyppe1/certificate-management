@@ -1,27 +1,29 @@
 import { INPUT_METHOD, Template } from '../domain/template'
-import { ValidationError } from '../domain/error/validation-error'
 import { SessionsRepository } from './interfaces/sessions-repository'
 import { GoogleDriveGateway } from './interfaces/google-drive-gateway'
 import { FileContentExtractorFactory } from './interfaces/file-content-extractor'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
 import { CertificatesRepository } from './interfaces/certificates-repository'
 import { NotFoundError } from '../domain/error/not-found-error'
+import { ExternalUserAccountsRepository } from './interfaces/external-user-account-repository'
 
-interface AddTemplateByUrlUseCaseInput {
+interface AddTemplateByDrivePickerUseCaseInput {
     certificateId: string
-    fileUrl: string
+    fileId: string
     sessionToken: string
 }
 
-export class AddTemplateByUrlUseCase {
+export class AddTemplateByDrivePickerUseCase {
     constructor(
         private certificateEmissionsRepository: CertificatesRepository,
         private sessionsRepository: SessionsRepository,
         private googleDriveGateway: GoogleDriveGateway,
         private fileContentExtractorFactory: FileContentExtractorFactory,
+        private externalUserAccountsRepository: ExternalUserAccountsRepository,
     ) {}
 
-    async execute(input: AddTemplateByUrlUseCaseInput) {
+    async execute(input: AddTemplateByDrivePickerUseCaseInput) {
+        console.log('Executing Picker')
         const session = await this.sessionsRepository.getById(
             input.sessionToken,
         )
@@ -38,20 +40,27 @@ export class AddTemplateByUrlUseCase {
             throw new NotFoundError('Certificate not found')
         }
 
-        const driveFileId = Template.getFileIdFromUrl(input.fileUrl)
+        const externalAccount =
+            await this.externalUserAccountsRepository.getById(
+                session.userId,
+                'GOOGLE',
+            )
 
-        if (!driveFileId) {
-            throw new ValidationError('Invalid file URL')
+        if (!externalAccount) {
+            throw new UnauthorizedError('Google account not linked')
         }
 
         const { name, fileExtension } =
             await this.googleDriveGateway.getFileMetadata({
-                fileId: driveFileId,
+                fileId: input.fileId,
+                userAccessToken: externalAccount.accessToken,
+                userRefreshToken: externalAccount.refreshToken || undefined,
             })
 
         const buffer = await this.googleDriveGateway.downloadFile({
-            driveFileId,
+            driveFileId: input.fileId,
             fileExtension: fileExtension,
+            accessToken: externalAccount.accessToken,
         })
 
         const contentExtractor =
@@ -62,7 +71,7 @@ export class AddTemplateByUrlUseCase {
         const uniqueVariables = Template.extractVariablesFromContent(content)
 
         const newTemplate = Template.create({
-            driveFileId,
+            driveFileId: input.fileId,
             storageFileUrl: null,
             inputMethod: INPUT_METHOD.URL,
             fileName: name,
@@ -72,6 +81,7 @@ export class AddTemplateByUrlUseCase {
 
         certificate.addTemplate(newTemplate)
 
+        console.log('New template added:', newTemplate)
         await this.certificateEmissionsRepository.update(certificate)
     }
 }

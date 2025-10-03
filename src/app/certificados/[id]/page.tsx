@@ -1,6 +1,7 @@
-import { cookies } from 'next/headers'
 import { GoBackButton } from '@/components/GoBackButton'
 import { TemplateSection } from './template-section'
+import { fetchMe } from '@/api-calls/fetch-me'
+import { fetchCertificateEmission } from '@/api-calls/fetch-certificate-emission'
 
 export default async function CertificatePage({
     params,
@@ -9,29 +10,22 @@ export default async function CertificatePage({
 }) {
     const { id: certificateId } = await params
 
-    const sessionToken = (await cookies()).get('session_token')!.value
+    // TODO: what to do when it throws an error
+    const certificateEmissionResponse =
+        await fetchCertificateEmission(certificateId)
 
-    const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/certificate-emissions/${certificateId}`,
-        {
-            headers: {
-                Cookie: `session_token=${sessionToken}`,
-            },
-            next: {
-                tags: ['certificate'],
-            },
-        },
+    const meResponse = await fetchMe()
+
+    const googleAccount = meResponse.user.externalAccounts.find(
+        externalAccount => externalAccount.provider === 'GOOGLE',
     )
-
-    const data = await response.json()
-    // TODO: what to do when it does not exist
 
     return (
         <div className="container mx-auto py-8 px-4 max-w-4xl">
             <GoBackButton />
             <div className="my-8">
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                    {data.certificateEmission.name}
+                    {certificateEmissionResponse.certificateEmission.name}
                 </h1>
                 <p className="text-gray-600">
                     Configure o template e os dados para gerar certificados
@@ -39,8 +33,11 @@ export default async function CertificatePage({
             </div>
 
             <TemplateSection
+                googleOAuthToken={googleAccount?.accessToken || null}
                 certificateId={certificateId}
-                template={data.certificateEmission.template}
+                template={
+                    certificateEmissionResponse.certificateEmission.template
+                }
             />
         </div>
     )

@@ -54,7 +54,9 @@ export class RefreshTemplateByUrlUseCase {
 
         // TODO: should it be a domain service?
         const { name, fileExtension } =
-            await this.googleDriveGateway.getFileMetadata(driveFileId)
+            await this.googleDriveGateway.getFileMetadata({
+                fileId: driveFileId,
+            })
 
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,

@@ -1,22 +1,34 @@
 import {
     DownloadFileInput,
+    GetFileMetadataInput,
     GoogleDriveGateway,
 } from '@/backend/application/interfaces/google-drive-gateway'
 import { ValidationError } from '@/backend/domain/error/validation-error'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { google } from 'googleapis'
 
-const auth = new google.auth.GoogleAuth({
+const oauth2Client = new google.auth.OAuth2()
+
+const googleAuth = new google.auth.GoogleAuth({
     keyFile: 'application-sa.json',
     scopes: ['https://www.googleapis.com/auth/drive.readonly'],
 })
 
-const drive = google.drive({ version: 'v3', auth })
-
 export class HttpGoogleDriveGateway implements GoogleDriveGateway {
-    async getFileMetadata(fileId: string) {
+    async getFileMetadata(input: GetFileMetadataInput) {
+        oauth2Client.setCredentials({
+            access_token: input.userAccessToken,
+            refresh_token: input.userRefreshToken,
+        })
+
+        const drive = google.drive({
+            version: 'v3',
+            auth: input.userAccessToken ? oauth2Client : googleAuth,
+        })
+
         const file = await drive.files.get({
-            fileId: fileId,
+            supportsAllDrives: true,
+            fileId: input.fileId,
             fields: 'id, name, mimeType, size, webViewLink, webContentLink, thumbnailLink',
         })
 
@@ -50,14 +62,23 @@ export class HttpGoogleDriveGateway implements GoogleDriveGateway {
         }
     }
 
-    async downloadFile({ driveFileId, fileExtension }: DownloadFileInput) {
+    async downloadFile({
+        driveFileId,
+        fileExtension,
+        accessToken,
+    }: DownloadFileInput) {
         const url =
             fileExtension === TEMPLATE_FILE_EXTENSION.DOCX ||
             fileExtension === TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS
                 ? `https://docs.google.com/document/d/${driveFileId}/export?format=docx`
                 : `https://docs.google.com/presentation/d/${driveFileId}/export?format=pptx`
 
-        const res = await fetch(url)
+        const headers: Record<string, string> = {}
+        if (accessToken) {
+            headers['Authorization'] = `Bearer ${accessToken}`
+        }
+
+        const res = await fetch(url, { headers })
 
         if (!res.ok) {
             throw new Error('Error downloading file from Google Drive')

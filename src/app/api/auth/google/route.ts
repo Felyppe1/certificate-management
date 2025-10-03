@@ -15,6 +15,7 @@ export async function GET() {
             'email',
             'profile',
             'https://www.googleapis.com/auth/drive.file',
+            'https://www.googleapis.com/auth/drive.readonly',
         ].join(' '),
     }
 

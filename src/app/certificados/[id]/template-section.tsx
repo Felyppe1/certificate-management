@@ -11,6 +11,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
+import { addTemplateByDrivePickerAction } from '@/server-actions/add-template-by-drive-picker-action'
 
 interface TemplateSectionProps {
     certificateId: string
@@ -23,19 +24,38 @@ interface TemplateSectionProps {
         fileExtension: string
         variables: string[]
     }
+    googleOAuthToken: string | null
 }
 
 export function TemplateSection({
     certificateId,
     template,
+    googleOAuthToken,
 }: TemplateSectionProps) {
-    const [, action, isLoading] = useActionState(addTemplateByUrlAction, null)
+    const [, urlAction, urlIsLoading] = useActionState(
+        addTemplateByUrlAction,
+        null,
+    )
+    const [, drivePickerAction, drivePickerIsLoading] = useActionState(
+        addTemplateByDrivePickerAction,
+        null,
+    )
 
     const handleSubmitUrl = async (formData: FormData) => {
         formData.append('certificateId', certificateId)
 
         startTransition(() => {
-            action(formData)
+            urlAction(formData)
+        })
+    }
+
+    const handleSubmitDrive = async (fileId: string) => {
+        const formData = new FormData()
+        formData.append('fileId', fileId)
+        formData.append('certificateId', certificateId)
+
+        startTransition(() => {
+            drivePickerAction(formData)
         })
     }
 
@@ -43,6 +63,7 @@ export function TemplateSection({
         return (
             <div className="space-y-8">
                 <TemplateDisplay
+                    googleOAuthToken={googleOAuthToken}
                     template={template}
                     certificateId={certificateId}
                 />
@@ -64,8 +85,10 @@ export function TemplateSection({
                 </CardHeader>
                 <CardContent>
                     <FileSelector
+                        googleOAuthToken={googleOAuthToken}
                         onSubmitUrl={handleSubmitUrl}
-                        isLoading={isLoading}
+                        onSubmitDrive={handleSubmitDrive}
+                        isLoading={urlIsLoading || drivePickerIsLoading}
                     />
                 </CardContent>
             </Card>

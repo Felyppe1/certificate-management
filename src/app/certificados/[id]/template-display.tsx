@@ -10,11 +10,12 @@ import {
     CardTitle,
 } from '@/components/ui/card'
 import { RefreshCw, Edit3, Trash2, User } from 'lucide-react'
-import { useState, startTransition, useActionState } from 'react'
+import { useState, startTransition, useActionState, useEffect } from 'react'
 import { FileSelector } from '@/components/FileSelector'
 import { addTemplateByUrlAction } from '@/server-actions/add-template-by-url-action'
 import { refreshTemplateByUrlAction } from '@/server-actions/refresh-template-by-url-action'
 import { deleteTemplateAction } from '@/server-actions/delete-template-action'
+import { addTemplateByDrivePickerAction } from '@/server-actions/add-template-by-drive-picker-action'
 
 interface TemplateDisplayProps {
     template: {
@@ -27,6 +28,7 @@ interface TemplateDisplayProps {
         variables: string[]
     }
     certificateId: string
+    googleOAuthToken: string | null
 }
 
 function getFileExtensionColor(extension: string) {
@@ -60,13 +62,14 @@ function getInputMethodLabel(method: string) {
 export function TemplateDisplay({
     template,
     certificateId,
+    googleOAuthToken,
 }: TemplateDisplayProps) {
     const [isEditing, setIsEditing] = useState(false)
     const [, refreshAction, isRefreshing] = useActionState(
         refreshTemplateByUrlAction,
         null,
     )
-    const [, addAction, isAddingNew] = useActionState(
+    const [urlState, addAction, isAddingNew] = useActionState(
         addTemplateByUrlAction,
         null,
     )
@@ -74,6 +77,8 @@ export function TemplateDisplay({
         deleteTemplateAction,
         null,
     )
+    const [drivePickerState, drivePickerAction, drivePickerIsLoading] =
+        useActionState(addTemplateByDrivePickerAction, null)
 
     const handleRefresh = () => {
         const formData = new FormData()
@@ -107,9 +112,39 @@ export function TemplateDisplay({
         startTransition(() => {
             addAction(formData)
         })
-
-        setIsEditing(false)
     }
+
+    const handleSubmitDrive = async (fileId: string) => {
+        const formData = new FormData()
+        formData.append('fileId', fileId)
+        formData.append('certificateId', certificateId)
+
+        startTransition(() => {
+            drivePickerAction(formData)
+        })
+    }
+
+    useEffect(() => {
+        if (!urlState) return
+
+        if (urlState.success) {
+            // TODO: show success message
+            setIsEditing(false)
+        }
+
+        // TODO: show error message
+    }, [urlState])
+
+    useEffect(() => {
+        if (!drivePickerState) return
+
+        if (drivePickerState.success) {
+            // TODO: show success message
+            setIsEditing(false)
+        }
+
+        // TODO: show error message
+    }, [drivePickerState])
 
     if (isEditing) {
         return (
@@ -129,14 +164,26 @@ export function TemplateDisplay({
                             <Button
                                 variant="outline"
                                 onClick={handleCancelEdit}
-                                disabled={isAddingNew}
+                                disabled={
+                                    isRefreshing ||
+                                    isAddingNew ||
+                                    isDeleting ||
+                                    drivePickerIsLoading
+                                }
                             >
                                 Cancelar
                             </Button>
                         </div>
                         <FileSelector
+                            googleOAuthToken={googleOAuthToken}
+                            onSubmitDrive={handleSubmitDrive}
                             onSubmitUrl={handleSubmitNewTemplate}
-                            isLoading={isAddingNew}
+                            isLoading={
+                                isRefreshing ||
+                                isAddingNew ||
+                                isDeleting ||
+                                drivePickerIsLoading
+                            }
                         />
                     </CardContent>
                 </Card>

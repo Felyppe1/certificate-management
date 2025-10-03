@@ -5,7 +5,7 @@ import { logoutAction } from '@/server-actions/logout-action'
 
 export function LogoutButton() {
     const handleLogout = async () => {
-        window.gtag('set', 'user_id', null)
+        window.gtag?.('set', 'user_id', null)
 
         await logoutAction()
     }
