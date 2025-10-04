@@ -3,6 +3,7 @@
 import { AddTemplateByDrivePickerUseCase } from '@/backend/application/add-template-by-drive-picker-use-case'
 import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
+import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { HttpGoogleDriveGateway } from '@/backend/infrastructure/gateway/http-google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
@@ -46,6 +47,7 @@ export async function addTemplateByDrivePickerAction(
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const externalUserAccountsRepository =
             new PrismaExternalUserAccountsRepository()
+        const googleAuthGateway = new GoogleAuthGateway()
 
         const addTemplateByDrivePickerUseCase =
             new AddTemplateByDrivePickerUseCase(
@@ -54,6 +56,7 @@ export async function addTemplateByDrivePickerAction(
                 googleDriveGateway,
                 fileContentExtractorFactory,
                 externalUserAccountsRepository,
+                googleAuthGateway,
             )
 
         await addTemplateByDrivePickerUseCase.execute({

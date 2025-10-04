@@ -1,6 +1,7 @@
 'use server'
 
 import { AddTemplateByUrlUseCase } from '@/backend/application/add-template-by-url-use-case'
+import { FileUrlNotFoundError } from '@/backend/domain/error/file-url-not-found-error'
 import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { HttpGoogleDriveGateway } from '@/backend/infrastructure/gateway/http-google-drive-gateway'
@@ -53,6 +54,8 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
             sessionToken,
         })
     } catch (error: any) {
+        console.log(error)
+
         globalThis.logger?.emit({
             severityText: 'ERROR',
             body: 'Error adding template by URL',
@@ -65,7 +68,10 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
 
         return {
             success: false,
-            message: 'Erro ao adicionar template',
+            message:
+                error instanceof FileUrlNotFoundError
+                    ? 'Arquivo não encontrado'
+                    : 'Ocorreu um erro ao adicionar template',
         }
         // if (error instanceof ZodError) {
 

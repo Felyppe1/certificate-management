@@ -3,6 +3,7 @@ import {
     GetFileMetadataInput,
     GoogleDriveGateway,
 } from '@/backend/application/interfaces/google-drive-gateway'
+import { FileUrlNotFoundError } from '@/backend/domain/error/file-url-not-found-error'
 import { ValidationError } from '@/backend/domain/error/validation-error'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { google } from 'googleapis'
@@ -26,39 +27,46 @@ export class HttpGoogleDriveGateway implements GoogleDriveGateway {
             auth: input.userAccessToken ? oauth2Client : googleAuth,
         })
 
-        const file = await drive.files.get({
-            supportsAllDrives: true,
-            fileId: input.fileId,
-            fields: 'id, name, mimeType, size, webViewLink, webContentLink, thumbnailLink',
-        })
+        try {
+            const file = await drive.files.get({
+                supportsAllDrives: true,
+                fileId: input.fileId,
+                fields: 'id, name, mimeType, size, webViewLink, webContentLink, thumbnailLink',
+            })
 
-        let fileExtension: TEMPLATE_FILE_EXTENSION
+            let fileExtension: TEMPLATE_FILE_EXTENSION
 
-        if (
-            file.data.mimeType ===
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation'
-        ) {
-            fileExtension = TEMPLATE_FILE_EXTENSION.PPTX
-        } else if (
-            file.data.mimeType === 'application/vnd.google-apps.presentation'
-        ) {
-            fileExtension = TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES
-        } else if (
-            file.data.mimeType === 'application/vnd.google-apps.document'
-        ) {
-            fileExtension = TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS
-        } else if (
-            file.data.mimeType ===
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        ) {
-            fileExtension = TEMPLATE_FILE_EXTENSION.DOCX
-        } else {
-            throw new ValidationError('Unsupported file type')
-        }
+            if (
+                file.data.mimeType ===
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+            ) {
+                fileExtension = TEMPLATE_FILE_EXTENSION.PPTX
+            } else if (
+                file.data.mimeType ===
+                'application/vnd.google-apps.presentation'
+            ) {
+                fileExtension = TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES
+            } else if (
+                file.data.mimeType === 'application/vnd.google-apps.document'
+            ) {
+                fileExtension = TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS
+            } else if (
+                file.data.mimeType ===
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ) {
+                fileExtension = TEMPLATE_FILE_EXTENSION.DOCX
+            } else {
+                throw new ValidationError('Unsupported file type')
+            }
 
-        return {
-            name: file.data.name!,
-            fileExtension,
+            return {
+                name: file.data.name!,
+                fileExtension,
+            }
+        } catch (error: any) {
+            console.log(error)
+
+            throw new FileUrlNotFoundError('File not found')
         }
     }
 

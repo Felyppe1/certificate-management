@@ -146,6 +146,10 @@ export function TemplateDisplay({
         // TODO: show error message
     }, [drivePickerState])
 
+    if (urlState) {
+        console.log(urlState.message)
+    }
+
     if (isEditing) {
         return (
             <div className="space-y-6">

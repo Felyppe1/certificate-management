@@ -1,4 +1,3 @@
-import { OAuth2Client } from 'google-auth-library'
 import {
     ExternalUserAccount,
     ExternalUserAccountsRepository,
@@ -6,6 +5,8 @@ import {
 import { SessionsRepository } from './interfaces/sessions-repository'
 import { User, UsersRepository } from './interfaces/users-repository'
 import crypto from 'crypto'
+import { UnauthorizedError } from '../domain/error/unauthorized-error'
+import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 
 interface LoginGoogleUseCaseInput {
     code: string
@@ -19,48 +20,37 @@ export class LoginGoogleUseCase {
             'save' | 'update' | 'getById'
         >,
         private sessionsRepository: Pick<SessionsRepository, 'save'>,
+        private googleAuthGateway: Pick<
+            IGoogleAuthGateway,
+            'getToken' | 'getUserInfo'
+        >,
     ) {}
 
     async execute({ code }: LoginGoogleUseCaseInput) {
-        const oAuth2Client = new OAuth2Client({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            redirectUri:
-                process.env.NEXT_PUBLIC_BASE_URL + '/api/auth/google/callback',
-        })
+        const tokenData = await this.googleAuthGateway.getToken({ code })
 
-        const { tokens } = await oAuth2Client.getToken(code)
+        const hasAllScopes = [
+            'https://www.googleapis.com/auth/drive.file',
+            'https://www.googleapis.com/auth/drive.readonly',
+        ].every(scope => tokenData.scopes.includes(scope))
 
-        console.log('Tokens received:', tokens)
-
-        if (
-            !tokens.scope?.includes(
-                'https://www.googleapis.com/auth/drive.file',
-            )
-        ) {
-            throw new Error('Unauthorized')
+        if (!hasAllScopes) {
+            throw new UnauthorizedError('Insufficient Google OAuth scopes')
         }
 
-        const ticket = await oAuth2Client.verifyIdToken({
-            idToken: tokens.id_token!,
-            audience: process.env.GOOGLE_CLIENT_ID,
+        const userInfo = await this.googleAuthGateway.getUserInfo({
+            idToken: tokenData.idToken,
         })
 
-        const payload = ticket.getPayload()
-
-        console.log('Payload:', payload)
-
-        const email = payload!.email!
-
-        const userExists = await this.usersRepository.getByEmail(email)
+        const userExists = await this.usersRepository.getByEmail(userInfo.email)
 
         let newUser: User
 
         if (!userExists) {
             newUser = {
                 id: crypto.randomUUID(),
-                email: email,
-                name: payload!.name!,
+                email: userInfo.email,
+                name: userInfo.name,
                 passwordHash: null,
             }
 
@@ -76,20 +66,20 @@ export class LoginGoogleUseCase {
             const newExternalAccount: ExternalUserAccount = {
                 userId: user.id,
                 provider: 'GOOGLE',
-                providerUserId: payload!.sub!,
-                accessToken: tokens.access_token!,
-                refreshToken: tokens.refresh_token ?? null,
-                // TODO: calculate expiry date times
-                accessTokenExpiryDateTime: null,
+                providerUserId: userInfo.providerUserId,
+                accessToken: tokenData.accessToken,
+                refreshToken: tokenData.refreshToken,
+                accessTokenExpiryDateTime: tokenData.accessTokenExpiryDateTime,
                 refreshTokenExpiryDateTime: null,
             }
 
             await this.externalUserAccountsRepository.save(newExternalAccount)
         } else {
-            externalAccount.accessToken = tokens.access_token!
+            externalAccount.accessToken = tokenData.accessToken
             externalAccount.refreshToken =
-                tokens.refresh_token ?? externalAccount.refreshToken
-            externalAccount.accessTokenExpiryDateTime = null
+                tokenData.refreshToken ?? externalAccount.refreshToken
+            externalAccount.accessTokenExpiryDateTime =
+                tokenData.accessTokenExpiryDateTime
             externalAccount.refreshTokenExpiryDateTime = null
 
             await this.externalUserAccountsRepository.update(externalAccount)

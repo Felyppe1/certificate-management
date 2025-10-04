@@ -32,7 +32,7 @@ export function TemplateSection({
     template,
     googleOAuthToken,
 }: TemplateSectionProps) {
-    const [, urlAction, urlIsLoading] = useActionState(
+    const [urlState, urlAction, urlIsLoading] = useActionState(
         addTemplateByUrlAction,
         null,
     )
@@ -57,6 +57,15 @@ export function TemplateSection({
         startTransition(() => {
             drivePickerAction(formData)
         })
+    }
+
+    if (urlState) {
+        console.log(urlState.message)
+        // if (urlState?.success) {
+
+        // } else {
+
+        // }
     }
 
     if (template) {

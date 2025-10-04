@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { LoginGoogleUseCase } from '@/backend/application/login-google-use-case'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
@@ -20,11 +21,13 @@ export async function GET(request: Request) {
     const externalUserAccountsRepository =
         new PrismaExternalUserAccountsRepository()
     const sessionsRepository = new PrismaSessionsRepository()
+    const googleAuthGateway = new GoogleAuthGateway()
 
     const loginGoogleUseCase = new LoginGoogleUseCase(
         usersRepository,
         externalUserAccountsRepository,
         sessionsRepository,
+        googleAuthGateway,
     )
 
     try {

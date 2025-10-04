@@ -6,6 +6,7 @@ import { UnauthorizedError } from '../domain/error/unauthorized-error'
 import { CertificatesRepository } from './interfaces/certificates-repository'
 import { NotFoundError } from '../domain/error/not-found-error'
 import { ExternalUserAccountsRepository } from './interfaces/external-user-account-repository'
+import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 
 interface AddTemplateByDrivePickerUseCaseInput {
     certificateId: string
@@ -20,6 +21,10 @@ export class AddTemplateByDrivePickerUseCase {
         private googleDriveGateway: GoogleDriveGateway,
         private fileContentExtractorFactory: FileContentExtractorFactory,
         private externalUserAccountsRepository: ExternalUserAccountsRepository,
+        private googleAuthGateway: Pick<
+            IGoogleAuthGateway,
+            'checkOrRefreshAccessToken'
+        >,
     ) {}
 
     async execute(input: AddTemplateByDrivePickerUseCaseInput) {
@@ -48,6 +53,21 @@ export class AddTemplateByDrivePickerUseCase {
 
         if (!externalAccount) {
             throw new UnauthorizedError('Google account not linked')
+        }
+
+        const newData = await this.googleAuthGateway.checkOrRefreshAccessToken({
+            accessToken: externalAccount.accessToken,
+            refreshToken: externalAccount.refreshToken!,
+            accessTokenExpiryDateTime:
+                externalAccount.accessTokenExpiryDateTime!,
+        })
+
+        if (newData) {
+            externalAccount.accessToken = newData.newAccessToken
+            externalAccount.accessTokenExpiryDateTime =
+                newData.newAccessTokenExpiryDateTime
+
+            await this.externalUserAccountsRepository.update(externalAccount)
         }
 
         const { name, fileExtension } =
