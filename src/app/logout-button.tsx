@@ -10,5 +10,9 @@ export function LogoutButton() {
         await logoutAction()
     }
 
-    return <Button onClick={handleLogout}>Sair</Button>
+    return (
+        <Button variant="outline" onClick={handleLogout}>
+            Sair
+        </Button>
+    )
 }

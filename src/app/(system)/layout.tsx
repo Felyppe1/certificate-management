@@ -1,3 +1,5 @@
+import { Header } from './_components/Header'
+
 interface SystemLayoutProps {
     children: React.ReactNode
 }
@@ -5,7 +7,14 @@ interface SystemLayoutProps {
 export default function Layout({ children }: SystemLayoutProps) {
     return (
         <>
-            <div className="min-h-screen bg-background">{children}</div>
+            <Header />
+
+            <div className="min-h-screen bg-background pt-30 px-10 pb-20 relative z-10">
+                {children}
+
+                <div className="fixed top-40 right-20 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none -z-1 animate-float"></div>
+                <div className="fixed bottom-40 left-20 w-80 h-80 bg-purple-600/20 rounded-full blur-3xl pointer-events-none -z-1 animate-float-delayed"></div>
+            </div>
         </>
     )
 }
