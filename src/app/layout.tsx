@@ -4,6 +4,7 @@ import './globals.css'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { fetchUserBySessionToken } from '@/api-calls/fetch-user-by-session-token'
 import { GoogleAnalytics } from './GoogleAnalytics'
+import { ThemeProvider } from '@/components/ThemeProvider'
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -28,7 +29,7 @@ export default async function RootLayout({
     const data = await fetchUserBySessionToken()
 
     return (
-        <html lang="pt-BR">
+        <html lang="pt-BR" suppressHydrationWarning>
             {process.env.NODE_ENV !== 'development' && process.env.GA_ID && (
                 <GoogleAnalytics userId={data?.userId} />
             )}
@@ -37,7 +38,14 @@ export default async function RootLayout({
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}
             >
                 <GoogleOAuthProvider clientId={process.env.GOOGLE_CLIENT_ID!}>
-                    {children}
+                    <ThemeProvider
+                        attribute="class"
+                        defaultTheme="system"
+                        enableSystem
+                        disableTransitionOnChange
+                    >
+                        {children}
+                    </ThemeProvider>
                 </GoogleOAuthProvider>
             </body>
         </html>
