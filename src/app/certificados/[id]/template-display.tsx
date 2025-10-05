@@ -12,24 +12,8 @@ import {
 import { RefreshCw, Edit3, Trash2, User } from 'lucide-react'
 import { useState, startTransition, useActionState, useEffect } from 'react'
 import { FileSelector } from '@/components/FileSelector'
-import { addTemplateByUrlAction } from '@/server-actions/add-template-by-url-action'
 import { refreshTemplateByUrlAction } from '@/server-actions/refresh-template-by-url-action'
 import { deleteTemplateAction } from '@/server-actions/delete-template-action'
-import { addTemplateByDrivePickerAction } from '@/server-actions/add-template-by-drive-picker-action'
-
-interface TemplateDisplayProps {
-    template: {
-        id: string
-        driveFileId: string | null
-        storageFileUrl: string | null
-        inputMethod: string
-        fileName: string
-        fileExtension: string
-        variables: string[]
-    }
-    certificateId: string
-    googleOAuthToken: string | null
-}
 
 function getFileExtensionColor(extension: string) {
     switch (extension) {
@@ -59,26 +43,51 @@ function getInputMethodLabel(method: string) {
     }
 }
 
+interface TemplateDisplayProps {
+    template: {
+        id: string
+        driveFileId: string | null
+        storageFileUrl: string | null
+        inputMethod: string
+        fileName: string
+        fileExtension: string
+        variables: string[]
+    }
+    certificateId: string
+    googleOAuthToken: string | null
+    onSubmitDrive: (fileId: string) => void
+    onSubmitUrl: (formData: FormData) => void
+    isAnySubmitionLoading: boolean
+    drivePickerState: {
+        success: boolean
+        message: string
+    } | null
+    urlState: {
+        success: boolean
+        message: string
+    } | null
+}
+
 export function TemplateDisplay({
     template,
     certificateId,
     googleOAuthToken,
+    onSubmitDrive,
+    onSubmitUrl,
+    isAnySubmitionLoading,
+    drivePickerState,
+    urlState,
 }: TemplateDisplayProps) {
     const [isEditing, setIsEditing] = useState(false)
     const [, refreshAction, isRefreshing] = useActionState(
         refreshTemplateByUrlAction,
         null,
     )
-    const [urlState, addAction, isAddingNew] = useActionState(
-        addTemplateByUrlAction,
-        null,
-    )
+
     const [, deleteAction, isDeleting] = useActionState(
         deleteTemplateAction,
         null,
     )
-    const [drivePickerState, drivePickerAction, drivePickerIsLoading] =
-        useActionState(addTemplateByDrivePickerAction, null)
 
     const handleRefresh = () => {
         const formData = new FormData()
@@ -106,24 +115,6 @@ export function TemplateDisplay({
         })
     }
 
-    const handleSubmitNewTemplate = async (formData: FormData) => {
-        formData.append('certificateId', certificateId)
-
-        startTransition(() => {
-            addAction(formData)
-        })
-    }
-
-    const handleSubmitDrive = async (fileId: string) => {
-        const formData = new FormData()
-        formData.append('fileId', fileId)
-        formData.append('certificateId', certificateId)
-
-        startTransition(() => {
-            drivePickerAction(formData)
-        })
-    }
-
     useEffect(() => {
         if (!urlState) return
 
@@ -146,10 +137,6 @@ export function TemplateDisplay({
         // TODO: show error message
     }, [drivePickerState])
 
-    if (urlState) {
-        console.log(urlState.message)
-    }
-
     if (isEditing) {
         return (
             <div className="space-y-6">
@@ -170,9 +157,8 @@ export function TemplateDisplay({
                                 onClick={handleCancelEdit}
                                 disabled={
                                     isRefreshing ||
-                                    isAddingNew ||
                                     isDeleting ||
-                                    drivePickerIsLoading
+                                    isAnySubmitionLoading
                                 }
                             >
                                 Cancelar
@@ -180,13 +166,12 @@ export function TemplateDisplay({
                         </div>
                         <FileSelector
                             googleOAuthToken={googleOAuthToken}
-                            onSubmitDrive={handleSubmitDrive}
-                            onSubmitUrl={handleSubmitNewTemplate}
+                            onSubmitDrive={onSubmitDrive}
+                            onSubmitUrl={onSubmitUrl}
                             isLoading={
                                 isRefreshing ||
-                                isAddingNew ||
                                 isDeleting ||
-                                drivePickerIsLoading
+                                isAnySubmitionLoading
                             }
                         />
                     </CardContent>

@@ -36,10 +36,8 @@ export function TemplateSection({
         addTemplateByUrlAction,
         null,
     )
-    const [, drivePickerAction, drivePickerIsLoading] = useActionState(
-        addTemplateByDrivePickerAction,
-        null,
-    )
+    const [driverPickerState, drivePickerAction, drivePickerIsLoading] =
+        useActionState(addTemplateByDrivePickerAction, null)
 
     const handleSubmitUrl = async (formData: FormData) => {
         formData.append('certificateId', certificateId)
@@ -59,15 +57,7 @@ export function TemplateSection({
         })
     }
 
-    if (urlState) {
-        console.log(urlState.message)
-        // if (urlState?.success) {
-
-        // } else {
-
-        // }
-    }
-
+    // TODO: manter a lógica do templatedisplay nesse componente
     if (template) {
         return (
             <div className="space-y-8">
@@ -75,6 +65,11 @@ export function TemplateSection({
                     googleOAuthToken={googleOAuthToken}
                     template={template}
                     certificateId={certificateId}
+                    isAnySubmitionLoading={urlIsLoading || drivePickerIsLoading}
+                    drivePickerState={driverPickerState}
+                    urlState={urlState}
+                    onSubmitDrive={handleSubmitDrive}
+                    onSubmitUrl={handleSubmitUrl}
                 />
             </div>
         )
