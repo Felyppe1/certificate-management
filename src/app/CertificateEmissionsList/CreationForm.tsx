@@ -16,7 +16,7 @@ export function CreationForm() {
     return (
         <Popover>
             <PopoverTrigger asChild>
-                <Button>Criar</Button>
+                <Button size="lg">Criar</Button>
             </PopoverTrigger>
             <PopoverContent>
                 <form action={action}>

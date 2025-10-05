@@ -34,6 +34,8 @@ export class HttpGoogleDriveGateway implements GoogleDriveGateway {
                 fields: 'id, name, mimeType, size, webViewLink, webContentLink, thumbnailLink',
             })
 
+            console.log(file)
+
             let fileExtension: TEMPLATE_FILE_EXTENSION
 
             if (

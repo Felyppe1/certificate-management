@@ -4,9 +4,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
     Card,
+    CardHeader,
     CardContent,
     CardDescription,
-    CardHeader,
     CardTitle,
 } from '@/components/ui/card'
 import { RefreshCw, Edit3, Trash2, User } from 'lucide-react'
