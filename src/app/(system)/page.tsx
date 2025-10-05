@@ -1,5 +1,5 @@
 import { Award, Mail, TrendingUp, Search, ChevronRight } from 'lucide-react'
-import { Header } from './Header'
+import { Header } from './_components/Header'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -7,7 +7,7 @@ import {
     InputGroupAddon,
     InputGroupInput,
 } from '@/components/ui/input-group'
-import { CreationForm } from '../CertificateEmissionsList/CreationForm'
+import { CreationForm } from './_components/CertificateEmissionsList/CreationForm'
 
 export default function Home() {
     console.log('Rendering Home Page')

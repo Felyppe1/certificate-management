@@ -12,8 +12,8 @@ import {
 import { RefreshCw, Edit3, Trash2, User } from 'lucide-react'
 import { useState, startTransition, useActionState, useEffect } from 'react'
 import { FileSelector } from '@/components/FileSelector'
-import { refreshTemplateByUrlAction } from '@/server-actions/refresh-template-by-url-action'
-import { deleteTemplateAction } from '@/server-actions/delete-template-action'
+import { refreshTemplateByUrlAction } from '@/backend/infrastructure/server-actions/refresh-template-by-url-action'
+import { deleteTemplateAction } from '@/backend/infrastructure/server-actions/delete-template-action'
 
 function getFileExtensionColor(extension: string) {
     switch (extension) {

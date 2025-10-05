@@ -7,7 +7,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
-import { createCertificateEmissionAction } from '@/server-actions/create-certificate-emission-action'
+import { createCertificateEmissionAction } from '@/backend/infrastructure/server-actions/create-certificate-emission-action'
 import { useActionState } from 'react'
 
 export function CreationForm() {

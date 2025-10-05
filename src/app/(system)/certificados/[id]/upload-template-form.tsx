@@ -1,6 +1,6 @@
 'use client'
 
-import { uploadTemplateAction } from '@/server-actions/upload-template-action'
+import { uploadTemplateAction } from '@/backend/infrastructure/server-actions/upload-template-action'
 import { useActionState, useRef } from 'react'
 
 export default function UploadTemplateForm() {

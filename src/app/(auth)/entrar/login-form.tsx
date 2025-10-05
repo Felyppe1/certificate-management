@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useActionState } from 'react'
-import { loginAction } from '../../server-actions/login-action'
+import { loginAction } from '../../../backend/infrastructure/server-actions/login-action'
 
 export function LoginForm() {
     const [state, action, isPending] = useActionState(loginAction, null)

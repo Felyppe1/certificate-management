@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { loginAction } from '@/server-actions/login-raw-action'
+import { loginAction } from '@/backend/infrastructure/server-actions/login-raw-action'
 import { useForms } from '@/custom-hooks/use-forms'
 
 export function LoginFormCustom() {

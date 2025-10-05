@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { addTemplateByUrlAction } from '@/server-actions/add-template-by-url-action'
+import { addTemplateByUrlAction } from '@/backend/infrastructure/server-actions/add-template-by-url-action'
 
 export default function CreateTemplatePage() {
     const router = useRouter()

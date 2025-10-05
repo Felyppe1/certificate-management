@@ -1,7 +1,7 @@
 'use client'
 
 import { FileSelector } from '@/components/FileSelector'
-import { addTemplateByUrlAction } from '@/server-actions/add-template-by-url-action'
+import { addTemplateByUrlAction } from '@/backend/infrastructure/server-actions/add-template-by-url-action'
 import { startTransition, useActionState } from 'react'
 import { TemplateDisplay } from './template-display'
 import {
@@ -11,7 +11,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
-import { addTemplateByDrivePickerAction } from '@/server-actions/add-template-by-drive-picker-action'
+import { addTemplateByDrivePickerAction } from '@/backend/infrastructure/server-actions/add-template-by-drive-picker-action'
 
 interface TemplateSectionProps {
     certificateId: string

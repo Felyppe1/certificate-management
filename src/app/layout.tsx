@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { fetchUserBySessionToken } from '@/api-calls/fetch-user-by-session-token'
-import { GoogleAnalytics } from './GoogleAnalytics'
+import { GoogleAnalytics } from './_components/GoogleAnalytics'
 import { ThemeProvider } from '@/components/ThemeProvider'
 
 const geistSans = Geist({
