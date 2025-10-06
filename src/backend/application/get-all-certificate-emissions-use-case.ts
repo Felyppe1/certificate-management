@@ -23,6 +23,12 @@ export class GetAllCertificateEmissionsUseCase {
             },
         })
 
-        return certificateEmissions
+        return certificateEmissions.map(certificate => ({
+            id: certificate.id,
+            name: certificate.title,
+            userId: certificate.user_id,
+            status: certificate.status,
+            createdAt: certificate.created_at,
+        }))
     }
 }

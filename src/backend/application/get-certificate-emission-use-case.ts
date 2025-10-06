@@ -1,3 +1,4 @@
+import { CERTIFICATE_STATUS } from '../domain/certificate'
 import { ForbiddenError } from '../domain/error/forbidden-error'
 import { NotFoundError } from '../domain/error/not-found-error'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
@@ -51,6 +52,8 @@ export class GetCertificateEmissionUseCase {
             id: certificateEmission.id,
             name: certificateEmission.title,
             userId: certificateEmission.user_id,
+            status: certificateEmission.status as CERTIFICATE_STATUS,
+            createdAt: certificateEmission.created_at,
             template: certificateEmission.Template
                 ? {
                       id: certificateEmission.Template.id,

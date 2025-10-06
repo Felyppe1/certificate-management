@@ -3,6 +3,12 @@ import { Badge } from '@/components/ui/badge'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 
+const statusMapping = {
+    DRAFT: 'Rascunho',
+    EMITTED: 'Emitido',
+    SCHEDULED: 'Agendado',
+}
+
 export async function List() {
     const data = await fetchCertificateEmissions()
 
@@ -34,7 +40,7 @@ export async function List() {
 
                                     <div className="flex-1">
                                         <h3 className="text-foreground font-semibold text-lg mb-1">
-                                            {certificate.title}
+                                            {certificate.name}
                                         </h3>
                                         {/* <p className="text-muted-foreground text-sm">
                                             {certificate.participants ? (
@@ -47,8 +53,7 @@ export async function List() {
                                             )}
                                         </p> */}
                                         <p className="text-muted-foreground text-sm">
-                                            {/* Criado em {certificate.date} */}
-                                            Criado em 12/10/2023
+                                            Criado em {certificate.createdAt}
                                         </p>
                                     </div>
                                 </div>
@@ -56,17 +61,19 @@ export async function List() {
                                 <div className="flex items-center gap-4">
                                     <Badge
                                         variant={
-                                            certificate.status === 'Concluído'
+                                            certificate.status === 'EMITTED'
                                                 ? 'green'
-                                                : certificate.status ===
-                                                    'Rascunho'
+                                                : certificate.status === 'DRAFT'
                                                   ? 'orange'
-                                                  : 'green' // Aqui é purple para Agendado
+                                                  : 'purple'
                                         }
                                         size="md"
                                     >
-                                        {/* {certificate.status} */}
-                                        Emitido
+                                        {
+                                            statusMapping[
+                                                certificate.status as keyof typeof statusMapping
+                                            ]
+                                        }
                                     </Badge>
 
                                     <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all duration-150" />

@@ -1,5 +1,5 @@
 import { CertificatesRepository } from '@/backend/application/interfaces/certificates-repository'
-import { Certificate } from '@/backend/domain/certificate'
+import { Certificate, CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 import { prisma } from '.'
 import {
     INPUT_METHOD,
@@ -9,7 +9,7 @@ import {
 
 export class PrismaCertificatesRepository implements CertificatesRepository {
     async save(certificate: Certificate) {
-        const { id, name, userId, template, domainEvents } =
+        const { id, name, status, createdAt, userId, template, domainEvents } =
             certificate.serialize()
 
         await prisma.$transaction([
@@ -18,6 +18,8 @@ export class PrismaCertificatesRepository implements CertificatesRepository {
                     id,
                     title: name,
                     user_id: userId,
+                    status,
+                    created_at: createdAt,
                     ...(template && {
                         Template: {
                             create: {
@@ -172,6 +174,8 @@ export class PrismaCertificatesRepository implements CertificatesRepository {
             name: certificate.title,
             userId: certificate.user_id,
             template: template,
+            status: certificate.status as CERTIFICATE_STATUS,
+            createdAt: certificate.created_at,
         })
     }
 }

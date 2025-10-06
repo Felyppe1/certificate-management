@@ -9,10 +9,13 @@ import {
 } from '@/components/ui/popover'
 import { createCertificateEmissionAction } from '@/backend/infrastructure/server-actions/create-certificate-emission-action'
 import { useActionState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Loader2 } from 'lucide-react'
 
 export function CreationForm() {
-    const [, action] = useActionState(createCertificateEmissionAction, null)
+    const [, action, isLoading] = useActionState(
+        createCertificateEmissionAction,
+        null,
+    )
 
     return (
         <Popover>
@@ -38,10 +41,22 @@ export function CreationForm() {
                             placeholder="Ex: Seminário sobre Cybersecurity"
                             required
                             className="w-full mt-3"
+                            disabled={isLoading}
                         />
                     </div>
-                    <Button type="submit" className="w-full">
-                        Criar Emissão
+                    <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <>
+                                <Loader2 className="size-5 animate-spin" />
+                                Criando...
+                            </>
+                        ) : (
+                            'Criar Emissão'
+                        )}
                     </Button>
                 </form>
             </PopoverContent>

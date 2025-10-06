@@ -4,20 +4,48 @@ import { AggregateRoot } from './primitives/aggregate-root'
 import { CertificateCreatedDomainEvent } from './events/certificate-created-domain-event'
 import { Template } from './template'
 
+export enum CERTIFICATE_STATUS {
+    DRAFT = 'DRAFT',
+    PUBLISHED = 'EMITTED',
+    SCHEDULED = 'SCHEDULED',
+}
+
 interface CertificateInput {
     id: string
     name: string
     template: Template | null
+    status: CERTIFICATE_STATUS
     userId: string
+    createdAt: Date
 }
 
-interface CreateCertificateInput extends Omit<CertificateInput, 'id'> {}
+interface CreateCertificateInput
+    extends Omit<CertificateInput, 'id' | 'status' | 'createdAt'> {}
 
 export class Certificate extends AggregateRoot {
     private id: string
     private name: string
     private template: Template | null
+    private status: CERTIFICATE_STATUS
     private userId: string
+    private createdAt: Date
+
+    static create(data: CreateCertificateInput): Certificate {
+        const certificate = new Certificate({
+            id: createId(),
+            ...data,
+            status: CERTIFICATE_STATUS.DRAFT,
+            createdAt: new Date(),
+        })
+
+        const domainEvent = new CertificateCreatedDomainEvent(
+            certificate.getId(),
+        )
+
+        certificate.addDomainEvent(domainEvent)
+
+        return certificate
+    }
 
     constructor(data: CertificateInput) {
         super()
@@ -34,25 +62,20 @@ export class Certificate extends AggregateRoot {
             throw new ValidationError('Certificate user ID is required')
         }
 
+        if (!data.status) {
+            throw new ValidationError('Certificate status is required')
+        }
+
+        if (!data.createdAt) {
+            throw new ValidationError('Certificate creation date is required')
+        }
+
         this.id = data.id
         this.name = data.name
         this.template = data.template ?? null
         this.userId = data.userId
-    }
-
-    static create(data: CreateCertificateInput): Certificate {
-        const certificate = new Certificate({
-            id: createId(),
-            ...data,
-        })
-
-        const domainEvent = new CertificateCreatedDomainEvent(
-            certificate.getId(),
-        )
-
-        certificate.addDomainEvent(domainEvent)
-
-        return certificate
+        this.status = data.status
+        this.createdAt = data.createdAt
     }
 
     getId() {
@@ -75,7 +98,9 @@ export class Certificate extends AggregateRoot {
         return {
             id: this.id,
             name: this.name,
-            template: this.template?.serialize(),
+            template: this.template?.serialize() ?? null,
+            status: this.status,
+            createdAt: this.createdAt,
             userId: this.userId,
             domainEvents: this.getDomainEvents(),
         }
