@@ -87,7 +87,7 @@
   --foreground: oklch(96.8% 0.007 247.896); /* stale-100 */
   --card: oklch(20.8% 0.042 265.755); /* stale-900 */
   --card-foreground: oklch(70.4% 0.04 256.788); /* stale-400 */
-  --popover: oklch(0.21 0.034 264.665);
+  --popover: oklch(20.8% 0.042 265.755); /* stale-900 */
   --popover-foreground: oklch(0.985 0.002 247.839);
   --primary: oklch(54.6% 0.245 262.881); /* blue-600 */
   --primary-foreground: oklch(98.4% 0.003 247.858); /* stale-50 */

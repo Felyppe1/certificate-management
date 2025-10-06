@@ -1,6 +1,5 @@
 import { fetchCertificateEmissions } from '@/api-calls/fetch-certificate-emissions'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 

@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/popover'
 import { createCertificateEmissionAction } from '@/backend/infrastructure/server-actions/create-certificate-emission-action'
 import { useActionState } from 'react'
+import { Plus } from 'lucide-react'
 
 export function CreationForm() {
     const [, action] = useActionState(createCertificateEmissionAction, null)
@@ -16,12 +17,32 @@ export function CreationForm() {
     return (
         <Popover>
             <PopoverTrigger asChild>
-                <Button size="lg">Criar</Button>
+                <Button size="lg">
+                    <Plus className="size-6" />
+                    Criar
+                </Button>
             </PopoverTrigger>
-            <PopoverContent>
-                <form action={action}>
-                    <label>Nome da emissão</label>
-                    <Input type="text" name="name" placeholder="Nome" />
+            <PopoverContent className="w-90" side="left">
+                <form action={action} className="space-y-5">
+                    <div className="space-y-4">
+                        <label
+                            htmlFor="emission-name"
+                            className="font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 mb-2"
+                        >
+                            Nome da emissão
+                        </label>
+                        <Input
+                            id="emission-name"
+                            type="text"
+                            name="name"
+                            placeholder="Ex: Seminário sobre Cybersecurity"
+                            required
+                            className="w-full mt-3"
+                        />
+                    </div>
+                    <Button type="submit" className="w-full">
+                        Criar Emissão
+                    </Button>
                 </form>
             </PopoverContent>
         </Popover>

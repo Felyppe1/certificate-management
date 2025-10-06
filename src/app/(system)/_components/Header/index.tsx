@@ -6,7 +6,7 @@ import { LogoutButton } from '@/app/logout-button'
 export function Header() {
     return (
         <header className="fixed top-0 w-full z-50 bg-card/80 backdrop-blur-md border-b border-input/30 shadow-lg shadow-black/20">
-            <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <nav className="max-w-7xl mx-auto px-10 py-4 flex items-center justify-between">
                 <Link
                     href="/"
                     className="flex items-center gap-2 p-1 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md"
