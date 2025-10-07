@@ -1,7 +1,7 @@
 import { Menu } from 'lucide-react'
 import { ThemeToggle } from './ThemeToggle'
+import { UserDropdown } from './UserDropdown'
 import Link from 'next/link'
-import { LogoutButton } from '@/app/logout-button'
 
 export function Header() {
     return (
@@ -32,17 +32,10 @@ export function Header() {
                     </Link>
                 </div>
 
-                <div className="flex items-center gap-10">
+                <div className="flex items-center gap-4">
                     <ThemeToggle />
-                    <button className="hidden md:flex items-center gap-3 px-2 p-1 cursor-pointer">
-                        <span className="text-card-foreground">João Silva</span>
-                        <div className="w-10 h-10 bg-yellow-800 rounded-full flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">
-                                JS
-                            </span>
-                        </div>
-                    </button>
-                    <LogoutButton />
+                    <UserDropdown />
+
                     <button className="md:hidden text-slate-300">
                         <Menu className="w-6 h-6" />
                     </button>

@@ -84,7 +84,7 @@
   --card: oklch(0.2 0 264);
   --card-foreground: oklch(0.985 0.002 247.839);
   --popover: oklch(0.28 0 0);
-  --popover-foreground: oklch(0.985 0.002 247.839);
+  --popover-foreground: oklch(87% 0 0);
   --primary: oklch(0.49 0.2 253.62);
   --primary-foreground: oklch(0.985 0.002 247.839);
   --secondary: oklch(0.278 0.033 256.848);
@@ -135,7 +135,7 @@
     box-shadow: var(--shadow-l);
   }
   
-  @keyframes float {
+  /* @keyframes float {
     0% {
       transform: translate(0, 0) scale(1) rotate(0deg);
     }
@@ -180,5 +180,5 @@
 
   .animate-float-delayed {
     animation: float-delayed 22s ease-in-out infinite;
-  }
+  } */
 }
