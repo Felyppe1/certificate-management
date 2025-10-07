@@ -9,26 +9,11 @@ import {
     CardDescription,
     CardTitle,
 } from '@/components/ui/card'
-import { RefreshCw, Edit3, Trash2, User } from 'lucide-react'
+import { RefreshCw, Edit3, Trash2 } from 'lucide-react'
 import { useState, startTransition, useActionState, useEffect } from 'react'
 import { FileSelector } from '@/components/FileSelector'
 import { refreshTemplateByUrlAction } from '@/backend/infrastructure/server-actions/refresh-template-by-url-action'
 import { deleteTemplateAction } from '@/backend/infrastructure/server-actions/delete-template-action'
-
-function getFileExtensionColor(extension: string) {
-    switch (extension) {
-        case 'DOCX':
-            return 'bg-blue-100 text-blue-800'
-        case 'GOOGLE_DOCS':
-            return 'bg-blue-100 text-blue-800'
-        case 'PPTX':
-            return 'bg-orange-100 text-orange-800'
-        case 'GOOGLE_SLIDES':
-            return 'bg-orange-100 text-orange-800'
-        default:
-            return 'bg-gray-100 text-gray-800'
-    }
-}
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -180,143 +165,275 @@ export function TemplateDisplay({
         )
     }
 
+    const handleViewFile = () => {
+        if (template.inputMethod === 'UPLOAD' && template.storageFileUrl) {
+            window.open(template.storageFileUrl, '_blank')
+        } else if (template.driveFileId) {
+            const driveUrl = `https://drive.google.com/file/d/${template.driveFileId}/view`
+            window.open(driveUrl, '_blank')
+        }
+    }
+
+    const getPreviewGradient = () => {
+        if (
+            template.fileExtension === 'DOCX' ||
+            template.fileExtension === 'GOOGLE_DOCS'
+        ) {
+            return 'from-blue-500 to-blue-600'
+        } else {
+            return 'from-orange-500 to-orange-600'
+        }
+    }
+
+    const getPreviewIcon = () => {
+        if (
+            template.fileExtension === 'DOCX' ||
+            template.fileExtension === 'GOOGLE_DOCS'
+        ) {
+            return (
+                <svg
+                    className="w-16 h-16 text-white drop-shadow-lg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                >
+                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M10,19H8V16H10V19M10,15H8V12H10V15M10,11H8V8H10V11M16,19H12V18H16V19M16,17H12V16H16V17M16,15H12V14H16V15M16,13H12V12H16V13M16,11H12V10H16V11Z" />
+                </svg>
+            )
+        } else {
+            return (
+                <svg
+                    className="w-16 h-16 text-white drop-shadow-lg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                >
+                    <path d="M13,9H18.5L13,3.5V9M6,2H14L20,8V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V4C4,2.89 4.89,2 6,2M6,20H15L18,20V12L14,16L12,14L6,20M8,9A2,2 0 0,0 6,11A2,2 0 0,0 8,13A2,2 0 0,0 10,11A2,2 0 0,0 8,9Z" />
+                </svg>
+            )
+        }
+    }
+
     return (
-        <div className="space-y-6">
-            {/* Template do Certificado */}
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            {/* <FileText className="h-5 w-5" /> */}
-                            <CardTitle>Template do Certificado</CardTitle>
+        <div className="space-y-4">
+            {/* Template Card Compacto */}
+            <Card className="">
+                {/* Header com gradiente */}
+                {/* <div className={`bg-gradient-to-r ${getPreviewGradient()} px-6 py-4`}>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                                    {getPreviewIcon()}
+                                </div>
+                                <div className="text-white">
+                                    <h3 className="font-semibold text-lg leading-tight mb-1">
+                                        Template Ativo
+                                    </h3>
+                                    <p className="text-sm opacity-90">
+                                        {template.variables.length} {template.variables.length === 1 ? 'variável identificada' : 'variáveis identificadas'}
+                                    </p>
+                                </div>
+                            </div>
+                            <Badge
+                                variant="secondary"
+                                className="bg-white/90 text-gray-900 hover:bg-white border-0"
+                            >
+                                {template.fileExtension === 'GOOGLE_DOCS'
+                                    ? 'Google Docs'
+                                    : template.fileExtension === 'GOOGLE_SLIDES'
+                                      ? 'Google Slides'
+                                      : template.fileExtension}
+                            </Badge>
                         </div>
-                        <div className="flex items-center gap-2">
-                            {template.inputMethod === 'URL' && (
+                    </div> */}
+
+                {/* Content */}
+                <CardContent className="flex flex-row p-0 gap-10">
+                    <div className="w-[35rem] h-[15rem] bg-muted"></div>
+
+                    <div className="flex flex-col w-full">
+                        <div className="flex flex-wrap gap-2 self-end">
+                            {template.inputMethod !== 'UPLOAD' && (
                                 <Button
                                     variant="outline"
-                                    size="sm"
                                     onClick={handleRefresh}
                                     disabled={isRefreshing}
                                 >
                                     <RefreshCw
-                                        className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                                        className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`}
                                     />
                                     {isRefreshing
                                         ? 'Atualizando...'
                                         : 'Atualizar'}
                                 </Button>
                             )}
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleEdit}
-                            >
-                                <Edit3 className="h-4 w-4" />
+                            <Button variant="outline" onClick={handleEdit}>
+                                <Edit3 className="h-4 w-4 mr-2" />
                                 Editar
                             </Button>
                             <Button
                                 variant="outline"
-                                size="sm"
                                 onClick={handleRemoveTemplate}
                                 disabled={isDeleting}
-                                className="text-destructive hover:text-destructive"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4 mr-2" />
                                 {isDeleting ? 'Removendo...' : 'Remover'}
                             </Button>
                         </div>
-                    </div>
-                    <CardDescription>
-                        Template selecionado para gerar os certificados
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    {/* Informações do Template */}
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                            <h3 className="font-medium text-green-800">
-                                Template Ativo
-                            </h3>
-                            <div className="flex gap-2">
-                                <Badge
-                                    variant="secondary"
-                                    className={getFileExtensionColor(
-                                        template.fileExtension,
-                                    )}
-                                >
-                                    {template.fileExtension === 'GOOGLE_DOCS'
-                                        ? 'Google Docs'
-                                        : template.fileExtension ===
-                                            'GOOGLE_SLIDES'
-                                          ? 'Google Slides'
-                                          : template.fileExtension}
-                                </Badge>
-                                <Badge variant="outline">
-                                    {getInputMethodLabel(template.inputMethod)}
-                                </Badge>
+
+                        <div className="flex flex-col gap-4 mt-1">
+                            {/* File Info */}
+                            <div className="flex items-start gap-3">
+                                <div className="flex-shrink-0 mt-0.5">
+                                    <svg
+                                        className="w-5 h-5 text-muted-foreground"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                    >
+                                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                                        <polyline points="13 2 13 9 20 9" />
+                                    </svg>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-muted-foreground mb-1">
+                                        Nome do arquivo
+                                    </p>
+                                    <p className="font-medium truncate">
+                                        {template.fileName}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
 
-                        <p className="text-sm text-gray-600 mb-2">
-                            <strong>Nome do arquivo:</strong>{' '}
-                            {template.fileName}
-                        </p>
-                    </div>
+                            {/* Source */}
+                            <div className="flex items-start gap-3">
+                                <div className="flex-shrink-0 mt-0.5">
+                                    <svg
+                                        className="w-5 h-5 text-muted-foreground"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                    >
+                                        <circle cx="12" cy="12" r="10" />
+                                        <path d="M12 16v-4M12 8h.01" />
+                                    </svg>
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-muted-foreground mb-1">
+                                        Fonte
+                                    </p>
+                                    <div className="flex items-center gap-4">
+                                        <p className="font-medium">
+                                            {getInputMethodLabel(
+                                                template.inputMethod,
+                                            )}
+                                        </p>
+                                        {template.inputMethod === 'UPLOAD' ? (
+                                            <Button
+                                                variant="default"
+                                                onClick={handleViewFile}
+                                                className="flex-1 min-w-[120px]"
+                                            >
+                                                <svg
+                                                    className="h-4 w-4 mr-2"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                >
+                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                                                </svg>
+                                                Baixar
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                variant="default"
+                                                size="sm"
+                                                onClick={handleViewFile}
+                                                className=""
+                                            >
+                                                <svg
+                                                    className="h-4 w-4 mr-2"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                >
+                                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
+                                                </svg>
+                                                Abrir no Drive
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
 
-                    {/* Variáveis do Template */}
-                    <div>
-                        <div className="flex items-center gap-2 mb-3">
-                            {/* <User className="h-5 w-5" /> */}
-                            <h3 className="font-medium text-gray-900">
-                                Variáveis do Template
-                            </h3>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-4">
-                            Variáveis identificadas no template que serão
-                            substituídas na geração dos certificados
-                        </p>
-
-                        {template.variables.length > 0 ? (
-                            <div className="space-y-4">
-                                <div className="flex flex-wrap gap-2">
+                            <div className="flex items-start gap-3">
+                                <div className="flex-shrink-0 mt-0.5">
+                                    <svg
+                                        className="w-5 h-5 text-muted-foreground"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                    >
+                                        <circle cx="12" cy="12" r="10" />
+                                        <path d="M12 16v-4M12 8h.01" />
+                                    </svg>
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-muted-foreground mb-1">
+                                        Variáveis do Template
+                                    </p>
                                     {template.variables.map(
                                         (variable, index) => (
                                             <Badge
                                                 key={index}
-                                                variant="outline"
-                                                className="font-mono"
+                                                variant="secondary"
+                                                className="font-mono mr-2"
                                             >
-                                                {`{{${variable}}}`}
+                                                {`{{ ${variable} }}`}
                                             </Badge>
                                         ),
                                     )}
                                 </div>
-                                <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-                                    <p className="font-medium text-blue-900 mb-1">
-                                        Como usar:
-                                    </p>
-                                    <p>
-                                        Essas variáveis serão substituídas pelos
-                                        dados reais durante a geração dos
-                                        certificados. Por exemplo,{' '}
-                                        <code className="bg-blue-100 px-1 rounded">{`{{nome}}`}</code>{' '}
-                                        será substituído pelo nome da pessoa.
-                                    </p>
-                                </div>
                             </div>
-                        ) : (
-                            <div className="text-center py-6 text-gray-500">
-                                <User className="h-8 w-8 mx-auto mb-2 opacity-20" />
-                                <p>Nenhuma variável encontrada no template</p>
-                                <p className="text-sm mt-1">
-                                    Variáveis devem estar no formato{' '}
-                                    <code className="bg-gray-100 px-1 rounded">{`{{variavel}}`}</code>
-                                </p>
-                            </div>
-                        )}
+                        </div>
                     </div>
                 </CardContent>
             </Card>
+
+            {/* Info box - mais discreto */}
+            {template.variables.length > 0 && (
+                <div className="bg-muted/50 backdrop-blur-sm border rounded-lg p-4">
+                    <div className="flex gap-3">
+                        <div className="flex-shrink-0 text-blue-600 dark:text-blue-400">
+                            <svg
+                                className="w-5 h-5"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                            >
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 16v-4M12 8h.01" />
+                            </svg>
+                        </div>
+                        <div className="text-sm space-y-1">
+                            <p className="font-medium">
+                                Como funcionam as variáveis
+                            </p>
+                            <p className="text-muted-foreground">
+                                As variáveis no formato{' '}
+                                <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{`{{variavel}}`}</code>{' '}
+                                serão substituídas automaticamente pelos dados
+                                reais durante a geração dos certificados.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
