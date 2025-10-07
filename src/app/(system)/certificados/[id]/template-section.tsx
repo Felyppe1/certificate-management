@@ -78,23 +78,22 @@ export function TemplateSection({
     return (
         <div className="space-y-8">
             <Card>
-                <CardHeader>
-                    <div className="flex items-center gap-2">
-                        {/* <FileText className="h-5 w-5" /> */}
-                        <CardTitle>Template do Certificado</CardTitle>
-                    </div>
+                {/* <CardHeader> */}
+                <div>
+                    <CardTitle>Template do Certificado</CardTitle>
                     <CardDescription>
                         Selecione um template para gerar os certificados
                     </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <FileSelector
-                        googleOAuthToken={googleOAuthToken}
-                        onSubmitUrl={handleSubmitUrl}
-                        onSubmitDrive={handleSubmitDrive}
-                        isLoading={urlIsLoading || drivePickerIsLoading}
-                    />
-                </CardContent>
+                </div>
+                {/* </CardHeader> */}
+                {/* <CardContent> */}
+                <FileSelector
+                    googleOAuthToken={googleOAuthToken}
+                    onSubmitUrl={handleSubmitUrl}
+                    onSubmitDrive={handleSubmitDrive}
+                    isLoading={urlIsLoading || drivePickerIsLoading}
+                />
+                {/* </CardContent> */}
             </Card>
         </div>
     )

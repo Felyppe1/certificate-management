@@ -1,13 +1,14 @@
 import { Suspense } from 'react'
 import { List } from './List'
 import { CreationForm } from './CreationForm'
-import { Card } from '@/components/ui/card'
+import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import {
     InputGroup,
     InputGroupAddon,
     InputGroupInput,
 } from '@/components/ui/input-group'
 import { Search } from 'lucide-react'
+import { CertificateEmissionsLoading } from '@/components/Loading/CertificateEmissionsLoading'
 
 export function CertificateEmissionsList() {
     return (
@@ -15,12 +16,10 @@ export function CertificateEmissionsList() {
             <div className="pb-8 border-b">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-2xl font-semibold text-foreground mb-2">
-                            Minhas Emissões de Certificados
-                        </h2>
-                        <p className="font-light">
+                        <CardTitle>Minhas Emissões de Certificados</CardTitle>
+                        {/* <CardDescription>
                             Todos os certificados criados por você
-                        </p>
+                        </CardDescription> */}
                     </div>
 
                     <div className="flex items-center gap-4">
@@ -35,7 +34,7 @@ export function CertificateEmissionsList() {
                     </div>
                 </div>
             </div>
-            <Suspense fallback={<p>Carregando emissões de certificados...</p>}>
+            <Suspense fallback={<CertificateEmissionsLoading />}>
                 <List />
             </Suspense>
         </Card>

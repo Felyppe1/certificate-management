@@ -4,7 +4,6 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --shadow-primary-glow: 0px 0px 20px -8px var(--primary);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -24,7 +23,6 @@
   --color-chart-1: var(--chart-1);
   --color-ring: var(--ring);
   --color-input: var(--input);
-  --color-input-border: var(--input-border);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
   --color-accent-foreground: var(--accent-foreground);
@@ -46,31 +44,6 @@
 }
 
 :root {
-    /* bg-colors */
-  --bg-primary: oklch(0.55 0.15 264);
-  --bg-dark: oklch(0.92 0 264);
-  --bg: oklch(0.96 0 264);
-  --bg-light: oklch(1 0 264);
-  
-  /* text-colors */
-  --text: oklch(0.15 0 264);
-  --text-muted: oklch(0.4 0 264);
-  
-  /* shadows */
-  --shadow-s:
-    inset 0 1px 2px oklch(1 0 264 / 50%), /* top highlight */
-    0 1px 2px oklch(0 0 264 / 30%), /* dark shadow */
-    0 2px 4px oklch(0 0 264 / 15); /* soft shadow */
-  --shadow-m:
-    inset 0 1px 2px oklch(1 0 264 / 50%), /* top highlight */
-    0 2px 4px oklch(0 0 264 / 30%), /* dark shadow */
-    0 4px 8px oklch(0 0 264 / 15); /* soft shadow */
-  --shadow-l:
-    inset 0 1px 2px oklch(1 0 264 / 70%), /* top highlight */
-    0 4px 6px oklch(0 0 264 / 30%), /* dark shadow */
-    0 6px 10px oklch(0 0 264 / 15); /* soft shadow */
-
-  --shadow-primary-glow: 0px 0px 20px -8px var(--primary);
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.13 0.028 261.692);
@@ -89,7 +62,6 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.928 0.006 264.531);
   --input: oklch(0.928 0.006 264.531);
-  --input-border: oklch(0.928 0.006 264.531);
   --ring: oklch(0.707 0.022 261.325);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -107,49 +79,24 @@
 }
 
 .dark {
-    /* bg-colors */
-  --bg-primary: oklch(0.9 0.17 100);
-  --bg-dark: oklch(0.1 0 264);
-  --bg: oklch(0.2 0 264);
-  --bg-light: oklch(0.3 0 264);
-  
-  /* text-colors */
-  --text: oklch(0.96 0 264);
-  --text-muted: oklch(0.76 0 264);
-  
-  /* shadows */
-  --shadow-s:
-    inset 0 1px 2px oklch(1 0 264 / 30%), /* top highlight */
-    0 1px 2px oklch(0 0 264 / 30%), /* dark shadow */
-    0 2px 4px oklch(0 0 264 / 15); /* soft shadow */
-  --shadow-m:
-    inset 0 1px 2px oklch(1 0 264 / 50%), /* top highlight */
-    0 2px 4px oklch(0 0 264 / 30%), /* dark shadow */
-    0 4px 8px oklch(0 0 264 / 15); /* soft shadow */
-  --shadow-l:
-    inset 0 1px 2px oklch(1 0 264 / 70%), /* top highlight */
-    0 4px 6px oklch(0 0 264 / 30%), /* dark shadow */
-    0 6px 10px oklch(0 0 264 / 15); /* soft shadow */
-
-  --background: oklch(0.1 0 264); /*  */
-  --foreground: oklch(96.7% 0.001 286.375); /*  */
-  --card: oklch(0.2 0 264); /*  */
-  --card-foreground: oklch(87.1% 0.006 286.286); /*  */
-  --popover: oklch(0.3 0 264); /*  */
+  --background: oklch(0.1 0 264);
+  --foreground: oklch(0.985 0.002 247.839);
+  --card: oklch(0.2 0 264);
+  --card-foreground: oklch(0.985 0.002 247.839);
+  --popover: oklch(0.28 0 0);
   --popover-foreground: oklch(0.985 0.002 247.839);
-  --primary: oklch(54.6% 0.245 262.881); /* blue-600 */
-  --primary-foreground: oklch(98.4% 0.003 247.858); /* stale-50 */
+  --primary: oklch(0.49 0.2 253.62);
+  --primary-foreground: oklch(0.985 0.002 247.839);
   --secondary: oklch(0.278 0.033 256.848);
   --secondary-foreground: oklch(0.985 0.002 247.839);
-  --muted: oklch(0.3 0 264); /*  */
-  --muted-foreground: oklch(87.1% 0.006 286.286); /* stale-500 */
-  --accent: oklch(0.3 0 264); /*  */
+  --muted: oklch(0.28 0 0);
+  --muted-foreground: oklch(0.707 0.022 261.325);
+  --accent: oklch(0.36 0 0);
   --accent-foreground: oklch(0.985 0.002 247.839);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(27.4% 0.006 286.033); /*  */
-  --input: oklch(0.3 0 264);
-  --input-border: oklch(37.2% 0.044 257.287); /* stale-700 */
-  --ring: oklch(92.9% 0.013 255.508);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 10%);
+  --ring: oklch(0.75 0.03 265.04);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -173,6 +120,7 @@
     @apply bg-background text-foreground;
   }
 }
+
 
 @layer utilities {
   .shadow-s {

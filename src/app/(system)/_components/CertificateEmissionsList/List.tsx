@@ -14,9 +14,35 @@ export async function List() {
 
     if (data.certificateEmissions.length === 0) {
         return (
-            <p className="text-gray-600">
-                Nenhuma emissão de certificado criada
-            </p>
+            <div className="flex flex-col items-center justify-center py-16 px-6">
+                {/* <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-6">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="40"
+                        height="40"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-muted-foreground"
+                    >
+                        <rect width="18" height="18" x="3" y="3" rx="2" />
+                        <path d="M7 7h.01" />
+                        <path d="M17 7h.01" />
+                        <path d="M7 17h.01" />
+                        <path d="M17 17h.01" />
+                    </svg>
+                </div> */}
+                <h3 className="text-xl font-semibold text-foreground mb-2">
+                    Nenhuma emissão de certificado criada
+                </h3>
+                <p className="text-muted-foreground text-center max-w-md">
+                    Comece criando sua primeira emissão de certificado clicando
+                    no botão acima
+                </p>
+            </div>
         )
     }
 

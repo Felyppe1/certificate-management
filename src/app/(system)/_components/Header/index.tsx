@@ -20,13 +20,13 @@ export function Header() {
                 <div className="hidden md:flex items-center gap-8">
                     <Link
                         href="#"
-                        className="text-card-foreground hover:text-foreground transition-colors px-2 py-1 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md"
+                        className="text-foreground/70 hover:text-foreground transition-colors px-2 py-1 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md"
                     >
                         Dashboard
                     </Link>
                     <Link
                         href="#"
-                        className="text-card-foreground hover:text-foreground transition-colors px-2 py-1 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md"
+                        className="text-foreground/70 hover:text-foreground transition-colors px-2 py-1 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md"
                     >
                         Templates
                     </Link>

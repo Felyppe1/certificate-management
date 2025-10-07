@@ -126,85 +126,83 @@ export function FileSelector({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     {/* Upload Local */}
                     <Card
-                        className={`cursor-pointer transition-colors hover:border-primary focus-within:ring-3 focus-within:ring-ring/50 focus-within:border-ring ${
+                        className={`cursor-pointer hover:border-primary focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center ${
                             selectedOption === 'upload'
-                                ? 'border-primary bg-primary/4'
+                                ? 'border-primary bg-primary/5'
                                 : ''
                         }`}
                         onClick={() => handleOptionSelect('upload')}
                     >
-                        <CardContent className="text-center">
-                            <div className="flex justify-center items-center gap-3 mb-4">
-                                <RadioGroupItem
-                                    disabled={isLoading}
-                                    value="upload"
-                                    className="sr-only"
-                                />
-                                <Upload
-                                    className={`w-12 h-12 ${selectedOption === 'upload' ? 'text-primary' : 'text-muted-foreground'}`}
-                                />
-                            </div>
-                            <CardTitle className="mb-2">Upload Local</CardTitle>
-                            <CardDescription>
-                                Envie um arquivo do seu computador
-                            </CardDescription>
-                        </CardContent>
+                        <div className="flex justify-center items-center gap-3 mb-4">
+                            <RadioGroupItem
+                                disabled={isLoading}
+                                value="upload"
+                                className="sr-only"
+                            />
+                            <Upload
+                                className={`w-12 h-12 ${selectedOption === 'upload' ? 'text-primary' : 'text-muted-foreground'}`}
+                            />
+                        </div>
+                        <h3 className="text-lg font-semibold mb-2">
+                            Upload Local
+                        </h3>
+                        <p className="text-muted-foreground">
+                            Envie um arquivo do seu computador
+                        </p>
                     </Card>
 
                     {/* Google Drive */}
                     <Card
-                        className={`cursor-pointer transition-colors hover:border-primary focus-within:ring-3 focus-within:ring-ring/50 focus-within:border-ring ${
+                        className={`cursor-pointer hover:border-primary focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center ${
                             selectedOption === 'drive'
-                                ? 'border-primary bg-primary/4'
+                                ? 'border-primary bg-primary/5'
                                 : ''
                         }`}
                         onClick={() => handleOptionSelect('drive')}
                     >
-                        <CardContent className="text-center">
-                            <div className="flex justify-center items-center gap-3 mb-4">
-                                <RadioGroupItem
-                                    disabled={isLoading}
-                                    value="drive"
-                                    className="sr-only"
-                                />
-                                <FileText
-                                    className={`w-12 h-12 ${selectedOption === 'drive' ? 'text-primary' : 'text-muted-foreground'}`}
-                                />
-                            </div>
-                            <CardTitle className="mb-2">Google Drive</CardTitle>
-                            <CardDescription>
-                                Selecione um arquivo do seu Google Drive
-                            </CardDescription>
-                        </CardContent>
+                        <div className="flex justify-center items-center gap-3 mb-4">
+                            <RadioGroupItem
+                                disabled={isLoading}
+                                value="drive"
+                                className="sr-only"
+                            />
+                            <FileText
+                                className={`w-12 h-12 ${selectedOption === 'drive' ? 'text-primary' : 'text-muted-foreground'}`}
+                            />
+                        </div>
+                        <h3 className="text-lg font-semibold mb-2">
+                            Google Drive
+                        </h3>
+                        <p className="text-muted-foreground">
+                            Selecione um arquivo do seu Google Drive
+                        </p>
                     </Card>
 
                     {/* Link de compartilhamento */}
                     <Card
-                        className={`cursor-pointer transition-colors hover:border-primary focus-within:ring-3 focus-within:ring-ring/50 focus-within:border-ring ${
+                        className={`cursor-pointer hover:border-primary focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center ${
                             selectedOption === 'link'
-                                ? 'border-primary bg-primary/4'
+                                ? 'border-primary bg-primary/5'
                                 : ''
                         }`}
                         onClick={() => handleOptionSelect('link')}
                     >
-                        <CardContent className="text-center">
-                            <div className="flex justify-center items-center gap-3 mb-4">
-                                <RadioGroupItem
-                                    disabled={isLoading}
-                                    value="link"
-                                    className="sr-only"
-                                />
-                                <Link
-                                    className={`w-12 h-12 ${selectedOption === 'link' ? 'text-primary' : 'text-muted-foreground'}`}
-                                />
-                            </div>
-                            <CardTitle className="mb-2">
-                                Link de compartilhamento
-                            </CardTitle>
-                            <CardDescription>
-                                Cole o link de um Google Docs ou Slides
-                            </CardDescription>
-                        </CardContent>
+                        <div className="flex justify-center items-center gap-3 mb-4">
+                            <RadioGroupItem
+                                disabled={isLoading}
+                                value="link"
+                                className="sr-only"
+                            />
+                            <Link
+                                className={`w-12 h-12 ${selectedOption === 'link' ? 'text-primary' : 'text-muted-foreground'}`}
+                            />
+                        </div>
+                        <h3 className="text-lg font-semibold mb-2">
+                            Link de compartilhamento
+                        </h3>
+                        <p className="text-muted-foreground">
+                            Cole o link de um Google Docs ou Slides
+                        </p>
                     </Card>
                 </div>
             </RadioGroup>
