@@ -40,7 +40,7 @@ export function CreationForm() {
                             name="name"
                             placeholder="Ex: Seminário sobre Cybersecurity"
                             required
-                            className="w-full mt-3"
+                            className="w-full mt-3 py-5 dark:bg-bg"
                             disabled={isLoading}
                         />
                     </div>

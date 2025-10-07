@@ -39,7 +39,7 @@ export async function List() {
                                     /> */}
 
                                     <div className="flex-1">
-                                        <h3 className="text-foreground font-semibold text-lg mb-1">
+                                        <h3 className="text-foreground font-medium text-lg mb-1">
                                             {certificate.name}
                                         </h3>
                                         {/* <p className="text-muted-foreground text-sm">

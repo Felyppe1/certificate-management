@@ -21,13 +21,14 @@ export default async function CertificatePage({
     )
 
     return (
-        <div className="container mx-auto pb-8 px-4 max-w-4xl">
+        <>
+            {/* // <div className="container mx-auto pb-8 px-4 max-w-4xl"> */}
             <GoBackButton />
             <div className="my-8">
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                <h1 className="text-3xl md:text-4xl font-bold mb-4">
                     {certificateEmissionResponse.certificateEmission.name}
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-foreground/90 text-lg font-light">
                     Configure o template e os dados para gerar certificados
                 </p>
             </div>
@@ -39,6 +40,7 @@ export default async function CertificatePage({
                     certificateEmissionResponse.certificateEmission.template
                 }
             />
-        </div>
+            {/* // </div> */}
+        </>
     )
 }

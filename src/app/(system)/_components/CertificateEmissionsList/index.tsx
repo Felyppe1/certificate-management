@@ -15,16 +15,16 @@ export function CertificateEmissionsList() {
             <div className="pb-8 border-b">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-3xl font-bold text-foreground mb-2">
+                        <h2 className="text-2xl font-semibold text-foreground mb-2">
                             Minhas Emissões de Certificados
                         </h2>
-                        <p className="">
+                        <p className="font-light">
                             Todos os certificados criados por você
                         </p>
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <InputGroup>
+                        <InputGroup className="max-w-[20rem] w-full">
                             <InputGroupAddon>
                                 <Search className="size-5 text-muted-foreground" />
                             </InputGroupAddon>
