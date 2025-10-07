@@ -79,7 +79,15 @@ export async function List() {
                                             )}
                                         </p> */}
                                         <p className="text-muted-foreground text-sm">
-                                            Criado em {certificate.createdAt}
+                                            Criado em{' '}
+                                            {new Date(
+                                                certificate.createdAt,
+                                            ).toLocaleDateString('pt-BR', {
+                                                timeZone: 'America/Sao_Paulo',
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                year: 'numeric',
+                                            })}
                                         </p>
                                     </div>
                                 </div>

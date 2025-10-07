@@ -21,6 +21,9 @@ export class GetAllCertificateEmissionsUseCase {
             where: {
                 user_id: session.userId,
             },
+            orderBy: {
+                created_at: 'desc',
+            },
         })
 
         return certificateEmissions.map(certificate => ({
