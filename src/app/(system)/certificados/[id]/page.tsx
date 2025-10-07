@@ -2,6 +2,13 @@ import { GoBackButton } from '@/components/GoBackButton'
 import { TemplateSection } from './template-section'
 import { fetchMe } from '@/api-calls/fetch-me'
 import { fetchCertificateEmission } from '@/api-calls/fetch-certificate-emission'
+import { Badge } from '@/components/ui/badge'
+
+const statusMapping = {
+    DRAFT: 'Rascunho',
+    EMITTED: 'Emitido',
+    SCHEDULED: 'Agendado',
+}
 
 export default async function CertificatePage({
     params,
@@ -25,9 +32,30 @@ export default async function CertificatePage({
             {/* // <div className="container mx-auto pb-8 px-4 max-w-4xl"> */}
             <GoBackButton />
             <div className="my-8">
-                <h1 className="text-3xl md:text-4xl font-bold mb-4">
-                    {certificateEmissionResponse.certificateEmission.name}
-                </h1>
+                <div className="flex items-center gap-4 mb-4">
+                    <h1 className="text-3xl md:text-4xl font-bold">
+                        {certificateEmissionResponse.certificateEmission.name}
+                    </h1>
+                    <Badge
+                        variant={
+                            certificateEmissionResponse.certificateEmission
+                                .status === 'EMITTED'
+                                ? 'green'
+                                : certificateEmissionResponse
+                                        .certificateEmission.status === 'DRAFT'
+                                  ? 'orange'
+                                  : 'purple'
+                        }
+                        size="lg"
+                    >
+                        {
+                            statusMapping[
+                                certificateEmissionResponse.certificateEmission
+                                    .status as keyof typeof statusMapping
+                            ]
+                        }
+                    </Badge>
+                </div>
                 <p className="text-foreground/90 text-lg font-light">
                     Configure o template e os dados para gerar certificados
                 </p>

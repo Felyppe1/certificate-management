@@ -16,7 +16,7 @@ export function GoBackButton() {
     }
 
     return (
-        <Button variant="outline" onClick={handleBack}>
+        <Button variant="outline" size="sm" onClick={handleBack}>
             <ArrowLeft className="w-4 h-4" />
             Voltar
         </Button>

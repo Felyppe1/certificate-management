@@ -333,7 +333,7 @@ export function TemplateDisplay({
                                             <Button
                                                 variant="default"
                                                 onClick={handleViewFile}
-                                                className="flex-1 min-w-[120px]"
+                                                size="sm"
                                             >
                                                 <svg
                                                     className="h-4 w-4 mr-2"
@@ -351,7 +351,6 @@ export function TemplateDisplay({
                                                 variant="default"
                                                 size="sm"
                                                 onClick={handleViewFile}
-                                                className=""
                                             >
                                                 <svg
                                                     className="h-4 w-4 mr-2"
@@ -362,7 +361,7 @@ export function TemplateDisplay({
                                                 >
                                                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
                                                 </svg>
-                                                Abrir no Drive
+                                                Abrir
                                             </Button>
                                         )}
                                     </div>
@@ -386,17 +385,18 @@ export function TemplateDisplay({
                                     <p className="text-muted-foreground mb-1">
                                         Variáveis do Template
                                     </p>
-                                    {template.variables.map(
-                                        (variable, index) => (
-                                            <Badge
-                                                key={index}
-                                                variant="secondary"
-                                                className="font-mono mr-2"
-                                            >
-                                                {`{{ ${variable} }}`}
-                                            </Badge>
-                                        ),
-                                    )}
+                                    <div className="mt-3">
+                                        {template.variables.map(
+                                            (variable, index) => (
+                                                <Badge
+                                                    key={index}
+                                                    className="font-mono mr-2 bg-accent text-accent-foreground"
+                                                >
+                                                    {`{{ ${variable} }}`}
+                                                </Badge>
+                                            ),
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
