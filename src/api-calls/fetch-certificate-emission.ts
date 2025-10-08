@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+import { notFound } from 'next/navigation'
 
 export async function fetchCertificateEmission(certificateId: string) {
     const sessionToken = (await cookies()).get('session_token')?.value
@@ -14,6 +15,12 @@ export async function fetchCertificateEmission(certificateId: string) {
             },
         },
     )
+
+    if (!response.ok) {
+        if (response.status === 404) {
+            notFound()
+        }
+    }
 
     return await response.json()
 }

@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
-import { List } from './List'
-import { CreationForm } from './CreationForm'
+import { List } from './components/List'
+import { CreationForm } from './components/CreationForm'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import {
     InputGroup,
@@ -8,7 +8,7 @@ import {
     InputGroupInput,
 } from '@/components/ui/input-group'
 import { Search } from 'lucide-react'
-import { CertificateEmissionsLoading } from '@/components/Loading/CertificateEmissionsLoading'
+import { ListLoading } from './components/ListLoading'
 
 export function CertificateEmissionsList() {
     return (
@@ -34,7 +34,7 @@ export function CertificateEmissionsList() {
                     </div>
                 </div>
             </div>
-            <Suspense fallback={<CertificateEmissionsLoading />}>
+            <Suspense fallback={<ListLoading />}>
                 <List />
             </Suspense>
         </Card>

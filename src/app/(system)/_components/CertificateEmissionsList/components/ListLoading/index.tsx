@@ -1,6 +1,6 @@
 import { Skeleton } from '@/components/ui/skeleton'
 
-export function CertificateEmissionsLoading() {
+export function ListLoading() {
     return (
         <div className="divide-y">
             {Array.from({ length: 3 }).map((_, index) => (
