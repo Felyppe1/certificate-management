@@ -6,7 +6,7 @@ export default function Loading() {
         <Card className="max-w-lg w-full m-auto">
             <CardContent className="flex flex-col items-center text-center gap-6 py-12">
                 <div className="relative">
-                    <div className="absolute inset-0 bg-primary/30 rounded-full blur-3xl animate-pulse" />
+                    <div className="absolute inset-0 bg-primary/40 rounded-full blur-3xl animate-pulse" />
 
                     <Loader2 className="size-20 animate-spin text-primary" />
                 </div>

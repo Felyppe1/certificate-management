@@ -41,6 +41,7 @@ export class GetMeUseCase {
                 provider: account.provider,
                 providerUserId: account.providerUserId,
                 accessToken: account.accessToken,
+                accessTokenExpiryDateTime: account.accessTokenExpiryDateTime,
             })),
         }
     }

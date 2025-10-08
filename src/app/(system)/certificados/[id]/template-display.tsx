@@ -40,6 +40,7 @@ interface TemplateDisplayProps {
     }
     certificateId: string
     googleOAuthToken: string | null
+    googleOAuthTokenExpiry: Date | null
     onSubmitDrive: (fileId: string) => void
     onSubmitUrl: (formData: FormData) => void
     isAnySubmitionLoading: boolean
@@ -57,6 +58,7 @@ export function TemplateDisplay({
     template,
     certificateId,
     googleOAuthToken,
+    googleOAuthTokenExpiry,
     onSubmitDrive,
     onSubmitUrl,
     isAnySubmitionLoading,
@@ -151,6 +153,7 @@ export function TemplateDisplay({
                         </div>
                         <FileSelector
                             googleOAuthToken={googleOAuthToken}
+                            googleOAuthTokenExpiry={googleOAuthTokenExpiry}
                             onSubmitDrive={onSubmitDrive}
                             onSubmitUrl={onSubmitUrl}
                             isLoading={

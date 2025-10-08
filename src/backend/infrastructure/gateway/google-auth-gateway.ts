@@ -8,16 +8,12 @@ import {
 } from '@/backend/application/interfaces/igoogle-auth-gateway'
 
 export class GoogleAuthGateway implements IGoogleAuthGateway {
-    async checkOrRefreshAccessToken({
+    async checkOrGetNewAccessToken({
         accessToken,
         refreshToken,
         accessTokenExpiryDateTime,
     }: CheckOrRefreshAccessTokenInput) {
-        if (accessTokenExpiryDateTime! >= new Date())
-            return {
-                newAccessToken: accessToken,
-                newAccessTokenExpiryDateTime: accessTokenExpiryDateTime,
-            }
+        if (accessTokenExpiryDateTime! > new Date()) return null
 
         const oauth2Client = new google.auth.OAuth2({
             clientId: process.env.GOOGLE_CLIENT_ID,
@@ -55,7 +51,7 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
             console.error('Error refreshing access token:', error)
 
             // TODO: criar erro específico
-            throw new UnauthorizedError("Google's Refresh token expired")
+            throw new UnauthorizedError("Google's refresh token expired")
         }
     }
 

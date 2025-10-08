@@ -17,6 +17,7 @@ export interface GetMeControllerResponse {
             provider: Provider
             providerUserId: string
             accessToken: string
+            accessTokenExpiryDateTime: Date | null
         }[]
     }
 }

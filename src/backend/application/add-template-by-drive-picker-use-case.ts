@@ -23,7 +23,7 @@ export class AddTemplateByDrivePickerUseCase {
         private externalUserAccountsRepository: ExternalUserAccountsRepository,
         private googleAuthGateway: Pick<
             IGoogleAuthGateway,
-            'checkOrRefreshAccessToken'
+            'checkOrGetNewAccessToken'
         >,
     ) {}
 
@@ -55,7 +55,7 @@ export class AddTemplateByDrivePickerUseCase {
             throw new UnauthorizedError('Google account not linked')
         }
 
-        const newData = await this.googleAuthGateway.checkOrRefreshAccessToken({
+        const newData = await this.googleAuthGateway.checkOrGetNewAccessToken({
             accessToken: externalAccount.accessToken,
             refreshToken: externalAccount.refreshToken!,
             accessTokenExpiryDateTime:

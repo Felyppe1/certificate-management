@@ -1,6 +1,6 @@
 'use client'
 
-import { RadioGroup, RadioGroupItem } from '@radix-ui/react-radio-group'
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group'
 import {
     Card,
     CardContent,
@@ -8,15 +8,22 @@ import {
     CardHeader,
     CardTitle,
 } from '../ui/card'
-import { FileText, Link, Upload } from 'lucide-react'
+import { FileText, Link, Upload, Loader2 } from 'lucide-react'
 import { Input } from '../ui/input'
 import { Button } from '../ui/button'
-import { useEffect, useRef, useState } from 'react'
+import {
+    startTransition,
+    useEffect,
+    useRef,
+    useState,
+    useTransition,
+} from 'react'
 import {
     PickerCanceledEvent,
     PickerErrorEvent,
     PickerPickedEvent,
 } from '@googleworkspace/drive-picker-element'
+import { refreshGoogleAccessTokenAction } from '@/backend/infrastructure/server-actions/refresh-google-access-token-action'
 
 type SelectOption = 'upload' | 'link' | 'drive'
 
@@ -25,6 +32,7 @@ interface FileSelectorProps {
     onSubmitUrl: (formData: FormData) => void
     onSubmitDrive: (fileId: string) => void
     googleOAuthToken: string | null
+    googleOAuthTokenExpiry: Date | null
     // urlAction: (_: unknown, formData: FormData) => Promise<any> // TODO: improve this type
 }
 
@@ -33,31 +41,23 @@ export function FileSelector({
     onSubmitDrive,
     isLoading,
     googleOAuthToken,
+    googleOAuthTokenExpiry,
 }: FileSelectorProps) {
     const [selectedOption, setSelectedOption] = useState<SelectOption | null>(
         null,
     )
     const [fileUrl, setFileUrl] = useState('')
 
+    const [isRefreshTokenLoading, startRefreshTokenTransition] = useTransition()
+
     const pickerRef = useRef<any>(null)
 
-    const handleOptionSelect = (value: SelectOption) => {
-        if (value === 'drive' && !googleOAuthToken) {
-            alert('Google OAuth token is missing. Please authenticate first.')
-            return
-        }
-
+    const handleOptionSelect = async (value: SelectOption) => {
         setSelectedOption(value)
 
         if (value !== 'link') {
             setFileUrl('')
         }
-
-        // if (selectedOption === 'drive') {
-        //     if (pickerRef.current) {
-        //         pickerRef.current.visible = true;
-        //     }
-        // }
     }
 
     const handleSubmitUrl = async (e: React.FormEvent) => {
@@ -90,15 +90,41 @@ export function FileSelector({
     useEffect(() => {
         if (selectedOption !== 'drive') return
 
-        import('@googleworkspace/drive-picker-element')
-
         const pickerRefCurrent = pickerRef.current
 
         if (!pickerRefCurrent) return
 
-        pickerRefCurrent.addEventListener('picker:picked', handlePickerPicked)
-        pickerRefCurrent.addEventListener('picker:canceled', handlePickerClosed)
-        pickerRefCurrent.addEventListener('picker:error', handlePickerError)
+        const initPicker = async () => {
+            if (!googleOAuthToken) {
+                alert(
+                    'Google OAuth token is missing. Please authenticate first.',
+                )
+                return
+            }
+
+            // TODO: melhorar essa lógica? se passou no if de cima, é pq tem o expiry tbm
+            if (new Date(googleOAuthTokenExpiry!) < new Date()) {
+                startRefreshTokenTransition(() => {
+                    refreshGoogleAccessTokenAction()
+                })
+
+                return
+            }
+
+            import('@googleworkspace/drive-picker-element')
+
+            pickerRefCurrent.addEventListener(
+                'picker:picked',
+                handlePickerPicked,
+            )
+            pickerRefCurrent.addEventListener(
+                'picker:canceled',
+                handlePickerClosed,
+            )
+            pickerRefCurrent.addEventListener('picker:error', handlePickerError)
+        }
+
+        initPicker()
 
         return () => {
             pickerRefCurrent.removeEventListener(
@@ -114,7 +140,7 @@ export function FileSelector({
                 handlePickerError,
             )
         }
-    }, [selectedOption])
+    }, [selectedOption, googleOAuthToken])
 
     return (
         <div className="flex flex-col">
@@ -125,85 +151,88 @@ export function FileSelector({
             >
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     {/* Upload Local */}
-                    <Card
-                        className={`cursor-pointer hover:border-primary focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center ${
-                            selectedOption === 'upload'
-                                ? 'border-primary bg-primary/5'
-                                : ''
-                        }`}
-                        onClick={() => handleOptionSelect('upload')}
-                    >
-                        <div className="flex justify-center items-center gap-3 mb-4">
+                    <label htmlFor="option-upload" className="group relative">
+                        <Card className="cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none group-has-[:disabled]:cursor-default hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center">
                             <RadioGroupItem
+                                id="option-upload"
                                 disabled={isLoading}
                                 value="upload"
                                 className="sr-only"
                             />
-                            <Upload
-                                className={`w-12 h-12 ${selectedOption === 'upload' ? 'text-primary' : 'text-muted-foreground'}`}
-                            />
-                        </div>
-                        <h3 className="text-lg font-semibold mb-2">
-                            Upload Local
-                        </h3>
-                        <p className="text-muted-foreground">
-                            Envie um arquivo do seu computador
-                        </p>
-                    </Card>
+                            <div className="flex justify-center items-center gap-3 mb-4">
+                                <Upload className="w-12 h-12 transition-colors group-has-[[data-state=checked]]:text-primary text-muted-foreground" />
+                            </div>
+                            <h3 className="text-lg font-semibold mb-2">
+                                Upload Local
+                            </h3>
+                            <p className="text-muted-foreground">
+                                Envie um arquivo do seu computador
+                            </p>
+                        </Card>
+                        {isLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className="bg-background/80 rounded-full p-2">
+                                    <Loader2 className="w-10 h-10 animate-spin text-foreground" />
+                                </div>
+                            </div>
+                        )}
+                    </label>
 
                     {/* Google Drive */}
-                    <Card
-                        className={`cursor-pointer hover:border-primary focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center ${
-                            selectedOption === 'drive'
-                                ? 'border-primary bg-primary/5'
-                                : ''
-                        }`}
-                        onClick={() => handleOptionSelect('drive')}
-                    >
-                        <div className="flex justify-center items-center gap-3 mb-4">
+                    <label htmlFor="option-drive" className="group relative">
+                        <Card className="cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none hover:group-has-[:disabled]:none hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center">
                             <RadioGroupItem
-                                disabled={isLoading}
+                                id="option-drive"
+                                disabled={isLoading || isRefreshTokenLoading}
                                 value="drive"
                                 className="sr-only"
                             />
-                            <FileText
-                                className={`w-12 h-12 ${selectedOption === 'drive' ? 'text-primary' : 'text-muted-foreground'}`}
-                            />
-                        </div>
-                        <h3 className="text-lg font-semibold mb-2">
-                            Google Drive
-                        </h3>
-                        <p className="text-muted-foreground">
-                            Selecione um arquivo do seu Google Drive
-                        </p>
-                    </Card>
+                            <div className="flex justify-center items-center gap-3 mb-4">
+                                <FileText className="w-12 h-12 transition-colors group-has-[[data-state=checked]]:text-primary text-muted-foreground" />
+                            </div>
+                            <h3 className="text-lg font-semibold mb-2">
+                                Google Drive
+                            </h3>
+                            <p className="text-muted-foreground">
+                                Selecione um arquivo do seu Google Drive
+                            </p>
+                        </Card>
+                        {(isLoading || isRefreshTokenLoading) && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className="bg-background/80 rounded-full p-2">
+                                    <Loader2 className="w-10 h-10 animate-spin text-foreground" />
+                                </div>
+                            </div>
+                        )}
+                    </label>
 
                     {/* Link de compartilhamento */}
-                    <Card
-                        className={`cursor-pointer hover:border-primary focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center ${
-                            selectedOption === 'link'
-                                ? 'border-primary bg-primary/5'
-                                : ''
-                        }`}
-                        onClick={() => handleOptionSelect('link')}
-                    >
-                        <div className="flex justify-center items-center gap-3 mb-4">
+                    <label htmlFor="option-link" className="group relative">
+                        <Card className="cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center">
                             <RadioGroupItem
+                                id="option-link"
                                 disabled={isLoading}
                                 value="link"
                                 className="sr-only"
                             />
-                            <Link
-                                className={`w-12 h-12 ${selectedOption === 'link' ? 'text-primary' : 'text-muted-foreground'}`}
-                            />
-                        </div>
-                        <h3 className="text-lg font-semibold mb-2">
-                            Link de compartilhamento
-                        </h3>
-                        <p className="text-muted-foreground">
-                            Cole o link de um Google Docs ou Slides
-                        </p>
-                    </Card>
+                            <div className="flex justify-center items-center gap-3 mb-4">
+                                <Link className="w-12 h-12 transition-colors group-has-[[data-state=checked]]:text-primary text-muted-foreground" />
+                            </div>
+                            <h3 className="text-lg font-semibold mb-2">
+                                Link de compartilhamento
+                            </h3>
+                            <p className="text-muted-foreground">
+                                Cole o link de um Google Docs ou Slides
+                            </p>
+                        </Card>
+                        {isLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className="bg-background/80 rounded-full p-2">
+                                    <Loader2 className="w-10 h-10 animate-spin text-foreground" />
+                                </div>
+                            </div>
+                        )}
+                    </label>
                 </div>
             </RadioGroup>
 
@@ -212,7 +241,7 @@ export function FileSelector({
                     ref={pickerRef}
                     client-id={process.env.GOOGLE_CLIENT_ID}
                     app-id={process.env.GCP_PROJECT_ID}
-                    oauth-token={googleOAuthToken}
+                    oauth-token={googleOAuthToken!}
                 >
                     <drive-picker-docs-view
                         mime-types={[

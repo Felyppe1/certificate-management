@@ -32,9 +32,9 @@ export interface GetUserInfoOutput {
 }
 
 export interface IGoogleAuthGateway {
-    checkOrRefreshAccessToken(
+    checkOrGetNewAccessToken(
         input: CheckOrRefreshAccessTokenInput,
-    ): Promise<CheckOrRefreshAccessTokenOuput | void>
+    ): Promise<CheckOrRefreshAccessTokenOuput | null>
     getToken(input: GetTokenInput): Promise<GetTokenOutput>
     getUserInfo(input: GetUserInfoInput): Promise<GetUserInfoOutput>
 }

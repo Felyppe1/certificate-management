@@ -25,12 +25,14 @@ interface TemplateSectionProps {
         variables: string[]
     }
     googleOAuthToken: string | null
+    googleOAuthTokenExpiry: Date | null
 }
 
 export function TemplateSection({
     certificateId,
     template,
     googleOAuthToken,
+    googleOAuthTokenExpiry,
 }: TemplateSectionProps) {
     const [urlState, urlAction, urlIsLoading] = useActionState(
         addTemplateByUrlAction,
@@ -63,6 +65,7 @@ export function TemplateSection({
             <div className="space-y-8">
                 <TemplateDisplay
                     googleOAuthToken={googleOAuthToken}
+                    googleOAuthTokenExpiry={googleOAuthTokenExpiry}
                     template={template}
                     certificateId={certificateId}
                     isAnySubmitionLoading={urlIsLoading || drivePickerIsLoading}
@@ -89,6 +92,7 @@ export function TemplateSection({
                 {/* <CardContent> */}
                 <FileSelector
                     googleOAuthToken={googleOAuthToken}
+                    googleOAuthTokenExpiry={googleOAuthTokenExpiry}
                     onSubmitUrl={handleSubmitUrl}
                     onSubmitDrive={handleSubmitDrive}
                     isLoading={urlIsLoading || drivePickerIsLoading}

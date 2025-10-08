@@ -63,6 +63,9 @@ export default async function CertificatePage({
 
             <TemplateSection
                 googleOAuthToken={googleAccount?.accessToken || null}
+                googleOAuthTokenExpiry={
+                    googleAccount?.accessTokenExpiryDateTime || null
+                }
                 certificateId={certificateId}
                 template={
                     certificateEmissionResponse.certificateEmission.template
