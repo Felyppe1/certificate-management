@@ -28,7 +28,9 @@ import { refreshGoogleAccessTokenAction } from '@/backend/infrastructure/server-
 type SelectOption = 'upload' | 'link' | 'drive'
 
 interface FileSelectorProps {
-    isLoading: boolean
+    isDriveLoading: boolean
+    isUploadLoading: boolean
+    isUrlLoading: boolean
     onSubmitUrl: (formData: FormData) => void
     onSubmitDrive: (fileId: string) => void
     googleOAuthToken: string | null
@@ -39,7 +41,9 @@ interface FileSelectorProps {
 export function FileSelector({
     onSubmitUrl,
     onSubmitDrive,
-    isLoading,
+    isDriveLoading,
+    isUploadLoading,
+    isUrlLoading,
     googleOAuthToken,
     googleOAuthTokenExpiry,
 }: FileSelectorProps) {
@@ -142,6 +146,12 @@ export function FileSelector({
         }
     }, [selectedOption, googleOAuthToken])
 
+    const allAreLoading =
+        isDriveLoading ||
+        isUploadLoading ||
+        isUrlLoading ||
+        isRefreshTokenLoading
+
     return (
         <div className="flex flex-col">
             {/* Options Grid */}
@@ -149,13 +159,13 @@ export function FileSelector({
                 value={selectedOption || ''}
                 onValueChange={handleOptionSelect}
             >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Upload Local */}
                     <label htmlFor="option-upload" className="group relative">
-                        <Card className="cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none group-has-[:disabled]:cursor-default hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center">
+                        <Card className="h-full justify-center cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none group-has-[:disabled]:cursor-default hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center">
                             <RadioGroupItem
                                 id="option-upload"
-                                disabled={isLoading}
+                                disabled={allAreLoading}
                                 value="upload"
                                 className="sr-only"
                             />
@@ -169,7 +179,7 @@ export function FileSelector({
                                 Envie um arquivo do seu computador
                             </p>
                         </Card>
-                        {isLoading && (
+                        {isUploadLoading && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 <div className="bg-background/80 rounded-full p-2">
                                     <Loader2 className="w-10 h-10 animate-spin text-foreground" />
@@ -180,10 +190,10 @@ export function FileSelector({
 
                     {/* Google Drive */}
                     <label htmlFor="option-drive" className="group relative">
-                        <Card className="cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none hover:group-has-[:disabled]:none hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center">
+                        <Card className="h-full justify-center cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none hover:group-has-[:disabled]:none hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center">
                             <RadioGroupItem
                                 id="option-drive"
-                                disabled={isLoading || isRefreshTokenLoading}
+                                disabled={allAreLoading}
                                 value="drive"
                                 className="sr-only"
                             />
@@ -197,7 +207,7 @@ export function FileSelector({
                                 Selecione um arquivo do seu Google Drive
                             </p>
                         </Card>
-                        {(isLoading || isRefreshTokenLoading) && (
+                        {(isDriveLoading || isRefreshTokenLoading) && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 <div className="bg-background/80 rounded-full p-2">
                                     <Loader2 className="w-10 h-10 animate-spin text-foreground" />
@@ -208,10 +218,10 @@ export function FileSelector({
 
                     {/* Link de compartilhamento */}
                     <label htmlFor="option-link" className="group relative">
-                        <Card className="cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center">
+                        <Card className="h-full justify-center cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center">
                             <RadioGroupItem
                                 id="option-link"
-                                disabled={isLoading}
+                                disabled={allAreLoading}
                                 value="link"
                                 className="sr-only"
                             />
@@ -225,7 +235,7 @@ export function FileSelector({
                                 Cole o link de um Google Docs ou Slides
                             </p>
                         </Card>
-                        {isLoading && (
+                        {isUrlLoading && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 <div className="bg-background/80 rounded-full p-2">
                                     <Loader2 className="w-10 h-10 animate-spin text-foreground" />
@@ -254,36 +264,41 @@ export function FileSelector({
                 </drive-picker>
             )}
 
-            {/* Link Input Form */}
-            {selectedOption === 'link' && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Link do arquivo</CardTitle>
-                        <CardDescription>
-                            Cole o link de compartilhamento do Google Docs ou
-                            Google Slides
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSubmitUrl} className="flex gap-3">
-                            <Input
-                                type="url"
-                                name="fileUrl"
-                                value={fileUrl}
-                                onChange={e => setFileUrl(e.target.value)}
-                                placeholder="Cole o link de compartilhamento do Google Docs ou Google Slides"
-                                className="flex-1"
-                            />
-                            <Button
-                                // onClick={handleConfirm}
-                                disabled={!fileUrl.trim() || isLoading}
+            <div className="mt-6">
+                {/* Link Input Form */}
+                {selectedOption === 'link' && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Link do arquivo</CardTitle>
+                            <CardDescription>
+                                Cole o link de compartilhamento do Google Docs
+                                ou Google Slides
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <form
+                                onSubmit={handleSubmitUrl}
+                                className="flex gap-3"
                             >
-                                Confirmar
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
-            )}
+                                <Input
+                                    type="url"
+                                    name="fileUrl"
+                                    value={fileUrl}
+                                    onChange={e => setFileUrl(e.target.value)}
+                                    placeholder="Cole o link de compartilhamento do Google Docs ou Google Slides"
+                                    className="flex-1"
+                                />
+                                <Button
+                                    // onClick={handleConfirm}
+                                    disabled={!fileUrl.trim() || isUrlLoading}
+                                >
+                                    Confirmar
+                                </Button>
+                            </form>
+                        </CardContent>
+                    </Card>
+                )}
+            </div>
         </div>
     )
 }

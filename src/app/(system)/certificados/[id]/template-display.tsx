@@ -2,16 +2,9 @@
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-    Card,
-    CardHeader,
-    CardContent,
-    CardDescription,
-    CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { RefreshCw, Edit3, Trash2 } from 'lucide-react'
-import { useState, startTransition, useActionState, useEffect } from 'react'
-import { FileSelector } from '@/components/FileSelector'
+import { startTransition, useActionState } from 'react'
 import { refreshTemplateByUrlAction } from '@/backend/infrastructure/server-actions/refresh-template-by-url-action'
 import { deleteTemplateAction } from '@/backend/infrastructure/server-actions/delete-template-action'
 
@@ -39,33 +32,14 @@ interface TemplateDisplayProps {
         variables: string[]
     }
     certificateId: string
-    googleOAuthToken: string | null
-    googleOAuthTokenExpiry: Date | null
-    onSubmitDrive: (fileId: string) => void
-    onSubmitUrl: (formData: FormData) => void
-    isAnySubmitionLoading: boolean
-    drivePickerState: {
-        success: boolean
-        message: string
-    } | null
-    urlState: {
-        success: boolean
-        message: string
-    } | null
+    onEdit: () => void
 }
 
 export function TemplateDisplay({
     template,
     certificateId,
-    googleOAuthToken,
-    googleOAuthTokenExpiry,
-    onSubmitDrive,
-    onSubmitUrl,
-    isAnySubmitionLoading,
-    drivePickerState,
-    urlState,
+    onEdit,
 }: TemplateDisplayProps) {
-    const [isEditing, setIsEditing] = useState(false)
     const [, refreshAction, isRefreshing] = useActionState(
         refreshTemplateByUrlAction,
         null,
@@ -85,14 +59,6 @@ export function TemplateDisplay({
         })
     }
 
-    const handleEdit = () => {
-        setIsEditing(true)
-    }
-
-    const handleCancelEdit = () => {
-        setIsEditing(false)
-    }
-
     const handleRemoveTemplate = () => {
         const formData = new FormData()
         formData.append('certificateId', certificateId)
@@ -102,116 +68,12 @@ export function TemplateDisplay({
         })
     }
 
-    useEffect(() => {
-        if (!urlState) return
-
-        if (urlState.success) {
-            // TODO: show success message
-            setIsEditing(false)
-        }
-
-        // TODO: show error message
-    }, [urlState])
-
-    useEffect(() => {
-        if (!drivePickerState) return
-
-        if (drivePickerState.success) {
-            // TODO: show success message
-            setIsEditing(false)
-        }
-
-        // TODO: show error message
-    }, [drivePickerState])
-
-    if (isEditing) {
-        return (
-            <div className="space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            {/* <FileText className="h-5 w-5" /> */}
-                            Selecionar Novo Template
-                        </CardTitle>
-                        <CardDescription>
-                            Escolha um novo template para substituir o atual
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex gap-2 mb-4">
-                            <Button
-                                variant="outline"
-                                onClick={handleCancelEdit}
-                                disabled={
-                                    isRefreshing ||
-                                    isDeleting ||
-                                    isAnySubmitionLoading
-                                }
-                            >
-                                Cancelar
-                            </Button>
-                        </div>
-                        <FileSelector
-                            googleOAuthToken={googleOAuthToken}
-                            googleOAuthTokenExpiry={googleOAuthTokenExpiry}
-                            onSubmitDrive={onSubmitDrive}
-                            onSubmitUrl={onSubmitUrl}
-                            isLoading={
-                                isRefreshing ||
-                                isDeleting ||
-                                isAnySubmitionLoading
-                            }
-                        />
-                    </CardContent>
-                </Card>
-            </div>
-        )
-    }
-
     const handleViewFile = () => {
         if (template.inputMethod === 'UPLOAD' && template.storageFileUrl) {
             window.open(template.storageFileUrl, '_blank')
         } else if (template.driveFileId) {
             const driveUrl = `https://drive.google.com/file/d/${template.driveFileId}/view`
             window.open(driveUrl, '_blank')
-        }
-    }
-
-    const getPreviewGradient = () => {
-        if (
-            template.fileExtension === 'DOCX' ||
-            template.fileExtension === 'GOOGLE_DOCS'
-        ) {
-            return 'from-blue-500 to-blue-600'
-        } else {
-            return 'from-orange-500 to-orange-600'
-        }
-    }
-
-    const getPreviewIcon = () => {
-        if (
-            template.fileExtension === 'DOCX' ||
-            template.fileExtension === 'GOOGLE_DOCS'
-        ) {
-            return (
-                <svg
-                    className="w-16 h-16 text-white drop-shadow-lg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                >
-                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M10,19H8V16H10V19M10,15H8V12H10V15M10,11H8V8H10V11M16,19H12V18H16V19M16,17H12V16H16V17M16,15H12V14H16V15M16,13H12V12H16V13M16,11H12V10H16V11Z" />
-                </svg>
-            )
-        } else {
-            return (
-                <svg
-                    className="w-16 h-16 text-white drop-shadow-lg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                >
-                    <path d="M13,9H18.5L13,3.5V9M6,2H14L20,8V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V4C4,2.89 4.89,2 6,2M6,20H15L18,20V12L14,16L12,14L6,20M8,9A2,2 0 0,0 6,11A2,2 0 0,0 8,13A2,2 0 0,0 10,11A2,2 0 0,0 8,9Z" />
-                </svg>
-            )
         }
     }
 
@@ -258,7 +120,7 @@ export function TemplateDisplay({
                                 <Button
                                     variant="outline"
                                     onClick={handleRefresh}
-                                    disabled={isRefreshing}
+                                    disabled={isRefreshing || isDeleting}
                                 >
                                     <RefreshCw
                                         className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`}
@@ -268,14 +130,19 @@ export function TemplateDisplay({
                                         : 'Atualizar'}
                                 </Button>
                             )}
-                            <Button variant="outline" onClick={handleEdit}>
+
+                            <Button
+                                variant="outline"
+                                onClick={onEdit}
+                                disabled={isRefreshing || isDeleting}
+                            >
                                 <Edit3 className="h-4 w-4 mr-2" />
                                 Editar
                             </Button>
                             <Button
                                 variant="outline"
                                 onClick={handleRemoveTemplate}
-                                disabled={isDeleting}
+                                disabled={isDeleting || isRefreshing}
                                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             >
                                 <Trash2 className="h-4 w-4 mr-2" />
