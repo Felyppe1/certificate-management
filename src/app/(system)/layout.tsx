@@ -1,13 +1,16 @@
+import { fetchMe } from '@/api-calls/fetch-me'
 import { Header } from './_components/Header'
 
 interface SystemLayoutProps {
     children: React.ReactNode
 }
 
-export default function Layout({ children }: SystemLayoutProps) {
+export default async function Layout({ children }: SystemLayoutProps) {
+    const data = await fetchMe()
+
     return (
         <>
-            <Header />
+            <Header userName={data.user.name} />
 
             <div className="min-h-screen bg-background pt-30 px-10 pb-20 relative z-10">
                 <div className="max-w-7xl mx-auto">{children}</div>

@@ -11,7 +11,11 @@ import {
 import { Button } from '@/components/ui/button'
 import { useTransition } from 'react'
 
-export function UserDropdown() {
+interface UserDropdownProps {
+    name: string
+}
+
+export function UserDropdown({ name }: UserDropdownProps) {
     const [isPending, startTransition] = useTransition()
 
     const handleLogout = () => {
@@ -21,6 +25,8 @@ export function UserDropdown() {
         })
     }
 
+    const firstAndLastName = name.split(' ').slice(0, 2).join(' ')
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -29,7 +35,9 @@ export function UserDropdown() {
                     className="hidden md:flex items-center gap-2"
                     disabled={isPending}
                 >
-                    <span className="text-card-foreground">João Silva</span>
+                    <span className="text-card-foreground">
+                        {firstAndLastName}
+                    </span>
                     <ChevronDown className="w-4 h-4 text-muted-foreground" />
                 </Button>
             </DropdownMenuTrigger>
