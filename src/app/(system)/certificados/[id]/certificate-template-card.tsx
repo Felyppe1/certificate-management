@@ -15,7 +15,7 @@
 // import { useActionState } from 'react'
 // import { createTemplateByUrlAction } from '@/server-actions/create-template-by-url-action'
 // import { deleteTemplateAction } from '@/server-actions/delete-template-action'
-// import { refreshTemplateByUrlAction } from '@/server-actions/refresh-template-by-url-action'
+// import { refreshTemplateAction } from '@/server-actions/refresh-template-by-url-action'
 
 // interface CertificateTemplateCardProps {
 //     template: {
@@ -41,7 +41,7 @@
 //     )
 
 //     const [refreshState, refreshAction, isRefreshing] = useActionState(
-//         refreshTemplateByUrlAction,
+//         refreshTemplateAction,
 //         null,
 //     )
 

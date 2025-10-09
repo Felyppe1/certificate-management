@@ -8,12 +8,12 @@ import { FileContentExtractorFactory } from './interfaces/file-content-extractor
 import { GoogleDriveGateway } from './interfaces/google-drive-gateway'
 import { SessionsRepository } from './interfaces/sessions-repository'
 
-interface RefreshTemplateByUrlUseCaseInput {
+interface RefreshTemplateUseCaseInput {
     sessionToken: string
     certificateId: string
 }
 
-export class RefreshTemplateByUrlUseCase {
+export class RefreshTemplateUseCase {
     constructor(
         private certificateEmissionsRepository: CertificatesRepository,
         private sessionsRepository: SessionsRepository,
@@ -21,7 +21,7 @@ export class RefreshTemplateByUrlUseCase {
         private fileContentExtractorFactory: FileContentExtractorFactory,
     ) {}
 
-    async execute(input: RefreshTemplateByUrlUseCaseInput) {
+    async execute(input: RefreshTemplateUseCaseInput) {
         const session = await this.sessionsRepository.getById(
             input.sessionToken,
         )

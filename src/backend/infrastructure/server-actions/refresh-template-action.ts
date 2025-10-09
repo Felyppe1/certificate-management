@@ -1,6 +1,6 @@
 'use server'
 
-import { RefreshTemplateByUrlUseCase } from '@/backend/application/refresh-template-by-url-use-case'
+import { RefreshTemplateUseCase } from '@/backend/application/refresh-template-use-case'
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { HttpGoogleDriveGateway } from '@/backend/infrastructure/gateway/http-google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
@@ -9,14 +9,11 @@ import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
 
-const refreshTemplateByUrlActionSchema = z.object({
+const refreshTemplateActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
 })
 
-export async function refreshTemplateByUrlAction(
-    _: unknown,
-    formData: FormData,
-) {
+export async function refreshTemplateAction(_: unknown, formData: FormData) {
     const cookie = await cookies()
 
     const rawData = {
@@ -26,21 +23,21 @@ export async function refreshTemplateByUrlAction(
     try {
         const sessionToken = cookie.get('session_token')!.value
 
-        const parsedData = refreshTemplateByUrlActionSchema.parse(rawData)
+        const parsedData = refreshTemplateActionSchema.parse(rawData)
 
         const sessionsRepository = new PrismaSessionsRepository()
         const certificatesRepository = new PrismaCertificatesRepository()
         const googleDriveGateway = new HttpGoogleDriveGateway()
         const fileContentExtractorFactory = new FileContentExtractorFactory()
 
-        const refreshTemplateByUrlUseCase = new RefreshTemplateByUrlUseCase(
+        const refreshTemplateUseCase = new RefreshTemplateUseCase(
             certificatesRepository,
             sessionsRepository,
             googleDriveGateway,
             fileContentExtractorFactory,
         )
 
-        await refreshTemplateByUrlUseCase.execute({
+        await refreshTemplateUseCase.execute({
             sessionToken,
             certificateId: parsedData.certificateId,
         })

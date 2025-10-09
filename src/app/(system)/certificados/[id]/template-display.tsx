@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { RefreshCw, Edit3, Trash2 } from 'lucide-react'
 import { startTransition, useActionState } from 'react'
-import { refreshTemplateByUrlAction } from '@/backend/infrastructure/server-actions/refresh-template-by-url-action'
+import { refreshTemplateAction } from '@/backend/infrastructure/server-actions/refresh-template-action'
 import { deleteTemplateAction } from '@/backend/infrastructure/server-actions/delete-template-action'
 
 function getInputMethodLabel(method: string) {
@@ -41,7 +41,7 @@ export function TemplateDisplay({
     onEdit,
 }: TemplateDisplayProps) {
     const [, refreshAction, isRefreshing] = useActionState(
-        refreshTemplateByUrlAction,
+        refreshTemplateAction,
         null,
     )
 
