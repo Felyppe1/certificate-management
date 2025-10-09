@@ -99,7 +99,7 @@ export class AddTemplateByDrivePickerUseCase {
             fileExtension,
         })
 
-        certificate.addTemplate(newTemplate)
+        certificate.setTemplate(newTemplate)
 
         console.log('New template added:', newTemplate)
         await this.certificateEmissionsRepository.update(certificate)

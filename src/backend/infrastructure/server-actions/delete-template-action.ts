@@ -28,7 +28,7 @@ export async function deleteTemplateAction(_: unknown, formData: FormData) {
         const certificateEmissionsRepository =
             new PrismaCertificatesRepository()
 
-        // Buscar o certificado para remover o template
+        // TODO: Refatorar para usar o use case
         const certificate = await certificateEmissionsRepository.getById(
             parsedData.certificateId,
         )
@@ -37,14 +37,12 @@ export async function deleteTemplateAction(_: unknown, formData: FormData) {
             throw new Error('Certificate not found')
         }
 
-        // Verificar se o usuário tem permissão
         const session = await sessionsRepository.getById(sessionToken)
         if (!session || certificate.getUserId() !== session.userId) {
             throw new Error('Unauthorized')
         }
 
-        // Remover o template definindo como null
-        certificate.addTemplate(null as any) // TODO: implementar método removeTemplate no domain
+        certificate.removeTemplate()
 
         await certificateEmissionsRepository.update(certificate)
 

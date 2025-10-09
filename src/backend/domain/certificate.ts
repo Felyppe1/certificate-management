@@ -86,8 +86,12 @@ export class Certificate extends AggregateRoot {
         return this.userId
     }
 
-    addTemplate(template: Template) {
+    setTemplate(template: Template) {
         this.template = template
+    }
+
+    removeTemplate() {
+        this.template = null
     }
 
     getDriveFileId() {

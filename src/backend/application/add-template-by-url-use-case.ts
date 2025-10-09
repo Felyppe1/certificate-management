@@ -70,7 +70,7 @@ export class AddTemplateByUrlUseCase {
             fileExtension,
         })
 
-        certificate.addTemplate(newTemplate)
+        certificate.setTemplate(newTemplate)
 
         await this.certificateEmissionsRepository.update(certificate)
     }

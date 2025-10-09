@@ -79,7 +79,7 @@ export class RefreshTemplateUseCase {
             variables: uniqueVariables,
         })
 
-        certificate.addTemplate(newTemplate)
+        certificate.setTemplate(newTemplate)
 
         await this.certificateEmissionsRepository.update(certificate)
     }
