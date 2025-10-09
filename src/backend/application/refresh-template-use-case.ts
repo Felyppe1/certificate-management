@@ -4,6 +4,7 @@ import { UnauthorizedError } from '../domain/error/unauthorized-error'
 import { ValidationError } from '../domain/error/validation-error'
 import { INPUT_METHOD, Template } from '../domain/template'
 import { CertificatesRepository } from './interfaces/certificates-repository'
+import { ExternalUserAccountsRepository } from './interfaces/external-user-account-repository'
 import { FileContentExtractorFactory } from './interfaces/file-content-extractor'
 import { GoogleDriveGateway } from './interfaces/google-drive-gateway'
 import { SessionsRepository } from './interfaces/sessions-repository'
@@ -19,6 +20,7 @@ export class RefreshTemplateUseCase {
         private sessionsRepository: SessionsRepository,
         private googleDriveGateway: GoogleDriveGateway,
         private fileContentExtractorFactory: FileContentExtractorFactory,
+        private externalUserAccountsRepository: ExternalUserAccountsRepository,
     ) {}
 
     async execute(input: RefreshTemplateUseCaseInput) {
@@ -44,7 +46,13 @@ export class RefreshTemplateUseCase {
             )
         }
 
-        const driveFileId = certificate.getDriveFileId()
+        if (!certificate.hasTemplate()) {
+            throw new ValidationError(
+                'Certificate does not have a template to refresh',
+            )
+        }
+
+        const driveFileId = certificate.getDriveTemplateFileId()
 
         if (!driveFileId) {
             throw new ValidationError(
@@ -52,15 +60,24 @@ export class RefreshTemplateUseCase {
             )
         }
 
+        const externalAccount =
+            await this.externalUserAccountsRepository.getById(
+                certificate.getUserId(),
+                'GOOGLE',
+            )
+
         // TODO: should it be a domain service?
         const { name, fileExtension } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
+                userAccessToken: externalAccount?.accessToken,
+                userRefreshToken: externalAccount?.refreshToken ?? undefined,
             })
 
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
             fileExtension: fileExtension,
+            accessToken: externalAccount?.accessToken,
         })
 
         const contentExtractor =

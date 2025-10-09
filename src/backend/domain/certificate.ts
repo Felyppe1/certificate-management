@@ -94,7 +94,11 @@ export class Certificate extends AggregateRoot {
         this.template = null
     }
 
-    getDriveFileId() {
+    hasTemplate() {
+        return !!this.template
+    }
+
+    getDriveTemplateFileId() {
         return this.template?.getDriveFileId()
     }
 

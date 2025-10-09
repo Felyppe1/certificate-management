@@ -8,6 +8,7 @@ import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/pr
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
+import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
 
 const refreshTemplateActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -29,12 +30,15 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
         const certificatesRepository = new PrismaCertificatesRepository()
         const googleDriveGateway = new HttpGoogleDriveGateway()
         const fileContentExtractorFactory = new FileContentExtractorFactory()
+        const externalUserAccountsRepository =
+            new PrismaExternalUserAccountsRepository()
 
         const refreshTemplateUseCase = new RefreshTemplateUseCase(
             certificatesRepository,
             sessionsRepository,
             googleDriveGateway,
             fileContentExtractorFactory,
+            externalUserAccountsRepository,
         )
 
         await refreshTemplateUseCase.execute({
