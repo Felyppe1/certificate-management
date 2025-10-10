@@ -15,10 +15,19 @@ interface AddTemplateByUrlUseCaseInput {
 
 export class AddTemplateByUrlUseCase {
     constructor(
-        private certificateEmissionsRepository: CertificatesRepository,
-        private sessionsRepository: SessionsRepository,
-        private googleDriveGateway: GoogleDriveGateway,
-        private fileContentExtractorFactory: FileContentExtractorFactory,
+        private certificateEmissionsRepository: Pick<
+            CertificatesRepository,
+            'getById' | 'update'
+        >,
+        private sessionsRepository: Pick<SessionsRepository, 'getById'>,
+        private googleDriveGateway: Pick<
+            GoogleDriveGateway,
+            'getFileMetadata' | 'downloadFile'
+        >,
+        private fileContentExtractorFactory: Pick<
+            FileContentExtractorFactory,
+            'create'
+        >,
     ) {}
 
     async execute(input: AddTemplateByUrlUseCaseInput) {
