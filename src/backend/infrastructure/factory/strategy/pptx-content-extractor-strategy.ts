@@ -1,8 +1,10 @@
 import JSZip from 'jszip'
 import { DOMParser } from 'xmldom'
-import { FileContentExtractor } from '../../application/interfaces/file-content-extractor'
+import { IFileContentExtractorStrategy } from '../../../application/interfaces/ifile-content-extractor'
 
-export class PptxContentExtractor implements FileContentExtractor {
+export class PptxContentExtractorStrategy
+    implements IFileContentExtractorStrategy
+{
     async extractText(buffer: Buffer) {
         const zip = new JSZip()
         await zip.loadAsync(buffer)

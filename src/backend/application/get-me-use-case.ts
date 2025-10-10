@@ -1,8 +1,8 @@
 import { NotFoundError } from '../domain/error/not-found-error'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
-import { ExternalUserAccountsRepository } from './interfaces/external-user-account-repository'
-import { SessionsRepository } from './interfaces/sessions-repository'
-import { UsersRepository } from './interfaces/users-repository'
+import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
+import { ISessionsRepository } from './interfaces/isessions-repository'
+import { IUsersRepository } from './interfaces/iusers-repository'
 
 interface GetMeUseCaseInput {
     sessionToken: string
@@ -10,9 +10,9 @@ interface GetMeUseCaseInput {
 
 export class GetMeUseCase {
     constructor(
-        private sessionsRepository: SessionsRepository,
-        private usersRepository: UsersRepository,
-        private externalUserAccountsRepository: ExternalUserAccountsRepository,
+        private sessionsRepository: ISessionsRepository,
+        private usersRepository: IUsersRepository,
+        private externalUserAccountsRepository: IExternalUserAccountsRepository,
     ) {}
 
     async execute(input: GetMeUseCaseInput) {

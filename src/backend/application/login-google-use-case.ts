@@ -1,9 +1,9 @@
 import {
     ExternalUserAccount,
-    ExternalUserAccountsRepository,
-} from './interfaces/external-user-account-repository'
-import { SessionsRepository } from './interfaces/sessions-repository'
-import { User, UsersRepository } from './interfaces/users-repository'
+    IExternalUserAccountsRepository,
+} from './interfaces/iexternal-user-accounts-repository'
+import { ISessionsRepository } from './interfaces/isessions-repository'
+import { User, IUsersRepository } from './interfaces/iusers-repository'
 import crypto from 'crypto'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
@@ -14,12 +14,12 @@ interface LoginGoogleUseCaseInput {
 
 export class LoginGoogleUseCase {
     constructor(
-        private usersRepository: Pick<UsersRepository, 'save' | 'getByEmail'>,
+        private usersRepository: Pick<IUsersRepository, 'save' | 'getByEmail'>,
         private externalUserAccountsRepository: Pick<
-            ExternalUserAccountsRepository,
+            IExternalUserAccountsRepository,
             'save' | 'update' | 'getById'
         >,
-        private sessionsRepository: Pick<SessionsRepository, 'save'>,
+        private sessionsRepository: Pick<ISessionsRepository, 'save'>,
         private googleAuthGateway: Pick<
             IGoogleAuthGateway,
             'getToken' | 'getUserInfo'

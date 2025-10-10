@@ -1,5 +1,5 @@
 import { GetMeUseCase } from '@/backend/application/get-me-use-case'
-import { Provider } from '@/backend/application/interfaces/external-user-account-repository'
+import { Provider } from '@/backend/application/interfaces/iexternal-user-accounts-repository'
 import { NotFoundError } from '@/backend/domain/error/not-found-error'
 import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'

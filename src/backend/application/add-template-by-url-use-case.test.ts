@@ -1,24 +1,24 @@
 import { describe, expect, it } from 'vitest'
 import { AddTemplateByUrlUseCase } from './add-template-by-url-use-case'
-import { CertificatesRepository } from './interfaces/certificates-repository'
+import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { Certificate, CERTIFICATE_STATUS } from '../domain/certificate'
-import { Session, SessionsRepository } from './interfaces/sessions-repository'
+import { Session, ISessionsRepository } from './interfaces/isessions-repository'
 import {
     DownloadFileInput,
     GetFileMetadataInput,
     GetFileMetadataOutput,
-    GoogleDriveGateway,
-} from './interfaces/google-drive-gateway'
+    IGoogleDriveGateway,
+} from './interfaces/igoogle-drive-gateway'
 import { TEMPLATE_FILE_EXTENSION } from '../domain/template'
 import {
-    FileContentExtractor,
-    FileContentExtractorFactory,
-} from './interfaces/file-content-extractor'
+    IFileContentExtractorStrategy,
+    IFileContentExtractorFactory,
+} from './interfaces/ifile-content-extractor'
 
 describe('AddTemplateByUrlUseCase', () => {
     it('should add a template by URL successfully', async () => {
         class CertificateEmissionsRepositoryStub
-            implements Pick<CertificatesRepository, 'getById' | 'update'>
+            implements Pick<ICertificatesRepository, 'getById' | 'update'>
         {
             async getById(id: string): Promise<Certificate | null> {
                 return new Certificate({
@@ -37,7 +37,7 @@ describe('AddTemplateByUrlUseCase', () => {
         }
 
         class SessionsRepositoryStub
-            implements Pick<SessionsRepository, 'getById'>
+            implements Pick<ISessionsRepository, 'getById'>
         {
             async getById(id: string): Promise<Session | null> {
                 return {
@@ -52,7 +52,7 @@ describe('AddTemplateByUrlUseCase', () => {
 
         class GoogleDriveGatewayStub
             implements
-                Pick<GoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
+                Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
         {
             async getFileMetadata(
                 input: GetFileMetadataInput,
@@ -69,9 +69,11 @@ describe('AddTemplateByUrlUseCase', () => {
         }
 
         class FileContentExtractorFactoryStub
-            implements Pick<FileContentExtractorFactory, 'create'>
+            implements Pick<IFileContentExtractorFactory, 'create'>
         {
-            create(mimeType: TEMPLATE_FILE_EXTENSION): FileContentExtractor {
+            create(
+                mimeType: TEMPLATE_FILE_EXTENSION,
+            ): IFileContentExtractorStrategy {
                 return {
                     async extractText(buffer: Buffer): Promise<string> {
                         return 'file content'

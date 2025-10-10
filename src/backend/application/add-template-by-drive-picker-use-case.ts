@@ -1,11 +1,11 @@
 import { INPUT_METHOD, Template } from '../domain/template'
-import { SessionsRepository } from './interfaces/sessions-repository'
-import { GoogleDriveGateway } from './interfaces/google-drive-gateway'
-import { FileContentExtractorFactory } from './interfaces/file-content-extractor'
+import { ISessionsRepository } from './interfaces/isessions-repository'
+import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
+import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
-import { CertificatesRepository } from './interfaces/certificates-repository'
+import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { NotFoundError } from '../domain/error/not-found-error'
-import { ExternalUserAccountsRepository } from './interfaces/external-user-account-repository'
+import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 
 interface AddTemplateByDrivePickerUseCaseInput {
@@ -16,11 +16,11 @@ interface AddTemplateByDrivePickerUseCaseInput {
 
 export class AddTemplateByDrivePickerUseCase {
     constructor(
-        private certificateEmissionsRepository: CertificatesRepository,
-        private sessionsRepository: SessionsRepository,
-        private googleDriveGateway: GoogleDriveGateway,
-        private fileContentExtractorFactory: FileContentExtractorFactory,
-        private externalUserAccountsRepository: ExternalUserAccountsRepository,
+        private certificateEmissionsRepository: ICertificatesRepository,
+        private sessionsRepository: ISessionsRepository,
+        private googleDriveGateway: IGoogleDriveGateway,
+        private fileContentExtractorFactory: IFileContentExtractorFactory,
+        private externalUserAccountsRepository: IExternalUserAccountsRepository,
         private googleAuthGateway: Pick<
             IGoogleAuthGateway,
             'checkOrGetNewAccessToken'

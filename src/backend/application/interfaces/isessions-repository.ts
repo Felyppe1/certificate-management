@@ -3,7 +3,7 @@ export interface Session {
     token: string
 }
 
-export interface SessionsRepository {
+export interface ISessionsRepository {
     save(session: Session): Promise<void>
     getById(token: string): Promise<Session | null>
     deleteById(token: string): Promise<void>

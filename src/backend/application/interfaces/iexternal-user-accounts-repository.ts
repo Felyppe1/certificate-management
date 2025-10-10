@@ -10,7 +10,7 @@ export interface ExternalUserAccount {
     refreshTokenExpiryDateTime: Date | null
 }
 
-export interface ExternalUserAccountsRepository {
+export interface IExternalUserAccountsRepository {
     getById(
         userId: string,
         provider: Provider,

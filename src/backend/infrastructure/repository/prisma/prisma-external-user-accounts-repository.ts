@@ -1,12 +1,12 @@
 import {
     ExternalUserAccount,
-    ExternalUserAccountsRepository,
+    IExternalUserAccountsRepository,
     Provider,
-} from '@/backend/application/interfaces/external-user-account-repository'
+} from '@/backend/application/interfaces/iexternal-user-accounts-repository'
 import { prisma } from '.'
 
 export class PrismaExternalUserAccountsRepository
-    implements ExternalUserAccountsRepository
+    implements IExternalUserAccountsRepository
 {
     async getById(userId: string, provider: Provider) {
         const account = await prisma.externalUserAccount.findUnique({

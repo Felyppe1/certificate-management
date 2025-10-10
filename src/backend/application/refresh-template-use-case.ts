@@ -3,11 +3,11 @@ import { NotFoundError } from '../domain/error/not-found-error'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
 import { ValidationError } from '../domain/error/validation-error'
 import { INPUT_METHOD, Template } from '../domain/template'
-import { CertificatesRepository } from './interfaces/certificates-repository'
-import { ExternalUserAccountsRepository } from './interfaces/external-user-account-repository'
-import { FileContentExtractorFactory } from './interfaces/file-content-extractor'
-import { GoogleDriveGateway } from './interfaces/google-drive-gateway'
-import { SessionsRepository } from './interfaces/sessions-repository'
+import { ICertificatesRepository } from './interfaces/icertificates-repository'
+import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
+import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'
+import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
+import { ISessionsRepository } from './interfaces/isessions-repository'
 
 interface RefreshTemplateUseCaseInput {
     sessionToken: string
@@ -16,11 +16,11 @@ interface RefreshTemplateUseCaseInput {
 
 export class RefreshTemplateUseCase {
     constructor(
-        private certificateEmissionsRepository: CertificatesRepository,
-        private sessionsRepository: SessionsRepository,
-        private googleDriveGateway: GoogleDriveGateway,
-        private fileContentExtractorFactory: FileContentExtractorFactory,
-        private externalUserAccountsRepository: ExternalUserAccountsRepository,
+        private certificateEmissionsRepository: ICertificatesRepository,
+        private sessionsRepository: ISessionsRepository,
+        private googleDriveGateway: IGoogleDriveGateway,
+        private fileContentExtractorFactory: IFileContentExtractorFactory,
+        private externalUserAccountsRepository: IExternalUserAccountsRepository,
     ) {}
 
     async execute(input: RefreshTemplateUseCaseInput) {

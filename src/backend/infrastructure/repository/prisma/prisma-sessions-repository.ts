@@ -1,10 +1,10 @@
 import {
     Session,
-    SessionsRepository,
-} from '@/backend/application/interfaces/sessions-repository'
+    ISessionsRepository,
+} from '@/backend/application/interfaces/isessions-repository'
 import { prisma } from '.'
 
-export class PrismaSessionsRepository implements SessionsRepository {
+export class PrismaSessionsRepository implements ISessionsRepository {
     async getById(token: string) {
         const session = await prisma.session.findUnique({
             where: {

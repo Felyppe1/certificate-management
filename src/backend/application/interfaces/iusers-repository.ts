@@ -5,7 +5,7 @@ export interface User {
     passwordHash: string | null
 }
 
-export interface UsersRepository {
+export interface IUsersRepository {
     getById(id: string): Promise<User | null>
     getByEmail(email: string): Promise<User | null>
     save(user: User): Promise<void>

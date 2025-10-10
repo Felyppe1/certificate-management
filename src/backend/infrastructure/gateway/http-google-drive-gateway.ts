@@ -1,8 +1,8 @@
 import {
     DownloadFileInput,
     GetFileMetadataInput,
-    GoogleDriveGateway,
-} from '@/backend/application/interfaces/google-drive-gateway'
+    IGoogleDriveGateway,
+} from '@/backend/application/interfaces/igoogle-drive-gateway'
 import { FileUrlNotFoundError } from '@/backend/domain/error/file-url-not-found-error'
 import { ValidationError } from '@/backend/domain/error/validation-error'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
@@ -15,7 +15,7 @@ const googleAuth = new google.auth.GoogleAuth({
     scopes: ['https://www.googleapis.com/auth/drive.readonly'],
 })
 
-export class HttpGoogleDriveGateway implements GoogleDriveGateway {
+export class HttpGoogleDriveGateway implements IGoogleDriveGateway {
     async getFileMetadata(input: GetFileMetadataInput) {
         oauth2Client.setCredentials({
             access_token: input.userAccessToken,

@@ -17,7 +17,7 @@ export interface GetFileMetadataOutput {
     fileExtension: TEMPLATE_FILE_EXTENSION
 }
 
-export interface GoogleDriveGateway {
+export interface IGoogleDriveGateway {
     getFileMetadata(input: GetFileMetadataInput): Promise<GetFileMetadataOutput>
     downloadFile(data: DownloadFileInput): Promise<Buffer>
 }

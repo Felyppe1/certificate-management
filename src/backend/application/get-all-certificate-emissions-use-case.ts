@@ -1,6 +1,6 @@
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
 import { prisma } from '../infrastructure/repository/prisma'
-import { SessionsRepository } from './interfaces/sessions-repository'
+import { ISessionsRepository } from './interfaces/isessions-repository'
 
 interface GetAllCertificateEmissionsUseCaseInput {
     sessionToken: string
@@ -8,7 +8,7 @@ interface GetAllCertificateEmissionsUseCaseInput {
 }
 
 export class GetAllCertificateEmissionsUseCase {
-    constructor(private sessionsRepository: SessionsRepository) {}
+    constructor(private sessionsRepository: ISessionsRepository) {}
 
     async execute({ sessionToken }: GetAllCertificateEmissionsUseCaseInput) {
         const session = await this.sessionsRepository.getById(sessionToken)

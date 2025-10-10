@@ -4,7 +4,7 @@ import { NotFoundError } from '../domain/error/not-found-error'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
 import { INPUT_METHOD, TEMPLATE_FILE_EXTENSION } from '../domain/template'
 import { prisma } from '../infrastructure/repository/prisma'
-import { SessionsRepository } from './interfaces/sessions-repository'
+import { ISessionsRepository } from './interfaces/isessions-repository'
 
 interface GetCertificateEmissionUseCaseInput {
     certificateId: string
@@ -12,7 +12,7 @@ interface GetCertificateEmissionUseCaseInput {
 }
 
 export class GetCertificateEmissionUseCase {
-    constructor(private sessionsRepository: SessionsRepository) {}
+    constructor(private sessionsRepository: ISessionsRepository) {}
 
     async execute({
         certificateId,

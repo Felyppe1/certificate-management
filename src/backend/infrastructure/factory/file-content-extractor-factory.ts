@@ -1,26 +1,28 @@
-import { FileContentExtractor } from '../../application/interfaces/file-content-extractor'
+import { IFileContentExtractorStrategy } from '../../application/interfaces/ifile-content-extractor'
 import { ValidationError } from '../../domain/error/validation-error'
-import { DocxContentExtractor } from '../extractor/docx-content-extractor'
-import { PptxContentExtractor } from '../extractor/pptx-content-extractor'
-import { FileContentExtractorFactory as IFileContentExtractorFactory } from '../../application/interfaces/file-content-extractor'
+import { DocxContentExtractorStrategy } from './strategy/docx-content-extractor-strategy'
+import { PptxContentExtractorStrategy } from './strategy/pptx-content-extractor-strategy'
+import { IFileContentExtractorFactory } from '../../application/interfaces/ifile-content-extractor'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 
 export class FileContentExtractorFactory
     implements IFileContentExtractorFactory
 {
-    create(fileExtension: TEMPLATE_FILE_EXTENSION): FileContentExtractor {
+    create(
+        fileExtension: TEMPLATE_FILE_EXTENSION,
+    ): IFileContentExtractorStrategy {
         if (
             fileExtension === TEMPLATE_FILE_EXTENSION.PPTX ||
             fileExtension === TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES
         ) {
-            return new PptxContentExtractor()
+            return new PptxContentExtractorStrategy()
         }
 
         if (
             fileExtension === TEMPLATE_FILE_EXTENSION.DOCX ||
             fileExtension === TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS
         ) {
-            return new DocxContentExtractor()
+            return new DocxContentExtractorStrategy()
         }
 
         throw new ValidationError('Unsupported template file extension')

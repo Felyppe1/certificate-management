@@ -1,10 +1,10 @@
 import { INPUT_METHOD, Template } from '../domain/template'
 import { ValidationError } from '../domain/error/validation-error'
-import { SessionsRepository } from './interfaces/sessions-repository'
-import { GoogleDriveGateway } from './interfaces/google-drive-gateway'
-import { FileContentExtractorFactory } from './interfaces/file-content-extractor'
+import { ISessionsRepository } from './interfaces/isessions-repository'
+import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
+import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
-import { CertificatesRepository } from './interfaces/certificates-repository'
+import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { NotFoundError } from '../domain/error/not-found-error'
 
 interface AddTemplateByUrlUseCaseInput {
@@ -16,16 +16,16 @@ interface AddTemplateByUrlUseCaseInput {
 export class AddTemplateByUrlUseCase {
     constructor(
         private certificateEmissionsRepository: Pick<
-            CertificatesRepository,
+            ICertificatesRepository,
             'getById' | 'update'
         >,
-        private sessionsRepository: Pick<SessionsRepository, 'getById'>,
+        private sessionsRepository: Pick<ISessionsRepository, 'getById'>,
         private googleDriveGateway: Pick<
-            GoogleDriveGateway,
+            IGoogleDriveGateway,
             'getFileMetadata' | 'downloadFile'
         >,
         private fileContentExtractorFactory: Pick<
-            FileContentExtractorFactory,
+            IFileContentExtractorFactory,
             'create'
         >,
     ) {}

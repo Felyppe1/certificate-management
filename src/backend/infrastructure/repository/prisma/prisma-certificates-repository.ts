@@ -1,4 +1,4 @@
-import { CertificatesRepository } from '@/backend/application/interfaces/certificates-repository'
+import { ICertificatesRepository } from '@/backend/application/interfaces/icertificates-repository'
 import { Certificate, CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 import { prisma } from '.'
 import {
@@ -7,7 +7,7 @@ import {
     TEMPLATE_FILE_EXTENSION,
 } from '@/backend/domain/template'
 
-export class PrismaCertificatesRepository implements CertificatesRepository {
+export class PrismaCertificatesRepository implements ICertificatesRepository {
     async save(certificate: Certificate) {
         const { id, name, status, createdAt, userId, template, domainEvents } =
             certificate.serialize()

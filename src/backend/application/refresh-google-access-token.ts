@@ -1,7 +1,7 @@
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
-import { ExternalUserAccountsRepository } from './interfaces/external-user-account-repository'
+import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
-import { SessionsRepository } from './interfaces/sessions-repository'
+import { ISessionsRepository } from './interfaces/isessions-repository'
 
 interface RefreshGoogleAccessTokenUseCaseInput {
     sessionToken: string
@@ -9,8 +9,8 @@ interface RefreshGoogleAccessTokenUseCaseInput {
 
 export class RefreshGoogleAccessTokenUseCase {
     constructor(
-        private sessionsRepository: SessionsRepository,
-        private externalUserAccountsRepository: ExternalUserAccountsRepository,
+        private sessionsRepository: ISessionsRepository,
+        private externalUserAccountsRepository: IExternalUserAccountsRepository,
         private googleAuthGateway: IGoogleAuthGateway,
     ) {}
 

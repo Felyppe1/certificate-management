@@ -1,7 +1,7 @@
 import { Certificate } from '../domain/certificate'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
-import { CertificatesRepository } from './interfaces/certificates-repository'
-import { SessionsRepository } from './interfaces/sessions-repository'
+import { ICertificatesRepository } from './interfaces/icertificates-repository'
+import { ISessionsRepository } from './interfaces/isessions-repository'
 
 interface CreateUseCaseEmissionUseCaseInput {
     name: string
@@ -10,8 +10,8 @@ interface CreateUseCaseEmissionUseCaseInput {
 
 export class CreateCertificateEmissionUseCase {
     constructor(
-        private certificateEmissionsRepository: CertificatesRepository,
-        private sessionsRepository: SessionsRepository,
+        private certificateEmissionsRepository: ICertificatesRepository,
+        private sessionsRepository: ISessionsRepository,
     ) {}
 
     async execute({ name, sessionToken }: CreateUseCaseEmissionUseCaseInput) {

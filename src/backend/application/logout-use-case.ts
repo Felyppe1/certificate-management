@@ -1,8 +1,8 @@
 import { SessionNotFoundError } from '../domain/error/session-not-found-error'
-import { SessionsRepository } from './interfaces/sessions-repository'
+import { ISessionsRepository } from './interfaces/isessions-repository'
 
 export class LogoutUseCase {
-    constructor(private readonly sessionsRepository: SessionsRepository) {}
+    constructor(private readonly sessionsRepository: ISessionsRepository) {}
 
     async execute(tokenId: string) {
         const session = await this.sessionsRepository.getById(tokenId)

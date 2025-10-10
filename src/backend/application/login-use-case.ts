@@ -1,13 +1,13 @@
-import { UsersRepository } from './interfaces/users-repository'
+import { IUsersRepository } from './interfaces/iusers-repository'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
-import { SessionsRepository } from './interfaces/sessions-repository'
+import { ISessionsRepository } from './interfaces/isessions-repository'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
 
 export class LoginUseCase {
     constructor(
-        private usersRepository: UsersRepository,
-        private sessionsRepository: SessionsRepository,
+        private usersRepository: IUsersRepository,
+        private sessionsRepository: ISessionsRepository,
     ) {}
 
     async execute(email: string, password: string) {

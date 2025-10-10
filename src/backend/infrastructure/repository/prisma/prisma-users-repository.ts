@@ -1,10 +1,10 @@
 import {
     User,
-    UsersRepository,
-} from '@/backend/application/interfaces/users-repository'
+    IUsersRepository,
+} from '@/backend/application/interfaces/iusers-repository'
 import { prisma } from '.'
 
-export class PrismaUsersRepository implements UsersRepository {
+export class PrismaUsersRepository implements IUsersRepository {
     async getByEmail(email: string) {
         const user = await prisma.user.findUnique({
             where: {
