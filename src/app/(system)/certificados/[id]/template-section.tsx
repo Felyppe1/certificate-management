@@ -7,18 +7,22 @@ import { TemplateDisplay } from './template-display'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { addTemplateByDrivePickerAction } from '@/backend/infrastructure/server-actions/add-template-by-drive-picker-action'
 import { Button } from '@/components/ui/button'
+import {
+    INPUT_METHOD,
+    TEMPLATE_FILE_EXTENSION,
+} from '@/backend/domain/template'
 
 interface TemplateSectionProps {
     certificateId: string
-    template?: {
+    template: {
         id: string
         driveFileId: string | null
         storageFileUrl: string | null
-        inputMethod: string
+        inputMethod: INPUT_METHOD
         fileName: string
-        fileExtension: string
+        fileExtension: TEMPLATE_FILE_EXTENSION
         variables: string[]
-    }
+    } | null
     googleOAuthToken: string | null
     googleOAuthTokenExpiry: Date | null
 }

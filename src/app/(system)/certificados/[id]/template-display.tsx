@@ -7,6 +7,10 @@ import { RefreshCw, Edit3, Trash2 } from 'lucide-react'
 import { startTransition, useActionState } from 'react'
 import { refreshTemplateAction } from '@/backend/infrastructure/server-actions/refresh-template-action'
 import { deleteTemplateAction } from '@/backend/infrastructure/server-actions/delete-template-action'
+import {
+    INPUT_METHOD,
+    TEMPLATE_FILE_EXTENSION,
+} from '@/backend/domain/template'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -26,9 +30,9 @@ interface TemplateDisplayProps {
         id: string
         driveFileId: string | null
         storageFileUrl: string | null
-        inputMethod: string
+        inputMethod: INPUT_METHOD
         fileName: string
-        fileExtension: string
+        fileExtension: TEMPLATE_FILE_EXTENSION
         variables: string[]
     }
     certificateId: string

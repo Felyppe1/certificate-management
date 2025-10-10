@@ -2,6 +2,7 @@ import { CERTIFICATE_STATUS } from '../domain/certificate'
 import { ForbiddenError } from '../domain/error/forbidden-error'
 import { NotFoundError } from '../domain/error/not-found-error'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
+import { INPUT_METHOD, TEMPLATE_FILE_EXTENSION } from '../domain/template'
 import { prisma } from '../infrastructure/repository/prisma'
 import { SessionsRepository } from './interfaces/sessions-repository'
 
@@ -60,10 +61,11 @@ export class GetCertificateEmissionUseCase {
                       driveFileId: certificateEmission.Template.drive_file_id,
                       storageFileUrl:
                           certificateEmission.Template.storage_file_url,
-                      inputMethod: certificateEmission.Template.input_method,
+                      inputMethod: certificateEmission.Template
+                          .input_method as INPUT_METHOD,
                       fileName: certificateEmission.Template.file_name,
-                      fileExtension:
-                          certificateEmission.Template.file_extension,
+                      fileExtension: certificateEmission.Template
+                          .file_extension as TEMPLATE_FILE_EXTENSION,
                       variables:
                           certificateEmission.Template.TemplateVariable.map(
                               variable => variable.name,

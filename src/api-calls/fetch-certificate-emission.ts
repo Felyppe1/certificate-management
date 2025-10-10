@@ -1,7 +1,10 @@
+import { GetCertificateEmissionControllerResponse } from '@/app/api/certificate-emissions/[id]/route'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 
-export async function fetchCertificateEmission(certificateId: string) {
+export async function fetchCertificateEmission(
+    certificateId: string,
+): Promise<GetCertificateEmissionControllerResponse> {
     const sessionToken = (await cookies()).get('session_token')?.value
 
     const response = await fetch(
