@@ -3,6 +3,7 @@ import { ValidationError } from './error/validation-error'
 import { AggregateRoot } from './primitives/aggregate-root'
 import { CertificateCreatedDomainEvent } from './events/certificate-created-domain-event'
 import { Template } from './template'
+import { TemplateSetDomainEvent } from './events/template-set-domain-event'
 
 export enum CERTIFICATE_STATUS {
     DRAFT = 'DRAFT',
@@ -88,6 +89,10 @@ export class Certificate extends AggregateRoot {
 
     setTemplate(template: Template) {
         this.template = template
+
+        const domainEvent = new TemplateSetDomainEvent(template.getId())
+
+        this.addDomainEvent(domainEvent)
     }
 
     removeTemplate() {

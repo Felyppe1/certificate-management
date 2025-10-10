@@ -1,64 +1,84 @@
-// import { describe, expect, it } from 'vitest'
-// import { Certificate } from './certificate'
-// import { Template, INPUT_METHOD } from './template'
+import { describe, expect, it } from 'vitest'
+import { Certificate, CERTIFICATE_STATUS } from './certificate'
+import { Template, INPUT_METHOD, TEMPLATE_FILE_EXTENSION } from './template'
 
-// describe('Certificate', () => {
-//     it('should create a certificate successfully only with necessary data', () => {
-//         expect(
-//             () =>
-//                 new Certificate({
-//                     id: '1',
-//                     name: 'Title',
-//                     userId: '1',
-//                     templateId: '1',
-//                 }),
-//         ).not.toThrow()
-//     })
+describe('Certificate', () => {
+    it('should create a certificate emission successfully only with necessary data', () => {
+        let certificate!: Certificate
 
-//     it('should add a template successfully', () => {
-//         const certificate = new Certificate({
-//             id: '1',
-//             title: 'Title',
-//             userId: '1',
-//             template: null,
-//         })
+        expect(
+            () =>
+                (certificate = Certificate.create({
+                    name: 'Title',
+                    userId: '1',
+                    template: null,
+                })),
+        ).not.toThrow()
 
-//         expect(() => {
-//             certificate.addTemplate(
-//                 new Template({
-//                     id: '1',
-//                     fileId: '1',
-//                     variables: [],
-//                     bucketUrl: null,
-//                     fileName: 'File Name',
-//                     type: INPUT_METHOD.URL,
-//                 }),
-//             )
-//         }).not.toThrow()
+        const { domainEvents, ...serialized } = certificate.serialize()
 
-//         expect(certificate.hasTemplate()).toBe(true)
-//         expect(certificate.getDomainEvents().length).toBe(1)
-//     })
+        expect(serialized).toEqual({
+            id: expect.any(String),
+            name: 'Title',
+            userId: '1',
+            template: null,
+            status: CERTIFICATE_STATUS.DRAFT,
+            createdAt: expect.any(Date),
+        })
 
-//     it('should remove a template successfully', () => {
-//         const certificate = new Certificate({
-//             id: '1',
-//             title: 'Title',
-//             userId: '1',
-//             template: new Template({
-//                 id: '1',
-//                 fileId: '1',
-//                 variables: [],
-//                 bucketUrl: null,
-//                 fileName: 'File Name',
-//                 type: INPUT_METHOD.URL,
-//             }),
-//         })
+        const {} = certificate.serialize()
+    })
 
-//         expect(certificate.hasTemplate()).toBe(true)
+    it('should add a template successfully', () => {
+        const certificate = new Certificate({
+            id: '1',
+            name: 'Name',
+            userId: '1',
+            template: null,
+            createdAt: new Date(),
+            status: CERTIFICATE_STATUS.DRAFT,
+        })
 
-//         certificate.removeTemplate()
+        expect(() => {
+            certificate.setTemplate(
+                new Template({
+                    id: '1',
+                    fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
+                    inputMethod: INPUT_METHOD.URL,
+                    driveFileId: '1',
+                    storageFileUrl: null,
+                    fileName: 'File Name',
+                    variables: [],
+                }),
+            )
+        }).not.toThrow()
 
-//         expect(certificate.hasTemplate()).toBe(false)
-//     })
-// })
+        expect(certificate.hasTemplate()).toBe(true)
+        expect(certificate.getDomainEvents().length).toBe(1)
+    })
+
+    it('should remove a template successfully', () => {
+        const certificate = new Certificate({
+            id: '1',
+            name: 'Name',
+            userId: '1',
+            template: new Template({
+                id: '1',
+                fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
+                inputMethod: INPUT_METHOD.URL,
+                driveFileId: '1',
+                storageFileUrl: null,
+                fileName: 'File Name',
+                variables: [],
+            }),
+            createdAt: new Date(),
+            status: CERTIFICATE_STATUS.DRAFT,
+        })
+
+        expect(certificate.hasTemplate()).toBe(true)
+
+        certificate.removeTemplate()
+
+        expect(certificate.hasTemplate()).toBe(false)
+    })
+})

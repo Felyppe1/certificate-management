@@ -1,10 +1,10 @@
 import { DomainEvent } from '../primitives/domain-event'
 
-export class TemplateAddedDomainEvent extends DomainEvent {
+export class TemplateSetDomainEvent extends DomainEvent {
     private templateId: string
 
     constructor(templateId: string) {
-        super('template-added-domain-event')
+        super('template-set-domain-event')
 
         this.templateId = templateId
     }
