@@ -1,7 +1,7 @@
 resource "google_service_account" "app_service_account" {
   project      = var.project_id
-  account_id   = "application-service-account${local.suffix}"
-  display_name = "${lower(var.branch)} branch's service account"
+  account_id   = "app-sa${local.suffix}"
+  display_name = "Service account used by the application to communicate with the services required"
 
   depends_on = [
     google_project_service.gcp_services
