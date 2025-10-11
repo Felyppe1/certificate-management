@@ -31,10 +31,19 @@ export interface GetUserInfoOutput {
     providerUserId: string
 }
 
+export interface GetOAuth2ClientWithCredentials {
+    accessToken: string
+    refreshToken: string
+}
+
 export interface IGoogleAuthGateway {
     checkOrGetNewAccessToken(
         input: CheckOrRefreshAccessTokenInput,
     ): Promise<CheckOrRefreshAccessTokenOuput | null>
     getToken(input: GetTokenInput): Promise<GetTokenOutput>
     getUserInfo(input: GetUserInfoInput): Promise<GetUserInfoOutput>
+    getOAuth2ClientWithCredentials(
+        credentials: GetOAuth2ClientWithCredentials,
+    ): any
+    getAuthClient(): any
 }

@@ -31,8 +31,8 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
 
         const sessionsRepository = new PrismaSessionsRepository()
         const certificatesRepository = new PrismaCertificatesRepository()
-        const googleDriveGateway = new GoogleDriveGateway()
         const googleAuthGateway = new GoogleAuthGateway()
+        const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const externalUserAccountsRepository =
             new PrismaExternalUserAccountsRepository()

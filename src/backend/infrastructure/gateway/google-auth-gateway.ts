@@ -1,13 +1,52 @@
-import { google } from 'googleapis'
+import { google, Auth } from 'googleapis'
 import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
 import {
     CheckOrRefreshAccessTokenInput,
+    GetOAuth2ClientWithCredentials,
     GetTokenInput,
     GetUserInfoInput,
     IGoogleAuthGateway,
 } from '@/backend/application/interfaces/igoogle-auth-gateway'
 
 export class GoogleAuthGateway implements IGoogleAuthGateway {
+    private readonly oauth2Client: Auth.OAuth2Client
+    private readonly authClient: Auth.GoogleAuth
+
+    constructor() {
+        this.oauth2Client = new google.auth.OAuth2({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            redirectUri:
+                process.env.NEXT_PUBLIC_BASE_URL + '/api/auth/google/callback',
+        })
+
+        this.authClient = new google.auth.GoogleAuth({
+            apiKey: process.env.GOOGLE_API_KEY,
+            scopes: ['https://www.googleapis.com/auth/drive.readonly'],
+        })
+    }
+
+    getAuthClient() {
+        return this.authClient
+    }
+
+    getOAuth2ClientWithCredentials(
+        credentials: GetOAuth2ClientWithCredentials,
+    ) {
+        const client = new google.auth.OAuth2({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            redirectUri:
+                process.env.NEXT_PUBLIC_BASE_URL + '/api/auth/google/callback',
+        })
+
+        client.setCredentials({
+            access_token: credentials.accessToken,
+            refresh_token: credentials.refreshToken,
+        })
+
+        return client
+    }
     async checkOrGetNewAccessToken({
         accessToken,
         refreshToken,
@@ -15,20 +54,13 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
     }: CheckOrRefreshAccessTokenInput) {
         if (accessTokenExpiryDateTime! > new Date()) return null
 
-        const oauth2Client = new google.auth.OAuth2({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            redirectUri:
-                process.env.NEXT_PUBLIC_BASE_URL + '/api/auth/google/callback',
-        })
-
-        oauth2Client.setCredentials({
+        this.oauth2Client.setCredentials({
             access_token: accessToken,
             refresh_token: refreshToken,
         })
 
         try {
-            const { credentials } = await oauth2Client.refreshAccessToken()
+            const { credentials } = await this.oauth2Client.refreshAccessToken()
 
             const accessTokenExpiryDate = new Date(credentials.expiry_date!)
             // const refreshTokenExpiryDate = new Date(Date.now() + 6 * 24 * 60 * 60 * 1000) // 6 days from now
@@ -55,14 +87,7 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
     }
 
     async getToken({ code }: GetTokenInput) {
-        const oAuth2Client = new google.auth.OAuth2({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            redirectUri:
-                process.env.NEXT_PUBLIC_BASE_URL + '/api/auth/google/callback',
-        })
-
-        const { tokens } = await oAuth2Client.getToken(code)
+        const { tokens } = await this.oauth2Client.getToken(code)
 
         return {
             accessToken: tokens.access_token!,
@@ -74,14 +99,7 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
     }
 
     async getUserInfo({ idToken }: GetUserInfoInput) {
-        const oAuth2Client = new google.auth.OAuth2({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            redirectUri:
-                process.env.NEXT_PUBLIC_BASE_URL + '/api/auth/google/callback',
-        })
-
-        const ticket = await oAuth2Client.verifyIdToken({
+        const ticket = await this.oauth2Client.verifyIdToken({
             idToken: idToken,
             audience: process.env.GOOGLE_CLIENT_ID,
         })

@@ -3,6 +3,7 @@ import {
     GetFileMetadataInput,
     IGoogleDriveGateway,
 } from '@/backend/application/interfaces/igoogle-drive-gateway'
+import { IGoogleAuthGateway } from '@/backend/application/interfaces/igoogle-auth-gateway'
 import { FileUrlNotFoundError } from '@/backend/domain/error/file-url-not-found-error'
 import { ValidationError } from '@/backend/domain/error/validation-error'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
@@ -20,22 +21,22 @@ export const MIME_TYPE_TO_EXTENSION: Record<
 }
 
 export class GoogleDriveGateway implements IGoogleDriveGateway {
+    constructor(private readonly googleAuthGateway: IGoogleAuthGateway) {}
+
     async getFileMetadata(input: GetFileMetadataInput) {
-        const oauth2Client = new google.auth.OAuth2()
+        const oauth2Client =
+            input.userAccessToken && input.userRefreshToken
+                ? this.googleAuthGateway.getOAuth2ClientWithCredentials({
+                      accessToken: input.userAccessToken,
+                      refreshToken: input.userRefreshToken,
+                  })
+                : null
 
-        oauth2Client.setCredentials({
-            access_token: input.userAccessToken,
-            refresh_token: input.userRefreshToken,
-        })
-
-        const googleAuth = new google.auth.GoogleAuth({
-            keyFile: 'application-sa.json',
-            scopes: ['https://www.googleapis.com/auth/drive.readonly'],
-        })
+        const authClient = this.googleAuthGateway.getAuthClient()
 
         const drive = google.drive({
             version: 'v3',
-            auth: input.userAccessToken ? oauth2Client : googleAuth,
+            auth: oauth2Client ?? authClient,
         })
 
         try {

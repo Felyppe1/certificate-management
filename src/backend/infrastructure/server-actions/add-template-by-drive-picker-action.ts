@@ -44,11 +44,11 @@ export async function addTemplateByDrivePickerAction(
         const sessionsRepository = new PrismaSessionsRepository()
         const certificateEmissionsRepository =
             new PrismaCertificatesRepository()
-        const googleDriveGateway = new GoogleDriveGateway()
+        const googleAuthGateway = new GoogleAuthGateway()
+        const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const externalUserAccountsRepository =
             new PrismaExternalUserAccountsRepository()
-        const googleAuthGateway = new GoogleAuthGateway()
 
         const addTemplateByDrivePickerUseCase =
             new AddTemplateByDrivePickerUseCase(

@@ -4,6 +4,7 @@ import { AddTemplateByUrlUseCase } from '@/backend/application/add-template-by-u
 import { FileUrlNotFoundError } from '@/backend/domain/error/file-url-not-found-error'
 import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
+import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
@@ -39,7 +40,8 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
         const sessionsRepository = new PrismaSessionsRepository()
         const certificateEmissionsRepository =
             new PrismaCertificatesRepository()
-        const googleDriveGateway = new GoogleDriveGateway()
+        const googleAuthGateway = new GoogleAuthGateway()
+        const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
 
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
