@@ -34,20 +34,7 @@ jobs:
           echo "TF_VAR_region=${{ env.REGION }}" >> $GITHUB_ENV
           echo "TF_VAR_branch=${{ github.ref_name }}" >> $GITHUB_ENV
           # Application environment variables
-          echo 'TF_VAR_environment_variables={
-            "DB_USER": "${{ secrets.DB_USER }}",
-            "DB_PASSWORD": "${{ secrets.DB_PASSWORD }}",
-            "DB_NAME": "${{ secrets.DB_NAME }}",
-            "DB_URL": "${{ secrets.DB_URL }}",
-            "DB_DIRECT_URL": "${{ secrets.DB_DIRECT_URL }}",
-            "REDIS_URL": "${{ secrets.REDIS_URL }}",
-            "LOKI_URL": "${{ secrets.LOKI_URL }}",
-            "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT": "${{ secrets.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT }}",
-            "GOOGLE_CLIENT_ID": "${{ secrets.GOOGLE_CLIENT_ID }}",
-            "GOOGLE_CLIENT_SECRET": "${{ secrets.GOOGLE_CLIENT_SECRET }}",
-            "GOOGLE_API_KEY": "${{ secrets.GOOGLE_API_KEY }}",
-            "SESSION_SECRET": "${{ secrets.SESSION_SECRET }}"
-          }' >> $GITHUB_ENV
+          echo 'TF_VAR_environment_variables={"DB_USER":"${{ secrets.DB_USER }}","DB_PASSWORD":"${{ secrets.DB_PASSWORD }}","DB_NAME":"${{ secrets.DB_NAME }}","DB_URL":"${{ secrets.DB_URL }}","DB_DIRECT_URL":"${{ secrets.DB_DIRECT_URL }}","REDIS_URL":"${{ secrets.REDIS_URL }}","LOKI_URL":"${{ secrets.LOKI_URL }}","OTEL_EXPORTER_OTLP_LOGS_ENDPOINT":"${{ secrets.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT }}","GOOGLE_CLIENT_ID":"${{ secrets.GOOGLE_CLIENT_ID }}","GOOGLE_CLIENT_SECRET":"${{ secrets.GOOGLE_CLIENT_SECRET }}","GOOGLE_API_KEY":"${{ secrets.GOOGLE_API_KEY }}","SESSION_SECRET":"${{ secrets.SESSION_SECRET }}"}' >> $GITHUB_ENV
 
       - name: Set Terraform backend
         working-directory: ./terraform
