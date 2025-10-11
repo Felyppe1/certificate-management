@@ -1,0 +1,65 @@
+# Dependências e caches
+node_modules
+.npm
+.pnpm-store
+.bun
+.cache
+
+# Saídas de build
+.next
+.next/cache
+out
+dist
+build
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testes e relatórios
+coverage
+.nyc_output
+reports
+**/*.test.*
+**/*.spec.*
+
+# Configurações locais/IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Variáveis de ambiente (passe via args/secrets)
+.env
+.env.*
+!.env.example
+
+# Controle de versão
+.git
+.gitignore
+.gitattributes
+
+# Arquivos do SO
+.DS_Store
+Thumbs.db
+
+# Arquivos/diretórios sensíveis ou desnecessários na imagem
+certs/
+dev-sa.json
+prod-sa.json
+terraform/
+docs/
+dump.rdb
+.cypress
+playwright-report
+test-results
+tmp
+temp
+
+# Compose (não necessário para o build)
+docker-compose*.yml
+docker-compose*.yaml

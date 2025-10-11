@@ -1,21 +1,44 @@
-# Use a Node.js base image
-FROM node:20-alpine AS builder
-
-# Set the working directory
+# Etapa 1: Dependências
+FROM node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package.json and install dependencies
-COPY package.json .
-RUN npm install --frozen-lockfile
+COPY package*.json ./
+# Usa npm ci para builds reprodutíveis. Instala exatamente o que está no package-lock.json e nunca altera o lockfile
+RUN npm ci
 
-# Copy the rest of the application code
+# Etapa 2: Build
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build the Next.js application
+# Garante que o build use variáveis adequadas de produção
+ENV NODE_ENV=production
 RUN npm run build
 
-# Expose the port Cloud Run will use
-EXPOSE 8080
+# Etapa 3: Runner
+FROM node:20-alpine AS runner
+WORKDIR /app
 
-# Start the Next.js server in production mode
-CMD ["npm", "run", "start"]
+ENV NODE_ENV=production
+ENV PORT=8080
+# Cloud Run define PORT automaticamente, então:
+ENV HOSTNAME=0.0.0.0
+
+# Cria um usuário não root
+RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
+
+# Copia apenas o que é necessário para rodar
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+# Ajuste opcional: muda dono dos arquivos (não obrigatório, mas melhora segurança)
+RUN chown -R nextjs:nodejs /app
+
+USER nextjs
+
+EXPOSE 8080
+# O arquivo gerado pelo Next standalone é server.js (no root da standalone)
+CMD ["node", "server.js"]
