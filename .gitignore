@@ -42,3 +42,18 @@ next-env.d.ts
 
 dump.rdb
 application-sa.json
+
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/*.tfvars
+!terraform/terraform.tfvars.example
+terraform/tfplan
+terraform/*.tfplan
+
+# GCP Service Account Keys
+*-key.json
+*-sa.json
+github-actions-key.json

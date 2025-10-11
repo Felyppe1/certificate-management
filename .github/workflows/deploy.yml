@@ -1,0 +1,101 @@
+# name: CI/CD - Terraform + Cloud Run
+
+# on:
+#   push:
+#     branches:
+#       - main
+#       - develop
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+
+#     env:
+#       REGION: us-central1
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+
+#       - name: Authenticate to GCP
+#         uses: google-github-actions/auth@v2
+#         with:
+#           credentials_json: ${{ secrets.SERVICE_ACCOUNT }}
+
+#       - name: Setup gcloud
+#         uses: google-github-actions/setup-gcloud@v2
+#         with:
+#           project_id: ${{ secrets.GCP_PROJECT_ID }}
+#           export_default_credentials: true
+
+#       - name: Export Terraform variables (TF_VAR_*)
+#         run: |
+#           echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
+#           echo "TF_VAR_region=${{ env.REGION }}" >> $GITHUB_ENV
+#           echo "TF_VAR_branch=${{ github.ref_name }}" >> $GITHUB_ENV
+#           # Application environment variables
+#           echo 'TF_VAR_environment_variables={
+#             "DB_USER": "${{ secrets.DB_USER }}",
+#             "DB_PASSWORD": "${{ secrets.DB_PASSWORD }}",
+#             "DB_NAME": "${{ secrets.DB_NAME }}",
+#             "DB_URL": "${{ secrets.DB_URL }}",
+#             "DB_DIRECT_URL": "${{ secrets.DB_DIRECT_URL }}",
+#             "REDIS_URL": "${{ secrets.REDIS_URL }}",
+#             "LOKI_URL": "${{ secrets.LOKI_URL }}",
+#             "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT": "${{ secrets.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT }}",
+#             "GOOGLE_CLIENT_ID": "${{ secrets.GOOGLE_CLIENT_ID }}",
+#             "GOOGLE_CLIENT_SECRET": "${{ secrets.GOOGLE_CLIENT_SECRET }}",
+#             "GOOGLE_API_KEY": "${{ secrets.GOOGLE_API_KEY }}",
+#             "SESSION_SECRET": "${{ secrets.SESSION_SECRET }}"
+#           }' >> $GITHUB_ENV
+
+#       - name: Set Terraform backend
+#         working-directory: ./terraform
+#         run: |
+#           if [ "${{ github.ref_name }}" = "main" ]; then SUFFIX=""; else SUFFIX="-${{ github.ref_name }}"; fi
+#           echo "TF_BACKEND_BUCKET=tf-state${SUFFIX}-${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
+
+#       - name: Install Terraform
+#         uses: hashicorp/setup-terraform@v3
+
+#       - name: Terraform Init
+#         working-directory: ./terraform
+#         run: terraform init -backend-config="bucket=$TF_BACKEND_BUCKET"
+
+#       - name: Terraform Plan
+#         working-directory: ./terraform
+#         run: terraform plan -out=tfplan
+
+#       - name: Terraform Apply
+#         working-directory: ./terraform
+#         run: terraform apply -auto-approve tfplan
+
+#       - name: Get Artifact Path from Terraform
+#         id: tf_output
+#         working-directory: ./terraform
+#         run: |
+#           echo "ARTIFACT_PATH=$(terraform output -raw artifact_registry_path)" >> $GITHUB_ENV
+
+#       # 3️⃣ Build Docker image
+#       - name: Build Docker image
+#         run: docker build -t $ARTIFACT_PATH:$GITHUB_SHA .
+
+#       # 4️⃣ Push to Artifact Registry
+#       - name: Push image
+#         run: |
+#           gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+#           docker push $ARTIFACT_PATH:$GITHUB_SHA
+
+#       - name: Get Service Name from Terraform
+#         working-directory: ./terraform
+#         run: |
+#           echo "CLOUD_RUN_NAME=$(terraform output -raw cloud_run_name)" >> $GITHUB_ENV
+
+#       # 5️⃣ Deploy to Cloud Run
+#       - name: Deploy to Cloud Run
+#         run: |
+#           gcloud run deploy $CLOUD_RUN_NAME \
+#             --image $ARTIFACT_PATH:$GITHUB_SHA \
+#             --region $REGION \
+#             --platform managed \
+#             --allow-unauthenticated
