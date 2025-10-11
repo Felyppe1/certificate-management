@@ -103,7 +103,7 @@ export class Certificate extends AggregateRoot {
             )
         }
 
-        if (!!this.template) {
+        if (!this.template) {
             throw new ValidationError('Certificate does not have a template')
         }
 
