@@ -11,19 +11,14 @@ import {
 import { FileText, Link, Upload, Loader2 } from 'lucide-react'
 import { Input } from '../ui/input'
 import { Button } from '../ui/button'
-import {
-    startTransition,
-    useEffect,
-    useRef,
-    useState,
-    useTransition,
-} from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import {
     PickerCanceledEvent,
     PickerErrorEvent,
     PickerPickedEvent,
 } from '@googleworkspace/drive-picker-element'
 import { refreshGoogleAccessTokenAction } from '@/backend/infrastructure/server-actions/refresh-google-access-token-action'
+import { MIME_TYPES } from '@/types'
 
 type SelectOption = 'upload' | 'link' | 'drive'
 
@@ -76,7 +71,7 @@ export function FileSelector({
 
         onSubmitDrive(fileId)
 
-        setSelectedOption(null)
+        // setSelectedOption(null)
     }
 
     const handlePickerClosed = (event: PickerCanceledEvent) => {
@@ -255,10 +250,10 @@ export function FileSelector({
                 >
                     <drive-picker-docs-view
                         mime-types={[
-                            'application/vnd.google-apps.document',
-                            'application/vnd.google-apps.presentation',
-                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                            MIME_TYPES.GOOGLE_DOCS,
+                            MIME_TYPES.GOOGLE_SLIDES,
+                            MIME_TYPES.DOCX,
+                            MIME_TYPES.PPTX,
                         ].join(',')}
                     ></drive-picker-docs-view>
                 </drive-picker>

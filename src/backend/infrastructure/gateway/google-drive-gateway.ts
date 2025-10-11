@@ -6,20 +6,31 @@ import {
 import { FileUrlNotFoundError } from '@/backend/domain/error/file-url-not-found-error'
 import { ValidationError } from '@/backend/domain/error/validation-error'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
+import { MIME_TYPES } from '@/types'
 import { google } from 'googleapis'
 
-const oauth2Client = new google.auth.OAuth2()
-
-const googleAuth = new google.auth.GoogleAuth({
-    keyFile: 'application-sa.json',
-    scopes: ['https://www.googleapis.com/auth/drive.readonly'],
-})
+export const MIME_TYPE_TO_EXTENSION: Record<
+    string,
+    TEMPLATE_FILE_EXTENSION | undefined
+> = {
+    [MIME_TYPES.PPTX]: TEMPLATE_FILE_EXTENSION.PPTX,
+    [MIME_TYPES.GOOGLE_SLIDES]: TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES,
+    [MIME_TYPES.GOOGLE_DOCS]: TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS,
+    [MIME_TYPES.DOCX]: TEMPLATE_FILE_EXTENSION.DOCX,
+}
 
 export class GoogleDriveGateway implements IGoogleDriveGateway {
     async getFileMetadata(input: GetFileMetadataInput) {
+        const oauth2Client = new google.auth.OAuth2()
+
         oauth2Client.setCredentials({
             access_token: input.userAccessToken,
             refresh_token: input.userRefreshToken,
+        })
+
+        const googleAuth = new google.auth.GoogleAuth({
+            keyFile: 'application-sa.json',
+            scopes: ['https://www.googleapis.com/auth/drive.readonly'],
         })
 
         const drive = google.drive({
@@ -34,30 +45,15 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
                 fields: 'id, name, mimeType, size, webViewLink, webContentLink, thumbnailLink',
             })
 
-            console.log(file)
+            const mimeType = file.data.mimeType
 
-            let fileExtension: TEMPLATE_FILE_EXTENSION
+            if (!mimeType) {
+                throw new ValidationError('File mime type not found')
+            }
 
-            if (
-                file.data.mimeType ===
-                'application/vnd.openxmlformats-officedocument.presentationml.presentation'
-            ) {
-                fileExtension = TEMPLATE_FILE_EXTENSION.PPTX
-            } else if (
-                file.data.mimeType ===
-                'application/vnd.google-apps.presentation'
-            ) {
-                fileExtension = TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES
-            } else if (
-                file.data.mimeType === 'application/vnd.google-apps.document'
-            ) {
-                fileExtension = TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS
-            } else if (
-                file.data.mimeType ===
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            ) {
-                fileExtension = TEMPLATE_FILE_EXTENSION.DOCX
-            } else {
+            const fileExtension = MIME_TYPE_TO_EXTENSION[mimeType]
+
+            if (!fileExtension) {
                 throw new ValidationError('Unsupported file type')
             }
 
@@ -67,6 +63,10 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
             }
         } catch (error: any) {
             console.log(error)
+
+            if (error instanceof ValidationError) {
+                throw error
+            }
 
             throw new FileUrlNotFoundError('File not found')
         }

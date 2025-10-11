@@ -7,6 +7,7 @@ import { cookies } from 'next/headers'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { redirect } from 'next/navigation'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { MIME_TYPES } from '@/types'
 
 interface UploadTemplateActionOutput {
     id?: string
@@ -71,9 +72,9 @@ export async function uploadTemplateAction(
     let mimeType: string
     // TODO: melhorar segurança
     if (file.name.endsWith('.docx')) {
-        mimeType = 'application/vnd.google-apps.document' // Google Docs
+        mimeType = MIME_TYPES.GOOGLE_DOCS // Google Docs
     } else if (file.name.endsWith('.pptx')) {
-        mimeType = 'application/vnd.google-apps.presentation' // Google Slides
+        mimeType = MIME_TYPES.GOOGLE_SLIDES // Google Slides
     } else {
         throw new Error('Formato não suportado (somente .docx ou .pptx)')
     }
@@ -146,7 +147,7 @@ export async function uploadTemplateAction(
     const fileId = uploaded.data.id!
     let variables: string[] = []
 
-    if (mimeType === 'application/vnd.google-apps.document') {
+    if (mimeType === MIME_TYPES.GOOGLE_DOCS) {
         variables = await extractFromDocs(oAuthClient, fileId)
     } else {
         variables = await extractFromSlides(oAuthClient, fileId)
