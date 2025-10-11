@@ -13,7 +13,7 @@ export async function POST() {
 
     try {
         if (!sessionToken) {
-            throw new UnauthorizedError('Session token not present')
+            throw new UnauthorizedError('missing-session')
         }
 
         const sessionsRepository = new PrismaSessionsRepository()
@@ -35,11 +35,17 @@ export async function POST() {
         return NextResponse.json({ accessToken })
     } catch (error) {
         if (error instanceof UnauthorizedError) {
-            return NextResponse.json({ error: error.message }, { status: 401 })
+            return NextResponse.json(
+                { type: error.type, title: error.title },
+                { status: 401 },
+            )
         }
 
         return NextResponse.json(
-            { error: 'Failed to retrieve access token' },
+            {
+                type: 'external-token-refresh-failed',
+                title: 'An unexpected error occurred while refreshing the access token',
+            },
             { status: 500 },
         )
     }

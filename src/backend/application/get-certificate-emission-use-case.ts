@@ -21,7 +21,7 @@ export class GetCertificateEmissionUseCase {
         const session = await this.sessionsRepository.getById(sessionToken)
 
         if (!session) {
-            throw new UnauthorizedError('Unauthorized')
+            throw new UnauthorizedError('session-not-found')
         }
 
         const certificateEmission = await prisma.certificateEmission.findUnique(

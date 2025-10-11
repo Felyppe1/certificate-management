@@ -1,8 +1,17 @@
-export class UnauthorizedError extends Error {
-    title = 'You are not authenticated'
+import { AppError } from './app-error'
 
-    constructor(detail?: string) {
-        super(detail)
-        this.name = 'UnauthorizedError'
+export type UnauthorizedErrorType =
+    | 'missing-session'
+    | 'session-not-found'
+    | 'external-account-not-found'
+    | 'external-token-refresh-failed'
+    | 'insufficient-external-account-scopes'
+    | 'incorrect-credentials'
+
+export class UnauthorizedError extends AppError<UnauthorizedErrorType> {
+    constructor(type: UnauthorizedErrorType, detail?: string) {
+        const title = 'You are not authenticated'
+
+        super(title, type, detail)
     }
 }

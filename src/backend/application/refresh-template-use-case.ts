@@ -29,7 +29,7 @@ export class RefreshTemplateUseCase {
         )
 
         if (!session) {
-            throw new UnauthorizedError('Session not found')
+            throw new UnauthorizedError('session-not-found')
         }
 
         const certificate = await this.certificateEmissionsRepository.getById(

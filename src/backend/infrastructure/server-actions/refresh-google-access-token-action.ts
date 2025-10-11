@@ -6,11 +6,8 @@ import { PrismaSessionsRepository } from '../repository/prisma/prisma-sessions-r
 import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-google-access-token'
-import { NextResponse } from 'next/server'
-import { redirect } from 'next/navigation'
 import { logoutAction } from './logout-action'
 import { revalidateTag } from 'next/cache'
-import { prisma } from '../repository/prisma'
 
 export async function refreshGoogleAccessTokenAction() {
     const cookie = await cookies()
@@ -19,7 +16,7 @@ export async function refreshGoogleAccessTokenAction() {
 
     try {
         if (!sessionToken) {
-            throw new UnauthorizedError('Session token not present')
+            throw new UnauthorizedError('missing-session')
         }
 
         const sessionsRepository = new PrismaSessionsRepository()
@@ -36,11 +33,25 @@ export async function refreshGoogleAccessTokenAction() {
 
         await refreshGoogleAccessTokenUseCase.execute({ sessionToken })
     } catch (error) {
-        // TODO: tem 3 tipos de unauthorized: sessão não existe (fazer logout), conta externa não existe (conectar conta do google) ou não conseguiu fazer refresh do token (conectar conta do google)
         if (error instanceof UnauthorizedError) {
-            return {
-                success: false,
+            if (
+                error.type === 'missing-session' ||
+                error.type === 'session-not-found'
+            ) {
+                await logoutAction()
             }
+
+            // TODO: como fazer para fazer login novamente pegando o refresh token por popup
+            // if (['external-account-not-found', 'external-token-refresh-failed'].includes(error.type)) {
+            //     return {
+            //         success: false,
+            //     }
+            // }
+        }
+
+        return {
+            success: false,
+            message: 'Não foi possível acessar seu Google Drive',
         }
     }
 

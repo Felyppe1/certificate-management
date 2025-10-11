@@ -1,5 +1,6 @@
 import { GetCertificateEmissionUseCase } from '@/backend/application/get-certificate-emission-use-case'
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
+import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
 import {
     INPUT_METHOD,
     TEMPLATE_FILE_EXTENSION,
@@ -41,7 +42,11 @@ export async function GET(
     )
 
     try {
-        const sessionToken = cookie.get('session_token')!.value
+        const sessionToken = cookie.get('session_token')?.value
+
+        if (!sessionToken) {
+            throw new UnauthorizedError('missing-session')
+        }
 
         const certificateEmission = await getCertificateUseCase.execute({
             certificateId,
@@ -51,6 +56,21 @@ export async function GET(
         return Response.json({ certificateEmission })
     } catch (error: any) {
         console.log(error.message)
-        return Response.json({ message: 'Ocorreu um erro' }, { status: 500 })
+
+        if (error instanceof UnauthorizedError) {
+            return Response.json(
+                { type: error.type, title: error.title },
+                { status: 401 },
+            )
+        }
+
+        return Response.json(
+            {
+                type: 'internal-server-error',
+                message:
+                    'An unexpected error occurred while getting the certificate emission',
+            },
+            { status: 500 },
+        )
     }
 }

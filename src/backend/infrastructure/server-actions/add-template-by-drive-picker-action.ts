@@ -11,6 +11,7 @@ import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/pr
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
+import { logoutAction } from './logout-action'
 
 const addTemplateByDrivePickerActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -35,7 +36,7 @@ export async function addTemplateByDrivePickerAction(
 
     try {
         if (!sessionToken) {
-            throw new UnauthorizedError('Session token not present')
+            throw new UnauthorizedError('missing-session')
         }
 
         const parsedData = addTemplateByDrivePickerActionSchema.parse(rawData)
@@ -66,6 +67,11 @@ export async function addTemplateByDrivePickerAction(
         })
     } catch (error: any) {
         console.log(error)
+
+        if (error instanceof UnauthorizedError) {
+            await logoutAction()
+        }
+
         return {
             success: false,
             message: 'Erro ao adicionar template',

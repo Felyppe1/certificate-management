@@ -8,6 +8,7 @@ import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import z from 'zod'
+import { logoutAction } from './logout-action'
 
 const createCertificateEmissionActionSchema = z.object({
     name: z
@@ -34,7 +35,7 @@ export async function createCertificateEmissionAction(
 
     try {
         if (!sessionToken) {
-            throw new UnauthorizedError('Session token not present')
+            throw new UnauthorizedError('missing-session')
         }
 
         const parsedData = createCertificateEmissionActionSchema.parse(rawData)
@@ -55,8 +56,12 @@ export async function createCertificateEmissionAction(
 
         revalidateTag('certificate-emissions')
     } catch (error) {
-        // TODO:
         console.log(error)
+
+        if (error instanceof UnauthorizedError) {
+            await logoutAction()
+        }
+
         return {
             success: false,
             message: 'Ocorreu um erro ao criar a emissão de certificado',

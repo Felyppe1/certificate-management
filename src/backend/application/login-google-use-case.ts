@@ -35,7 +35,7 @@ export class LoginGoogleUseCase {
         ].every(scope => tokenData.scopes.includes(scope))
 
         if (!hasAllScopes) {
-            throw new UnauthorizedError('Insufficient Google OAuth scopes')
+            throw new UnauthorizedError('insufficient-external-account-scopes')
         }
 
         const userInfo = await this.googleAuthGateway.getUserInfo({

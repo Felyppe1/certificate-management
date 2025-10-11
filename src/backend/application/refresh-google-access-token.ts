@@ -18,7 +18,7 @@ export class RefreshGoogleAccessTokenUseCase {
         const session = await this.sessionsRepository.getById(sessionToken)
 
         if (!session) {
-            throw new UnauthorizedError('Session not found')
+            throw new UnauthorizedError('session-not-found')
         }
 
         const externalAccount =
@@ -28,7 +28,7 @@ export class RefreshGoogleAccessTokenUseCase {
             )
 
         if (!externalAccount) {
-            throw new UnauthorizedError('External account not found')
+            throw new UnauthorizedError('external-account-not-found')
         }
 
         const newToken = await this.googleAuthGateway.checkOrGetNewAccessToken({

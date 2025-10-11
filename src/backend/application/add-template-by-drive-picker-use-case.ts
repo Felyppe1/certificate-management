@@ -34,7 +34,7 @@ export class AddTemplateByDrivePickerUseCase {
         )
 
         if (!session) {
-            throw new UnauthorizedError('Session not found')
+            throw new UnauthorizedError('session-not-found')
         }
 
         const certificate = await this.certificateEmissionsRepository.getById(
@@ -52,7 +52,7 @@ export class AddTemplateByDrivePickerUseCase {
             )
 
         if (!externalAccount) {
-            throw new UnauthorizedError('Google account not linked')
+            throw new UnauthorizedError('external-account-not-found')
         }
 
         const newData = await this.googleAuthGateway.checkOrGetNewAccessToken({

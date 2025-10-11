@@ -5,25 +5,47 @@ import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prism
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
 
 export async function GET() {
     const cookie = await cookies()
 
-    const sessionToken = cookie.get('session_token')
-    if (!sessionToken) {
-        throw new Error('Unauthorized')
-        // return new NextResponse('No session token', { status: 401 })
+    const sessionToken = cookie.get('session_token')?.value
+
+    try {
+        if (!sessionToken) {
+            throw new UnauthorizedError('missing-session')
+            // return new NextResponse('No session token', { status: 401 })
+        }
+
+        const session = await new PrismaSessionsRepository().getById(
+            sessionToken,
+        )
+
+        if (!session) {
+            throw new UnauthorizedError('session-not-found')
+        }
+
+        return NextResponse.json(session)
+    } catch (error: any) {
+        if (error instanceof UnauthorizedError) {
+            return NextResponse.json(
+                {
+                    type: error.type,
+                    title: error.title,
+                },
+                { status: 401 },
+            )
+        }
+
+        return NextResponse.json(
+            {
+                type: 'internal-server-error',
+                title: 'An unexpected error occurred while getting the session',
+            },
+            { status: 500 },
+        )
     }
-
-    const session = await new PrismaSessionsRepository().getById(
-        sessionToken.value,
-    )
-
-    if (!session) {
-        throw new Error('Unauthorized')
-    }
-
-    return NextResponse.json(session)
 }
 
 interface LoginResponse {

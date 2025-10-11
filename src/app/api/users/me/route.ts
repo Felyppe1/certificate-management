@@ -23,17 +23,17 @@ export interface GetMeControllerResponse {
 }
 
 export async function GET(): Promise<
-    NextResponse<GetMeControllerResponse | { error: string }>
+    NextResponse<GetMeControllerResponse | { type: string; title: string }>
 > {
     const cookie = await cookies()
 
     const sessionToken = cookie.get('session_token')?.value
 
-    if (!sessionToken) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     try {
+        if (!sessionToken) {
+            throw new UnauthorizedError('missing-session')
+        }
+
         const sessionsRepository = new PrismaSessionsRepository()
         const usersRepository = new PrismaUsersRepository()
         const externalUserAccountsRepository =
@@ -50,15 +50,24 @@ export async function GET(): Promise<
         return NextResponse.json({ user })
     } catch (error: any) {
         if (error instanceof NotFoundError) {
-            return NextResponse.json({ error: error.message }, { status: 404 })
+            return NextResponse.json(
+                { type: 'user-not-found', title: 'User not found' },
+                { status: 404 },
+            )
         }
 
         if (error instanceof UnauthorizedError) {
-            return NextResponse.json({ error: error.message }, { status: 401 })
+            return NextResponse.json(
+                { type: error.type, title: error.title },
+                { status: 401 },
+            )
         }
 
         return NextResponse.json(
-            { error: error.message || 'Internal Server Error' },
+            {
+                type: 'internal-server-error',
+                title: 'An unexpected error occurred while getting the user',
+            },
             { status: 500 },
         )
     }

@@ -14,7 +14,7 @@ export class LoginUseCase {
         const user = await this.usersRepository.getByEmail(email)
 
         if (!user) {
-            throw new UnauthorizedError()
+            throw new UnauthorizedError('incorrect-credentials')
         }
 
         // TODO: check if ''compared to '' passes
@@ -24,7 +24,7 @@ export class LoginUseCase {
         )
 
         if (!isPasswordValid) {
-            throw new UnauthorizedError()
+            throw new UnauthorizedError('incorrect-credentials')
         }
 
         const sessionToken = crypto.randomBytes(32).toString('hex')

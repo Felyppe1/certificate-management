@@ -50,8 +50,7 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
         } catch (error: any) {
             console.error('Error refreshing access token:', error)
 
-            // TODO: criar erro específico
-            throw new UnauthorizedError("Google's refresh token expired")
+            throw new UnauthorizedError('external-token-refresh-failed')
         }
     }
 

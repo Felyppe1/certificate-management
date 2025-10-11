@@ -10,6 +10,7 @@ import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/pr
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
+import { logoutAction } from './logout-action'
 
 const addTemplateByUrlActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -30,7 +31,7 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
 
     try {
         if (!sessionToken) {
-            throw new UnauthorizedError('Session token not present')
+            throw new UnauthorizedError('missing-session')
         }
 
         const parsedData = addTemplateByUrlActionSchema.parse(rawData)
@@ -65,6 +66,10 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
                 certificateId: rawData.certificateId,
             },
         })
+
+        if (error instanceof UnauthorizedError) {
+            await logoutAction()
+        }
 
         return {
             success: false,
