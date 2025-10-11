@@ -15,7 +15,7 @@ const googleAuth = new google.auth.GoogleAuth({
     scopes: ['https://www.googleapis.com/auth/drive.readonly'],
 })
 
-export class HttpGoogleDriveGateway implements IGoogleDriveGateway {
+export class GoogleDriveGateway implements IGoogleDriveGateway {
     async getFileMetadata(input: GetFileMetadataInput) {
         oauth2Client.setCredentials({
             access_token: input.userAccessToken,

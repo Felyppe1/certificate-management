@@ -2,7 +2,7 @@
 
 import { RefreshTemplateUseCase } from '@/backend/application/refresh-template-use-case'
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
-import { HttpGoogleDriveGateway } from '@/backend/infrastructure/gateway/http-google-drive-gateway'
+import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { revalidateTag } from 'next/cache'
@@ -31,7 +31,7 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
 
         const sessionsRepository = new PrismaSessionsRepository()
         const certificatesRepository = new PrismaCertificatesRepository()
-        const googleDriveGateway = new HttpGoogleDriveGateway()
+        const googleDriveGateway = new GoogleDriveGateway()
         const googleAuthGateway = new GoogleAuthGateway()
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const externalUserAccountsRepository =
