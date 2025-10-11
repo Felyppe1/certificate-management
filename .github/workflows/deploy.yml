@@ -40,7 +40,22 @@ jobs:
         working-directory: ./terraform
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then SUFFIX=""; else SUFFIX="-${{ github.ref_name }}"; fi
-          echo "TF_BACKEND_BUCKET=tf-state${SUFFIX}-${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
+          PROJECT_HASH=$(echo -n "${{ secrets.GCP_PROJECT_ID }}" | sha256sum | cut -c1-8)
+          echo "TF_BACKEND_BUCKET=tf-state${SUFFIX}-${PROJECT_HASH}" >> $GITHUB_ENV
+
+      - name: Create Terraform state bucket if not exists
+        run: |
+          # Verifica se o bucket já existe
+          if ! gcloud storage buckets describe gs://$TF_BACKEND_BUCKET --project=${{ secrets.GCP_PROJECT_ID }} > /dev/null 2>&1; then
+            echo "Bucket $TF_BACKEND_BUCKET não existe. Criando..."
+            gcloud storage buckets create gs://$TF_BACKEND_BUCKET \
+              --project=${{ secrets.GCP_PROJECT_ID }} \
+              --location=${{ env.REGION }} \
+              --uniform-bucket-level-access
+            echo "✅ Bucket criado com sucesso"
+          else
+            echo "✅ Bucket $TF_BACKEND_BUCKET já existe"
+          fi
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
