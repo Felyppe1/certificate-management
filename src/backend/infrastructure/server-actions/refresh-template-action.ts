@@ -9,6 +9,9 @@ import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
 import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
+import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
+import { logoutAction } from './logout-action'
+import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 
 const refreshTemplateActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -29,6 +32,7 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
         const sessionsRepository = new PrismaSessionsRepository()
         const certificatesRepository = new PrismaCertificatesRepository()
         const googleDriveGateway = new HttpGoogleDriveGateway()
+        const googleAuthGateway = new GoogleAuthGateway()
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const externalUserAccountsRepository =
             new PrismaExternalUserAccountsRepository()
@@ -37,6 +41,7 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
             certificatesRepository,
             sessionsRepository,
             googleDriveGateway,
+            googleAuthGateway,
             fileContentExtractorFactory,
             externalUserAccountsRepository,
         )
@@ -53,12 +58,24 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
         }
     } catch (error) {
         console.error(error)
+
+        if (error instanceof UnauthorizedError) {
+            if (
+                error.type === 'missing-session' ||
+                error.type === 'session-not-found'
+            ) {
+                await logoutAction()
+            }
+
+            return {
+                success: false,
+                message: 'Sua conta da Google precisa ser reconectada',
+            }
+        }
+
         return {
             success: false,
-            message: 'Erro ao atualizar os dados do template',
+            message: 'Um erro inesperado ocorreu ao atualizar o template',
         }
-        // if (error instanceof ZodError) {
-
-        // }
     }
 }

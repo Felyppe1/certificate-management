@@ -69,12 +69,17 @@ export async function addTemplateByDrivePickerAction(
         console.log(error)
 
         if (error instanceof UnauthorizedError) {
-            await logoutAction()
-        }
+            if (
+                error.type === 'missing-session' ||
+                error.type === 'session-not-found'
+            ) {
+                await logoutAction()
+            }
 
-        return {
-            success: false,
-            message: 'Erro ao adicionar template',
+            return {
+                success: false,
+                message: 'Sua conta da Google precisa ser reconectada',
+            }
         }
     }
 

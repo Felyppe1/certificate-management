@@ -43,7 +43,7 @@ export async function POST() {
 
         return NextResponse.json(
             {
-                type: 'external-token-refresh-failed',
+                type: 'internal-server-error',
                 title: 'An unexpected error occurred while refreshing the access token',
             },
             { status: 500 },

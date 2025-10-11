@@ -4,6 +4,7 @@ import { AggregateRoot } from './primitives/aggregate-root'
 import { CertificateCreatedDomainEvent } from './events/certificate-created-domain-event'
 import { Template } from './template'
 import { TemplateSetDomainEvent } from './events/template-set-domain-event'
+import { ForbiddenError } from './error/forbidden-error'
 
 export enum CERTIFICATE_STATUS {
     DRAFT = 'DRAFT',
@@ -95,7 +96,17 @@ export class Certificate extends AggregateRoot {
         this.addDomainEvent(domainEvent)
     }
 
-    removeTemplate() {
+    removeTemplate(userIdTryingToRemove: string) {
+        if (this.userId !== userIdTryingToRemove) {
+            throw new ForbiddenError(
+                'Only the owner of the certificate can remove the template',
+            )
+        }
+
+        if (!!this.template) {
+            throw new ValidationError('Certificate does not have a template')
+        }
+
         this.template = null
     }
 

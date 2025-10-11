@@ -78,9 +78,6 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
                     ? 'Arquivo não encontrado'
                     : 'Ocorreu um erro ao adicionar template',
         }
-        // if (error instanceof ZodError) {
-
-        // }
     }
 
     revalidateTag('certificate')

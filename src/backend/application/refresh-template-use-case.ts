@@ -6,6 +6,7 @@ import { INPUT_METHOD, Template } from '../domain/template'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'
+import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 
@@ -19,6 +20,10 @@ export class RefreshTemplateUseCase {
         private certificateEmissionsRepository: ICertificatesRepository,
         private sessionsRepository: ISessionsRepository,
         private googleDriveGateway: IGoogleDriveGateway,
+        private googleAuthGateway: Pick<
+            IGoogleAuthGateway,
+            'checkOrGetNewAccessToken'
+        >,
         private fileContentExtractorFactory: IFileContentExtractorFactory,
         private externalUserAccountsRepository: IExternalUserAccountsRepository,
     ) {}
@@ -65,6 +70,26 @@ export class RefreshTemplateUseCase {
                 certificate.getUserId(),
                 'GOOGLE',
             )
+
+        if (externalAccount) {
+            const newData =
+                await this.googleAuthGateway.checkOrGetNewAccessToken({
+                    accessToken: externalAccount.accessToken,
+                    refreshToken: externalAccount.refreshToken!,
+                    accessTokenExpiryDateTime:
+                        externalAccount.accessTokenExpiryDateTime!,
+                })
+
+            if (newData) {
+                externalAccount.accessToken = newData.newAccessToken
+                externalAccount.accessTokenExpiryDateTime =
+                    newData.newAccessTokenExpiryDateTime
+
+                await this.externalUserAccountsRepository.update(
+                    externalAccount,
+                )
+            }
+        }
 
         // TODO: should it be a domain service?
         const { name, fileExtension } =

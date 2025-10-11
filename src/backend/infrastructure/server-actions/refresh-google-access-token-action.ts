@@ -42,7 +42,7 @@ export async function refreshGoogleAccessTokenAction() {
             }
 
             // TODO: como fazer para fazer login novamente pegando o refresh token por popup
-            // if (['external-account-not-found', 'external-token-refresh-failed'].includes(error.type)) {
+            // if (['external-account-not-found', 'google-token-refresh-failed'].includes(error.type)) {
             //     return {
             //         success: false,
             //     }

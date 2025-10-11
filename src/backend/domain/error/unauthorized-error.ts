@@ -4,7 +4,7 @@ export type UnauthorizedErrorType =
     | 'missing-session'
     | 'session-not-found'
     | 'external-account-not-found'
-    | 'external-token-refresh-failed'
+    | 'google-token-refresh-failed'
     | 'insufficient-external-account-scopes'
     | 'incorrect-credentials'
 

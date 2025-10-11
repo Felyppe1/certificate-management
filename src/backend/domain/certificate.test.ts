@@ -77,7 +77,7 @@ describe('Certificate', () => {
 
         expect(certificate.hasTemplate()).toBe(true)
 
-        certificate.removeTemplate()
+        certificate.removeTemplate('1')
 
         expect(certificate.hasTemplate()).toBe(false)
     })
