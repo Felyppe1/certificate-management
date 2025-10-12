@@ -79,11 +79,17 @@ jobs:
         run: terraform apply -auto-approve tfplan
 
       - name: Get Artifact Path from Terraform
-        id: tf_output
+        id: get_artifact_path
         working-directory: ./terraform
         run: |
           REPO_PATH=$(terraform output -raw artifact_registry_path)
           echo "ARTIFACT_PATH=${REPO_PATH}/certificate-management" >> $GITHUB_ENV
+
+      - name: Get Cloud Run URL from Terraform
+        id: get_url
+        working-directory: ./terraform
+        run: |
+          echo "CLOUD_RUN_URL=$(terraform output -raw cloud_run_url)" >> $GITHUB_ENV
 
       # 3️⃣ Build Docker image
       - name: Build Docker image
@@ -108,3 +114,9 @@ jobs:
             --region $REGION \
             --platform managed \
             --allow-unauthenticated
+
+      - name: Inject NEXT_PUBLIC_BASE_URL via gcloud
+        run: |
+          gcloud run services update $CLOUD_RUN_NAME \
+            --region $REGION \
+            --update-env-vars=NEXT_PUBLIC_BASE_URL=${{ env.CLOUD_RUN_URL }}
