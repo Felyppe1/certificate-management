@@ -11,8 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
 
-    needs: setup-gcloud
-
     outputs:
       artifact_path: ${{ steps.get_artifact_path.outputs.artifact_path }}
       cloud_run_url: ${{ steps.get_url.outputs.cloud_run_url }}
