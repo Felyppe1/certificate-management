@@ -70,7 +70,7 @@ resource "google_cloud_run_v2_service_iam_member" "public_access" {
 }
 
 output "cloud_run_url" {
-  value       = google_cloud_run_v2_service.app.urls
+  value = "https://${google_cloud_run_v2_service.app.name}-${data.google_project.project.number}.${google_cloud_run_v2_service.app.location}.run.app"
   description = "Cloud Run URL"
 }
 
