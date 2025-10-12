@@ -1,11 +1,11 @@
 # Etapa 1: Dependências
 FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 COPY package*.json ./
-# Copia o schema do Prisma antes do npm ci (necessário para prisma generate no postinstall)
-COPY src/backend/infrastructure/repository/prisma/schema.prisma ./src/backend/infrastructure/repository/prisma/schema.prisma
+# Copia o schema do Prisma e as migrações antes do npm ci (necessário para prisma generate no postinstall)
+COPY src/backend/infrastructure/repository/prisma ./src/backend/infrastructure/repository/prisma
 # Usa npm ci para builds reprodutíveis. Instala exatamente o que está no package-lock.json e nunca altera o lockfile
 RUN npm ci
 
@@ -36,6 +36,11 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
+# Copia Prisma para executar migrations
+COPY --from=builder /app/src/backend/infrastructure/repository/prisma ./src/backend/infrastructure/repository/prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
 # Ajuste opcional: muda dono dos arquivos (não obrigatório, mas melhora segurança)
 RUN chown -R nextjs:nodejs /app
 
@@ -43,4 +48,5 @@ USER nextjs
 
 EXPOSE 8080
 # O arquivo gerado pelo Next standalone é server.js (no root da standalone)
-CMD ["node", "server.js"]
+# Executa migrations antes de iniciar o servidor
+CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
