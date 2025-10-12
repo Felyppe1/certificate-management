@@ -6,7 +6,8 @@ resource "google_project_service" "gcp_services" {
     "run.googleapis.com",
     "cloudbuild.googleapis.com",
     "artifactregistry.googleapis.com",
-    "iam.googleapis.com"
+    "iam.googleapis.com",
+    "cloudresourcemanager.googleapis.com"
   ])
 
   project  = var.project_id
