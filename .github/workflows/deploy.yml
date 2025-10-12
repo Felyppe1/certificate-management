@@ -79,6 +79,7 @@ jobs:
         working-directory: ./terraform
         run: |
           REPO_PATH=$(terraform output -raw artifact_registry_path)
+          echo "REPO_PATH=$REPO_PATH"
           printf "artifact_path=%s/certificate-management\n" "$REPO_PATH" >> "$GITHUB_OUTPUT"
 
       - name: Get Cloud Run URL from Terraform
