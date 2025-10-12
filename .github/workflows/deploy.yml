@@ -7,11 +7,9 @@ on:
       - develop
 
 jobs:
-  deploy:
+  setup-gcloud:
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
-    env:
-      REGION: us-central1
 
     steps:
       - name: Checkout code
@@ -19,6 +17,7 @@ jobs:
 
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
+
         with:
           credentials_json: ${{ secrets.SERVICE_ACCOUNT }}
 
@@ -28,40 +27,48 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           export_default_credentials: true
 
+  terraform:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
+
+    needs: setup-gcloud
+
+    outputs:
+      artifact_path: ${{ steps.get_artifact_path.outputs.artifact_path }}
+      cloud_run_url: ${{ steps.get_url.outputs.cloud_run_url }}
+      cloud_run_name: ${{ steps.get_service_name.outputs.cloud_run_name }}
+
+    env:
+      REGION: us-central1
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Export Terraform variables (TF_VAR_*)
         run: |
           echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "TF_VAR_region=${{ env.REGION }}" >> $GITHUB_ENV
           echo "TF_VAR_branch=${{ github.ref_name }}" >> $GITHUB_ENV
-          # Application environment variables
           echo 'TF_VAR_environment_variables={"DB_USER":"${{ secrets.DB_USER }}","DB_PASSWORD":"${{ secrets.DB_PASSWORD }}","DB_NAME":"${{ secrets.DB_NAME }}","DB_URL":"${{ secrets.DB_URL }}","DB_DIRECT_URL":"${{ secrets.DB_DIRECT_URL }}","REDIS_URL":"${{ secrets.REDIS_URL }}","LOKI_URL":"${{ secrets.LOKI_URL }}","OTEL_EXPORTER_OTLP_LOGS_ENDPOINT":"${{ secrets.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT }}","GOOGLE_CLIENT_ID":"${{ secrets.GOOGLE_CLIENT_ID }}","GOOGLE_CLIENT_SECRET":"${{ secrets.GOOGLE_CLIENT_SECRET }}","GOOGLE_API_KEY":"${{ secrets.GOOGLE_API_KEY }}","SESSION_SECRET":"${{ secrets.SESSION_SECRET }}"}' >> $GITHUB_ENV
 
       - name: Set Terraform backend
         working-directory: ./terraform
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then SUFFIX=""; else SUFFIX="-${{ github.ref_name }}"; fi
-          PROJECT_HASH=$(echo -n "${{ secrets.GCP_PROJECT_ID }}" | sha256sum | cut -c1-8)
+          PROJECT_HASH=$(echo -n "${{ env.GCP_PROJECT_ID }}" | sha256sum | cut -c1-8)
           echo "TF_BACKEND_BUCKET=tf-state${SUFFIX}-${PROJECT_HASH}" >> $GITHUB_ENV
 
       - name: Create Terraform state bucket if not exists
         run: |
-          # Verifica se o bucket já existe
-          if ! gcloud storage buckets describe gs://$TF_BACKEND_BUCKET --project=${{ secrets.GCP_PROJECT_ID }} > /dev/null 2>&1; then
-            echo "Bucket $TF_BACKEND_BUCKET não existe. Criando..."
-            gcloud storage buckets create gs://$TF_BACKEND_BUCKET \
-              --project=${{ secrets.GCP_PROJECT_ID }} \
-              --location=${{ env.REGION }} \
-              --uniform-bucket-level-access
-            echo "Bucket criado com sucesso"
-          else
-            echo "Bucket $TF_BACKEND_BUCKET já existe"
+          if ! gcloud storage buckets describe gs://$TF_BACKEND_BUCKET --project=${{ env.GCP_PROJECT_ID }} > /dev/null 2>&1; then
+            gcloud storage buckets create gs://$TF_BACKEND_BUCKET --project=${{ env.GCP_PROJECT_ID }} --location=${{ env.REGION }} --uniform-bucket-level-access
           fi
 
       - name: Enable required GCP API
         run: |
-          echo "Habilitando API necessária..."
-          gcloud services enable cloudresourcemanager.googleapis.com --project=${{ secrets.GCP_PROJECT_ID }}
-          echo "API habilitada com sucesso"
+          gcloud services enable cloudresourcemanager.googleapis.com --project=${{ env.GCP_PROJECT_ID }}
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
@@ -83,30 +90,44 @@ jobs:
         working-directory: ./terraform
         run: |
           REPO_PATH=$(terraform output -raw artifact_registry_path)
-          echo "ARTIFACT_PATH=${REPO_PATH}/certificate-management" >> $GITHUB_ENV
+          echo "artifact_path=${REPO_PATH}/certificate-management" >> $GITHUB_OUTPUT
 
       - name: Get Cloud Run URL from Terraform
         id: get_url
         working-directory: ./terraform
         run: |
-          echo "CLOUD_RUN_URL=$(terraform output -raw cloud_run_url)" >> $GITHUB_ENV
+          echo "cloud_run_url=$(terraform output -raw cloud_run_url)" >> $GITHUB_OUTPUT
 
-      # 3️⃣ Build Docker image
+      - name: Get Service Name from Terraform
+        id: get_service_name
+        working-directory: ./terraform
+        run: |
+          echo "cloud_run_name=$(terraform output -raw cloud_run_name)" >> $GITHUB_OUTPUT
+
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
+
+    needs: terraform
+
+    env:
+      REGION: us-central1
+      ARTIFACT_PATH: ${{ needs.terraform.outputs.artifact_path }}
+      CLOUD_RUN_URL: ${{ needs.terraform.outputs.cloud_run_url }}
+      CLOUD_RUN_NAME: ${{ needs.terraform.outputs.cloud_run_name }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Build Docker image
         run: docker build -t $ARTIFACT_PATH:$GITHUB_SHA .
 
-      # 4️⃣ Push to Artifact Registry
       - name: Push image
         run: |
           gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
           docker push $ARTIFACT_PATH:$GITHUB_SHA
 
-      - name: Get Service Name from Terraform
-        working-directory: ./terraform
-        run: |
-          echo "CLOUD_RUN_NAME=$(terraform output -raw cloud_run_name)" >> $GITHUB_ENV
-
-      # 5️⃣ Deploy to Cloud Run
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy $CLOUD_RUN_NAME \
@@ -119,4 +140,4 @@ jobs:
         run: |
           gcloud run services update $CLOUD_RUN_NAME \
             --region $REGION \
-            --update-env-vars=NEXT_PUBLIC_BASE_URL=${{ env.CLOUD_RUN_URL }}
+            --update-env-vars=NEXT_PUBLIC_BASE_URL=$CLOUD_RUN_URL
