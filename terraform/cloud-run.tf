@@ -46,11 +46,6 @@ resource "google_cloud_run_v2_service" "app" {
         name = "GCP_PROJECT_ID"
         value = var.project_id
       }
-
-      env {
-        name = "NEXT_PUBLIC_BASE_URL"
-        value = google_cloud_run_v2_service.app.uri
-      }
     }
   }
 
