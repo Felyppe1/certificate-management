@@ -83,7 +83,7 @@ jobs:
           echo "${REPO_PATH}/certificate-management" > artifact_path.txt
 
       - name: Upload Artifact Path
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: artifact-path
           path: ./terraform/artifact_path.txt
@@ -127,7 +127,7 @@ jobs:
           export_default_credentials: true
 
       - name: Download Artifact Path
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: artifact-path
 
