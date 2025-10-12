@@ -52,10 +52,16 @@ jobs:
               --project=${{ secrets.GCP_PROJECT_ID }} \
               --location=${{ env.REGION }} \
               --uniform-bucket-level-access
-            echo "✅ Bucket criado com sucesso"
+            echo "Bucket criado com sucesso"
           else
-            echo "✅ Bucket $TF_BACKEND_BUCKET já existe"
+            echo "Bucket $TF_BACKEND_BUCKET já existe"
           fi
+
+      - name: Enable required GCP API
+        run: |
+          echo "Habilitando API necessária..."
+          gcloud services enable cloudresourcemanager.googleapis.com --project=${{ secrets.GCP_PROJECT_ID }}
+          echo "API habilitada com sucesso"
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
