@@ -82,7 +82,8 @@ jobs:
         id: tf_output
         working-directory: ./terraform
         run: |
-          echo "ARTIFACT_PATH=$(terraform output -raw artifact_registry_path)" >> $GITHUB_ENV
+          REPO_PATH=$(terraform output -raw artifact_registry_path)
+          echo "ARTIFACT_PATH=${REPO_PATH}/certificate-management" >> $GITHUB_ENV
 
       # 3️⃣ Build Docker image
       - name: Build Docker image
