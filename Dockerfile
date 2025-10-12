@@ -4,6 +4,8 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package*.json ./
+# Copia o schema do Prisma antes do npm ci (necessário para prisma generate no postinstall)
+COPY src/backend/infrastructure/repository/prisma/schema.prisma ./src/backend/infrastructure/repository/prisma/schema.prisma
 # Usa npm ci para builds reprodutíveis. Instala exatamente o que está no package-lock.json e nunca altera o lockfile
 RUN npm ci
 
