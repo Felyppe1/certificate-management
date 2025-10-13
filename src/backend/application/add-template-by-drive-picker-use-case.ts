@@ -72,7 +72,7 @@ export class AddTemplateByDrivePickerUseCase {
             await this.externalUserAccountsRepository.update(externalAccount)
         }
 
-        const { name, fileExtension } =
+        const { name, fileExtension, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: input.fileId,
                 userAccessToken: externalAccount.accessToken,
@@ -106,6 +106,7 @@ export class AddTemplateByDrivePickerUseCase {
             fileName: name,
             variables: uniqueVariables,
             fileExtension,
+            thumbnailUrl,
         })
 
         certificate.setTemplate(newTemplate)

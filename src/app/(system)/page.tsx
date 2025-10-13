@@ -1,4 +1,4 @@
-import { Award, Mail, TrendingUp } from 'lucide-react'
+import { TrendingUp } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { CertificateEmissionsList } from './_components/CertificateEmissionsList'
 

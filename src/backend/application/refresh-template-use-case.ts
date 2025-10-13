@@ -92,7 +92,7 @@ export class RefreshTemplateUseCase {
         }
 
         // TODO: should it be a domain service?
-        const { name, fileExtension } =
+        const { name, fileExtension, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
                 userAccessToken: externalAccount?.accessToken,
@@ -119,6 +119,7 @@ export class RefreshTemplateUseCase {
             inputMethod: INPUT_METHOD.URL,
             fileName: name,
             variables: uniqueVariables,
+            thumbnailUrl,
         })
 
         certificate.setTemplate(newTemplate)

@@ -37,11 +37,13 @@ export class DeleteTemplateUseCase {
 
         certificate.removeTemplate(session.userId)
 
-        // TODO: do this on outbox pattern?
-        await this.bucket.deleteObject({
-            bucketName: process.env.CERTIFICATES_BUCKET!,
-            objectName: storageFileUrl,
-        })
+        if (storageFileUrl) {
+            // TODO: do this on outbox pattern?
+            await this.bucket.deleteObject({
+                bucketName: process.env.CERTIFICATES_BUCKET!,
+                objectName: storageFileUrl,
+            })
+        }
 
         await this.certificateEmissionsRepository.update(certificate)
     }

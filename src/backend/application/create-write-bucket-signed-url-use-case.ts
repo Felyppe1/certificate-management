@@ -1,6 +1,5 @@
 import { MIME_TYPES } from '@/types'
 import { IBucket } from './interfaces/ibucket'
-import { PrismaCertificatesRepository } from '../infrastructure/repository/prisma/prisma-certificates-repository'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'

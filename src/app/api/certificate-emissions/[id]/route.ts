@@ -23,6 +23,7 @@ export interface GetCertificateEmissionControllerResponse {
             fileName: string
             fileExtension: TEMPLATE_FILE_EXTENSION
             variables: string[]
+            thumbnailUrl: string | null
         } | null
     }
 }

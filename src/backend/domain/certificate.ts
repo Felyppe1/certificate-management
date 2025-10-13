@@ -2,9 +2,10 @@ import { createId } from '@paralleldrive/cuid2'
 import { ValidationError } from './error/validation-error'
 import { AggregateRoot } from './primitives/aggregate-root'
 import { CertificateCreatedDomainEvent } from './events/certificate-created-domain-event'
-import { Template } from './template'
+import { Template, TemplateOutput } from './template'
 import { TemplateSetDomainEvent } from './events/template-set-domain-event'
 import { ForbiddenError } from './error/forbidden-error'
+import { DomainEvent } from './primitives/domain-event'
 
 export enum CERTIFICATE_STATUS {
     DRAFT = 'DRAFT',
@@ -23,6 +24,11 @@ interface CertificateInput {
 
 interface CreateCertificateInput
     extends Omit<CertificateInput, 'id' | 'status' | 'createdAt'> {}
+
+interface CertificateOutput extends Omit<CertificateInput, 'template'> {
+    template: TemplateOutput | null
+    domainEvents: DomainEvent[]
+}
 
 export class Certificate extends AggregateRoot {
     private id: string
@@ -130,11 +136,19 @@ export class Certificate extends AggregateRoot {
         this.template.setStorageFileUrl(url)
     }
 
+    setTemplateThumbnailUrl(url: string) {
+        if (!this.template) {
+            throw new ValidationError('Certificate does not have a template')
+        }
+
+        this.template.setThumbnailUrl(url)
+    }
+
     getTemplateStorageFileUrl() {
         return this.template?.getStorageFileUrl() ?? null
     }
 
-    serialize() {
+    serialize(): CertificateOutput {
         return {
             id: this.id,
             name: this.name,

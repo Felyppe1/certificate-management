@@ -70,6 +70,7 @@ export class GetCertificateEmissionUseCase {
                           certificateEmission.Template.TemplateVariable.map(
                               variable => variable.name,
                           ),
+                      thumbnailUrl: certificateEmission.Template.thumbnail_url,
                   }
                 : null,
         }

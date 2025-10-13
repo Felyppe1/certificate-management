@@ -67,6 +67,7 @@ model Template {
 
     drive_file_id    String?
     storage_file_url String?
+    thumbnail_url    String?
     file_name        String
     input_method     String // "URL" | "GOOGLE_DRIVE" | "UPLOAD"
     file_extension   String

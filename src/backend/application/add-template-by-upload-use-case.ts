@@ -90,6 +90,7 @@ export class AddTemplateByUploadUseCase {
             fileExtension:
                 fileExtension.toUpperCase() as TEMPLATE_FILE_EXTENSION,
             variables: uniqueVariables,
+            thumbnailUrl: null,
         })
 
         certificate.setTemplate(newTemplate)

@@ -58,9 +58,14 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
                 throw new ValidationError('Unsupported file type')
             }
 
+            // TODO: check if I will still use it...
+            // const thumbnailUrl = file.data.thumbnailLink ? file.data.thumbnailLink.replace(/=s220$/, '') : null
+            const thumbnailUrl = null
+
             return {
                 name: file.data.name!,
                 fileExtension,
+                thumbnailUrl,
             }
         } catch (error: any) {
             console.log(error)

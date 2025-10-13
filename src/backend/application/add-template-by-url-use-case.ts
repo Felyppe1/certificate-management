@@ -55,7 +55,7 @@ export class AddTemplateByUrlUseCase {
             throw new ValidationError('Invalid file URL')
         }
 
-        const { name, fileExtension } =
+        const { name, fileExtension, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
             })
@@ -86,6 +86,7 @@ export class AddTemplateByUrlUseCase {
             fileName: name,
             variables: uniqueVariables,
             fileExtension,
+            thumbnailUrl,
         })
 
         certificate.setTemplate(newTemplate)

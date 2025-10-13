@@ -34,6 +34,7 @@ interface TemplateDisplayProps {
         fileName: string
         fileExtension: TEMPLATE_FILE_EXTENSION
         variables: string[]
+        thumbnailUrl: string | null
     }
     certificateId: string
     onEdit: () => void
@@ -116,7 +117,17 @@ export function TemplateDisplay({
 
                 {/* Content */}
                 <CardContent className="flex flex-row p-0 gap-10">
-                    <div className="w-[35rem] h-[15rem] bg-muted"></div>
+                    {template.thumbnailUrl ? (
+                        <img
+                            src={template.thumbnailUrl || ''}
+                            alt=""
+                            className="aspect-3/2 w-full max-w-[25rem] object-cover object-top"
+                        />
+                    ) : (
+                        <div className="aspect-3/2 w-full max-w-[25rem] rounded-md bg-muted flex justify-center items-center text-muted-foreground">
+                            Gerando miniatura...
+                        </div>
+                    )}
 
                     <div className="flex flex-col w-full">
                         <div className="flex flex-wrap gap-2 self-end">

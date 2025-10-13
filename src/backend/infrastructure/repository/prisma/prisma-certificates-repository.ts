@@ -29,6 +29,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                 input_method: template.inputMethod,
                                 file_name: template.fileName,
                                 file_extension: template.fileExtension,
+                                thumbnail_url: template.thumbnailUrl,
                                 TemplateVariable: {
                                     createMany: {
                                         data: template.variables.map(
@@ -92,6 +93,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                     input_method: template.inputMethod,
                                     file_name: template.fileName,
                                     file_extension: template.fileExtension,
+                                    thumbnail_url: template.thumbnailUrl,
                                     TemplateVariable: {
                                         createMany: {
                                             data: template.variables.map(
@@ -108,6 +110,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                     file_name: template.fileName,
                                     input_method: template.inputMethod,
                                     file_extension: template.fileExtension,
+                                    thumbnail_url: template.thumbnailUrl,
                                     TemplateVariable: {
                                         deleteMany: {},
                                         createMany: {
@@ -166,6 +169,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                   variables: certificate.Template.TemplateVariable.map(
                       variable => variable.name,
                   ),
+                  thumbnailUrl: certificate.Template.thumbnail_url,
               })
             : null
 

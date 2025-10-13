@@ -15,6 +15,7 @@ export interface GetFileMetadataInput {
 export interface GetFileMetadataOutput {
     name: string
     fileExtension: TEMPLATE_FILE_EXTENSION
+    thumbnailUrl: string | null
 }
 
 export interface IGoogleDriveGateway {

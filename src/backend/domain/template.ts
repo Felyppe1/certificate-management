@@ -21,8 +21,11 @@ interface TemplateInput {
     inputMethod: INPUT_METHOD
     fileName: string
     fileExtension: TEMPLATE_FILE_EXTENSION
+    thumbnailUrl: string | null
     variables: string[]
 }
+
+export interface TemplateOutput extends TemplateInput {}
 
 interface CreateTemplateInput extends Omit<TemplateInput, 'id'> {}
 
@@ -34,6 +37,7 @@ export class Template {
     private fileName: string
     private fileExtension: TEMPLATE_FILE_EXTENSION
     private variables: string[]
+    private thumbnailUrl: string | null
 
     static create(data: CreateTemplateInput): Template {
         return new Template({
@@ -87,6 +91,7 @@ export class Template {
         this.fileName = data.fileName
         this.fileExtension = data.fileExtension
         this.variables = data.variables
+        this.thumbnailUrl = data.thumbnailUrl
     }
 
     getId() {
@@ -105,6 +110,10 @@ export class Template {
         return this.storageFileUrl
     }
 
+    setThumbnailUrl(url: string) {
+        this.thumbnailUrl = url
+    }
+
     static getFileIdFromUrl(url: string): string | null {
         const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/)
         return match ? match[1] : null
@@ -118,7 +127,7 @@ export class Template {
         return uniqueVariables
     }
 
-    serialize(): TemplateInput {
+    serialize(): TemplateOutput {
         return {
             id: this.id,
             driveFileId: this.driveFileId,
@@ -127,6 +136,7 @@ export class Template {
             fileName: this.fileName,
             fileExtension: this.fileExtension,
             variables: this.variables,
+            thumbnailUrl: this.thumbnailUrl,
         }
     }
 }
