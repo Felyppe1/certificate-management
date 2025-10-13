@@ -70,8 +70,8 @@ export function TemplateSection({
         })
     }
 
-    const handleSubmitUpload = async (formData: FormData) => {
-        const file = formData.get('file') as File
+    const handleSubmitUpload = async (file: File) => {
+        const formData = new FormData()
 
         formData.append('certificateId', certificateId)
         formData.append('file', file)

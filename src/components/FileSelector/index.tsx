@@ -11,7 +11,7 @@ import {
 import { FileText, Link, Upload, Loader2 } from 'lucide-react'
 import { Input } from '../ui/input'
 import { Button } from '../ui/button'
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import {
     PickerCanceledEvent,
     PickerErrorEvent,
@@ -19,7 +19,9 @@ import {
 } from '@googleworkspace/drive-picker-element'
 import { refreshGoogleAccessTokenAction } from '@/backend/infrastructure/server-actions/refresh-google-access-token-action'
 import { MIME_TYPES } from '@/types'
-import { createWriteBucketSignedUrlAction } from '@/backend/infrastructure/server-actions/create-write-bucket-signed-url-action'
+// import { createWriteBucketSignedUrlAction } from '@/backend/infrastructure/server-actions/create-write-bucket-signed-url-action'
+import { FileRejection, useDropzone } from 'react-dropzone'
+import { cn } from '@/lib/utils'
 
 type SelectOption = 'upload' | 'link' | 'drive'
 
@@ -29,7 +31,7 @@ interface FileSelectorProps {
     isUrlLoading: boolean
     onSubmitUrl: (formData: FormData) => void
     onSubmitDrive: (fileId: string) => void
-    onSubmitUpload: (formData: FormData) => void
+    onSubmitUpload: (file: File) => void
     googleOAuthToken: string | null
     googleOAuthTokenExpiry: Date | null
     // urlAction: (_: unknown, formData: FormData) => Promise<any> // TODO: improve this type
@@ -45,7 +47,6 @@ export function FileSelector({
     googleOAuthToken,
     googleOAuthTokenExpiry,
 }: FileSelectorProps) {
-    console.log(isUploadLoading)
     const [selectedOption, setSelectedOption] = useState<SelectOption | null>(
         null,
     )
@@ -69,19 +70,11 @@ export function FileSelector({
         onSubmitUrl(formData)
     }
 
-    const handleSubmitUpload = async (e: React.FormEvent) => {
-        e.preventDefault()
-        const formData = new FormData(e.currentTarget as HTMLFormElement)
-        onSubmitUpload(formData)
-    }
-
     const handlePickerPicked = (event: PickerPickedEvent) => {
         console.log('Picker picked:', event)
         const fileId = event.detail.docs[0].id
 
         onSubmitDrive(fileId)
-
-        // setSelectedOption(null)
     }
 
     const handlePickerClosed = (event: PickerCanceledEvent) => {
@@ -95,6 +88,46 @@ export function FileSelector({
 
         setSelectedOption(null)
     }
+
+    const onDrop = useCallback((acceptedFiles: File[]) => {
+        if (acceptedFiles.length === 0) return
+
+        const file = acceptedFiles[0]
+
+        if (file.type != MIME_TYPES.DOCX && file.type != MIME_TYPES.PPTX) {
+            console.log('Formato de arquivo não suportado')
+            return
+        }
+
+        onSubmitUpload(file)
+    }, [])
+
+    const onDropRejected = useCallback((fileRejections: FileRejection[]) => {
+        if (fileRejections.length === 0) return
+
+        const tooManyFiles = fileRejections.find(
+            fileRejection => fileRejection.errors[0].code === 'too-many-files',
+        )
+
+        const fileTooLarge = fileRejections.find(
+            fileRejection => fileRejection.errors[0].code === 'file-too-large',
+        )
+
+        if (tooManyFiles) {
+            console.log('Somente um arquivo é permitido')
+        }
+
+        if (fileTooLarge) {
+            console.log('O arquivo é muito grande')
+        }
+    }, [])
+
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop,
+        onDropRejected,
+        maxFiles: 1,
+        maxSize: 5 * 1024 * 1024, // 5MB
+    })
 
     useEffect(() => {
         if (selectedOption !== 'drive') return
@@ -306,19 +339,41 @@ export function FileSelector({
 
                 {/* Upload Input Form */}
                 {selectedOption === 'upload' && (
-                    <form onSubmit={handleSubmitUpload} className="flex gap-3">
-                        <input
-                            type="file"
-                            name="file"
-                            accept=".doc,.docx,.ppt,.pptx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/pdf"
-                            required
-                            // Apenas 1 arquivo
-                            multiple={false}
-                        />
-                        <Button type="submit" disabled={isUploadLoading}>
-                            Upload
-                        </Button>
-                    </form>
+                    <Card
+                        {...getRootProps()}
+                        className={cn(
+                            'relative border-2 border-dashed h-[10rem]',
+                            isDragActive &&
+                                'border-primary bg-primary/5 border-solid',
+                            isUploadLoading
+                                ? 'cursor-default opacity-60'
+                                : 'cursor-pointer hover:border-primary',
+                        )}
+                    >
+                        <CardContent className="flex flex-col items-center justify-center h-full w-full gap-3">
+                            <input
+                                {...getInputProps({
+                                    disabled: isUploadLoading,
+                                })}
+                            />
+                            {isDragActive ? (
+                                <h4 className="text-lg font-semibold">
+                                    Solte o arquivo aqui...
+                                </h4>
+                            ) : (
+                                <>
+                                    <h4 className="text-lg font-semibold">
+                                        Clique para enviar ou arraste o arquivo
+                                        aqui
+                                    </h4>
+                                    <p className="text-muted-foreground">
+                                        Formatos suportados: .docx, .pptx (máx.
+                                        5MB)
+                                    </p>
+                                </>
+                            )}
+                        </CardContent>
+                    </Card>
                 )}
             </div>
         </div>
