@@ -19,6 +19,7 @@ import {
 } from '@googleworkspace/drive-picker-element'
 import { refreshGoogleAccessTokenAction } from '@/backend/infrastructure/server-actions/refresh-google-access-token-action'
 import { MIME_TYPES } from '@/types'
+import { createWriteBucketSignedUrlAction } from '@/backend/infrastructure/server-actions/create-write-bucket-signed-url-action'
 
 type SelectOption = 'upload' | 'link' | 'drive'
 
@@ -28,6 +29,7 @@ interface FileSelectorProps {
     isUrlLoading: boolean
     onSubmitUrl: (formData: FormData) => void
     onSubmitDrive: (fileId: string) => void
+    onSubmitUpload: (formData: FormData) => void
     googleOAuthToken: string | null
     googleOAuthTokenExpiry: Date | null
     // urlAction: (_: unknown, formData: FormData) => Promise<any> // TODO: improve this type
@@ -36,12 +38,14 @@ interface FileSelectorProps {
 export function FileSelector({
     onSubmitUrl,
     onSubmitDrive,
+    onSubmitUpload,
     isDriveLoading,
     isUploadLoading,
     isUrlLoading,
     googleOAuthToken,
     googleOAuthTokenExpiry,
 }: FileSelectorProps) {
+    console.log(isUploadLoading)
     const [selectedOption, setSelectedOption] = useState<SelectOption | null>(
         null,
     )
@@ -63,6 +67,12 @@ export function FileSelector({
         e.preventDefault()
         const formData = new FormData(e.currentTarget as HTMLFormElement)
         onSubmitUrl(formData)
+    }
+
+    const handleSubmitUpload = async (e: React.FormEvent) => {
+        e.preventDefault()
+        const formData = new FormData(e.currentTarget as HTMLFormElement)
+        onSubmitUpload(formData)
     }
 
     const handlePickerPicked = (event: PickerPickedEvent) => {
@@ -292,6 +302,23 @@ export function FileSelector({
                             </form>
                         </CardContent>
                     </Card>
+                )}
+
+                {/* Upload Input Form */}
+                {selectedOption === 'upload' && (
+                    <form onSubmit={handleSubmitUpload} className="flex gap-3">
+                        <input
+                            type="file"
+                            name="file"
+                            accept=".doc,.docx,.ppt,.pptx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/pdf"
+                            required
+                            // Apenas 1 arquivo
+                            multiple={false}
+                        />
+                        <Button type="submit" disabled={isUploadLoading}>
+                            Upload
+                        </Button>
+                    </form>
                 )}
             </div>
         </div>

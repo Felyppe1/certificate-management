@@ -7,6 +7,7 @@ import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { NotFoundError } from '../domain/error/not-found-error'
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
+import { IBucket } from './interfaces/ibucket'
 
 interface AddTemplateByDrivePickerUseCaseInput {
     certificateId: string
@@ -25,6 +26,7 @@ export class AddTemplateByDrivePickerUseCase {
             IGoogleAuthGateway,
             'checkOrGetNewAccessToken'
         >,
+        private bucket: Pick<IBucket, 'deleteObject'>,
     ) {}
 
     async execute(input: AddTemplateByDrivePickerUseCaseInput) {
@@ -89,6 +91,13 @@ export class AddTemplateByDrivePickerUseCase {
         const content = await contentExtractor.extractText(buffer)
 
         const uniqueVariables = Template.extractVariablesFromContent(content)
+
+        if (certificate.getTemplateStorageFileUrl()) {
+            await this.bucket.deleteObject({
+                bucketName: process.env.CERTIFICATES_BUCKET!,
+                objectName: certificate.getTemplateStorageFileUrl()!,
+            })
+        }
 
         const newTemplate = Template.create({
             driveFileId: input.fileId,

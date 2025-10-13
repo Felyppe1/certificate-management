@@ -6,6 +6,7 @@ import { IFileContentExtractorFactory } from './interfaces/ifile-content-extract
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { NotFoundError } from '../domain/error/not-found-error'
+import { IBucket } from './interfaces/ibucket'
 
 interface AddTemplateByUrlUseCaseInput {
     certificateId: string
@@ -28,6 +29,7 @@ export class AddTemplateByUrlUseCase {
             IFileContentExtractorFactory,
             'create'
         >,
+        private bucket: Pick<IBucket, 'deleteObject'>,
     ) {}
 
     async execute(input: AddTemplateByUrlUseCaseInput) {
@@ -69,6 +71,13 @@ export class AddTemplateByUrlUseCase {
         const content = await contentExtractor.extractText(buffer)
 
         const uniqueVariables = Template.extractVariablesFromContent(content)
+
+        if (certificate.getTemplateStorageFileUrl()) {
+            await this.bucket.deleteObject({
+                bucketName: process.env.CERTIFICATES_BUCKET!,
+                objectName: certificate.getTemplateStorageFileUrl()!,
+            })
+        }
 
         const newTemplate = Template.create({
             driveFileId,

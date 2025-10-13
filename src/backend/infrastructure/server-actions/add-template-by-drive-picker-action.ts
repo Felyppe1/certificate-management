@@ -12,6 +12,7 @@ import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
 import { logoutAction } from './logout-action'
+import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 
 const addTemplateByDrivePickerActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -49,6 +50,7 @@ export async function addTemplateByDrivePickerAction(
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const externalUserAccountsRepository =
             new PrismaExternalUserAccountsRepository()
+        const bucket = new GcpBucket()
 
         const addTemplateByDrivePickerUseCase =
             new AddTemplateByDrivePickerUseCase(
@@ -58,6 +60,7 @@ export async function addTemplateByDrivePickerAction(
                 fileContentExtractorFactory,
                 externalUserAccountsRepository,
                 googleAuthGateway,
+                bucket,
             )
 
         await addTemplateByDrivePickerUseCase.execute({

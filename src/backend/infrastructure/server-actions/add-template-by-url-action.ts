@@ -12,6 +12,7 @@ import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
 import { logoutAction } from './logout-action'
+import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 
 const addTemplateByUrlActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -43,12 +44,14 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
+        const bucket = new GcpBucket()
 
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificateEmissionsRepository,
             sessionsRepository,
             googleDriveGateway,
             fileContentExtractorFactory,
+            bucket,
         )
 
         await addTemplateByUrlUseCase.execute({

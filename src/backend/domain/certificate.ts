@@ -114,8 +114,24 @@ export class Certificate extends AggregateRoot {
         return !!this.template
     }
 
+    getTemplateId() {
+        return this.template?.getId() ?? null
+    }
+
     getDriveTemplateFileId() {
         return this.template?.getDriveFileId()
+    }
+
+    setTemplateStorageFileUrl(url: string) {
+        if (!this.template) {
+            throw new ValidationError('Certificate does not have a template')
+        }
+
+        this.template.setStorageFileUrl(url)
+    }
+
+    getTemplateStorageFileUrl() {
+        return this.template?.getStorageFileUrl() ?? null
     }
 
     serialize() {

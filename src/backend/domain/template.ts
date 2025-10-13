@@ -97,6 +97,14 @@ export class Template {
         return this.driveFileId
     }
 
+    setStorageFileUrl(url: string) {
+        this.storageFileUrl = url
+    }
+
+    getStorageFileUrl() {
+        return this.storageFileUrl
+    }
+
     static getFileIdFromUrl(url: string): string | null {
         const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/)
         return match ? match[1] : null

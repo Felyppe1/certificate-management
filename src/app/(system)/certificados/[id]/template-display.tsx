@@ -260,15 +260,19 @@ export function TemplateDisplay({
                                         Variáveis do Template
                                     </p>
                                     <div className="mt-3">
-                                        {template.variables.map(
-                                            (variable, index) => (
-                                                <Badge
-                                                    key={index}
-                                                    className="font-mono mr-2 bg-accent text-accent-foreground"
-                                                >
-                                                    {`{{ ${variable} }}`}
-                                                </Badge>
-                                            ),
+                                        {template.variables.length === 0 ? (
+                                            <p>Nenhuma variável encontrada</p>
+                                        ) : (
+                                            template.variables.map(
+                                                (variable, index) => (
+                                                    <Badge
+                                                        key={index}
+                                                        className="font-mono mr-2 bg-accent text-accent-foreground"
+                                                    >
+                                                        {`{{ ${variable} }}`}
+                                                    </Badge>
+                                                ),
+                                            )
                                         )}
                                     </div>
                                 </div>

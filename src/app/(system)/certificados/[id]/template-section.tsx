@@ -11,6 +11,7 @@ import {
     INPUT_METHOD,
     TEMPLATE_FILE_EXTENSION,
 } from '@/backend/domain/template'
+import { addTemplateByUploadAction } from '@/backend/infrastructure/server-actions/add-template-by-upload-action'
 
 interface TemplateSectionProps {
     certificateId: string
@@ -40,6 +41,16 @@ export function TemplateSection({
     )
     const [driverPickerState, drivePickerAction, drivePickerIsLoading] =
         useActionState(addTemplateByDrivePickerAction, null)
+    // const [signedUrlState, signedUrlAction, signedUrlIsLoading] =
+    //     useActionState(createWriteBucketSignedUrlAction, null)
+    const [uploadState, uploadAction, uploadIsLoading] = useActionState(
+        addTemplateByUploadAction,
+        null,
+    )
+    // const [uploadState, uploadAction, uploadIsLoading] = useActionState(
+    //     create
+    //     null,
+    // )
 
     const handleSubmitUrl = async (formData: FormData) => {
         formData.append('certificateId', certificateId)
@@ -59,6 +70,17 @@ export function TemplateSection({
         })
     }
 
+    const handleSubmitUpload = async (formData: FormData) => {
+        const file = formData.get('file') as File
+
+        formData.append('certificateId', certificateId)
+        formData.append('file', file)
+
+        startTransition(() => {
+            uploadAction(formData)
+        })
+    }
+
     const handleEdit = () => {
         setIsEditing(true)
     }
@@ -68,10 +90,14 @@ export function TemplateSection({
     }
 
     useEffect(() => {
-        if (urlState?.success || driverPickerState?.success) {
+        if (
+            urlState?.success ||
+            driverPickerState?.success ||
+            uploadState?.success
+        ) {
             setIsEditing(false)
         }
-    }, [urlState, driverPickerState])
+    }, [urlState, driverPickerState, uploadState])
 
     if (template && isEditing) {
         return (
@@ -98,8 +124,9 @@ export function TemplateSection({
                         googleOAuthTokenExpiry={googleOAuthTokenExpiry}
                         onSubmitUrl={handleSubmitUrl}
                         onSubmitDrive={handleSubmitDrive}
+                        onSubmitUpload={handleSubmitUpload}
                         isDriveLoading={drivePickerIsLoading}
-                        isUploadLoading={false}
+                        isUploadLoading={uploadIsLoading}
                         isUrlLoading={urlIsLoading}
                     />
                 </div>
@@ -131,8 +158,9 @@ export function TemplateSection({
                     googleOAuthTokenExpiry={googleOAuthTokenExpiry}
                     onSubmitUrl={handleSubmitUrl}
                     onSubmitDrive={handleSubmitDrive}
+                    onSubmitUpload={handleSubmitUpload}
                     isDriveLoading={drivePickerIsLoading}
-                    isUploadLoading={false}
+                    isUploadLoading={uploadIsLoading}
                     isUrlLoading={urlIsLoading}
                 />
             </div>
