@@ -2,7 +2,13 @@
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card'
 import { RefreshCw, Edit3, Trash2 } from 'lucide-react'
 import { startTransition, useActionState } from 'react'
 import { refreshTemplateAction } from '@/backend/infrastructure/server-actions/refresh-template-action'
@@ -116,7 +122,50 @@ export function TemplateDisplay({
                     </div> */}
 
                 {/* Content */}
-                <CardContent className="flex flex-row p-0 gap-10">
+                <CardHeader className="flex justify-between">
+                    <div>
+                        <CardTitle>Template do Certificado</CardTitle>
+                        <CardDescription>
+                            Template que será utilizado para gerar os
+                            certificados
+                        </CardDescription>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                        {template.inputMethod !== 'UPLOAD' && (
+                            <Button
+                                variant="outline"
+                                onClick={handleRefresh}
+                                disabled={isRefreshing || isDeleting}
+                            >
+                                <RefreshCw
+                                    className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`}
+                                />
+                                {isRefreshing ? 'Atualizando...' : 'Atualizar'}
+                            </Button>
+                        )}
+
+                        <Button
+                            variant="outline"
+                            onClick={onEdit}
+                            disabled={isRefreshing || isDeleting}
+                        >
+                            <Edit3 className="h-4 w-4 mr-2" />
+                            Editar
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={handleRemoveTemplate}
+                            disabled={isDeleting || isRefreshing}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            {isDeleting ? 'Removendo...' : 'Remover'}
+                        </Button>
+                    </div>
+                </CardHeader>
+
+                <CardContent className="flex flex-row gap-10">
                     {template.thumbnailUrl ? (
                         <img
                             src={template.thumbnailUrl || ''}
@@ -130,41 +179,6 @@ export function TemplateDisplay({
                     )}
 
                     <div className="flex flex-col w-full">
-                        <div className="flex flex-wrap gap-2 self-end">
-                            {template.inputMethod !== 'UPLOAD' && (
-                                <Button
-                                    variant="outline"
-                                    onClick={handleRefresh}
-                                    disabled={isRefreshing || isDeleting}
-                                >
-                                    <RefreshCw
-                                        className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`}
-                                    />
-                                    {isRefreshing
-                                        ? 'Atualizando...'
-                                        : 'Atualizar'}
-                                </Button>
-                            )}
-
-                            <Button
-                                variant="outline"
-                                onClick={onEdit}
-                                disabled={isRefreshing || isDeleting}
-                            >
-                                <Edit3 className="h-4 w-4 mr-2" />
-                                Editar
-                            </Button>
-                            <Button
-                                variant="outline"
-                                onClick={handleRemoveTemplate}
-                                disabled={isDeleting || isRefreshing}
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                {isDeleting ? 'Removendo...' : 'Remover'}
-                            </Button>
-                        </div>
-
                         <div className="flex flex-col gap-4 mt-1">
                             {/* File Info */}
                             <div className="flex items-start gap-3">
@@ -294,7 +308,7 @@ export function TemplateDisplay({
             </Card>
 
             {/* Info box - mais discreto */}
-            {template.variables.length > 0 && (
+            {/* {template.variables.length > 0 && (
                 <div className="bg-muted/50 backdrop-blur-sm border rounded-lg p-4">
                     <div className="flex gap-3">
                         <div className="flex-shrink-0 text-blue-600 dark:text-blue-400">
@@ -322,7 +336,7 @@ export function TemplateDisplay({
                         </div>
                     </div>
                 </div>
-            )}
+            )} */}
         </div>
     )
 }

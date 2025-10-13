@@ -4,7 +4,13 @@ import { FileSelector } from '@/components/FileSelector'
 import { addTemplateByUrlAction } from '@/backend/infrastructure/server-actions/add-template-by-url-action'
 import { startTransition, useActionState, useState, useEffect } from 'react'
 import { TemplateDisplay } from './template-display'
-import { Card, CardDescription, CardTitle } from '@/components/ui/card'
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card'
 import { addTemplateByDrivePickerAction } from '@/backend/infrastructure/server-actions/add-template-by-drive-picker-action'
 import { Button } from '@/components/ui/button'
 import {
@@ -103,11 +109,11 @@ export function TemplateSection({
     if (template && isEditing) {
         return (
             <Card>
-                <div className="flex justify-between p-6">
+                <CardHeader className="flex justify-between">
                     <div>
                         <CardTitle>Selecionar Novo Template</CardTitle>
                         <CardDescription>
-                            Escolha um novo template para substituir o atual
+                            Selecione um novo template para substituir o atual
                         </CardDescription>
                     </div>
 
@@ -119,8 +125,8 @@ export function TemplateSection({
                     >
                         Cancelar
                     </Button>
-                </div>
-                <div className="px-6 pb-6">
+                </CardHeader>
+                <CardContent className="">
                     <FileSelector
                         googleOAuthToken={googleOAuthToken}
                         googleOAuthTokenExpiry={googleOAuthTokenExpiry}
@@ -131,7 +137,7 @@ export function TemplateSection({
                         isUploadLoading={uploadIsLoading}
                         isUrlLoading={urlIsLoading}
                     />
-                </div>
+                </CardContent>
             </Card>
         )
     }
@@ -148,13 +154,13 @@ export function TemplateSection({
 
     return (
         <Card>
-            <div className="p-6">
+            <CardHeader className="">
                 <CardTitle>Template do Certificado</CardTitle>
                 <CardDescription>
                     Selecione um template para gerar os certificados
                 </CardDescription>
-            </div>
-            <div className="px-6 pb-6">
+            </CardHeader>
+            <CardContent className="">
                 <FileSelector
                     googleOAuthToken={googleOAuthToken}
                     googleOAuthTokenExpiry={googleOAuthTokenExpiry}
@@ -165,7 +171,7 @@ export function TemplateSection({
                     isUploadLoading={uploadIsLoading}
                     isUrlLoading={urlIsLoading}
                 />
-            </div>
+            </CardContent>
         </Card>
     )
 }
