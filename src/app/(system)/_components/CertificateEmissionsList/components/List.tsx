@@ -79,7 +79,7 @@ export async function List() {
                                             )}
                                         </p> */}
                                         <p className="text-muted-foreground text-sm">
-                                            Criado em{' '}
+                                            Criada em{' '}
                                             {new Date(
                                                 certificate.createdAt,
                                             ).toLocaleDateString('pt-BR', {

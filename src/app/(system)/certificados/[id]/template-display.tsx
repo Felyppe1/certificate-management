@@ -267,7 +267,7 @@ export function TemplateDisplay({
                                                 (variable, index) => (
                                                     <Badge
                                                         key={index}
-                                                        className="font-mono mr-2 bg-muted text-accent-foreground"
+                                                        className="font-mono mr-2 mb-2 bg-muted text-accent-foreground"
                                                     >
                                                         {`{{ ${variable} }}`}
                                                     </Badge>
