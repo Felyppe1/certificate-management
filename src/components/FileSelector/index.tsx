@@ -22,6 +22,7 @@ import { MIME_TYPES } from '@/types'
 // import { createWriteBucketSignedUrlAction } from '@/backend/infrastructure/server-actions/create-write-bucket-signed-url-action'
 import { FileRejection, useDropzone } from 'react-dropzone'
 import { cn } from '@/lib/utils'
+import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
 
 type SelectOption = 'upload' | 'link' | 'drive'
 
@@ -34,6 +35,7 @@ interface FileSelectorProps {
     onSubmitUpload: (file: File) => void
     googleOAuthToken: string | null
     googleOAuthTokenExpiry: Date | null
+    radioGroupName: string
     // urlAction: (_: unknown, formData: FormData) => Promise<any> // TODO: improve this type
 }
 
@@ -46,6 +48,7 @@ export function FileSelector({
     isUrlLoading,
     googleOAuthToken,
     googleOAuthTokenExpiry,
+    radioGroupName,
 }: FileSelectorProps) {
     const [selectedOption, setSelectedOption] = useState<SelectOption | null>(
         null,
@@ -199,10 +202,13 @@ export function FileSelector({
             >
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Upload Local */}
-                    <label htmlFor="option-upload" className="group relative">
+                    <label
+                        htmlFor={`option-upload-${radioGroupName}`}
+                        className="group relative"
+                    >
                         <Card className="h-full justify-center cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none group-has-[:disabled]:cursor-default hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center">
                             <RadioGroupItem
-                                id="option-upload"
+                                id={`option-upload-${radioGroupName}`}
                                 disabled={allAreLoading}
                                 value="upload"
                                 className="sr-only"
@@ -227,10 +233,13 @@ export function FileSelector({
                     </label>
 
                     {/* Google Drive */}
-                    <label htmlFor="option-drive" className="group relative">
+                    <label
+                        htmlFor={`option-drive-${radioGroupName}`}
+                        className="group relative"
+                    >
                         <Card className="h-full justify-center cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none hover:group-has-[:disabled]:none hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center">
                             <RadioGroupItem
-                                id="option-drive"
+                                id={`option-drive-${radioGroupName}`}
                                 disabled={allAreLoading}
                                 value="drive"
                                 className="sr-only"
@@ -255,10 +264,13 @@ export function FileSelector({
                     </label>
 
                     {/* Link de compartilhamento */}
-                    <label htmlFor="option-link" className="group relative">
+                    <label
+                        htmlFor={`option-link-${radioGroupName}`}
+                        className="group relative"
+                    >
                         <Card className="h-full justify-center cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center">
                             <RadioGroupItem
-                                id="option-link"
+                                id={`option-link-${radioGroupName}`}
                                 disabled={allAreLoading}
                                 value="link"
                                 className="sr-only"
@@ -297,6 +309,10 @@ export function FileSelector({
                             MIME_TYPES.GOOGLE_SLIDES,
                             MIME_TYPES.DOCX,
                             MIME_TYPES.PPTX,
+                            DATA_SOURCE_FILE_EXTENSION.CSV,
+                            DATA_SOURCE_FILE_EXTENSION.XLSX,
+                            DATA_SOURCE_FILE_EXTENSION.ODS,
+                            DATA_SOURCE_FILE_EXTENSION.GOOGLE_SHEETS,
                         ].join(',')}
                     ></drive-picker-docs-view>
                 </drive-picker>

@@ -8,10 +8,10 @@ export enum INPUT_METHOD {
 }
 
 export enum TEMPLATE_FILE_EXTENSION {
-    DOCX = 'DOCX',
-    GOOGLE_DOCS = 'GOOGLE_DOCS',
-    PPTX = 'PPTX',
-    GOOGLE_SLIDES = 'GOOGLE_SLIDES',
+    PPTX = 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    GOOGLE_SLIDES = 'application/vnd.google-apps.presentation',
+    GOOGLE_DOCS = 'application/vnd.google-apps.document',
+    DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 }
 
 interface TemplateInput {
@@ -129,6 +129,14 @@ export class Template {
         const uniqueVariables = Array.from(new Set(variables))
 
         return uniqueVariables
+    }
+
+    static isValidFileExtension(
+        fileExtension: string,
+    ): fileExtension is TEMPLATE_FILE_EXTENSION {
+        return Object.values(TEMPLATE_FILE_EXTENSION).includes(
+            fileExtension as TEMPLATE_FILE_EXTENSION,
+        )
     }
 
     serialize(): TemplateOutput {

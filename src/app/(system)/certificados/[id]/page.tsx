@@ -85,8 +85,9 @@ export default async function CertificatePage({
                         googleAccount?.accessTokenExpiryDateTime || null
                     }
                     certificateId={certificateId}
-                    template={
-                        certificateEmissionResponse.certificateEmission.template
+                    dataSource={
+                        certificateEmissionResponse.certificateEmission
+                            .dataSource
                     }
                 />
             </div>

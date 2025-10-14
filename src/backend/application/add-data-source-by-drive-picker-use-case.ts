@@ -1,27 +1,28 @@
 import { INPUT_METHOD, Template } from '../domain/template'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
-import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { NotFoundError } from '../domain/error/not-found-error'
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IBucket } from './interfaces/ibucket'
+import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
+import { DATA_SOURCE_FILE_EXTENSION, DataSource } from '../domain/data-source'
 import { ValidationError } from '../domain/error/validation-error'
 
-interface AddTemplateByDrivePickerUseCaseInput {
+interface AddDataSourceByDrivePickerUseCaseInput {
     certificateId: string
     fileId: string
     sessionToken: string
 }
 
-export class AddTemplateByDrivePickerUseCase {
+export class AddDataSourceByDrivePickerUseCase {
     constructor(
         private certificateEmissionsRepository: ICertificatesRepository,
         private sessionsRepository: ISessionsRepository,
         private googleDriveGateway: IGoogleDriveGateway,
-        private fileContentExtractorFactory: IFileContentExtractorFactory,
+        private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
         private externalUserAccountsRepository: IExternalUserAccountsRepository,
         private googleAuthGateway: Pick<
             IGoogleAuthGateway,
@@ -30,8 +31,7 @@ export class AddTemplateByDrivePickerUseCase {
         private bucket: Pick<IBucket, 'deleteObject'>,
     ) {}
 
-    async execute(input: AddTemplateByDrivePickerUseCaseInput) {
-        console.log('Executing Picker')
+    async execute(input: AddDataSourceByDrivePickerUseCaseInput) {
         const session = await this.sessionsRepository.getById(
             input.sessionToken,
         )
@@ -80,9 +80,9 @@ export class AddTemplateByDrivePickerUseCase {
                 userRefreshToken: externalAccount.refreshToken || undefined,
             })
 
-        if (!Template.isValidFileExtension(fileExtension)) {
+        if (!DataSource.isValidFileExtension(fileExtension)) {
             throw new ValidationError(
-                'File extension not supported for template',
+                'File extension not supported for data source',
             )
         }
 
@@ -93,32 +93,29 @@ export class AddTemplateByDrivePickerUseCase {
         })
 
         const contentExtractor =
-            this.fileContentExtractorFactory.create(fileExtension)
+            this.spreadsheetContentExtractorFactory.create(fileExtension)
 
-        const content = await contentExtractor.extractText(buffer)
+        const columns = contentExtractor.extractColumns(buffer)
 
-        const uniqueVariables = Template.extractVariablesFromContent(content)
-
-        if (certificate.getTemplateStorageFileUrl()) {
+        if (certificate.getDataSourceStorageFileUrl()) {
             await this.bucket.deleteObject({
                 bucketName: process.env.CERTIFICATES_BUCKET!,
-                objectName: certificate.getTemplateStorageFileUrl()!,
+                objectName: certificate.getDataSourceStorageFileUrl()!,
             })
         }
 
-        const newTemplate = Template.create({
+        const newDataSource = DataSource.create({
             driveFileId: input.fileId,
             storageFileUrl: null,
             inputMethod: INPUT_METHOD.URL,
             fileName: name,
-            variables: uniqueVariables,
-            fileExtension,
+            fileExtension: fileExtension as DATA_SOURCE_FILE_EXTENSION,
+            columns,
             thumbnailUrl,
         })
 
-        certificate.setTemplate(newTemplate)
+        certificate.setDataSource(newDataSource)
 
-        console.log('New template added:', newTemplate)
         await this.certificateEmissionsRepository.update(certificate)
     }
 }

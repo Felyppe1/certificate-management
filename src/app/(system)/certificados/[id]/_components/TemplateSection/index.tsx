@@ -106,6 +106,8 @@ export function TemplateSection({
         }
     }, [urlState, driverPickerState, uploadState])
 
+    const radioGroupName = 'template'
+
     if (template && isEditing) {
         return (
             <Card>
@@ -136,6 +138,7 @@ export function TemplateSection({
                         isDriveLoading={drivePickerIsLoading}
                         isUploadLoading={uploadIsLoading}
                         isUrlLoading={urlIsLoading}
+                        radioGroupName={radioGroupName}
                     />
                 </CardContent>
             </Card>
@@ -170,6 +173,7 @@ export function TemplateSection({
                     isDriveLoading={drivePickerIsLoading}
                     isUploadLoading={uploadIsLoading}
                     isUrlLoading={urlIsLoading}
+                    radioGroupName={radioGroupName}
                 />
             </CardContent>
         </Card>

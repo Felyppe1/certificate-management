@@ -1,8 +1,6 @@
-import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
-
 export interface DownloadFileInput {
     driveFileId: string
-    fileExtension: TEMPLATE_FILE_EXTENSION
+    fileExtension: string
     accessToken?: string
 }
 
@@ -14,7 +12,7 @@ export interface GetFileMetadataInput {
 
 export interface GetFileMetadataOutput {
     name: string
-    fileExtension: TEMPLATE_FILE_EXTENSION
+    fileExtension: string
     thumbnailUrl: string | null
 }
 

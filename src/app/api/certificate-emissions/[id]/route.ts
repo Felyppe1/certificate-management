@@ -1,5 +1,6 @@
 import { GetCertificateEmissionUseCase } from '@/backend/application/get-certificate-emission-use-case'
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
+import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
 import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
 import {
     INPUT_METHOD,
@@ -23,6 +24,16 @@ export interface GetCertificateEmissionControllerResponse {
             fileName: string
             fileExtension: TEMPLATE_FILE_EXTENSION
             variables: string[]
+            thumbnailUrl: string | null
+        } | null
+        dataSource: {
+            id: string
+            driveFileId: string | null
+            storageFileUrl: string | null
+            inputMethod: INPUT_METHOD
+            fileName: string
+            fileExtension: DATA_SOURCE_FILE_EXTENSION
+            columns: string[]
             thumbnailUrl: string | null
         } | null
     }

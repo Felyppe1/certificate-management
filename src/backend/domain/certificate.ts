@@ -182,10 +182,22 @@ export class Certificate extends AggregateRoot {
         )
     }
 
+    getDataSourceStorageFileUrl() {
+        return this.dataSource?.getStorageFileUrl() ?? null
+    }
+
     static mapVariablesToColumns(
         template: Template | null,
         dataSource: DataSource | null,
     ) {
+        const normalizeString = (str: string) => {
+            return str
+                .normalize('NFD') // separa os acentos das letras
+                .replace(/[\u0300-\u036f]/g, '') // remove os acentos
+                .replace(/[\s_\-!@#$%^&*()+=\[\]{};:'",.<>?/\\|`~]/g, '') // remove símbolos e espaços
+                .toLowerCase() // transforma em minúscula
+        }
+
         if (template) {
             const variableColumnMapping: Record<string, string | null> = {}
 
@@ -197,7 +209,11 @@ export class Certificate extends AggregateRoot {
 
                 const sameName = dataSource
                     .getColumns()
-                    .find(column => column === variable)
+                    .find(
+                        column =>
+                            normalizeString(column) ===
+                            normalizeString(variable),
+                    )
 
                 variableColumnMapping[variable] = sameName ?? null
             })

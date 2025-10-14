@@ -109,6 +109,8 @@ export class GetCertificateEmissionUseCase {
                 : null,
         }
 
+        console.log(certificate)
+
         return certificate
     }
 }

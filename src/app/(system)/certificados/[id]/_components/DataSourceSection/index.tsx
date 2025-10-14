@@ -13,22 +13,25 @@ import {
 } from '@/components/ui/card'
 import { addTemplateByDrivePickerAction } from '@/backend/infrastructure/server-actions/add-template-by-drive-picker-action'
 import { Button } from '@/components/ui/button'
-import {
-    INPUT_METHOD,
-    TEMPLATE_FILE_EXTENSION,
-} from '@/backend/domain/template'
 import { addTemplateByUploadAction } from '@/backend/infrastructure/server-actions/add-template-by-upload-action'
+import {
+    DATA_SOURCE_FILE_EXTENSION,
+    INPUT_METHOD,
+} from '@/backend/domain/data-source'
+import { addDataSourceByUrlAction } from '@/backend/infrastructure/server-actions/add-data-source-by-url-action'
+import { addDataSourceByDrivePickerAction } from '@/backend/infrastructure/server-actions/add-data-source-by-drive-picker-action'
+import { addDataSourceByUploadAction } from '@/backend/infrastructure/server-actions/add-data-source-by-upload-action'
 
-interface TemplateSectionProps {
+interface DataSourceSectionProps {
     certificateId: string
-    template: {
+    dataSource: {
         id: string
         driveFileId: string | null
         storageFileUrl: string | null
         inputMethod: INPUT_METHOD
         fileName: string
-        fileExtension: TEMPLATE_FILE_EXTENSION
-        variables: string[]
+        fileExtension: DATA_SOURCE_FILE_EXTENSION
+        columns: string[]
         thumbnailUrl: string | null
     } | null
     googleOAuthToken: string | null
@@ -37,19 +40,19 @@ interface TemplateSectionProps {
 
 export function DataSourceSection({
     certificateId,
-    template,
+    dataSource,
     googleOAuthToken,
     googleOAuthTokenExpiry,
-}: TemplateSectionProps) {
+}: DataSourceSectionProps) {
     const [isEditing, setIsEditing] = useState(false)
     const [urlState, urlAction, urlIsLoading] = useActionState(
-        addTemplateByUrlAction,
+        addDataSourceByUrlAction,
         null,
     )
     const [driverPickerState, drivePickerAction, drivePickerIsLoading] =
-        useActionState(addTemplateByDrivePickerAction, null)
+        useActionState(addDataSourceByDrivePickerAction, null)
     const [uploadState, uploadAction, uploadIsLoading] = useActionState(
-        addTemplateByUploadAction,
+        addDataSourceByUploadAction,
         null,
     )
 
@@ -100,7 +103,9 @@ export function DataSourceSection({
         }
     }, [urlState, driverPickerState, uploadState])
 
-    if (template && isEditing) {
+    const radioGroupName = 'data-source'
+
+    if (dataSource && isEditing) {
         return (
             <Card>
                 <CardHeader className="flex justify-between">
@@ -130,21 +135,22 @@ export function DataSourceSection({
                         isDriveLoading={drivePickerIsLoading}
                         isUploadLoading={uploadIsLoading}
                         isUrlLoading={urlIsLoading}
+                        radioGroupName={radioGroupName}
                     />
                 </CardContent>
             </Card>
         )
     }
 
-    if (template) {
-        return (
-            <TemplateDisplay
-                template={template}
-                certificateId={certificateId}
-                onEdit={handleEdit}
-            />
-        )
-    }
+    // if (dataSource) {
+    //     return (
+    //         <TemplateDisplay
+    //             dataSource={dataSource}
+    //             certificateId={certificateId}
+    //             onEdit={handleEdit}
+    //         />
+    //     )
+    // }
 
     return (
         <Card>
@@ -165,6 +171,7 @@ export function DataSourceSection({
                     isDriveLoading={drivePickerIsLoading}
                     isUploadLoading={uploadIsLoading}
                     isUrlLoading={urlIsLoading}
+                    radioGroupName={radioGroupName}
                 />
             </CardContent>
         </Card>

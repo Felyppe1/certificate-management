@@ -131,6 +131,14 @@ export class DataSource {
     //     return uniqueVariables
     // }
 
+    static isValidFileExtension(
+        fileExtension: string,
+    ): fileExtension is DATA_SOURCE_FILE_EXTENSION {
+        return Object.values(DATA_SOURCE_FILE_EXTENSION).includes(
+            fileExtension as DATA_SOURCE_FILE_EXTENSION,
+        )
+    }
+
     serialize(): DataSourceOutput {
         return {
             id: this.id,
