@@ -6,11 +6,24 @@ import {
     Template,
     TEMPLATE_FILE_EXTENSION,
 } from '@/backend/domain/template'
+import {
+    DATA_SOURCE_FILE_EXTENSION,
+    DataSource,
+} from '@/backend/domain/data-source'
 
 export class PrismaCertificatesRepository implements ICertificatesRepository {
     async save(certificate: Certificate) {
-        const { id, name, status, createdAt, userId, template, domainEvents } =
-            certificate.serialize()
+        const {
+            id,
+            name,
+            status,
+            createdAt,
+            userId,
+            template,
+            dataSource,
+            variableColumnMapping,
+            domainEvents,
+        } = certificate.serialize()
 
         await prisma.$transaction([
             prisma.certificateEmission.create({
@@ -20,6 +33,28 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                     user_id: userId,
                     status,
                     created_at: createdAt,
+                    ...(dataSource && {
+                        DataSource: {
+                            create: {
+                                id: dataSource.id,
+                                drive_file_id: dataSource.driveFileId,
+                                storage_file_url: dataSource.storageFileUrl,
+                                input_method: dataSource.inputMethod,
+                                file_name: dataSource.fileName,
+                                file_extension: dataSource.fileExtension,
+                                thumbnail_url: dataSource.thumbnailUrl,
+                                DataSourceColumn: {
+                                    createMany: {
+                                        data: dataSource.columns.map(
+                                            column => ({
+                                                name: column,
+                                            }),
+                                        ),
+                                    },
+                                },
+                            },
+                        },
+                    }),
                     ...(template && {
                         Template: {
                             create: {
@@ -35,6 +70,16 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                         data: template.variables.map(
                                             variable => ({
                                                 name: variable,
+                                                data_source_id:
+                                                    variableColumnMapping?.[
+                                                        variable
+                                                    ]
+                                                        ? dataSource?.id
+                                                        : null,
+                                                data_source_name:
+                                                    variableColumnMapping?.[
+                                                        variable
+                                                    ],
                                             }),
                                         ),
                                     },
@@ -57,13 +102,25 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
     }
 
     async update(certificate: Certificate) {
-        const { id, name, template, domainEvents } = certificate.serialize()
+        const {
+            id,
+            name,
+            template,
+            dataSource,
+            variableColumnMapping,
+            domainEvents,
+        } = certificate.serialize()
 
         if (!template) {
             const certificate = await prisma.certificateEmission.findUnique({
                 where: { id },
                 include: {
                     Template: {
+                        select: {
+                            id: true,
+                        },
+                    },
+                    DataSource: {
                         select: {
                             id: true,
                         },
@@ -76,6 +133,12 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                     where: { id: certificate.Template.id },
                 })
             }
+
+            if (certificate?.DataSource) {
+                await prisma.dataSource.delete({
+                    where: { id: certificate.DataSource.id },
+                })
+            }
         }
 
         await prisma.$transaction([
@@ -83,6 +146,49 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                 where: { id },
                 data: {
                     title: name,
+                    DataSource: {
+                        ...(dataSource && {
+                            upsert: {
+                                create: {
+                                    id: dataSource.id,
+                                    drive_file_id: dataSource.driveFileId,
+                                    storage_file_url: dataSource.storageFileUrl,
+                                    input_method: dataSource.inputMethod,
+                                    file_name: dataSource.fileName,
+                                    file_extension: dataSource.fileExtension,
+                                    thumbnail_url: dataSource.thumbnailUrl,
+                                    DataSourceColumn: {
+                                        createMany: {
+                                            data: dataSource.columns.map(
+                                                column => ({
+                                                    name: column,
+                                                }),
+                                            ),
+                                        },
+                                    },
+                                },
+                                update: {
+                                    drive_file_id: dataSource.driveFileId,
+                                    storage_file_url: dataSource.storageFileUrl,
+                                    file_name: dataSource.fileName,
+                                    input_method: dataSource.inputMethod,
+                                    file_extension: dataSource.fileExtension,
+                                    thumbnail_url: dataSource.thumbnailUrl,
+                                    DataSourceColumn: {
+                                        deleteMany: {},
+                                        createMany: {
+                                            data: dataSource.columns.map(
+                                                column => ({
+                                                    name: column,
+                                                }),
+                                            ),
+                                        },
+                                    },
+                                },
+                                // where: { id: template.id }, // TODO: must be the id of the previous template, not the new one
+                            },
+                        }),
+                    },
                     Template: {
                         ...(template && {
                             upsert: {
@@ -99,6 +205,16 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                             data: template.variables.map(
                                                 variable => ({
                                                     name: variable,
+                                                    data_source_id:
+                                                        variableColumnMapping?.[
+                                                            variable
+                                                        ]
+                                                            ? dataSource?.id
+                                                            : null,
+                                                    data_source_name:
+                                                        variableColumnMapping?.[
+                                                            variable
+                                                        ],
                                                 }),
                                             ),
                                         },
@@ -117,6 +233,16 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                             data: template.variables.map(
                                                 variable => ({
                                                     name: variable,
+                                                    data_source_id:
+                                                        variableColumnMapping?.[
+                                                            variable
+                                                        ]
+                                                            ? dataSource?.id
+                                                            : null,
+                                                    data_source_name:
+                                                        variableColumnMapping?.[
+                                                            variable
+                                                        ],
                                                 }),
                                             ),
                                         },
@@ -149,6 +275,11 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                         TemplateVariable: true,
                     },
                 },
+                DataSource: {
+                    include: {
+                        DataSourceColumn: true,
+                    },
+                },
             },
         })
 
@@ -173,13 +304,40 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
               })
             : null
 
+        const dataSource = certificate.DataSource
+            ? new DataSource({
+                  id: certificate.DataSource.id,
+                  driveFileId: certificate.DataSource.drive_file_id,
+                  storageFileUrl: certificate.DataSource.storage_file_url,
+                  inputMethod: certificate.DataSource
+                      .input_method as INPUT_METHOD,
+                  fileName: certificate.DataSource.file_name,
+                  fileExtension: certificate.DataSource
+                      .file_extension as DATA_SOURCE_FILE_EXTENSION,
+                  columns: certificate.DataSource.DataSourceColumn.map(
+                      column => column.name,
+                  ),
+                  thumbnailUrl: certificate.DataSource.thumbnail_url,
+              })
+            : null
+
         return new Certificate({
             id: certificate.id,
             name: certificate.title,
             userId: certificate.user_id,
             template: template,
+            dataSource: dataSource,
             status: certificate.status as CERTIFICATE_STATUS,
             createdAt: certificate.created_at,
+            variableColumnMapping:
+                certificate.Template?.TemplateVariable.reduce(
+                    (acc, templateVariable) => {
+                        acc[templateVariable.name] =
+                            templateVariable.data_source_name
+                        return acc
+                    },
+                    {} as Record<string, string | null>,
+                ) ?? null,
         })
     }
 }

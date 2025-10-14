@@ -7,65 +7,65 @@ export enum INPUT_METHOD {
     UPLOAD = 'UPLOAD',
 }
 
-export enum TEMPLATE_FILE_EXTENSION {
-    DOCX = 'DOCX',
-    GOOGLE_DOCS = 'GOOGLE_DOCS',
-    PPTX = 'PPTX',
-    GOOGLE_SLIDES = 'GOOGLE_SLIDES',
+export enum DATA_SOURCE_FILE_EXTENSION {
+    CSV = 'text/csv',
+    XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ODS = 'application/vnd.oasis.opendocument.spreadsheet',
+    GOOGLE_SHEETS = 'application/vnd.google-apps.spreadsheet',
 }
 
-interface TemplateInput {
+interface DataSourceInput {
     id: string
     driveFileId: string | null
     storageFileUrl: string | null
     inputMethod: INPUT_METHOD
     fileName: string
-    fileExtension: TEMPLATE_FILE_EXTENSION
+    fileExtension: DATA_SOURCE_FILE_EXTENSION
     thumbnailUrl: string | null
-    variables: string[]
+    columns: string[]
 }
 
-export interface TemplateOutput extends TemplateInput {}
+export interface DataSourceOutput extends DataSourceInput {}
 
-interface CreateTemplateInput extends Omit<TemplateInput, 'id'> {}
+interface CreateDataSourceInput extends Omit<DataSourceInput, 'id'> {}
 
-export class Template {
+export class DataSource {
     private id: string
     private driveFileId: string | null
     private storageFileUrl: string | null
     private inputMethod: INPUT_METHOD
     private fileName: string
-    private fileExtension: TEMPLATE_FILE_EXTENSION
-    private variables: string[]
+    private fileExtension: DATA_SOURCE_FILE_EXTENSION
+    private columns: string[]
     private thumbnailUrl: string | null
 
-    static create(data: CreateTemplateInput): Template {
-        return new Template({
+    static create(data: CreateDataSourceInput): DataSource {
+        return new DataSource({
             id: createId(),
             ...data,
         })
     }
 
-    constructor(data: TemplateInput) {
+    constructor(data: DataSourceInput) {
         if (!data.id) {
-            throw new ValidationError('Template ID is required')
+            throw new ValidationError('DataSource ID is required')
         }
 
         if (!data.inputMethod) {
-            throw new ValidationError('Template input method is required')
+            throw new ValidationError('DataSource input method is required')
         }
 
-        if (!data.variables) {
-            throw new ValidationError('Template variables is required')
+        if (!data.columns) {
+            throw new ValidationError('DataSource columns is required')
         }
 
         if (!data.fileName) {
             // TODO: validate regex for file name
-            throw new ValidationError('Template file name is required')
+            throw new ValidationError('DataSource file name is required')
         }
 
         if (!data.fileExtension) {
-            throw new ValidationError('Template file extension is required')
+            throw new ValidationError('DataSource file extension is required')
         }
 
         if (data.driveFileId) {
@@ -90,7 +90,7 @@ export class Template {
         this.inputMethod = data.inputMethod
         this.fileName = data.fileName
         this.fileExtension = data.fileExtension
-        this.variables = data.variables
+        this.columns = data.columns
         this.thumbnailUrl = data.thumbnailUrl
     }
 
@@ -102,16 +102,16 @@ export class Template {
         return this.driveFileId
     }
 
-    getVariables() {
-        return this.variables
-    }
-
     setStorageFileUrl(url: string) {
         this.storageFileUrl = url
     }
 
     getStorageFileUrl() {
         return this.storageFileUrl
+    }
+
+    getColumns() {
+        return this.columns
     }
 
     setThumbnailUrl(url: string) {
@@ -123,15 +123,15 @@ export class Template {
         return match ? match[1] : null
     }
 
-    static extractVariablesFromContent(content: string): string[] {
-        const matches = [...content.matchAll(/\{\{\s*([\w.-]+)\s*\}\}/g)]
-        const variables = matches.map(match => match[1])
-        const uniqueVariables = Array.from(new Set(variables))
+    // static extractVariablesFromContent(content: string): string[] {
+    //     const matches = [...content.matchAll(/\{\{\s*([\w.-]+)\s*\}\}/g)]
+    //     const columns = matches.map(match => match[1])
+    //     const uniqueVariables = Array.from(new Set(columns))
 
-        return uniqueVariables
-    }
+    //     return uniqueVariables
+    // }
 
-    serialize(): TemplateOutput {
+    serialize(): DataSourceOutput {
         return {
             id: this.id,
             driveFileId: this.driveFileId,
@@ -139,7 +139,7 @@ export class Template {
             inputMethod: this.inputMethod,
             fileName: this.fileName,
             fileExtension: this.fileExtension,
-            variables: this.variables,
+            columns: this.columns,
             thumbnailUrl: this.thumbnailUrl,
         }
     }

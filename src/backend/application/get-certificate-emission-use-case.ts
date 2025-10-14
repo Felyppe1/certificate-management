@@ -1,4 +1,5 @@
 import { CERTIFICATE_STATUS } from '../domain/certificate'
+import { DATA_SOURCE_FILE_EXTENSION } from '../domain/data-source'
 import { ForbiddenError } from '../domain/error/forbidden-error'
 import { NotFoundError } from '../domain/error/not-found-error'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
@@ -35,6 +36,11 @@ export class GetCertificateEmissionUseCase {
                             TemplateVariable: true,
                         },
                     },
+                    DataSource: {
+                        include: {
+                            DataSourceColumn: true,
+                        },
+                    },
                 },
             },
         )
@@ -49,12 +55,21 @@ export class GetCertificateEmissionUseCase {
             )
         }
 
-        return {
+        const certificate = {
             id: certificateEmission.id,
             name: certificateEmission.title,
             userId: certificateEmission.user_id,
             status: certificateEmission.status as CERTIFICATE_STATUS,
             createdAt: certificateEmission.created_at,
+            variableColumnMapping:
+                certificateEmission.Template?.TemplateVariable.reduce(
+                    (acc, templateVariable) => {
+                        acc[templateVariable.name] =
+                            templateVariable.data_source_name
+                        return acc
+                    },
+                    {} as Record<string, string | null>,
+                ) ?? null,
             template: certificateEmission.Template
                 ? {
                       id: certificateEmission.Template.id,
@@ -73,6 +88,27 @@ export class GetCertificateEmissionUseCase {
                       thumbnailUrl: certificateEmission.Template.thumbnail_url,
                   }
                 : null,
+            dataSource: certificateEmission.DataSource
+                ? {
+                      id: certificateEmission.DataSource.id,
+                      driveFileId: certificateEmission.DataSource.drive_file_id,
+                      storageFileUrl:
+                          certificateEmission.DataSource.storage_file_url,
+                      inputMethod: certificateEmission.DataSource
+                          .input_method as INPUT_METHOD,
+                      fileName: certificateEmission.DataSource.file_name,
+                      fileExtension: certificateEmission.DataSource
+                          .file_extension as DATA_SOURCE_FILE_EXTENSION,
+                      columns:
+                          certificateEmission.DataSource.DataSourceColumn.map(
+                              column => column.name,
+                          ),
+                      thumbnailUrl:
+                          certificateEmission.DataSource.thumbnail_url,
+                  }
+                : null,
         }
+
+        return certificate
     }
 }

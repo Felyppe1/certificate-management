@@ -1,6 +1,6 @@
 datasource db {
-    provider = "postgresql"
-    url      = env("DB_URL")
+    provider  = "postgresql"
+    url       = env("DB_URL")
     directUrl = env("DB_DIRECT_URL")
 }
 
@@ -49,15 +49,16 @@ model ExternalUserAccount {
 }
 
 model CertificateEmission {
-    id    String @id @default(cuid())
-    title String
-    status String // "DRAFT" | "EMITTED" | "SCHEDULED"
+    id         String   @id @default(cuid())
+    title      String
+    status     String // "DRAFT" | "EMITTED" | "SCHEDULED"
     created_at DateTime @default(now())
 
-    user_id     String
-    
-    User     User      @relation(fields: [user_id], references: [id])
-    Template Template?
+    user_id String
+
+    User       User        @relation(fields: [user_id], references: [id])
+    Template   Template?
+    DataSource DataSource?
 
     @@map("certificate_emissions")
 }
@@ -72,10 +73,10 @@ model Template {
     input_method     String // "URL" | "GOOGLE_DRIVE" | "UPLOAD"
     file_extension   String
 
-    certificate_emission_id String  @unique
+    certificate_emission_id String @unique
 
     TemplateVariable    TemplateVariable[]
-    CertificateEmission    CertificateEmission      @relation(fields: [certificate_emission_id], references: [id])
+    CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id])
 
     @@map("templates")
 }
@@ -84,10 +85,44 @@ model TemplateVariable {
     template_id String
     name        String
 
-    Template Template @relation(fields: [template_id], references: [id], onDelete: Cascade)
+    data_source_id   String?
+    data_source_name String?
+
+    Template         Template          @relation(fields: [template_id], references: [id], onDelete: Cascade)
+    DataSourceColumn DataSourceColumn? @relation(fields: [data_source_id, data_source_name], references: [data_source_id, name])
 
     @@id([name, template_id])
+    @@unique([data_source_id, data_source_name])
     @@map("template_variables")
+}
+
+model DataSource {
+    id String @id @default(cuid())
+
+    drive_file_id    String?
+    storage_file_url String?
+    thumbnail_url    String?
+    file_name        String
+    input_method     String // "URL" | "GOOGLE_DRIVE" | "UPLOAD"
+    file_extension   String
+
+    certificate_emission_id String @unique
+
+    DataSourceColumn    DataSourceColumn[]
+    CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id])
+
+    @@map("data_sources")
+}
+
+model DataSourceColumn {
+    data_source_id String
+    name           String
+
+    DataSource       DataSource        @relation(fields: [data_source_id], references: [id], onDelete: Cascade)
+    TemplateVariable TemplateVariable?
+
+    @@id([name, data_source_id])
+    @@map("data_source_columns")
 }
 
 model Outbox {

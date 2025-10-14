@@ -25,6 +25,7 @@ export class CreateCertificateEmissionUseCase {
             name,
             userId: session.userId,
             template: null,
+            dataSource: null,
         })
 
         await this.certificateEmissionsRepository.save(newCertificate)
