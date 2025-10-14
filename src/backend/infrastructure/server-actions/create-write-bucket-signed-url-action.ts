@@ -7,12 +7,15 @@ import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certif
 import { PrismaSessionsRepository } from '../repository/prisma/prisma-sessions-repository'
 import { CreateWriteBucketSignedUrlUseCase } from '@/backend/application/create-write-bucket-signed-url-use-case'
 import z from 'zod'
-import { MIME_TYPES } from '@/types'
+import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 
 const createWriteBucketSignedUrlActionSchema = z.object({
     certificateId: z.string().min(1, 'Certificate ID is required'),
     fileName: z.string().min(1, 'File name is required'),
-    mimeType: z.enum([MIME_TYPES.PPTX, MIME_TYPES.DOCX]),
+    mimeType: z.enum([
+        TEMPLATE_FILE_EXTENSION.PPTX,
+        TEMPLATE_FILE_EXTENSION.DOCX,
+    ]),
     type: z.enum(['TEMPLATE']),
 })
 

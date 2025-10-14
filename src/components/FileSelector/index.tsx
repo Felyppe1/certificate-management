@@ -18,11 +18,11 @@ import {
     PickerPickedEvent,
 } from '@googleworkspace/drive-picker-element'
 import { refreshGoogleAccessTokenAction } from '@/backend/infrastructure/server-actions/refresh-google-access-token-action'
-import { MIME_TYPES } from '@/types'
 // import { createWriteBucketSignedUrlAction } from '@/backend/infrastructure/server-actions/create-write-bucket-signed-url-action'
 import { FileRejection, useDropzone } from 'react-dropzone'
 import { cn } from '@/lib/utils'
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
+import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 
 type SelectOption = 'upload' | 'link' | 'drive'
 
@@ -97,7 +97,10 @@ export function FileSelector({
 
         const file = acceptedFiles[0]
 
-        if (file.type != MIME_TYPES.DOCX && file.type != MIME_TYPES.PPTX) {
+        if (
+            file.type != TEMPLATE_FILE_EXTENSION.DOCX &&
+            file.type != TEMPLATE_FILE_EXTENSION.PPTX
+        ) {
             console.log('Formato de arquivo não suportado')
             return
         }
@@ -305,10 +308,10 @@ export function FileSelector({
                 >
                     <drive-picker-docs-view
                         mime-types={[
-                            MIME_TYPES.GOOGLE_DOCS,
-                            MIME_TYPES.GOOGLE_SLIDES,
-                            MIME_TYPES.DOCX,
-                            MIME_TYPES.PPTX,
+                            TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS,
+                            TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES,
+                            TEMPLATE_FILE_EXTENSION.DOCX,
+                            TEMPLATE_FILE_EXTENSION.PPTX,
                             DATA_SOURCE_FILE_EXTENSION.CSV,
                             DATA_SOURCE_FILE_EXTENSION.XLSX,
                             DATA_SOURCE_FILE_EXTENSION.ODS,
