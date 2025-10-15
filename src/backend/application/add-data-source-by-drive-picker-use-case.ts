@@ -104,7 +104,7 @@ export class AddDataSourceByDrivePickerUseCase {
             })
         }
 
-        const newDataSource = DataSource.create({
+        const newDataSourceInput = {
             driveFileId: input.fileId,
             storageFileUrl: null,
             inputMethod: INPUT_METHOD.URL,
@@ -112,7 +112,14 @@ export class AddDataSourceByDrivePickerUseCase {
             fileExtension: fileExtension as DATA_SOURCE_FILE_EXTENSION,
             columns,
             thumbnailUrl,
-        })
+        }
+
+        const newDataSource = certificate.hasDataSource()
+            ? new DataSource({
+                  id: certificate.getDataSourceId()!,
+                  ...newDataSourceInput,
+              })
+            : DataSource.create(newDataSourceInput)
 
         certificate.setDataSource(newDataSource)
 

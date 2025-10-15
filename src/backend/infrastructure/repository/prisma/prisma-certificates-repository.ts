@@ -111,8 +111,8 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
             domainEvents,
         } = certificate.serialize()
 
-        if (!template) {
-            const certificate = await prisma.certificateEmission.findUnique({
+        const previousCertificate = await prisma.certificateEmission.findUnique(
+            {
                 where: { id },
                 include: {
                     Template: {
@@ -126,23 +126,23 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                         },
                     },
                 },
-            })
+            },
+        )
 
-            if (certificate?.Template) {
-                await prisma.template.delete({
-                    where: { id: certificate.Template.id },
+        await prisma.$transaction(async tx => {
+            if (!template && previousCertificate?.Template) {
+                await tx.template.delete({
+                    where: { id: previousCertificate.Template.id },
                 })
             }
 
-            if (certificate?.DataSource) {
-                await prisma.dataSource.delete({
-                    where: { id: certificate.DataSource.id },
+            if (!dataSource && previousCertificate?.DataSource) {
+                await tx.dataSource.delete({
+                    where: { id: previousCertificate.DataSource.id },
                 })
             }
-        }
 
-        await prisma.$transaction([
-            prisma.certificateEmission.update({
+            await tx.certificateEmission.update({
                 where: { id },
                 data: {
                     title: name,
@@ -253,17 +253,17 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                         }),
                     },
                 },
-            }),
+            })
 
-            prisma.outbox.createMany({
+            await tx.outbox.createMany({
                 data: domainEvents.map(event => ({
                     id: event.id,
                     event_type: event.name,
                     created_at: event.ocurredOn,
                     payload: JSON.stringify(event),
                 })),
-            }),
-        ])
+            })
+        })
     }
 
     async getById(id: string): Promise<Certificate | null> {

@@ -182,6 +182,14 @@ export class Certificate extends AggregateRoot {
         )
     }
 
+    getDataSourceId() {
+        return this.dataSource?.getId() ?? null
+    }
+
+    hasDataSource() {
+        return !!this.dataSource
+    }
+
     getDataSourceStorageFileUrl() {
         return this.dataSource?.getStorageFileUrl() ?? null
     }
