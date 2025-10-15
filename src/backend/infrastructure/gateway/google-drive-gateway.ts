@@ -79,9 +79,10 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
             case TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES:
                 url = `https://docs.google.com/presentation/d/${driveFileId}/export?format=pptx`
                 break
-            case DATA_SOURCE_FILE_EXTENSION.CSV:
             case DATA_SOURCE_FILE_EXTENSION.XLSX:
-            case DATA_SOURCE_FILE_EXTENSION.ODS:
+                url = `https://docs.google.com/spreadsheets/d/${driveFileId}/export?format=xlsx`
+                break
+            case DATA_SOURCE_FILE_EXTENSION.CSV:
             case DATA_SOURCE_FILE_EXTENSION.GOOGLE_SHEETS:
                 url = `https://docs.google.com/spreadsheets/d/${driveFileId}/export?format=csv`
                 break

@@ -150,7 +150,7 @@ export class Certificate extends AggregateRoot {
     }
 
     getDriveTemplateFileId() {
-        return this.template?.getDriveFileId()
+        return this.template?.getDriveFileId() ?? null
     }
 
     setTemplateStorageFileUrl(url: string) {
@@ -194,12 +194,35 @@ export class Certificate extends AggregateRoot {
         return this.dataSource?.getStorageFileUrl() ?? null
     }
 
+    getDriveDataSourceFileId() {
+        return this.dataSource?.getDriveFileId() ?? null
+    }
+
     setDataSourceStorageFileUrl(url: string) {
         if (!this.dataSource) {
             throw new ValidationError('Certificate does not have a data source')
         }
 
         this.dataSource.setStorageFileUrl(url)
+    }
+
+    removeDataSource(userIdTryingToRemove: string) {
+        if (this.userId !== userIdTryingToRemove) {
+            throw new ForbiddenError(
+                'Only the owner of the certificate can remove the data source',
+            )
+        }
+
+        if (!this.dataSource) {
+            throw new ValidationError('Certificate does not have a data source')
+        }
+
+        this.dataSource = null
+
+        this.variableColumnMapping = Certificate.mapVariablesToColumns(
+            this.template,
+            this.dataSource,
+        )
     }
 
     static mapVariablesToColumns(

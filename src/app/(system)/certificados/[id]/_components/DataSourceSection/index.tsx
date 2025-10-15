@@ -1,9 +1,8 @@
 'use client'
 
 import { FileSelector } from '@/components/FileSelector'
-import { addTemplateByUrlAction } from '@/backend/infrastructure/server-actions/add-template-by-url-action'
 import { startTransition, useActionState, useState, useEffect } from 'react'
-import { TemplateDisplay } from './template-display'
+import { DataSourceDisplay } from './data-source-display'
 import {
     Card,
     CardContent,
@@ -11,9 +10,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
-import { addTemplateByDrivePickerAction } from '@/backend/infrastructure/server-actions/add-template-by-drive-picker-action'
 import { Button } from '@/components/ui/button'
-import { addTemplateByUploadAction } from '@/backend/infrastructure/server-actions/add-template-by-upload-action'
 import {
     DATA_SOURCE_FILE_EXTENSION,
     INPUT_METHOD,
@@ -142,15 +139,15 @@ export function DataSourceSection({
         )
     }
 
-    // if (dataSource) {
-    //     return (
-    //         <TemplateDisplay
-    //             dataSource={dataSource}
-    //             certificateId={certificateId}
-    //             onEdit={handleEdit}
-    //         />
-    //     )
-    // }
+    if (dataSource) {
+        return (
+            <DataSourceDisplay
+                dataSource={dataSource}
+                certificateId={certificateId}
+                onEdit={handleEdit}
+            />
+        )
+    }
 
     return (
         <Card>

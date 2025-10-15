@@ -1,7 +1,5 @@
 'use server'
 
-import { RefreshTemplateUseCase } from '@/backend/application/refresh-template-use-case'
-import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
@@ -12,12 +10,14 @@ import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prism
 import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
 import { logoutAction } from './logout-action'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
+import { RefreshDataSourceUseCase } from '@/backend/application/refresh-data-source-use-case'
+import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
 
-const refreshTemplateActionSchema = z.object({
+const refreshDataSourceActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
 })
 
-export async function refreshTemplateAction(_: unknown, formData: FormData) {
+export async function refreshDataSourceAction(_: unknown, formData: FormData) {
     const cookie = await cookies()
 
     const rawData = {
@@ -27,26 +27,27 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
     try {
         const sessionToken = cookie.get('session_token')!.value
 
-        const parsedData = refreshTemplateActionSchema.parse(rawData)
+        const parsedData = refreshDataSourceActionSchema.parse(rawData)
 
         const sessionsRepository = new PrismaSessionsRepository()
         const certificatesRepository = new PrismaCertificatesRepository()
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
-        const fileContentExtractorFactory = new FileContentExtractorFactory()
+        const spreadsheetContentExtractorFactory =
+            new SpreadsheetContentExtractorFactory()
         const externalUserAccountsRepository =
             new PrismaExternalUserAccountsRepository()
 
-        const refreshTemplateUseCase = new RefreshTemplateUseCase(
+        const refreshDataSourceUseCase = new RefreshDataSourceUseCase(
             certificatesRepository,
             sessionsRepository,
             googleDriveGateway,
             googleAuthGateway,
-            fileContentExtractorFactory,
+            spreadsheetContentExtractorFactory,
             externalUserAccountsRepository,
         )
 
-        await refreshTemplateUseCase.execute({
+        await refreshDataSourceUseCase.execute({
             sessionToken,
             certificateId: parsedData.certificateId,
         })

@@ -1,21 +1,21 @@
+import { DataSource, INPUT_METHOD } from '../domain/data-source'
 import { ForbiddenError } from '../domain/error/forbidden-error'
 import { NotFoundError } from '../domain/error/not-found-error'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
 import { ValidationError } from '../domain/error/validation-error'
-import { INPUT_METHOD, Template } from '../domain/template'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
-import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { ISessionsRepository } from './interfaces/isessions-repository'
+import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 
-interface RefreshTemplateUseCaseInput {
+interface RefreshDataSourceUseCaseInput {
     sessionToken: string
     certificateId: string
 }
 
-export class RefreshTemplateUseCase {
+export class RefreshDataSourceUseCase {
     constructor(
         private certificateEmissionsRepository: ICertificatesRepository,
         private sessionsRepository: ISessionsRepository,
@@ -24,11 +24,11 @@ export class RefreshTemplateUseCase {
             IGoogleAuthGateway,
             'checkOrGetNewAccessToken'
         >,
-        private fileContentExtractorFactory: IFileContentExtractorFactory,
+        private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
         private externalUserAccountsRepository: IExternalUserAccountsRepository,
     ) {}
 
-    async execute(input: RefreshTemplateUseCaseInput) {
+    async execute(input: RefreshDataSourceUseCaseInput) {
         const session = await this.sessionsRepository.getById(
             input.sessionToken,
         )
@@ -51,17 +51,21 @@ export class RefreshTemplateUseCase {
             )
         }
 
-        if (!certificate.hasTemplate()) {
+        if (!certificate.hasDataSource()) {
             throw new ValidationError(
-                'Certificate does not have a template to refresh',
+                'Certificate does not have a data source to refresh',
             )
         }
 
-        const driveFileId = certificate.getDriveTemplateFileId()
+        const driveFileId = certificate.getDriveDataSourceFileId()
 
         if (!driveFileId) {
-            throw new ValidationError('Template does not have a drive file ID')
+            throw new ValidationError(
+                'Data source does not have a drive file ID',
+            )
         }
+
+        console.log(certificate.getDataSourceStorageFileUrl())
 
         const externalAccount =
             await this.externalUserAccountsRepository.getById(
@@ -97,9 +101,9 @@ export class RefreshTemplateUseCase {
                 userRefreshToken: externalAccount?.refreshToken ?? undefined,
             })
 
-        if (!Template.isValidFileExtension(fileExtension)) {
+        if (!DataSource.isValidFileExtension(fileExtension)) {
             throw new ValidationError(
-                'File extension not supported for template',
+                'File extension not supported for data source',
             )
         }
 
@@ -110,30 +114,28 @@ export class RefreshTemplateUseCase {
         })
 
         const contentExtractor =
-            this.fileContentExtractorFactory.create(fileExtension)
+            this.spreadsheetContentExtractorFactory.create(fileExtension)
 
-        const content = await contentExtractor.extractText(buffer)
+        const columns = await contentExtractor.extractColumns(buffer)
 
-        const uniqueVariables = Template.extractVariablesFromContent(content)
-
-        const newTemplateInput = {
+        const newDataSourceInput = {
             driveFileId,
             storageFileUrl: null,
             fileExtension: fileExtension,
             inputMethod: INPUT_METHOD.URL,
             fileName: name,
-            variables: uniqueVariables,
+            columns,
             thumbnailUrl,
         }
 
-        const newTemplate = certificate.hasTemplate()
-            ? new Template({
-                  id: certificate.getTemplateId()!,
-                  ...newTemplateInput,
+        const newDataSource = certificate.hasDataSource()
+            ? new DataSource({
+                  id: certificate.getDataSourceId()!,
+                  ...newDataSourceInput,
               })
-            : Template.create(newTemplateInput)
+            : DataSource.create(newDataSourceInput)
 
-        certificate.setTemplate(newTemplate)
+        certificate.setDataSource(newDataSource)
 
         await this.certificateEmissionsRepository.update(certificate)
     }

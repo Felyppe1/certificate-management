@@ -90,41 +90,10 @@ export function TemplateDisplay({
 
     return (
         <div className="space-y-4">
-            {/* Template Card Compacto */}
             <Card className="">
-                {/* Header com gradiente */}
-                {/* <div className={`bg-gradient-to-r ${getPreviewGradient()} px-6 py-4`}>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                                    {getPreviewIcon()}
-                                </div>
-                                <div className="text-white">
-                                    <h3 className="font-semibold text-lg leading-tight mb-1">
-                                        Template Ativo
-                                    </h3>
-                                    <p className="text-sm opacity-90">
-                                        {template.variables.length} {template.variables.length === 1 ? 'variável identificada' : 'variáveis identificadas'}
-                                    </p>
-                                </div>
-                            </div>
-                            <Badge
-                                variant="secondary"
-                                className="bg-white/90 text-gray-900 hover:bg-white border-0"
-                            >
-                                {template.fileExtension === 'GOOGLE_DOCS'
-                                    ? 'Google Docs'
-                                    : template.fileExtension === 'GOOGLE_SLIDES'
-                                      ? 'Google Slides'
-                                      : template.fileExtension}
-                            </Badge>
-                        </div>
-                    </div> */}
-
-                {/* Content */}
                 <CardHeader className="flex justify-between">
                     <div>
-                        <CardTitle>Template do Certificado</CardTitle>
+                        <CardTitle>Template</CardTitle>
                         <CardDescription>
                             Template que será utilizado para gerar os
                             certificados
@@ -180,7 +149,6 @@ export function TemplateDisplay({
 
                     <div className="flex flex-col w-full">
                         <div className="flex flex-col gap-4 mt-1">
-                            {/* File Info */}
                             <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0 mt-0.5">
                                     <svg
@@ -204,7 +172,6 @@ export function TemplateDisplay({
                                 </div>
                             </div>
 
-                            {/* Source */}
                             <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0 mt-0.5">
                                     <svg

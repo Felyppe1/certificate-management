@@ -5,6 +5,7 @@ import {
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
 import { CsvSpreadsheetContentExtractorStrategy } from './strategy/csv-spreadsheet-content-extractor-strategy'
 import { ValidationError } from '@/backend/domain/error/validation-error'
+import { ExcelSpreadsheetContentExtractorStrategy } from './strategy/excel-spreadsheet-content-extractor-strategy'
 
 export class SpreadsheetContentExtractorFactory
     implements ISpreadsheetContentExtractorFactory
@@ -14,8 +15,7 @@ export class SpreadsheetContentExtractorFactory
     ): ISpreadsheetContentExtractorStrategy {
         switch (mimeType) {
             case DATA_SOURCE_FILE_EXTENSION.XLSX:
-            case DATA_SOURCE_FILE_EXTENSION.ODS:
-            // return new ExcelSpreadsheetContentExtractorStrategy();
+                return new ExcelSpreadsheetContentExtractorStrategy()
 
             case DATA_SOURCE_FILE_EXTENSION.CSV:
             case DATA_SOURCE_FILE_EXTENSION.GOOGLE_SHEETS:

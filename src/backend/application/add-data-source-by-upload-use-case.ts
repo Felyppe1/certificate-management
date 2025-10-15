@@ -81,7 +81,7 @@ export class AddDataSourceByUploadUseCase {
             thumbnailUrl: null,
         }
 
-        const newDataSource = certificate.hasTemplate()
+        const newDataSource = certificate.hasDataSource()
             ? new DataSource({
                   id: certificate.getDataSourceId()!,
                   ...newDataSourceInput,
