@@ -99,7 +99,9 @@ export function FileSelector({
 
         if (
             file.type != TEMPLATE_FILE_EXTENSION.DOCX &&
-            file.type != TEMPLATE_FILE_EXTENSION.PPTX
+            file.type != TEMPLATE_FILE_EXTENSION.PPTX &&
+            file.type != DATA_SOURCE_FILE_EXTENSION.CSV &&
+            file.type != DATA_SOURCE_FILE_EXTENSION.XLSX
         ) {
             console.log('Formato de arquivo não suportado')
             return

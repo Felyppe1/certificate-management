@@ -33,9 +33,11 @@ export class DeleteTemplateUseCase {
             throw new NotFoundError('Certificate not found')
         }
 
-        const storageFileUrl = certificate.getTemplateStorageFileUrl()!
+        const storageFileUrl = certificate.getTemplateStorageFileUrl()
 
         certificate.removeTemplate(session.userId)
+
+        await this.certificateEmissionsRepository.update(certificate)
 
         if (storageFileUrl) {
             // TODO: do this on outbox pattern?
@@ -44,7 +46,5 @@ export class DeleteTemplateUseCase {
                 objectName: storageFileUrl,
             })
         }
-
-        await this.certificateEmissionsRepository.update(certificate)
     }
 }

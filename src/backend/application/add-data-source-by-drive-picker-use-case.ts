@@ -97,12 +97,8 @@ export class AddDataSourceByDrivePickerUseCase {
 
         const columns = contentExtractor.extractColumns(buffer)
 
-        if (certificate.getDataSourceStorageFileUrl()) {
-            await this.bucket.deleteObject({
-                bucketName: process.env.CERTIFICATES_BUCKET!,
-                objectName: certificate.getDataSourceStorageFileUrl()!,
-            })
-        }
+        const dataSourceStorageFileUrl =
+            certificate.getDataSourceStorageFileUrl()
 
         const newDataSourceInput = {
             driveFileId: input.fileId,
@@ -124,5 +120,12 @@ export class AddDataSourceByDrivePickerUseCase {
         certificate.setDataSource(newDataSource)
 
         await this.certificateEmissionsRepository.update(certificate)
+
+        if (dataSourceStorageFileUrl) {
+            await this.bucket.deleteObject({
+                bucketName: process.env.CERTIFICATES_BUCKET!,
+                objectName: dataSourceStorageFileUrl,
+            })
+        }
     }
 }

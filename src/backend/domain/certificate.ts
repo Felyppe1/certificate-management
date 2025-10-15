@@ -194,6 +194,14 @@ export class Certificate extends AggregateRoot {
         return this.dataSource?.getStorageFileUrl() ?? null
     }
 
+    setDataSourceStorageFileUrl(url: string) {
+        if (!this.dataSource) {
+            throw new ValidationError('Certificate does not have a data source')
+        }
+
+        this.dataSource.setStorageFileUrl(url)
+    }
+
     static mapVariablesToColumns(
         template: Template | null,
         dataSource: DataSource | null,

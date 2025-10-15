@@ -6,13 +6,13 @@ import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '../repository/prisma/prisma-sessions-repository'
 import z from 'zod'
-import { AddTemplateByUploadUseCase } from '@/backend/application/add-template-by-upload-use-case'
-import { FileContentExtractorFactory } from '../factory/file-content-extractor-factory'
 import { revalidateTag } from 'next/cache'
+import { AddDataSourceByUploadUseCase } from '@/backend/application/add-data-source-by-upload-use-case'
+import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
 
 const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
 
-const addTemplateByUploadActionActionSchema = z.object({
+const addDataSourceByUploadActionSchema = z.object({
     certificateId: z.string().min(1, 'Certificate ID is required'),
     file: z.instanceof(File).refine(file => file.size <= MAXIMUM_FILE_SIZE, {
         message: 'File size must be less than 5MB',
@@ -37,21 +37,22 @@ export async function addDataSourceByUploadAction(
             throw new UnauthorizedError('missing-session')
         }
 
-        const parsedData = addTemplateByUploadActionActionSchema.parse(rawData)
+        const parsedData = addDataSourceByUploadActionSchema.parse(rawData)
 
         const bucket = new GcpBucket()
         const certificatesRepository = new PrismaCertificatesRepository()
         const sessionsRepository = new PrismaSessionsRepository()
-        const fileContentExtractorFactory = new FileContentExtractorFactory()
+        const spreadsheetContentExtractorFactory =
+            new SpreadsheetContentExtractorFactory()
 
-        const addTemplateByUploadUseCase = new AddTemplateByUploadUseCase(
+        const addDataSourceByUploadUseCase = new AddDataSourceByUploadUseCase(
             bucket,
             sessionsRepository,
             certificatesRepository,
-            fileContentExtractorFactory,
+            spreadsheetContentExtractorFactory,
         )
 
-        await addTemplateByUploadUseCase.execute({
+        await addDataSourceByUploadUseCase.execute({
             sessionToken,
             certificateId: parsedData.certificateId,
             file: parsedData.file,

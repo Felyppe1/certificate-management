@@ -82,12 +82,7 @@ export class AddTemplateByUrlUseCase {
 
         const uniqueVariables = Template.extractVariablesFromContent(content)
 
-        if (certificate.getTemplateStorageFileUrl()) {
-            await this.bucket.deleteObject({
-                bucketName: process.env.CERTIFICATES_BUCKET!,
-                objectName: certificate.getTemplateStorageFileUrl()!,
-            })
-        }
+        const templateStorageFileUrl = certificate.getTemplateStorageFileUrl()
 
         const newTemplateInput = {
             driveFileId,
@@ -109,5 +104,12 @@ export class AddTemplateByUrlUseCase {
         certificate.setTemplate(newTemplate)
 
         await this.certificateEmissionsRepository.update(certificate)
+
+        if (templateStorageFileUrl) {
+            await this.bucket.deleteObject({
+                bucketName: process.env.CERTIFICATES_BUCKET!,
+                objectName: templateStorageFileUrl,
+            })
+        }
     }
 }

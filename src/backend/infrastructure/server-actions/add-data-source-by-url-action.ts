@@ -1,9 +1,7 @@
 'use server'
 
-import { AddTemplateByUrlUseCase } from '@/backend/application/add-template-by-url-use-case'
 import { FileUrlNotFoundError } from '@/backend/domain/error/file-url-not-found-error'
 import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
-import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
@@ -13,8 +11,10 @@ import { cookies } from 'next/headers'
 import z from 'zod'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
+import { AddDataSourceByUrlUseCase } from '@/backend/application/add-data-source-by-url-use-case'
+import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
 
-const addTemplateByUrlActionSchema = z.object({
+const addDataSourceByUrlActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
     fileUrl: z.url('URL do arquivo inválida'),
 })
@@ -36,25 +36,26 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
             throw new UnauthorizedError('missing-session')
         }
 
-        const parsedData = addTemplateByUrlActionSchema.parse(rawData)
+        const parsedData = addDataSourceByUrlActionSchema.parse(rawData)
 
         const sessionsRepository = new PrismaSessionsRepository()
         const certificateEmissionsRepository =
             new PrismaCertificatesRepository()
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
-        const fileContentExtractorFactory = new FileContentExtractorFactory()
+        const spreadsheetContentExtractorFactory =
+            new SpreadsheetContentExtractorFactory()
         const bucket = new GcpBucket()
 
-        const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
+        const addDataSourceByUrlUseCase = new AddDataSourceByUrlUseCase(
             certificateEmissionsRepository,
             sessionsRepository,
             googleDriveGateway,
-            fileContentExtractorFactory,
+            spreadsheetContentExtractorFactory,
             bucket,
         )
 
-        await addTemplateByUrlUseCase.execute({
+        await addDataSourceByUrlUseCase.execute({
             certificateId: rawData.certificateId,
             fileUrl: parsedData.fileUrl,
             sessionToken,

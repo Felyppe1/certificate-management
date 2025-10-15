@@ -18,6 +18,12 @@ interface AddTemplateByUploadUseCaseInput {
     sessionToken: string
 }
 
+// TODO: melhorar isso
+const MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
+    [TEMPLATE_FILE_EXTENSION.DOCX]: 'docx',
+    [TEMPLATE_FILE_EXTENSION.PPTX]: 'pptx',
+}
+
 export class AddTemplateByUploadUseCase {
     constructor(
         private bucket: IBucket,
@@ -69,20 +75,15 @@ export class AddTemplateByUploadUseCase {
 
         const uniqueVariables = Template.extractVariablesFromContent(content)
 
-        if (certificate.getTemplateStorageFileUrl()) {
-            await this.bucket.deleteObject({
-                bucketName: process.env.CERTIFICATES_BUCKET!,
-                objectName: certificate.getTemplateStorageFileUrl()!,
-            })
-        }
+        const previousTemplateStorageFileUrl =
+            certificate.getTemplateStorageFileUrl()
 
         const newTemplateInput = {
             inputMethod: INPUT_METHOD.UPLOAD,
             driveFileId: null,
             storageFileUrl: null,
             fileName: input.file.name,
-            fileExtension:
-                fileExtension.toUpperCase() as TEMPLATE_FILE_EXTENSION,
+            fileExtension,
             variables: uniqueVariables,
             thumbnailUrl: null,
         }
@@ -96,7 +97,7 @@ export class AddTemplateByUploadUseCase {
 
         certificate.setTemplate(newTemplate)
 
-        const path = `users/${session.userId}/templates/${certificate.getTemplateId()}-original.${fileExtension.toLowerCase()}`
+        const path = `users/${session.userId}/templates/${certificate.getTemplateId()}-original.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
 
         certificate.setTemplateStorageFileUrl(path)
 
@@ -104,9 +105,16 @@ export class AddTemplateByUploadUseCase {
             buffer,
             bucketName: process.env.CERTIFICATES_BUCKET!,
             objectName: path,
-            mimeType: fileExtension.toLowerCase(),
+            mimeType: fileExtension,
         })
 
         await this.certificatesRepository.update(certificate)
+
+        if (previousTemplateStorageFileUrl) {
+            await this.bucket.deleteObject({
+                bucketName: process.env.CERTIFICATES_BUCKET!,
+                objectName: previousTemplateStorageFileUrl,
+            })
+        }
     }
 }

@@ -1,35 +1,37 @@
+import {
+    DATA_SOURCE_FILE_EXTENSION,
+    DataSource,
+    INPUT_METHOD,
+} from '../domain/data-source'
 import { ForbiddenError } from '../domain/error/forbidden-error'
 import { NotFoundError } from '../domain/error/not-found-error'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
 import { ValidationError } from '../domain/error/validation-error'
-import {
-    INPUT_METHOD,
-    Template,
-    TEMPLATE_FILE_EXTENSION,
-} from '../domain/template'
 import { IBucket } from './interfaces/ibucket'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
-import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'
 import { ISessionsRepository } from './interfaces/isessions-repository'
+import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 
-interface AddTemplateByUploadUseCaseInput {
+interface AddDataSourceByUploadUseCaseInput {
     file: File
     certificateId: string
     sessionToken: string
 }
 
-export class AddTemplateByUploadUseCase {
+const MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
+    [DATA_SOURCE_FILE_EXTENSION.CSV]: 'csv',
+    [DATA_SOURCE_FILE_EXTENSION.XLSX]: 'xlsx',
+}
+
+export class AddDataSourceByUploadUseCase {
     constructor(
         private bucket: IBucket,
         private sessionsRepository: ISessionsRepository,
         private certificatesRepository: ICertificatesRepository,
-        private fileContentExtractorFactory: Pick<
-            IFileContentExtractorFactory,
-            'create'
-        >,
+        private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
     ) {}
 
-    async execute(input: AddTemplateByUploadUseCaseInput) {
+    async execute(input: AddDataSourceByUploadUseCaseInput) {
         const session = await this.sessionsRepository.getById(
             input.sessionToken,
         )
@@ -50,62 +52,63 @@ export class AddTemplateByUploadUseCase {
             throw new ForbiddenError('Forbidden')
         }
 
-        const fileExtension = input.file.name
-            .split('.')
-            .pop()
-            ?.toUpperCase() as TEMPLATE_FILE_EXTENSION | undefined
+        const fileExtension = input.file.type
 
-        const isAllowedExtension = [
-            TEMPLATE_FILE_EXTENSION.DOCX,
-            TEMPLATE_FILE_EXTENSION.PPTX,
-        ].includes(fileExtension!)
-
-        if (!fileExtension || !isAllowedExtension) {
-            throw new ValidationError('Invalid file type')
+        if (!DataSource.isValidFileExtension(fileExtension)) {
+            throw new ValidationError(
+                'File extension not supported for data source',
+            )
         }
 
         const bytes = await input.file.arrayBuffer()
         const buffer = Buffer.from(bytes)
 
-        const contentExtractor = this.fileContentExtractorFactory.create(
-            fileExtension as TEMPLATE_FILE_EXTENSION,
-        )
+        const contentExtractor =
+            this.spreadsheetContentExtractorFactory.create(fileExtension)
 
-        const content = await contentExtractor.extractText(buffer)
+        const columns = contentExtractor.extractColumns(buffer)
 
-        const uniqueVariables = Template.extractVariablesFromContent(content)
+        const previousDataSourceStorageFileUrl =
+            certificate.getDataSourceStorageFileUrl()
 
-        if (certificate.getTemplateStorageFileUrl()) {
-            await this.bucket.deleteObject({
-                bucketName: process.env.CERTIFICATES_BUCKET!,
-                objectName: certificate.getTemplateStorageFileUrl()!,
-            })
-        }
-
-        const newTemplate = Template.create({
+        const newDataSourceInput = {
             inputMethod: INPUT_METHOD.UPLOAD,
             driveFileId: null,
             storageFileUrl: null,
             fileName: input.file.name,
-            fileExtension:
-                fileExtension.toUpperCase() as TEMPLATE_FILE_EXTENSION,
-            variables: uniqueVariables,
+            fileExtension,
+            columns,
             thumbnailUrl: null,
-        })
+        }
 
-        certificate.setTemplate(newTemplate)
+        const newDataSource = certificate.hasTemplate()
+            ? new DataSource({
+                  id: certificate.getDataSourceId()!,
+                  ...newDataSourceInput,
+              })
+            : DataSource.create(newDataSourceInput)
 
-        const path = `users/${session.userId}/templates/${certificate.getTemplateId()}-original.${fileExtension.toLowerCase()}`
+        certificate.setDataSource(newDataSource)
 
-        certificate.setTemplateStorageFileUrl(path)
+        const path = `users/${session.userId}/data-sources/${certificate.getDataSourceId()}-original.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
+
+        certificate.setDataSourceStorageFileUrl(path)
 
         await this.bucket.uploadObject({
             buffer,
             bucketName: process.env.CERTIFICATES_BUCKET!,
             objectName: path,
-            mimeType: fileExtension.toLowerCase(),
+            mimeType: fileExtension,
         })
 
         await this.certificatesRepository.update(certificate)
+
+        // TODO: it should be done using outbox pattern
+        if (previousDataSourceStorageFileUrl) {
+            await this.bucket.deleteObject({
+                bucketName: process.env.CERTIFICATES_BUCKET!,
+                objectName: previousDataSourceStorageFileUrl,
+            })
+        }
     }
 }
