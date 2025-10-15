@@ -50,18 +50,12 @@ export class AddTemplateByUploadUseCase {
             throw new ForbiddenError('Forbidden')
         }
 
-        const fileExtension = input.file.name
-            .split('.')
-            .pop()
-            ?.toUpperCase() as TEMPLATE_FILE_EXTENSION | undefined
+        const fileExtension = input.file.type
 
-        const isAllowedExtension = [
-            TEMPLATE_FILE_EXTENSION.DOCX,
-            TEMPLATE_FILE_EXTENSION.PPTX,
-        ].includes(fileExtension!)
-
-        if (!fileExtension || !isAllowedExtension) {
-            throw new ValidationError('Invalid file type')
+        if (!Template.isValidFileExtension(fileExtension)) {
+            throw new ValidationError(
+                'File extension not supported for template',
+            )
         }
 
         const bytes = await input.file.arrayBuffer()
@@ -82,7 +76,7 @@ export class AddTemplateByUploadUseCase {
             })
         }
 
-        const newTemplate = Template.create({
+        const newTemplateInput = {
             inputMethod: INPUT_METHOD.UPLOAD,
             driveFileId: null,
             storageFileUrl: null,
@@ -91,7 +85,14 @@ export class AddTemplateByUploadUseCase {
                 fileExtension.toUpperCase() as TEMPLATE_FILE_EXTENSION,
             variables: uniqueVariables,
             thumbnailUrl: null,
-        })
+        }
+
+        const newTemplate = certificate.hasTemplate()
+            ? new Template({
+                  id: certificate.getTemplateId()!,
+                  ...newTemplateInput,
+              })
+            : Template.create(newTemplateInput)
 
         certificate.setTemplate(newTemplate)
 

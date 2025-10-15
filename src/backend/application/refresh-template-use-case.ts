@@ -99,6 +99,12 @@ export class RefreshTemplateUseCase {
                 userRefreshToken: externalAccount?.refreshToken ?? undefined,
             })
 
+        if (!Template.isValidFileExtension(fileExtension)) {
+            throw new ValidationError(
+                'File extension not supported for template',
+            )
+        }
+
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
             fileExtension: fileExtension,
@@ -112,7 +118,7 @@ export class RefreshTemplateUseCase {
 
         const uniqueVariables = Template.extractVariablesFromContent(content)
 
-        const newTemplate = Template.create({
+        const newTemplateInput = {
             driveFileId,
             storageFileUrl: null,
             fileExtension: fileExtension,
@@ -120,7 +126,14 @@ export class RefreshTemplateUseCase {
             fileName: name,
             variables: uniqueVariables,
             thumbnailUrl,
-        })
+        }
+
+        const newTemplate = certificate.hasTemplate()
+            ? new Template({
+                  id: certificate.getTemplateId()!,
+                  ...newTemplateInput,
+              })
+            : Template.create(newTemplateInput)
 
         certificate.setTemplate(newTemplate)
 

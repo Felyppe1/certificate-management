@@ -106,7 +106,7 @@ export class AddTemplateByDrivePickerUseCase {
             })
         }
 
-        const newTemplate = Template.create({
+        const newTemplateInput = {
             driveFileId: input.fileId,
             storageFileUrl: null,
             inputMethod: INPUT_METHOD.URL,
@@ -114,7 +114,14 @@ export class AddTemplateByDrivePickerUseCase {
             variables: uniqueVariables,
             fileExtension,
             thumbnailUrl,
-        })
+        }
+
+        const newTemplate = certificate.hasTemplate()
+            ? new Template({
+                  id: certificate.getTemplateId()!,
+                  ...newTemplateInput,
+              })
+            : Template.create(newTemplateInput)
 
         certificate.setTemplate(newTemplate)
 

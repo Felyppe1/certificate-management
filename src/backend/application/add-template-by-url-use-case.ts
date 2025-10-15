@@ -1,4 +1,8 @@
-import { INPUT_METHOD, Template } from '../domain/template'
+import {
+    INPUT_METHOD,
+    Template,
+    TEMPLATE_FILE_EXTENSION,
+} from '../domain/template'
 import { ValidationError } from '../domain/error/validation-error'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
@@ -60,6 +64,12 @@ export class AddTemplateByUrlUseCase {
                 fileId: driveFileId,
             })
 
+        if (!Template.isValidFileExtension(fileExtension)) {
+            throw new ValidationError(
+                'File extension not supported for template',
+            )
+        }
+
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
             fileExtension: fileExtension,
@@ -79,7 +89,7 @@ export class AddTemplateByUrlUseCase {
             })
         }
 
-        const newTemplate = Template.create({
+        const newTemplateInput = {
             driveFileId,
             storageFileUrl: null,
             inputMethod: INPUT_METHOD.URL,
@@ -87,7 +97,14 @@ export class AddTemplateByUrlUseCase {
             variables: uniqueVariables,
             fileExtension,
             thumbnailUrl,
-        })
+        }
+
+        const newTemplate = certificate.hasTemplate()
+            ? new Template({
+                  id: certificate.getTemplateId()!,
+                  ...newTemplateInput,
+              })
+            : Template.create(newTemplateInput)
 
         certificate.setTemplate(newTemplate)
 
