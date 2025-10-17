@@ -1,5 +1,6 @@
 import { GetCertificateEmissionUseCase } from '@/backend/application/get-certificate-emission-use-case'
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
+import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
 import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
 import {
@@ -16,6 +17,7 @@ export interface GetCertificateEmissionControllerResponse {
         userId: string
         status: CERTIFICATE_STATUS
         createdAt: Date
+        variableColumnMapping: Record<string, string | null>
         template: {
             id: string
             driveFileId: string | null
@@ -35,6 +37,11 @@ export interface GetCertificateEmissionControllerResponse {
             fileExtension: DATA_SOURCE_FILE_EXTENSION
             columns: string[]
             thumbnailUrl: string | null
+            dataSet: {
+                id: string
+                generationStatus: GENERATION_STATUS
+                rows: Record<string, any>[]
+            }
         } | null
     }
 }

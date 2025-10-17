@@ -10,6 +10,8 @@ import { IBucket } from './interfaces/ibucket'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 import { DATA_SOURCE_FILE_EXTENSION, DataSource } from '../domain/data-source'
 import { ValidationError } from '../domain/error/validation-error'
+import { DataSet } from '../domain/data-set'
+import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 
 interface AddDataSourceByDrivePickerUseCaseInput {
     certificateId: string
@@ -20,6 +22,10 @@ interface AddDataSourceByDrivePickerUseCaseInput {
 export class AddDataSourceByDrivePickerUseCase {
     constructor(
         private certificateEmissionsRepository: ICertificatesRepository,
+        private dataSetsRepository: Pick<
+            IDataSetsRepository,
+            'getById' | 'update'
+        >,
         private sessionsRepository: ISessionsRepository,
         private googleDriveGateway: IGoogleDriveGateway,
         private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
@@ -95,7 +101,7 @@ export class AddDataSourceByDrivePickerUseCase {
         const contentExtractor =
             this.spreadsheetContentExtractorFactory.create(fileExtension)
 
-        const columns = contentExtractor.extractColumns(buffer)
+        const { columns, rows } = contentExtractor.extractColumns(buffer)
 
         const dataSourceStorageFileUrl =
             certificate.getDataSourceStorageFileUrl()
@@ -110,6 +116,7 @@ export class AddDataSourceByDrivePickerUseCase {
             thumbnailUrl,
         }
 
+        // TODO: CONSERTAR, N DEVE CRIAR NEW DATASOURCE NO APPLICATION
         const newDataSource = certificate.hasDataSource()
             ? new DataSource({
                   id: certificate.getDataSourceId()!,
@@ -120,6 +127,14 @@ export class AddDataSourceByDrivePickerUseCase {
         certificate.setDataSource(newDataSource)
 
         await this.certificateEmissionsRepository.update(certificate)
+
+        const newDataSet = DataSet.create({
+            dataSourceId: newDataSource.getId(),
+            rows,
+        })
+
+        // TODO: needs to be in a transaction
+        await this.dataSetsRepository.update(newDataSet)
 
         if (dataSourceStorageFileUrl) {
             await this.bucket.deleteObject({

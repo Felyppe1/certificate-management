@@ -110,6 +110,7 @@ model DataSource {
 
     DataSourceColumn    DataSourceColumn[]
     CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id])
+    DataSet             DataSet?
 
     @@map("data_sources")
 }
@@ -123,6 +124,18 @@ model DataSourceColumn {
 
     @@id([name, data_source_id])
     @@map("data_source_columns")
+}
+
+model DataSet {
+    id   String @id @default(cuid())
+    generation_status String // "PENDING" | "COMPLETED" | "FAILED"
+    rows Json
+
+    data_source_id String @unique
+
+    DataSource DataSource @relation(fields: [data_source_id], references: [id])
+
+    @@map("data_sets")
 }
 
 model Outbox {

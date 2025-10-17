@@ -1,9 +1,11 @@
+import { DataSet } from '../domain/data-set'
 import { DataSource, INPUT_METHOD } from '../domain/data-source'
 import { ForbiddenError } from '../domain/error/forbidden-error'
 import { NotFoundError } from '../domain/error/not-found-error'
 import { UnauthorizedError } from '../domain/error/unauthorized-error'
 import { ValidationError } from '../domain/error/validation-error'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
+import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
@@ -18,6 +20,7 @@ interface RefreshDataSourceUseCaseInput {
 export class RefreshDataSourceUseCase {
     constructor(
         private certificateEmissionsRepository: ICertificatesRepository,
+        private dataSetsRepository: Pick<IDataSetsRepository, 'update'>,
         private sessionsRepository: ISessionsRepository,
         private googleDriveGateway: IGoogleDriveGateway,
         private googleAuthGateway: Pick<
@@ -116,7 +119,7 @@ export class RefreshDataSourceUseCase {
         const contentExtractor =
             this.spreadsheetContentExtractorFactory.create(fileExtension)
 
-        const columns = await contentExtractor.extractColumns(buffer)
+        const { columns, rows } = contentExtractor.extractColumns(buffer)
 
         const newDataSourceInput = {
             driveFileId,
@@ -138,5 +141,13 @@ export class RefreshDataSourceUseCase {
         certificate.setDataSource(newDataSource)
 
         await this.certificateEmissionsRepository.update(certificate)
+
+        const newDataSet = DataSet.create({
+            dataSourceId: newDataSource.getId(),
+            rows,
+        })
+
+        // TODO: needs to be in a transaction
+        await this.dataSetsRepository.update(newDataSet)
     }
 }

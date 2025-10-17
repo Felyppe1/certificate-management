@@ -7,6 +7,8 @@ import { NotFoundError } from '../domain/error/not-found-error'
 import { IBucket } from './interfaces/ibucket'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 import { DataSource, INPUT_METHOD } from '../domain/data-source'
+import { DataSet } from '../domain/data-set'
+import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 
 interface AddDataSourceByUrlUseCaseInput {
     certificateId: string
@@ -20,6 +22,7 @@ export class AddDataSourceByUrlUseCase {
             ICertificatesRepository,
             'getById' | 'update'
         >,
+        private dataSetsRepository: Pick<IDataSetsRepository, 'update'>,
         private sessionsRepository: Pick<ISessionsRepository, 'getById'>,
         private googleDriveGateway: Pick<
             IGoogleDriveGateway,
@@ -71,7 +74,7 @@ export class AddDataSourceByUrlUseCase {
         const contentExtractor =
             this.spreadsheetContentExtractorFactory.create(fileExtension)
 
-        const columns = contentExtractor.extractColumns(buffer)
+        const { columns, rows } = contentExtractor.extractColumns(buffer)
 
         const dataSourceStorageFileUrl =
             certificate.getDataSourceStorageFileUrl()
@@ -96,6 +99,14 @@ export class AddDataSourceByUrlUseCase {
         certificate.setDataSource(newDataSource)
 
         await this.certificateEmissionsRepository.update(certificate)
+
+        const newDataSet = DataSet.create({
+            dataSourceId: newDataSource.getId(),
+            rows,
+        })
+
+        // TODO: needs to be in a transaction
+        await this.dataSetsRepository.update(newDataSet)
 
         if (dataSourceStorageFileUrl) {
             await this.bucket.deleteObject({

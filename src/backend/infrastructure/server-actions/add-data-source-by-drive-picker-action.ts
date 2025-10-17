@@ -15,6 +15,7 @@ import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { AddDataSourceByDrivePickerUseCase } from '@/backend/application/add-data-source-by-drive-picker-use-case'
 import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
+import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 
 const addDataSourceByDrivePickerActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -47,6 +48,7 @@ export async function addDataSourceByDrivePickerAction(
         const sessionsRepository = new PrismaSessionsRepository()
         const certificateEmissionsRepository =
             new PrismaCertificatesRepository()
+        const dataSetsRepository = new PrismaDataSetsRepository()
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const spreadsheetContentExtractorFactory =
@@ -58,6 +60,7 @@ export async function addDataSourceByDrivePickerAction(
         const addDataSourceByDrivePickerUseCase =
             new AddDataSourceByDrivePickerUseCase(
                 certificateEmissionsRepository,
+                dataSetsRepository,
                 sessionsRepository,
                 googleDriveGateway,
                 spreadsheetContentExtractorFactory,

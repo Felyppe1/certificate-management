@@ -1,4 +1,5 @@
 import { CERTIFICATE_STATUS } from '../domain/certificate'
+import { GENERATION_STATUS } from '../domain/data-set'
 import { DATA_SOURCE_FILE_EXTENSION } from '../domain/data-source'
 import { ForbiddenError } from '../domain/error/forbidden-error'
 import { NotFoundError } from '../domain/error/not-found-error'
@@ -39,6 +40,7 @@ export class GetCertificateEmissionUseCase {
                     DataSource: {
                         include: {
                             DataSourceColumn: true,
+                            DataSet: true,
                         },
                     },
                 },
@@ -105,6 +107,12 @@ export class GetCertificateEmissionUseCase {
                           ),
                       thumbnailUrl:
                           certificateEmission.DataSource.thumbnail_url,
+                      dataSet: {
+                          id: certificateEmission.DataSource.DataSet!.id,
+                          rows: certificateEmission.DataSource.DataSet!.rows,
+                          generationStatus: certificateEmission.DataSource
+                              .DataSet!.generation_status as GENERATION_STATUS,
+                      },
                   }
                 : null,
         }

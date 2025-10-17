@@ -4,15 +4,23 @@ import { parse } from 'csv-parse/sync'
 export class CsvSpreadsheetContentExtractorStrategy
     implements ISpreadsheetContentExtractorStrategy
 {
-    extractColumns(buffer: Buffer): string[] {
+    extractColumns(buffer: Buffer) {
         const content = buffer.toString('utf8')
 
         const records = parse(content, {
-            columns: true, // use the first line as header
+            columns: true,
+            trim: true,
             skip_empty_lines: true,
-        })
+        }) as Record<string, any>[]
 
-        const headers = Object.keys(records[0] || {})
-        return headers
+        const columns =
+            records.length > 0
+                ? Object.keys(records[0])
+                : (parse(content, { to_line: 1, trim: true })[0] ?? [])
+
+        return {
+            columns,
+            rows: records,
+        }
     }
 }

@@ -22,7 +22,7 @@ import { useState } from 'react'
 interface VariableMappingSectionProps {
     templateVariables: string[]
     dataSourceColumns: string[]
-    existingMappings?: Record<string, string>
+    existingMappings: Record<string, string | null> | null
     certificatesGenerated: boolean
     totalRecords: number
 }
@@ -30,12 +30,14 @@ interface VariableMappingSectionProps {
 export function VariableMappingSection({
     templateVariables,
     dataSourceColumns,
-    existingMappings = {},
+    existingMappings = null,
     certificatesGenerated,
     totalRecords,
 }: VariableMappingSectionProps) {
-    const [mappings, setMappings] =
-        useState<Record<string, string>>(existingMappings)
+    const [mappings, setMappings] = useState<Record<
+        string,
+        string | null
+    > | null>(existingMappings)
     const [isSaving, setIsSaving] = useState(false)
     const [mappingsSaved, setMappingsSaved] = useState(false)
     const [isGenerating, setIsGenerating] = useState(false)
@@ -63,13 +65,13 @@ export function VariableMappingSection({
         setIsGenerating(false)
     }
 
-    const allMapped = templateVariables.every(variable => mappings[variable])
-    const canSave = allMapped && !mappingsSaved
-    const canGenerate = mappingsSaved && !certificatesGenerated
-
     if (templateVariables.length === 0) {
         return null
     }
+
+    const allMapped = templateVariables.every(variable => mappings![variable])
+    const canSave = allMapped && !mappingsSaved
+    const canGenerate = mappingsSaved && !certificatesGenerated
 
     return (
         <Card>
@@ -145,7 +147,7 @@ export function VariableMappingSection({
 
                             <div>
                                 <Select
-                                    value={mappings[variable] || ''}
+                                    value={mappings![variable] || ''}
                                     onValueChange={value =>
                                         handleMappingChange(variable, value)
                                     }

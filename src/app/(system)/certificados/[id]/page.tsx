@@ -107,6 +107,10 @@ export default async function CertificatePage({
                         certificateEmissionResponse.certificateEmission
                             .dataSource
                     }
+                    rows={
+                        certificateEmissionResponse.certificateEmission
+                            .dataSource?.dataSet.rows || []
+                    }
                 />
 
                 {hasTemplate &&
@@ -117,6 +121,10 @@ export default async function CertificatePage({
                             dataSourceColumns={dataSourceColumns}
                             certificatesGenerated={certificatesGenerated}
                             totalRecords={totalRecords}
+                            existingMappings={
+                                certificateEmissionResponse.certificateEmission
+                                    .variableColumnMapping
+                            }
                         />
                     )}
 

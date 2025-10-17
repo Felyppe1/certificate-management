@@ -1,3 +1,4 @@
+import { DataSet } from '../domain/data-set'
 import {
     DATA_SOURCE_FILE_EXTENSION,
     DataSource,
@@ -9,6 +10,7 @@ import { UnauthorizedError } from '../domain/error/unauthorized-error'
 import { ValidationError } from '../domain/error/validation-error'
 import { IBucket } from './interfaces/ibucket'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
+import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 
@@ -28,6 +30,7 @@ export class AddDataSourceByUploadUseCase {
         private bucket: IBucket,
         private sessionsRepository: ISessionsRepository,
         private certificatesRepository: ICertificatesRepository,
+        private dataSetsRepository: Pick<IDataSetsRepository, 'update'>,
         private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
     ) {}
 
@@ -66,7 +69,7 @@ export class AddDataSourceByUploadUseCase {
         const contentExtractor =
             this.spreadsheetContentExtractorFactory.create(fileExtension)
 
-        const columns = contentExtractor.extractColumns(buffer)
+        const { columns, rows } = contentExtractor.extractColumns(buffer)
 
         const previousDataSourceStorageFileUrl =
             certificate.getDataSourceStorageFileUrl()
@@ -102,6 +105,14 @@ export class AddDataSourceByUploadUseCase {
         })
 
         await this.certificatesRepository.update(certificate)
+
+        const newDataSet = DataSet.create({
+            dataSourceId: newDataSource.getId(),
+            rows,
+        })
+
+        // TODO: needs to be in a transaction
+        await this.dataSetsRepository.update(newDataSet)
 
         // TODO: it should be done using outbox pattern
         if (previousDataSourceStorageFileUrl) {

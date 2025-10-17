@@ -62,7 +62,7 @@ interface DataSourceDisplayProps {
     certificateId: string
     onEdit: () => void
     // Mock data - TODO: Replace with real data from API
-    data?: Array<Record<string, string>>
+    rows: Array<Record<string, string>>
     certificatesGenerated?: boolean
     totalSize?: string
 }
@@ -71,7 +71,7 @@ export function DataSourceDisplay({
     dataSource,
     certificateId,
     onEdit,
-    data = [],
+    rows,
     certificatesGenerated = false,
     totalSize = '0 KB',
 }: DataSourceDisplayProps) {
@@ -321,7 +321,7 @@ export function DataSourceDisplay({
                                                         <div className="text-sm text-muted-foreground">
                                                             Linhas:{' '}
                                                             <span className="font-medium text-foreground">
-                                                                {data.length}
+                                                                {rows.length}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -353,7 +353,7 @@ export function DataSourceDisplay({
                                                                 </TableRow>
                                                             </TableHeader>
                                                             <TableBody>
-                                                                {data.map(
+                                                                {rows.map(
                                                                     (
                                                                         row,
                                                                         index,

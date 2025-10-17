@@ -33,6 +33,7 @@ interface DataSourceSectionProps {
     } | null
     googleOAuthToken: string | null
     googleOAuthTokenExpiry: Date | null
+    rows: Record<string, any>[]
 }
 
 export function DataSourceSection({
@@ -40,6 +41,7 @@ export function DataSourceSection({
     dataSource,
     googleOAuthToken,
     googleOAuthTokenExpiry,
+    rows,
 }: DataSourceSectionProps) {
     const [isEditing, setIsEditing] = useState(false)
     const [urlState, urlAction, urlIsLoading] = useActionState(
@@ -145,23 +147,7 @@ export function DataSourceSection({
                 dataSource={dataSource}
                 certificateId={certificateId}
                 onEdit={handleEdit}
-                data={[
-                    {
-                        Nome: 'João Silva',
-                        'E-mail': 'joao@example.com',
-                        Idade: '10',
-                    },
-                    {
-                        Nome: 'Maria Santos',
-                        'E-mail': 'maria@example.com',
-                        Idade: '10',
-                    },
-                    {
-                        Nome: 'Pedro Costa',
-                        'E-mail': 'pedro@example.com',
-                        Idade: '10',
-                    },
-                ]}
+                rows={rows}
             />
         )
     }

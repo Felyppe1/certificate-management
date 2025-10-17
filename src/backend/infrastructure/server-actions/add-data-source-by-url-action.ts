@@ -13,6 +13,7 @@ import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { AddDataSourceByUrlUseCase } from '@/backend/application/add-data-source-by-url-use-case'
 import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
+import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 
 const addDataSourceByUrlActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -41,6 +42,7 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
         const sessionsRepository = new PrismaSessionsRepository()
         const certificateEmissionsRepository =
             new PrismaCertificatesRepository()
+        const dataSetsRepository = new PrismaDataSetsRepository()
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const spreadsheetContentExtractorFactory =
@@ -49,6 +51,7 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
 
         const addDataSourceByUrlUseCase = new AddDataSourceByUrlUseCase(
             certificateEmissionsRepository,
+            dataSetsRepository,
             sessionsRepository,
             googleDriveGateway,
             spreadsheetContentExtractorFactory,
