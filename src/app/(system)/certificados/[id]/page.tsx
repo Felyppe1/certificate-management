@@ -4,6 +4,8 @@ import { fetchCertificateEmission } from '@/api-calls/fetch-certificate-emission
 import { Badge } from '@/components/ui/badge'
 import { TemplateSection } from './_components/TemplateSection'
 import { DataSourceSection } from './_components/DataSourceSection'
+import { VariableMappingSection } from './_components/VariableMappingSection'
+import { EmailSendingSection } from './_components/EmailSendingSection'
 
 const statusMapping = {
     DRAFT: 'Rascunho',
@@ -27,6 +29,22 @@ export default async function CertificatePage({
     const googleAccount = meResponse.user.externalAccounts.find(
         externalAccount => externalAccount.provider === 'GOOGLE',
     )
+
+    // TODO: Replace these with real data from API
+    const hasTemplate =
+        !!certificateEmissionResponse.certificateEmission.template
+    const hasDataSource =
+        !!certificateEmissionResponse.certificateEmission.dataSource
+    const templateVariables =
+        certificateEmissionResponse.certificateEmission.template?.variables ||
+        []
+    const dataSourceColumns =
+        certificateEmissionResponse.certificateEmission.dataSource?.columns ||
+        []
+    const variablesMapped = false // TODO: Get from API
+    const certificatesGenerated = false // TODO: Get from API
+    const emailSent = false // TODO: Get from API
+    const totalRecords = 3 // TODO: Get from API
 
     return (
         <>
@@ -90,6 +108,28 @@ export default async function CertificatePage({
                             .dataSource
                     }
                 />
+
+                {hasTemplate &&
+                    hasDataSource &&
+                    templateVariables.length > 0 && (
+                        <VariableMappingSection
+                            templateVariables={templateVariables}
+                            dataSourceColumns={dataSourceColumns}
+                            certificatesGenerated={certificatesGenerated}
+                            totalRecords={totalRecords}
+                        />
+                    )}
+
+                {hasTemplate && hasDataSource && (
+                    <EmailSendingSection
+                        certificateId={certificateId}
+                        dataSourceColumns={dataSourceColumns}
+                        variablesMapped={
+                            variablesMapped || templateVariables.length === 0
+                        }
+                        emailSent={emailSent}
+                    />
+                )}
             </div>
 
             {/* // </div> */}

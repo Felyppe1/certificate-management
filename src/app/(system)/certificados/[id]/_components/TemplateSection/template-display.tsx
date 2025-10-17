@@ -96,11 +96,12 @@ export function TemplateDisplay({
                         <CardTitle>Template</CardTitle>
                         <CardDescription>
                             Template que será utilizado para gerar os
-                            certificados
+                            certificados (Formatos: PPTX, Google Slides, DOCX,
+                            Google Docs)
                         </CardDescription>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap justify-end gap-2">
                         {template.inputMethod !== 'UPLOAD' && (
                             <Button
                                 variant="outline"

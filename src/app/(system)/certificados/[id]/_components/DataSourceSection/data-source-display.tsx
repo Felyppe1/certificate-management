@@ -9,8 +9,25 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
-import { RefreshCw, Edit3, Trash2 } from 'lucide-react'
-import { startTransition, useActionState } from 'react'
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table'
+import {
+    RefreshCw,
+    Edit3,
+    Trash2,
+    Download,
+    Eye,
+    FileDown,
+    CheckCircle2,
+    AlertCircle,
+} from 'lucide-react'
+import { startTransition, useActionState, useState } from 'react'
 import {
     INPUT_METHOD,
     DATA_SOURCE_FILE_EXTENSION,
@@ -44,12 +61,19 @@ interface DataSourceDisplayProps {
     }
     certificateId: string
     onEdit: () => void
+    // Mock data - TODO: Replace with real data from API
+    data?: Array<Record<string, string>>
+    certificatesGenerated?: boolean
+    totalSize?: string
 }
 
 export function DataSourceDisplay({
     dataSource,
     certificateId,
     onEdit,
+    data = [],
+    certificatesGenerated = false,
+    totalSize = '0 KB',
 }: DataSourceDisplayProps) {
     const [, refreshAction, isRefreshing] = useActionState(
         refreshDataSourceAction,
@@ -99,7 +123,7 @@ export function DataSourceDisplay({
                         </CardDescription>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap justify-end gap-2">
                         {dataSource.inputMethod !== 'UPLOAD' && (
                             <Button
                                 variant="outline"
@@ -134,7 +158,7 @@ export function DataSourceDisplay({
                 </CardHeader>
 
                 <CardContent className="flex flex-row gap-10">
-                    {dataSource.thumbnailUrl ? (
+                    {/* {dataSource.thumbnailUrl ? (
                         <img
                             src={dataSource.thumbnailUrl || ''}
                             alt=""
@@ -144,7 +168,7 @@ export function DataSourceDisplay({
                         <div className="aspect-3/2 w-full max-w-[25rem] rounded-md bg-muted flex justify-center items-center text-muted-foreground">
                             Gerando miniatura...
                         </div>
-                    )}
+                    )} */}
 
                     <div className="flex flex-col w-full">
                         <div className="flex flex-col gap-4 mt-1">
@@ -265,6 +289,152 @@ export function DataSourceDisplay({
                                                     </Badge>
                                                 ),
                                             )
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-3">
+                                <div className="flex-shrink-0 mt-0.5">
+                                    <svg
+                                        className="w-5 h-5 text-muted-foreground"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                    >
+                                        <circle cx="12" cy="12" r="10" />
+                                        <path d="M12 16v-4M12 8h.01" />
+                                    </svg>
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-muted-foreground mb-1">
+                                        Conteúdo
+                                    </p>
+                                    <div className="mt-3">
+                                        {dataSource.columns.length === 0 ? (
+                                            <p>Nenhuma coluna encontrada</p>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="text-sm text-muted-foreground">
+                                                            Linhas:{' '}
+                                                            <span className="font-medium text-foreground">
+                                                                {data.length}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="border rounded-lg overflow-hidden">
+                                                    <div className="overflow-x-auto">
+                                                        <Table>
+                                                            <TableHeader>
+                                                                <TableRow>
+                                                                    {certificatesGenerated && (
+                                                                        <TableHead className="w-[100px]">
+                                                                            Ações
+                                                                        </TableHead>
+                                                                    )}
+                                                                    {dataSource.columns.map(
+                                                                        column => (
+                                                                            <TableHead
+                                                                                key={
+                                                                                    column
+                                                                                }
+                                                                            >
+                                                                                {
+                                                                                    column
+                                                                                }
+                                                                            </TableHead>
+                                                                        ),
+                                                                    )}
+                                                                </TableRow>
+                                                            </TableHeader>
+                                                            <TableBody>
+                                                                {data.map(
+                                                                    (
+                                                                        row,
+                                                                        index,
+                                                                    ) => (
+                                                                        <TableRow
+                                                                            key={
+                                                                                index
+                                                                            }
+                                                                        >
+                                                                            {certificatesGenerated && (
+                                                                                <TableCell>
+                                                                                    <div className="flex gap-1">
+                                                                                        <Button
+                                                                                            variant="ghost"
+                                                                                            size="sm"
+                                                                                            className="h-8 w-8 p-0"
+                                                                                            title="Visualizar certificado"
+                                                                                        >
+                                                                                            <Eye className="h-4 w-4" />
+                                                                                        </Button>
+                                                                                        <Button
+                                                                                            variant="ghost"
+                                                                                            size="sm"
+                                                                                            className="h-8 w-8 p-0"
+                                                                                            title="Baixar certificado"
+                                                                                        >
+                                                                                            <Download className="h-4 w-4" />
+                                                                                        </Button>
+                                                                                    </div>
+                                                                                </TableCell>
+                                                                            )}
+                                                                            {dataSource.columns.map(
+                                                                                column => (
+                                                                                    <TableCell
+                                                                                        key={
+                                                                                            column
+                                                                                        }
+                                                                                    >
+                                                                                        {row[
+                                                                                            column
+                                                                                        ] ||
+                                                                                            '-'}
+                                                                                    </TableCell>
+                                                                                ),
+                                                                            )}
+                                                                        </TableRow>
+                                                                    ),
+                                                                )}
+                                                            </TableBody>
+                                                        </Table>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex gap-8 items-center">
+                                                    {certificatesGenerated && (
+                                                        <>
+                                                            <Button size="sm">
+                                                                <FileDown className="h-4 w-4 mr-2" />
+                                                                Baixar Todos
+                                                            </Button>
+
+                                                            <p className="text-sm text-muted-foreground">
+                                                                Tamanho total:{' '}
+                                                                <span className="font-medium text-foreground">
+                                                                    {totalSize}
+                                                                </span>
+                                                            </p>
+                                                        </>
+                                                    )}
+
+                                                    {/* <p className="text-sm text-muted-foreground">
+                                                        Formato:{' '}
+                                                        <Badge
+                                                            variant='blue'
+                                                            // size={'sm'}
+                                                        >
+                                                            PDF
+                                                        </Badge>
+                                                    </p> */}
+                                                </div>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
