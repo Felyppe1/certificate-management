@@ -10,16 +10,19 @@ Dessa forma, a plataforma atende à necessidade de reduzir esforços manuais ou 
 - Next.js 15 + React 19 + TypeScript
 - Prisma ORM
 - PostgreSQL (banco padrão)
-- Redis (cache/sessões)
 - Tailwind CSS
 - Google Workspace (opcional, para login e upload no Drive)
 
-## Pré‑requisitos
+![alt text](architecture.png)
+
+## Como rodar (primeira vez)
+
+### Pré‑requisitos
 - Node.js 20+ e npm
 - Docker e Docker Compose (recomendado para subir Postgres e Redis)
 - Projeto no Google Cloud
 
-## Como rodar (primeira vez)
+### Passo a passo:
 
 1. **Clone o repositório**:
     ```bash
@@ -69,8 +72,6 @@ Dessa forma, a plataforma atende à necessidade de reduzir esforços manuais ou 
 
     Acessível via: http://localhost:3000
 
-Healthcheck: GET http://localhost:3000/api/healthcheck
-
 ## Como rodar nas próximas vezes
 1. **Rodar containers**:
     
@@ -86,9 +87,15 @@ Healthcheck: GET http://localhost:3000/api/healthcheck
     ```
 
     Acessível via: http://localhost:3000
- 
-## Padrão Outbox (eventos de domínio)
+
+## Modelagem do banco
+
+![alt text](db-modelling.png)
+
+### Padrão Outbox (eventos de domínio)
 
 Esse projeto persiste eventos de domínio em uma tabela `outbox` junto com as alterações de dados de negócio, garantindo atomicidade.
 
 Para trocar de banco de dados, é necessário implementar uma forma de persistir e capturar esses eventos para que o sistema funcione corretamente.
+
+
