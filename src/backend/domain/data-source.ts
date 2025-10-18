@@ -29,6 +29,9 @@ export interface DataSourceOutput extends DataSourceInput {}
 
 interface CreateDataSourceInput extends Omit<DataSourceInput, 'id'> {}
 
+export interface UpdateDataSourceInput
+    extends Partial<Omit<DataSourceInput, 'id'>> {}
+
 export class DataSource {
     private id: string
     private driveFileId: string | null
@@ -68,21 +71,8 @@ export class DataSource {
             throw new ValidationError('DataSource file extension is required')
         }
 
-        if (data.driveFileId) {
-            if (data.inputMethod === INPUT_METHOD.UPLOAD) {
-                throw new ValidationError(
-                    'Drive file ID should not be provided for UPLOAD input method',
-                )
-            }
-        }
-
-        if (data.storageFileUrl) {
-            if (data.inputMethod !== INPUT_METHOD.UPLOAD) {
-                throw new ValidationError(
-                    'File storage URL should only be provided for UPLOAD input method',
-                )
-            }
-        }
+        this.validateDriveFileId(data.driveFileId)
+        this.validateStorageFileUrl(data.storageFileUrl)
 
         this.id = data.id
         this.driveFileId = data.driveFileId
@@ -92,6 +82,40 @@ export class DataSource {
         this.fileExtension = data.fileExtension
         this.columns = data.columns
         this.thumbnailUrl = data.thumbnailUrl
+    }
+
+    update(data: Partial<Omit<DataSourceInput, 'id'>>) {
+        if (data.driveFileId) {
+            this.validateDriveFileId(data.driveFileId)
+            this.driveFileId = data.driveFileId
+        }
+
+        if (data.storageFileUrl) {
+            this.validateStorageFileUrl(data.storageFileUrl)
+            this.storageFileUrl = data.storageFileUrl
+        }
+
+        if (data.inputMethod) this.inputMethod = data.inputMethod
+        if (data.fileName) this.fileName = data.fileName
+        if (data.fileExtension) this.fileExtension = data.fileExtension
+        if (data.columns) this.columns = data.columns
+        if (data.thumbnailUrl) this.thumbnailUrl = data.thumbnailUrl
+    }
+
+    private validateDriveFileId(driveFileId: string | null) {
+        if (this.inputMethod === INPUT_METHOD.UPLOAD && driveFileId) {
+            throw new ValidationError(
+                'Drive file ID should not be provided for UPLOAD input method',
+            )
+        }
+    }
+
+    private validateStorageFileUrl(storageFileUrl: string | null) {
+        if (this.inputMethod !== INPUT_METHOD.UPLOAD && storageFileUrl) {
+            throw new ValidationError(
+                'File storage URL should only be provided for UPLOAD input method',
+            )
+        }
     }
 
     getId() {

@@ -30,7 +30,7 @@ export class AddDataSourceByUploadUseCase {
         private bucket: IBucket,
         private sessionsRepository: ISessionsRepository,
         private certificatesRepository: ICertificatesRepository,
-        private dataSetsRepository: Pick<IDataSetsRepository, 'update'>,
+        private dataSetsRepository: Pick<IDataSetsRepository, 'upsert'>,
         private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
     ) {}
 
@@ -84,14 +84,12 @@ export class AddDataSourceByUploadUseCase {
             thumbnailUrl: null,
         }
 
-        const newDataSource = certificate.hasDataSource()
-            ? new DataSource({
-                  id: certificate.getDataSourceId()!,
-                  ...newDataSourceInput,
-              })
-            : DataSource.create(newDataSourceInput)
-
-        certificate.setDataSource(newDataSource)
+        if (certificate.hasDataSource()) {
+            certificate.updateDataSource(newDataSourceInput)
+        } else {
+            const newDataSource = DataSource.create(newDataSourceInput)
+            certificate.setDataSource(newDataSource)
+        }
 
         const path = `users/${session.userId}/data-sources/${certificate.getDataSourceId()}-original.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
 
@@ -107,12 +105,11 @@ export class AddDataSourceByUploadUseCase {
         await this.certificatesRepository.update(certificate)
 
         const newDataSet = DataSet.create({
-            dataSourceId: newDataSource.getId(),
+            dataSourceId: certificate.getDataSourceId()!,
             rows,
         })
 
-        // TODO: needs to be in a transaction
-        await this.dataSetsRepository.update(newDataSet)
+        await this.dataSetsRepository.upsert(newDataSet)
 
         // TODO: it should be done using outbox pattern
         if (previousDataSourceStorageFileUrl) {

@@ -111,12 +111,7 @@ export function DataSourceSection({
             <Card>
                 <CardHeader className="flex justify-between">
                     <div>
-                        <CardTitle>
-                            Selecione Nova Base de Dados{' '}
-                            <Badge variant="outline">
-                                IA habilitada para imagens
-                            </Badge>
-                        </CardTitle>
+                        <CardTitle>Selecione Nova Base de Dados</CardTitle>
                         <CardDescription>
                             Selecione uma base de dados para substituir a atual
                         </CardDescription>
@@ -132,6 +127,14 @@ export function DataSourceSection({
                     </Button>
                 </CardHeader>
                 <CardContent className="">
+                    <Badge
+                        variant="purple"
+                        size="md"
+                        className="[&>svg]:size-6 pr-3 mb-4"
+                    >
+                        <AiIcon3 />
+                        IA habilitada para imagens
+                    </Badge>
                     <FileSelector
                         googleOAuthToken={googleOAuthToken}
                         googleOAuthTokenExpiry={googleOAuthTokenExpiry}

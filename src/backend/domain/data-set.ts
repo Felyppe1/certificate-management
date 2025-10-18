@@ -58,6 +58,12 @@ export class DataSet extends AggregateRoot {
         this.rows = data.rows
     }
 
+    update(data: Partial<Omit<DataSetInput, 'id'>>) {
+        if (data.dataSourceId) this.dataSourceId = data.dataSourceId
+        if (data.generationStatus) this.generationStatus = data.generationStatus
+        if (data.rows) this.rows = data.rows
+    }
+
     serialize(): DataSetOutput {
         return {
             id: this.id,

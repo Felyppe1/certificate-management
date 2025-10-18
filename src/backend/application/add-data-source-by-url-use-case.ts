@@ -22,7 +22,7 @@ export class AddDataSourceByUrlUseCase {
             ICertificatesRepository,
             'getById' | 'update'
         >,
-        private dataSetsRepository: Pick<IDataSetsRepository, 'update'>,
+        private dataSetsRepository: Pick<IDataSetsRepository, 'upsert'>,
         private sessionsRepository: Pick<ISessionsRepository, 'getById'>,
         private googleDriveGateway: Pick<
             IGoogleDriveGateway,
@@ -89,24 +89,22 @@ export class AddDataSourceByUrlUseCase {
             thumbnailUrl,
         }
 
-        const newDataSource = certificate.hasDataSource()
-            ? new DataSource({
-                  id: certificate.getDataSourceId()!,
-                  ...newDataSourceInput,
-              })
-            : DataSource.create(newDataSourceInput)
-
-        certificate.setDataSource(newDataSource)
+        if (certificate.hasDataSource()) {
+            certificate.updateDataSource(newDataSourceInput)
+        } else {
+            const newDataSource = DataSource.create(newDataSourceInput)
+            certificate.setDataSource(newDataSource)
+        }
 
         await this.certificateEmissionsRepository.update(certificate)
 
         const newDataSet = DataSet.create({
-            dataSourceId: newDataSource.getId(),
+            dataSourceId: certificate.getDataSourceId()!,
             rows,
         })
 
         // TODO: needs to be in a transaction
-        await this.dataSetsRepository.update(newDataSet)
+        await this.dataSetsRepository.upsert(newDataSet)
 
         if (dataSourceStorageFileUrl) {
             await this.bucket.deleteObject({

@@ -22,10 +22,7 @@ interface AddDataSourceByDrivePickerUseCaseInput {
 export class AddDataSourceByDrivePickerUseCase {
     constructor(
         private certificateEmissionsRepository: ICertificatesRepository,
-        private dataSetsRepository: Pick<
-            IDataSetsRepository,
-            'getById' | 'update'
-        >,
+        private dataSetsRepository: Pick<IDataSetsRepository, 'upsert'>,
         private sessionsRepository: ISessionsRepository,
         private googleDriveGateway: IGoogleDriveGateway,
         private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
@@ -116,25 +113,21 @@ export class AddDataSourceByDrivePickerUseCase {
             thumbnailUrl,
         }
 
-        // TODO: CONSERTAR, N DEVE CRIAR NEW DATASOURCE NO APPLICATION
-        const newDataSource = certificate.hasDataSource()
-            ? new DataSource({
-                  id: certificate.getDataSourceId()!,
-                  ...newDataSourceInput,
-              })
-            : DataSource.create(newDataSourceInput)
-
-        certificate.setDataSource(newDataSource)
+        if (certificate.hasDataSource()) {
+            certificate.updateDataSource(newDataSourceInput)
+        } else {
+            const newDataSource = DataSource.create(newDataSourceInput)
+            certificate.setDataSource(newDataSource)
+        }
 
         await this.certificateEmissionsRepository.update(certificate)
 
         const newDataSet = DataSet.create({
-            dataSourceId: newDataSource.getId(),
+            dataSourceId: certificate.getDataSourceId()!,
             rows,
         })
 
-        // TODO: needs to be in a transaction
-        await this.dataSetsRepository.update(newDataSet)
+        await this.dataSetsRepository.upsert(newDataSet)
 
         if (dataSourceStorageFileUrl) {
             await this.bucket.deleteObject({

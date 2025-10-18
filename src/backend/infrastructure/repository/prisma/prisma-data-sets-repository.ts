@@ -37,7 +37,7 @@ export class PrismaDataSetsRepository implements IDataSetsRepository {
         })
     }
 
-    async update(dataSet: DataSet): Promise<void> {
+    async upsert(dataSet: DataSet): Promise<void> {
         const { id, dataSourceId, rows, generationStatus } = dataSet.serialize()
 
         // TODO: CONSERTAR ISSO AQUI DE UPSET PRA UPDATE

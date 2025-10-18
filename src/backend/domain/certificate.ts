@@ -6,7 +6,11 @@ import { Template, TemplateOutput } from './template'
 import { TemplateSetDomainEvent } from './events/template-set-domain-event'
 import { ForbiddenError } from './error/forbidden-error'
 import { DomainEvent } from './primitives/domain-event'
-import { DataSource, DataSourceOutput } from './data-source'
+import {
+    DataSource,
+    DataSourceOutput,
+    UpdateDataSourceInput,
+} from './data-source'
 
 export enum CERTIFICATE_STATUS {
     DRAFT = 'DRAFT',
@@ -223,6 +227,14 @@ export class Certificate extends AggregateRoot {
             this.template,
             this.dataSource,
         )
+    }
+
+    updateDataSource(data: UpdateDataSourceInput) {
+        if (!this.dataSource) {
+            throw new ValidationError('Certificate does not have a data source')
+        }
+
+        this.dataSource.update(data)
     }
 
     static mapVariablesToColumns(
