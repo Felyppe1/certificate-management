@@ -2,7 +2,7 @@ import { createId } from '@paralleldrive/cuid2'
 import { ValidationError } from './error/validation-error'
 import { AggregateRoot } from './primitives/aggregate-root'
 import { CertificateCreatedDomainEvent } from './events/certificate-created-domain-event'
-import { Template, TemplateOutput } from './template'
+import { Template, TemplateOutput, UpdateTemplateInput } from './template'
 import { TemplateSetDomainEvent } from './events/template-set-domain-event'
 import { ForbiddenError } from './error/forbidden-error'
 import { DomainEvent } from './primitives/domain-event'
@@ -235,6 +235,24 @@ export class Certificate extends AggregateRoot {
         }
 
         this.dataSource.update(data)
+
+        this.variableColumnMapping = Certificate.mapVariablesToColumns(
+            this.template,
+            this.dataSource,
+        )
+    }
+
+    updateTemplate(data: UpdateTemplateInput) {
+        if (!this.template) {
+            throw new ValidationError('Certificate does not have a template')
+        }
+
+        this.template.update(data)
+
+        this.variableColumnMapping = Certificate.mapVariablesToColumns(
+            this.template,
+            this.dataSource,
+        )
     }
 
     static mapVariablesToColumns(

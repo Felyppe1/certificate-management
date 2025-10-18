@@ -71,6 +71,18 @@ export class DataSource {
             throw new ValidationError('DataSource file extension is required')
         }
 
+        if (data.inputMethod === INPUT_METHOD.UPLOAD && data.driveFileId) {
+            throw new ValidationError(
+                'Drive file ID should not be provided for UPLOAD input method',
+            )
+        }
+
+        if (data.inputMethod !== INPUT_METHOD.UPLOAD && data.storageFileUrl) {
+            throw new ValidationError(
+                'File storage URL should only be provided for UPLOAD input method',
+            )
+        }
+
         this.validateDriveFileId(data.driveFileId)
         this.validateStorageFileUrl(data.storageFileUrl)
 
@@ -85,6 +97,8 @@ export class DataSource {
     }
 
     update(data: Partial<Omit<DataSourceInput, 'id'>>) {
+        if (data.inputMethod) this.inputMethod = data.inputMethod
+
         if (data.driveFileId) {
             this.validateDriveFileId(data.driveFileId)
             this.driveFileId = data.driveFileId
@@ -95,7 +109,6 @@ export class DataSource {
             this.storageFileUrl = data.storageFileUrl
         }
 
-        if (data.inputMethod) this.inputMethod = data.inputMethod
         if (data.fileName) this.fileName = data.fileName
         if (data.fileExtension) this.fileExtension = data.fileExtension
         if (data.columns) this.columns = data.columns

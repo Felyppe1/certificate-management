@@ -94,14 +94,12 @@ export class AddTemplateByUrlUseCase {
             thumbnailUrl,
         }
 
-        const newTemplate = certificate.hasTemplate()
-            ? new Template({
-                  id: certificate.getTemplateId()!,
-                  ...newTemplateInput,
-              })
-            : Template.create(newTemplateInput)
-
-        certificate.setTemplate(newTemplate)
+        if (certificate.hasDataSource()) {
+            certificate.updateTemplate(newTemplateInput)
+        } else {
+            const newTemplate = Template.create(newTemplateInput)
+            certificate.setTemplate(newTemplate)
+        }
 
         await this.certificateEmissionsRepository.update(certificate)
 

@@ -29,6 +29,9 @@ export interface TemplateOutput extends TemplateInput {}
 
 interface CreateTemplateInput extends Omit<TemplateInput, 'id'> {}
 
+export interface UpdateTemplateInput
+    extends Partial<Omit<TemplateInput, 'id'>> {}
+
 export class Template {
     private id: string
     private driveFileId: string | null
@@ -116,6 +119,42 @@ export class Template {
 
     setThumbnailUrl(url: string) {
         this.thumbnailUrl = url
+    }
+
+    update(data: Partial<Omit<TemplateInput, 'id'>>) {
+        if (data.inputMethod) this.inputMethod = data.inputMethod
+
+        if (data.driveFileId) {
+            this.validateDriveFileId(data.driveFileId)
+            this.driveFileId = data.driveFileId
+        }
+
+        if (data.storageFileUrl) {
+            this.validateStorageFileUrl(data.storageFileUrl)
+            this.storageFileUrl = data.storageFileUrl
+        }
+
+        if (data.fileName) this.fileName = data.fileName
+        if (data.fileExtension) this.fileExtension = data.fileExtension
+        if (data.variables) this.variables = data.variables
+        if (data.thumbnailUrl) this.thumbnailUrl = data.thumbnailUrl
+    }
+
+    // TODO: use this in the constructor as well
+    private validateDriveFileId(driveFileId: string | null) {
+        if (this.inputMethod === INPUT_METHOD.UPLOAD && driveFileId) {
+            throw new ValidationError(
+                'Drive file ID should not be provided for UPLOAD input method',
+            )
+        }
+    }
+
+    private validateStorageFileUrl(storageFileUrl: string | null) {
+        if (this.inputMethod !== INPUT_METHOD.UPLOAD && storageFileUrl) {
+            throw new ValidationError(
+                'File storage URL should only be provided for UPLOAD input method',
+            )
+        }
     }
 
     static getFileIdFromUrl(url: string): string | null {

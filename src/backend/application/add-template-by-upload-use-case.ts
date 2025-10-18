@@ -88,14 +88,12 @@ export class AddTemplateByUploadUseCase {
             thumbnailUrl: null,
         }
 
-        const newTemplate = certificate.hasTemplate()
-            ? new Template({
-                  id: certificate.getTemplateId()!,
-                  ...newTemplateInput,
-              })
-            : Template.create(newTemplateInput)
-
-        certificate.setTemplate(newTemplate)
+        if (certificate.hasDataSource()) {
+            certificate.updateTemplate(newTemplateInput)
+        } else {
+            const newTemplate = Template.create(newTemplateInput)
+            certificate.setTemplate(newTemplate)
+        }
 
         const path = `users/${session.userId}/templates/${certificate.getTemplateId()}-original.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
 
