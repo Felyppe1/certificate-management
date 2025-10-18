@@ -24,16 +24,18 @@ import {
     Download,
     Eye,
     FileDown,
-    CheckCircle2,
-    AlertCircle,
+    Columns2,
+    Table2,
+    ALargeSmall,
 } from 'lucide-react'
-import { startTransition, useActionState, useState } from 'react'
+import { startTransition, useActionState } from 'react'
 import {
     INPUT_METHOD,
     DATA_SOURCE_FILE_EXTENSION,
 } from '@/backend/domain/data-source'
 import { deleteDataSourceAction } from '@/backend/infrastructure/server-actions/delete-data-source-action'
 import { refreshDataSourceAction } from '@/backend/infrastructure/server-actions/refresh-data-source-action'
+import { SourceIcon } from '@/components/svg/SourceIcon'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -175,16 +177,7 @@ export function DataSourceDisplay({
                             {/* File Info */}
                             <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0 mt-0.5">
-                                    <svg
-                                        className="w-5 h-5 text-muted-foreground"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                    >
-                                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
-                                        <polyline points="13 2 13 9 20 9" />
-                                    </svg>
+                                    <ALargeSmall className="size-5 text-muted-foreground" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-muted-foreground mb-1">
@@ -198,16 +191,7 @@ export function DataSourceDisplay({
 
                             <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0 mt-0.5">
-                                    <svg
-                                        className="w-5 h-5 text-muted-foreground"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                    >
-                                        <circle cx="12" cy="12" r="10" />
-                                        <path d="M12 16v-4M12 8h.01" />
-                                    </svg>
+                                    <SourceIcon className="size-5 text-muted-foreground" />
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-muted-foreground mb-1">
@@ -260,16 +244,7 @@ export function DataSourceDisplay({
 
                             <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0 mt-0.5">
-                                    <svg
-                                        className="w-5 h-5 text-muted-foreground"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                    >
-                                        <circle cx="12" cy="12" r="10" />
-                                        <path d="M12 16v-4M12 8h.01" />
-                                    </svg>
+                                    <Columns2 className="size-5 text-muted-foreground" />
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-muted-foreground mb-1">
@@ -296,16 +271,7 @@ export function DataSourceDisplay({
 
                             <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0 mt-0.5">
-                                    <svg
-                                        className="w-5 h-5 text-muted-foreground"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                    >
-                                        <circle cx="12" cy="12" r="10" />
-                                        <path d="M12 16v-4M12 8h.01" />
-                                    </svg>
+                                    <Table2 className="size-5 text-muted-foreground" />
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-muted-foreground mb-1">

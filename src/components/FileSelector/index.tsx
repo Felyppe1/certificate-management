@@ -23,8 +23,14 @@ import { FileRejection, useDropzone } from 'react-dropzone'
 import { cn } from '@/lib/utils'
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
+import { AiIcon3 } from '../svg/AiIcon3'
+import { AiIcon } from '../svg/AiIcon'
+import { Badge } from '../ui/badge'
+import { GoogleDriveIcon } from '../svg/GoogleDriveIcon'
 
 type SelectOption = 'upload' | 'link' | 'drive'
+
+type FileSelectorType = 'template' | 'data-source'
 
 interface FileSelectorProps {
     isDriveLoading: boolean
@@ -36,6 +42,7 @@ interface FileSelectorProps {
     googleOAuthToken: string | null
     googleOAuthTokenExpiry: Date | null
     radioGroupName: string
+    type: FileSelectorType
     // urlAction: (_: unknown, formData: FormData) => Promise<any> // TODO: improve this type
 }
 
@@ -49,6 +56,7 @@ export function FileSelector({
     googleOAuthToken,
     googleOAuthTokenExpiry,
     radioGroupName,
+    type,
 }: FileSelectorProps) {
     const [selectedOption, setSelectedOption] = useState<SelectOption | null>(
         null,
@@ -211,7 +219,7 @@ export function FileSelector({
                         htmlFor={`option-upload-${radioGroupName}`}
                         className="group relative"
                     >
-                        <Card className="h-full justify-center cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none group-has-[:disabled]:cursor-default hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center">
+                        <Card className="relative h-full justify-center cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none group-has-[:disabled]:cursor-default hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center">
                             <RadioGroupItem
                                 id={`option-upload-${radioGroupName}`}
                                 disabled={allAreLoading}
@@ -250,7 +258,7 @@ export function FileSelector({
                                 className="sr-only"
                             />
                             <div className="flex justify-center items-center gap-3 mb-4">
-                                <FileText className="w-12 h-12 transition-colors group-has-[[data-state=checked]]:text-primary text-muted-foreground" />
+                                <GoogleDriveIcon className="w-12 h-12 transition-colors group-has-[[data-state=checked]]:text-primary text-muted-foreground" />
                             </div>
                             <h3 className="text-lg font-semibold mb-2">
                                 Google Drive
@@ -287,7 +295,7 @@ export function FileSelector({
                                 Link de compartilhamento
                             </h3>
                             <p className="text-muted-foreground">
-                                Cole o link de um Google Docs ou Slides
+                                Cole o link de um arquivo do Drive
                             </p>
                         </Card>
                         {isUrlLoading && (
@@ -309,16 +317,19 @@ export function FileSelector({
                     oauth-token={googleOAuthToken!}
                 >
                     <drive-picker-docs-view
-                        mime-types={[
-                            TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS,
-                            TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES,
-                            TEMPLATE_FILE_EXTENSION.DOCX,
-                            TEMPLATE_FILE_EXTENSION.PPTX,
-                            DATA_SOURCE_FILE_EXTENSION.CSV,
-                            DATA_SOURCE_FILE_EXTENSION.XLSX,
-                            DATA_SOURCE_FILE_EXTENSION.ODS,
-                            DATA_SOURCE_FILE_EXTENSION.GOOGLE_SHEETS,
-                        ].join(',')}
+                        mime-types={(type === 'template'
+                            ? [
+                                  TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS,
+                                  TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES,
+                                  TEMPLATE_FILE_EXTENSION.DOCX,
+                                  TEMPLATE_FILE_EXTENSION.PPTX,
+                              ]
+                            : [
+                                  DATA_SOURCE_FILE_EXTENSION.CSV,
+                                  DATA_SOURCE_FILE_EXTENSION.XLSX,
+                                  DATA_SOURCE_FILE_EXTENSION.GOOGLE_SHEETS,
+                              ]
+                        ).join(',')}
                     ></drive-picker-docs-view>
                 </drive-picker>
             )}
@@ -330,8 +341,10 @@ export function FileSelector({
                         <CardHeader>
                             <CardTitle>Link do arquivo</CardTitle>
                             <CardDescription>
-                                Cole o link de compartilhamento do Google Docs
-                                ou Google Slides
+                                Cole o link de compartilhamento do{' '}
+                                {type === 'template'
+                                    ? 'Google Slides, Google Docs, .pptx ou .docx'
+                                    : 'Google Planilhas, .csv ou .xlsx'}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -344,8 +357,8 @@ export function FileSelector({
                                     name="fileUrl"
                                     value={fileUrl}
                                     onChange={e => setFileUrl(e.target.value)}
-                                    placeholder="Cole o link de compartilhamento do Google Docs ou Google Slides"
-                                    className="flex-1"
+                                    placeholder="https://docs.google.com/..."
+                                    className="flex-1 px-4"
                                 />
                                 <Button
                                     // onClick={handleConfirm}
@@ -388,8 +401,11 @@ export function FileSelector({
                                         aqui
                                     </h4>
                                     <p className="text-muted-foreground">
-                                        Formatos suportados: .docx, .pptx (máx.
-                                        5MB)
+                                        Formatos suportados:{' '}
+                                        {type === 'template'
+                                            ? '.docx, .pptx'
+                                            : '.csv, .xlsx, .png, .jpeg'}{' '}
+                                        (máx. 5MB)
                                     </p>
                                 </>
                             )}

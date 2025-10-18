@@ -139,6 +139,7 @@ export function TemplateSection({
                         isUploadLoading={uploadIsLoading}
                         isUrlLoading={urlIsLoading}
                         radioGroupName={radioGroupName}
+                        type="template"
                     />
                 </CardContent>
             </Card>
@@ -174,6 +175,7 @@ export function TemplateSection({
                     isUploadLoading={uploadIsLoading}
                     isUrlLoading={urlIsLoading}
                     radioGroupName={radioGroupName}
+                    type="template"
                 />
             </CardContent>
         </Card>

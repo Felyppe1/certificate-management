@@ -133,7 +133,7 @@ model DataSet {
 
     data_source_id String @unique
 
-    DataSource DataSource @relation(fields: [data_source_id], references: [id])
+    DataSource DataSource @relation(fields: [data_source_id], references: [id], onDelete: Cascade)
 
     @@map("data_sets")
 }

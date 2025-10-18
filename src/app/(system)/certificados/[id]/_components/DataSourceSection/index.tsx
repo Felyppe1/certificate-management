@@ -18,6 +18,8 @@ import {
 import { addDataSourceByUrlAction } from '@/backend/infrastructure/server-actions/add-data-source-by-url-action'
 import { addDataSourceByDrivePickerAction } from '@/backend/infrastructure/server-actions/add-data-source-by-drive-picker-action'
 import { addDataSourceByUploadAction } from '@/backend/infrastructure/server-actions/add-data-source-by-upload-action'
+import { Badge } from '@/components/ui/badge'
+import { AiIcon3 } from '@/components/svg/AiIcon3'
 
 interface DataSourceSectionProps {
     certificateId: string
@@ -109,7 +111,12 @@ export function DataSourceSection({
             <Card>
                 <CardHeader className="flex justify-between">
                     <div>
-                        <CardTitle>Selecione Nova Base de Dados</CardTitle>
+                        <CardTitle>
+                            Selecione Nova Base de Dados{' '}
+                            <Badge variant="outline">
+                                IA habilitada para imagens
+                            </Badge>
+                        </CardTitle>
                         <CardDescription>
                             Selecione uma base de dados para substituir a atual
                         </CardDescription>
@@ -135,6 +142,7 @@ export function DataSourceSection({
                         isUploadLoading={uploadIsLoading}
                         isUrlLoading={urlIsLoading}
                         radioGroupName={radioGroupName}
+                        type="data-source"
                     />
                 </CardContent>
             </Card>
@@ -158,51 +166,30 @@ export function DataSourceSection({
                 <CardTitle>Base de Dados</CardTitle>
                 <CardDescription>
                     Selecione a base de dados das pessoas que receberão o
-                    certificado (CSV, XLSX, Google Planilhas, PNG, JPEG)
+                    certificado
                 </CardDescription>
             </CardHeader>
             <CardContent className="">
-                <div className="space-y-4">
-                    {/* AI Info for image uploads */}
-                    <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg p-4">
-                        <div className="flex gap-3">
-                            <div className="flex-shrink-0 text-blue-600 dark:text-blue-400">
-                                <svg
-                                    className="w-5 h-5"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                >
-                                    <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z" />
-                                </svg>
-                            </div>
-                            <div className="text-sm">
-                                <p className="font-medium text-blue-900 dark:text-blue-100">
-                                    🤖 Extração Inteligente com IA
-                                </p>
-                                <p className="text-blue-700 dark:text-blue-300 mt-1">
-                                    Ao fazer upload de imagens (PNG, JPEG),
-                                    nossa IA consegue extrair automaticamente os
-                                    dados dos participantes a partir de fotos de
-                                    listas!
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <FileSelector
-                        googleOAuthToken={googleOAuthToken}
-                        googleOAuthTokenExpiry={googleOAuthTokenExpiry}
-                        onSubmitUrl={handleSubmitUrl}
-                        onSubmitDrive={handleSubmitDrive}
-                        onSubmitUpload={handleSubmitUpload}
-                        isDriveLoading={drivePickerIsLoading}
-                        isUploadLoading={uploadIsLoading}
-                        isUrlLoading={urlIsLoading}
-                        radioGroupName={radioGroupName}
-                    />
-                </div>
+                <Badge
+                    variant="purple"
+                    size="md"
+                    className="[&>svg]:size-6 pr-3 mb-4"
+                >
+                    <AiIcon3 />
+                    IA habilitada para imagens
+                </Badge>
+                <FileSelector
+                    googleOAuthToken={googleOAuthToken}
+                    googleOAuthTokenExpiry={googleOAuthTokenExpiry}
+                    onSubmitUrl={handleSubmitUrl}
+                    onSubmitDrive={handleSubmitDrive}
+                    onSubmitUpload={handleSubmitUpload}
+                    isDriveLoading={drivePickerIsLoading}
+                    isUploadLoading={uploadIsLoading}
+                    isUrlLoading={urlIsLoading}
+                    radioGroupName={radioGroupName}
+                    type="data-source"
+                />
             </CardContent>
         </Card>
     )

@@ -9,7 +9,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
-import { RefreshCw, Edit3, Trash2 } from 'lucide-react'
+import { RefreshCw, Edit3, Trash2, ALargeSmall } from 'lucide-react'
 import { startTransition, useActionState } from 'react'
 import { refreshTemplateAction } from '@/backend/infrastructure/server-actions/refresh-template-action'
 import { deleteTemplateAction } from '@/backend/infrastructure/server-actions/delete-template-action'
@@ -17,6 +17,7 @@ import {
     INPUT_METHOD,
     TEMPLATE_FILE_EXTENSION,
 } from '@/backend/domain/template'
+import { SourceIcon } from '@/components/svg/SourceIcon'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -95,9 +96,7 @@ export function TemplateDisplay({
                     <div>
                         <CardTitle>Template</CardTitle>
                         <CardDescription>
-                            Template que será utilizado para gerar os
-                            certificados (Formatos: PPTX, Google Slides, DOCX,
-                            Google Docs)
+                            Template utilizado para gerar os certificados
                         </CardDescription>
                     </div>
 
@@ -136,7 +135,7 @@ export function TemplateDisplay({
                 </CardHeader>
 
                 <CardContent className="flex flex-row gap-10">
-                    {template.thumbnailUrl ? (
+                    {/* {template.thumbnailUrl ? (
                         <img
                             src={template.thumbnailUrl || ''}
                             alt=""
@@ -146,22 +145,13 @@ export function TemplateDisplay({
                         <div className="aspect-3/2 w-full max-w-[25rem] rounded-md bg-muted flex justify-center items-center text-muted-foreground">
                             Gerando miniatura...
                         </div>
-                    )}
+                    )} */}
 
                     <div className="flex flex-col w-full">
                         <div className="flex flex-col gap-4 mt-1">
                             <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0 mt-0.5">
-                                    <svg
-                                        className="w-5 h-5 text-muted-foreground"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                    >
-                                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
-                                        <polyline points="13 2 13 9 20 9" />
-                                    </svg>
+                                    <ALargeSmall className="size-5 text-muted-foreground" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-muted-foreground mb-1">
@@ -175,16 +165,7 @@ export function TemplateDisplay({
 
                             <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0 mt-0.5">
-                                    <svg
-                                        className="w-5 h-5 text-muted-foreground"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                    >
-                                        <circle cx="12" cy="12" r="10" />
-                                        <path d="M12 16v-4M12 8h.01" />
-                                    </svg>
+                                    <SourceIcon className="size-5 text-muted-foreground" />
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-muted-foreground mb-1">
@@ -237,16 +218,9 @@ export function TemplateDisplay({
 
                             <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0 mt-0.5">
-                                    <svg
-                                        className="w-5 h-5 text-muted-foreground"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                    >
-                                        <circle cx="12" cy="12" r="10" />
-                                        <path d="M12 16v-4M12 8h.01" />
-                                    </svg>
+                                    <span className="font-mono font-semibold text-muted-foreground">
+                                        {'{}'}
+                                    </span>
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-muted-foreground mb-1">
