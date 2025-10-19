@@ -6,6 +6,7 @@ import { TemplateSection } from './_components/TemplateSection'
 import { DataSourceSection } from './_components/DataSourceSection'
 import { VariableMappingSection } from './_components/VariableMappingSection'
 import { EmailSendingSection } from './_components/EmailSendingSection'
+import { GenerateCertificatesSection } from './_components/GenerateCertificatesSection'
 
 const statusMapping = {
     DRAFT: 'Rascunho',
@@ -117,6 +118,7 @@ export default async function CertificatePage({
                     hasDataSource &&
                     templateVariables.length > 0 && (
                         <VariableMappingSection
+                            certificateId={certificateId}
                             templateVariables={templateVariables}
                             dataSourceColumns={dataSourceColumns}
                             certificatesGenerated={certificatesGenerated}
@@ -127,6 +129,15 @@ export default async function CertificatePage({
                             }
                         />
                     )}
+
+                <GenerateCertificatesSection
+                    certificateId={certificateId}
+                    variablesMapped={
+                        variablesMapped || templateVariables.length === 0
+                    }
+                    certificatesGenerated={certificatesGenerated}
+                    totalRecords={totalRecords}
+                />
 
                 {hasTemplate && hasDataSource && (
                     <EmailSendingSection

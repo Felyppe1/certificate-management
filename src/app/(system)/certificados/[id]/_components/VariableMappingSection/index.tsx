@@ -1,5 +1,6 @@
 'use client'
 
+import { updateCertificateEmissionAction } from '@/backend/infrastructure/server-actions/update-certificate-emission-action'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -17,9 +18,10 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { Check, AlertCircle, ArrowRight } from 'lucide-react'
-import { useState } from 'react'
+import { startTransition, useActionState, useEffect, useState } from 'react'
 
 interface VariableMappingSectionProps {
+    certificateId: string
     templateVariables: string[]
     dataSourceColumns: string[]
     existingMappings: Record<string, string | null> | null
@@ -28,34 +30,69 @@ interface VariableMappingSectionProps {
 }
 
 export function VariableMappingSection({
+    certificateId,
     templateVariables,
     dataSourceColumns,
     existingMappings = null,
     certificatesGenerated,
     totalRecords,
 }: VariableMappingSectionProps) {
+    const [mappingState, mappingAction, mappingIsLoading] = useActionState(
+        updateCertificateEmissionAction,
+        null,
+    )
+
     const [mappings, setMappings] = useState<Record<
         string,
         string | null
     > | null>(existingMappings)
-    const [isSaving, setIsSaving] = useState(false)
     const [mappingsSaved, setMappingsSaved] = useState(false)
     const [isGenerating, setIsGenerating] = useState(false)
 
+    useEffect(() => {
+        setMappings(existingMappings)
+    }, [existingMappings])
+
     const handleMappingChange = (variable: string, column: string) => {
+        setMappingsSaved(false)
+
+        if (column === '__clear__') {
+            setMappings(prev => ({
+                ...prev,
+                [variable]: null,
+            }))
+
+            return
+        }
+
         setMappings(prev => ({
             ...prev,
             [variable]: column,
         }))
-        setMappingsSaved(false)
+    }
+
+    const getAvailableColumns = (currentVariable: string) => {
+        if (!mappings) return dataSourceColumns
+
+        const mappedColumns = Object.entries(mappings)
+            .filter(([variable]) => variable !== currentVariable)
+            .map(([, column]) => column)
+            .filter((column): column is string => column !== null)
+
+        return dataSourceColumns.filter(
+            column => !mappedColumns.includes(column),
+        )
     }
 
     const handleSave = async () => {
-        setIsSaving(true)
-        // TODO: Call API to save mappings
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        setIsSaving(false)
-        setMappingsSaved(true)
+        const formData = new FormData()
+
+        formData.append('id', certificateId)
+        formData.append('variableColumnMapping', JSON.stringify(mappings))
+
+        startTransition(() => {
+            mappingAction(formData)
+        })
     }
 
     const handleGenerate = async () => {
@@ -118,7 +155,6 @@ export function VariableMappingSection({
                 )} */}
 
                 <div className="space-y-4">
-                    {/* Header */}
                     <div className="grid grid-cols-[1fr_auto_1fr] gap-4 px-4 pb-2 border-b">
                         <div className="text-sm font-medium text-muted-foreground">
                             Variável do Template
@@ -129,51 +165,71 @@ export function VariableMappingSection({
                         </div>
                     </div>
 
-                    {/* Mappings */}
-                    {templateVariables.map(variable => (
-                        <div
-                            key={variable}
-                            className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center px-4  rounded-lg"
-                        >
-                            <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="font-mono">
-                                    {`{{ ${variable} }}`}
-                                </Badge>
-                            </div>
+                    {templateVariables.map(variable => {
+                        const availableColumns = getAvailableColumns(variable)
 
-                            <div className="flex items-center justify-center">
-                                <ArrowRight className="text-muted-foreground" />
-                            </div>
+                        return (
+                            <div
+                                key={variable}
+                                className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center px-4  rounded-lg"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Badge
+                                        variant="outline"
+                                        className="font-mono"
+                                    >
+                                        {`{{ ${variable} }}`}
+                                    </Badge>
+                                </div>
 
-                            <div>
-                                <Select
-                                    value={mappings![variable] || ''}
-                                    onValueChange={value =>
-                                        handleMappingChange(variable, value)
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Selecione uma coluna" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {dataSourceColumns.map(column => (
-                                            <SelectItem
-                                                key={column}
-                                                value={column}
-                                            >
-                                                {column}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <div className="flex items-center justify-center">
+                                    <ArrowRight className="text-muted-foreground" />
+                                </div>
+
+                                <div>
+                                    <Select
+                                        value={mappings![variable] || ''}
+                                        onValueChange={value => {
+                                            handleMappingChange(variable, value)
+                                        }}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecione uma coluna" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {mappings![variable] && (
+                                                <SelectItem
+                                                    value="__clear__"
+                                                    className="text-muted-foreground italic"
+                                                >
+                                                    Desselecionar
+                                                </SelectItem>
+                                            )}
+                                            {availableColumns.length === 0 ? (
+                                                <p className="text-sm px-3 py-1">
+                                                    Nenhuma coluna disponível
+                                                </p>
+                                            ) : (
+                                                availableColumns.map(column => (
+                                                    <SelectItem
+                                                        key={column}
+                                                        value={column}
+                                                    >
+                                                        {column}
+                                                    </SelectItem>
+                                                ))
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        )
+                    })}
                 </div>
 
                 {/* Action buttons */}
                 <div className="flex flex-col gap-4 pt-4 border-t">
-                    {!mappingsSaved && (
+                    {/* {!mappingsSaved && (
                         <div className="bg-muted/50 border rounded-lg p-4">
                             <div className="flex gap-3">
                                 <div className="flex-shrink-0 text-blue-600 dark:text-blue-400">
@@ -191,10 +247,10 @@ export function VariableMappingSection({
                                 </div>
                             </div>
                         </div>
-                    )}
+                    )} */}
 
                     <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
+                        {/* <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
                                 {mappingsSaved ? (
                                     <Badge variant="green" className="gap-1">
@@ -207,7 +263,7 @@ export function VariableMappingSection({
                                     </Badge>
                                 )}
                             </div>
-                            {certificatesGenerated && (
+                            {!certificatesGenerated && (
                                 <Badge variant="green" className="gap-1">
                                     <Check className="h-3 w-3" />
                                     {totalRecords} Certificado
@@ -215,15 +271,15 @@ export function VariableMappingSection({
                                     {totalRecords !== 1 ? 's' : ''}
                                 </Badge>
                             )}
-                        </div>
+                        </div> */}
 
                         <div className="flex gap-3">
                             <Button
                                 onClick={handleSave}
-                                disabled={!canSave || isSaving}
+                                disabled={!canSave || mappingIsLoading}
                                 variant={mappingsSaved ? 'outline' : 'default'}
                             >
-                                {isSaving
+                                {mappingIsLoading
                                     ? 'Salvando...'
                                     : mappingsSaved
                                       ? 'Mapeamento Salvo'

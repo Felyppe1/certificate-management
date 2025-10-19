@@ -28,7 +28,7 @@ import {
     Table2,
     ALargeSmall,
 } from 'lucide-react'
-import { startTransition, useActionState } from 'react'
+import { startTransition, useActionState, useState } from 'react'
 import {
     INPUT_METHOD,
     DATA_SOURCE_FILE_EXTENSION,
@@ -77,6 +77,8 @@ export function DataSourceDisplay({
     certificatesGenerated = false,
     totalSize = '0 KB',
 }: DataSourceDisplayProps) {
+    const [showAllRows, setShowAllRows] = useState(false)
+
     const [, refreshAction, isRefreshing] = useActionState(
         refreshDataSourceAction,
         null,
@@ -273,7 +275,7 @@ export function DataSourceDisplay({
                                 <div className="flex-shrink-0 mt-0.5">
                                     <Table2 className="size-5 text-muted-foreground" />
                                 </div>
-                                <div className="flex-1">
+                                <div className="flex-1 min-w-0">
                                     <p className="text-muted-foreground mb-1">
                                         Conteúdo
                                     </p>
@@ -293,85 +295,126 @@ export function DataSourceDisplay({
                                                     </div>
                                                 </div>
 
-                                                <div className="border rounded-lg overflow-hidden">
-                                                    <div className="overflow-x-auto">
-                                                        <Table>
-                                                            <TableHeader>
-                                                                <TableRow>
-                                                                    {certificatesGenerated && (
-                                                                        <TableHead className="w-[100px]">
-                                                                            Ações
-                                                                        </TableHead>
-                                                                    )}
-                                                                    {dataSource.columns.map(
-                                                                        column => (
-                                                                            <TableHead
-                                                                                key={
-                                                                                    column
-                                                                                }
-                                                                            >
-                                                                                {
-                                                                                    column
-                                                                                }
-                                                                            </TableHead>
-                                                                        ),
-                                                                    )}
-                                                                </TableRow>
-                                                            </TableHeader>
-                                                            <TableBody>
-                                                                {rows.map(
-                                                                    (
-                                                                        row,
-                                                                        index,
-                                                                    ) => (
-                                                                        <TableRow
+                                                <div className="border rounded-lg">
+                                                    <Table>
+                                                        <TableHeader>
+                                                            <TableRow>
+                                                                {certificatesGenerated && (
+                                                                    <TableHead className="">
+                                                                        Ações
+                                                                    </TableHead>
+                                                                )}
+                                                                {dataSource.columns.map(
+                                                                    column => (
+                                                                        <TableHead
                                                                             key={
-                                                                                index
+                                                                                column
                                                                             }
                                                                         >
-                                                                            {certificatesGenerated && (
-                                                                                <TableCell>
-                                                                                    <div className="flex gap-1">
-                                                                                        <Button
-                                                                                            variant="ghost"
-                                                                                            size="sm"
-                                                                                            className="h-8 w-8 p-0"
-                                                                                            title="Visualizar certificado"
-                                                                                        >
-                                                                                            <Eye className="h-4 w-4" />
-                                                                                        </Button>
-                                                                                        <Button
-                                                                                            variant="ghost"
-                                                                                            size="sm"
-                                                                                            className="h-8 w-8 p-0"
-                                                                                            title="Baixar certificado"
-                                                                                        >
-                                                                                            <Download className="h-4 w-4" />
-                                                                                        </Button>
-                                                                                    </div>
-                                                                                </TableCell>
-                                                                            )}
-                                                                            {dataSource.columns.map(
-                                                                                column => (
-                                                                                    <TableCell
-                                                                                        key={
-                                                                                            column
-                                                                                        }
-                                                                                    >
-                                                                                        {row[
-                                                                                            column
-                                                                                        ] ||
-                                                                                            '-'}
-                                                                                    </TableCell>
-                                                                                ),
-                                                                            )}
-                                                                        </TableRow>
+                                                                            {
+                                                                                column
+                                                                            }
+                                                                        </TableHead>
                                                                     ),
                                                                 )}
-                                                            </TableBody>
-                                                        </Table>
-                                                    </div>
+                                                            </TableRow>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                            {(showAllRows
+                                                                ? rows
+                                                                : rows.slice(
+                                                                      0,
+                                                                      10,
+                                                                  )
+                                                            ).map(
+                                                                (
+                                                                    row,
+                                                                    index,
+                                                                ) => (
+                                                                    <TableRow
+                                                                        key={
+                                                                            index
+                                                                        }
+                                                                    >
+                                                                        {certificatesGenerated && (
+                                                                            <TableCell>
+                                                                                <div className="flex gap-1">
+                                                                                    <Button
+                                                                                        variant="ghost"
+                                                                                        size="sm"
+                                                                                        className="h-8 w-8 p-0"
+                                                                                        title="Visualizar certificado"
+                                                                                    >
+                                                                                        <Eye className="h-4 w-4" />
+                                                                                    </Button>
+                                                                                    <Button
+                                                                                        variant="ghost"
+                                                                                        size="sm"
+                                                                                        className="h-8 w-8 p-0"
+                                                                                        title="Baixar certificado"
+                                                                                    >
+                                                                                        <Download className="h-4 w-4" />
+                                                                                    </Button>
+                                                                                </div>
+                                                                            </TableCell>
+                                                                        )}
+                                                                        {dataSource.columns.map(
+                                                                            column => (
+                                                                                <TableCell
+                                                                                    key={
+                                                                                        column
+                                                                                    }
+                                                                                >
+                                                                                    {row[
+                                                                                        column
+                                                                                    ] ||
+                                                                                        '-'}
+                                                                                </TableCell>
+                                                                            ),
+                                                                        )}
+                                                                    </TableRow>
+                                                                ),
+                                                            )}
+                                                        </TableBody>
+                                                    </Table>
                                                 </div>
+
+                                                {rows.length > 10 &&
+                                                    !showAllRows && (
+                                                        <div className="flex justify-center">
+                                                            <Button
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    setShowAllRows(
+                                                                        true,
+                                                                    )
+                                                                }
+                                                                size="sm"
+                                                            >
+                                                                Mostrar todos os{' '}
+                                                                {rows.length}{' '}
+                                                                registros
+                                                            </Button>
+                                                        </div>
+                                                    )}
+
+                                                {rows.length > 10 &&
+                                                    showAllRows && (
+                                                        <div className="flex justify-center">
+                                                            <Button
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    setShowAllRows(
+                                                                        false,
+                                                                    )
+                                                                }
+                                                                size="sm"
+                                                            >
+                                                                Mostrar apenas
+                                                                10 registros
+                                                            </Button>
+                                                        </div>
+                                                    )}
 
                                                 <div className="flex gap-8 items-center">
                                                     {certificatesGenerated && (

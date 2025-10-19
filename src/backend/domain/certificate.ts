@@ -35,6 +35,14 @@ interface CreateCertificateInput
         'id' | 'status' | 'createdAt' | 'variableColumnMapping'
     > {}
 
+interface UpdateCertificateInput
+    extends Partial<
+        Omit<
+            CertificateInput,
+            'id' | 'userId' | 'createdAt' | 'status' | 'template' | 'dataSource'
+        >
+    > {}
+
 interface CertificateOutput
     extends Omit<CertificateInput, 'template' | 'dataSource'> {
     template: TemplateOutput | null
@@ -106,6 +114,8 @@ export class Certificate extends AggregateRoot {
         this.status = data.status
         this.createdAt = data.createdAt
         this.variableColumnMapping = data.variableColumnMapping
+
+        this.validateVariableColumnMapping()
     }
 
     getId() {
@@ -116,12 +126,58 @@ export class Certificate extends AggregateRoot {
         return this.userId
     }
 
+    update(data: UpdateCertificateInput) {
+        if (data.name !== undefined) this.name = data.name
+        if (data.variableColumnMapping !== undefined) {
+            this.variableColumnMapping = data.variableColumnMapping
+            this.validateVariableColumnMapping()
+        }
+    }
+
+    validateVariableColumnMapping() {
+        const templateHasVariable =
+            this.template !== null && this.template.getVariables().length > 0
+
+        if (templateHasVariable && !this.variableColumnMapping) {
+            throw new ValidationError(
+                'Variable-column mapping is required when a template with variables is set',
+            )
+        }
+
+        if (!this.variableColumnMapping) return
+
+        for (const [mappedVariable, mappedColumn] of Object.entries(
+            this.variableColumnMapping,
+        )) {
+            const variableExistsInTemplate = this.template
+                ?.getVariables()
+                .some(variable => variable === mappedVariable)
+
+            if (mappedVariable && !variableExistsInTemplate) {
+                throw new ValidationError(
+                    `Variable "${mappedVariable}" does not exist in the template`,
+                )
+            }
+
+            const columnExistsInDataSource = this.dataSource
+                ?.getColumns()
+                .some(column => column === mappedColumn)
+
+            if (mappedColumn && !columnExistsInDataSource) {
+                throw new ValidationError(
+                    `Column "${mappedColumn}" does not exist in the data source`,
+                )
+            }
+        }
+    }
+
     setTemplate(template: Template) {
         this.template = template
 
         this.variableColumnMapping = Certificate.mapVariablesToColumns(
             template,
             this.dataSource,
+            this.variableColumnMapping,
         )
 
         const domainEvent = new TemplateSetDomainEvent(template.getId())
@@ -183,6 +239,7 @@ export class Certificate extends AggregateRoot {
         this.variableColumnMapping = Certificate.mapVariablesToColumns(
             this.template,
             dataSource,
+            this.variableColumnMapping,
         )
     }
 
@@ -239,6 +296,7 @@ export class Certificate extends AggregateRoot {
         this.variableColumnMapping = Certificate.mapVariablesToColumns(
             this.template,
             this.dataSource,
+            this.variableColumnMapping,
         )
     }
 
@@ -252,12 +310,14 @@ export class Certificate extends AggregateRoot {
         this.variableColumnMapping = Certificate.mapVariablesToColumns(
             this.template,
             this.dataSource,
+            this.variableColumnMapping,
         )
     }
 
     static mapVariablesToColumns(
         template: Template | null,
         dataSource: DataSource | null,
+        previousMapping?: Record<string, string | null> | null,
     ) {
         const normalizeString = (str: string) => {
             return str
@@ -267,30 +327,32 @@ export class Certificate extends AggregateRoot {
                 .toLowerCase() // transforma em minúscula
         }
 
-        if (template) {
-            const variableColumnMapping: Record<string, string | null> = {}
+        if (!template) return null
 
-            template.getVariables().forEach(variable => {
-                if (!dataSource) {
-                    variableColumnMapping[variable] = null
-                    return
-                }
+        const variableColumnMapping: Record<string, string | null> = {}
 
-                const sameName = dataSource
-                    .getColumns()
-                    .find(
-                        column =>
-                            normalizeString(column) ===
-                            normalizeString(variable),
-                    )
+        for (const variable of template.getVariables()) {
+            const previousColumn = previousMapping?.[variable] ?? null
 
-                variableColumnMapping[variable] = sameName ?? null
-            })
+            if (
+                previousColumn &&
+                dataSource?.getColumns().includes(previousColumn)
+            ) {
+                variableColumnMapping[variable] = previousColumn
+                continue
+            }
 
-            return variableColumnMapping
+            const sameName = dataSource
+                ?.getColumns()
+                .find(
+                    column =>
+                        normalizeString(column) === normalizeString(variable),
+                )
+
+            variableColumnMapping[variable] = sameName ?? null
         }
 
-        return null
+        return variableColumnMapping
     }
 
     serialize(): CertificateOutput {
