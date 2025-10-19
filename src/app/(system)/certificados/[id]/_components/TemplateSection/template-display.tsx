@@ -108,7 +108,7 @@ export function TemplateDisplay({
                                 disabled={isRefreshing || isDeleting}
                             >
                                 <RefreshCw
-                                    className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`}
+                                    className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
                                 />
                                 {isRefreshing ? 'Atualizando...' : 'Atualizar'}
                             </Button>
@@ -119,7 +119,7 @@ export function TemplateDisplay({
                             onClick={onEdit}
                             disabled={isRefreshing || isDeleting}
                         >
-                            <Edit3 className="h-4 w-4 mr-2" />
+                            <Edit3 className="h-4 w-4" />
                             Editar
                         </Button>
                         <Button
@@ -128,7 +128,7 @@ export function TemplateDisplay({
                             disabled={isDeleting || isRefreshing}
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
-                            <Trash2 className="h-4 w-4 mr-2" />
+                            <Trash2 className="h-4 w-4" />
                             {isDeleting ? 'Removendo...' : 'Remover'}
                         </Button>
                     </div>
@@ -201,7 +201,7 @@ export function TemplateDisplay({
                                                 onClick={handleViewFile}
                                             >
                                                 <svg
-                                                    className="h-4 w-4 mr-2"
+                                                    className="h-4 w-4"
                                                     viewBox="0 0 24 24"
                                                     fill="none"
                                                     stroke="currentColor"

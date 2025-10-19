@@ -42,7 +42,8 @@ export default async function CertificatePage({
         certificateEmissionResponse.certificateEmission.dataSource?.columns ||
         []
     const variablesMapped = Object.values(
-        certificateEmissionResponse.certificateEmission.variableColumnMapping,
+        certificateEmissionResponse.certificateEmission.variableColumnMapping ||
+            {},
     ).every(mapping => mapping !== null)
     const certificatesGenerated = false // TODO: Get from API
     const emailSent = false // TODO: Get from API
