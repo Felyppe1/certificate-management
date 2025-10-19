@@ -104,7 +104,7 @@ describe('Certificate', () => {
                 driveFileId: '1',
                 storageFileUrl: null,
                 fileName: 'File Name',
-                variables: ['variable1', 'variable2'],
+                variables: ['variable1'],
                 thumbnailUrl: null,
             }),
             createdAt: new Date(),
@@ -121,19 +121,18 @@ describe('Certificate', () => {
             }),
             variableColumnMapping: {
                 variable1: 'column1',
-                variable2: 'column2',
             },
         })
 
         certificate.updateTemplate({
-            variables: ['variable1', 'variable3'],
+            variables: ['variable1', 'column1'],
         })
 
         const { variableColumnMapping } = certificate.serialize()
 
         expect(variableColumnMapping).toEqual({
             variable1: 'column1',
-            variable3: null,
+            column1: null,
         })
     })
 

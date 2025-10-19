@@ -331,25 +331,49 @@ export class Certificate extends AggregateRoot {
 
         const variableColumnMapping: Record<string, string | null> = {}
 
-        for (const variable of template.getVariables()) {
+        const columns = dataSource?.getColumns() || []
+        const variables = template?.getVariables() || []
+
+        for (const variable of variables) {
             const previousColumn = previousMapping?.[variable] ?? null
 
-            if (
-                previousColumn &&
-                dataSource?.getColumns().includes(previousColumn)
-            ) {
-                variableColumnMapping[variable] = previousColumn
-                continue
-            }
-
-            const sameName = dataSource
-                ?.getColumns()
-                .find(
+            // If it was mapped before, check if the column still exists in the new data source
+            if (previousColumn) {
+                const previousColumnStillExists = columns.some(
                     column =>
-                        normalizeString(column) === normalizeString(variable),
+                        normalizeString(column) ===
+                        normalizeString(previousColumn),
                 )
 
-            variableColumnMapping[variable] = sameName ?? null
+                const hasAlreadyMapped = Object.values(
+                    variableColumnMapping,
+                ).some(
+                    column =>
+                        normalizeString(column || '') ===
+                        normalizeString(previousColumn),
+                )
+
+                if (previousColumnStillExists && !hasAlreadyMapped) {
+                    variableColumnMapping[variable] = previousColumn
+                    continue
+                }
+            }
+
+            const hasAlreadyMapped = Object.values(variableColumnMapping).some(
+                mappedColumn =>
+                    columns.some(
+                        column =>
+                            normalizeString(column) ===
+                            normalizeString(mappedColumn || ''),
+                    ),
+            )
+
+            const sameName = columns.find(
+                column => normalizeString(column) === normalizeString(variable),
+            )
+
+            variableColumnMapping[variable] =
+                sameName && !hasAlreadyMapped ? sameName : null
         }
 
         return variableColumnMapping
