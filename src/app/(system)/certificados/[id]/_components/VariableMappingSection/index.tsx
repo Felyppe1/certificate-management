@@ -17,7 +17,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import { Check, AlertCircle, ArrowRight } from 'lucide-react'
+import { ArrowRight, Undo2, CircleAlert } from 'lucide-react'
 import { startTransition, useActionState, useEffect, useState } from 'react'
 
 interface VariableMappingSectionProps {
@@ -25,8 +25,6 @@ interface VariableMappingSectionProps {
     templateVariables: string[]
     dataSourceColumns: string[]
     existingMappings: Record<string, string | null> | null
-    certificatesGenerated: boolean
-    totalRecords: number
 }
 
 export function VariableMappingSection({
@@ -34,10 +32,8 @@ export function VariableMappingSection({
     templateVariables,
     dataSourceColumns,
     existingMappings = null,
-    certificatesGenerated,
-    totalRecords,
 }: VariableMappingSectionProps) {
-    const [mappingState, mappingAction, mappingIsLoading] = useActionState(
+    const [, mappingAction, mappingIsLoading] = useActionState(
         updateCertificateEmissionAction,
         null,
     )
@@ -47,11 +43,32 @@ export function VariableMappingSection({
         string | null
     > | null>(existingMappings)
     const [mappingsSaved, setMappingsSaved] = useState(false)
-    const [isGenerating, setIsGenerating] = useState(false)
 
     useEffect(() => {
         setMappings(existingMappings)
+        setMappingsSaved(false)
     }, [existingMappings])
+
+    // Check if there were changes in relation to the initial mapping
+    const hasMappingChanges = () => {
+        if (!mappings || !existingMappings) return false
+
+        const currentKeys = Object.keys(mappings).sort()
+        const existingKeys = Object.keys(existingMappings).sort()
+
+        if (currentKeys.length !== existingKeys.length) return true
+
+        return currentKeys.some(key => mappings[key] !== existingMappings[key])
+    }
+
+    const hasChanges = hasMappingChanges()
+
+    const allInitiallyMapped = templateVariables.every(
+        variable => existingMappings?.[variable],
+    )
+
+    const hasInsufficientColumns =
+        dataSourceColumns.length < templateVariables.length
 
     const handleMappingChange = (variable: string, column: string) => {
         setMappingsSaved(false)
@@ -93,66 +110,64 @@ export function VariableMappingSection({
         startTransition(() => {
             mappingAction(formData)
         })
+
+        setMappingsSaved(true)
     }
 
-    const handleGenerate = async () => {
-        setIsGenerating(true)
-        // TODO: Call API to generate certificates
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        setIsGenerating(false)
+    const handleUndoChanges = () => {
+        setMappings(existingMappings)
+        setMappingsSaved(false)
     }
 
     if (templateVariables.length === 0) {
         return null
     }
 
-    const allMapped = templateVariables.every(variable => mappings![variable])
-    const canSave = allMapped && !mappingsSaved
-    const canGenerate = mappingsSaved && !certificatesGenerated
-
     return (
         <Card>
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle>Geração de Certificados</CardTitle>
+                        <CardTitle>Mapeamento</CardTitle>
                         <CardDescription>
-                            Vincule as variáveis do template às colunas da base
-                            de dados para gerar os certificados
+                            Mapeie as variáveis do template às colunas da base
+                            de dados para serem substituídas na geração dos
+                            certificados
                         </CardDescription>
                     </div>
-                    {allMapped ? (
-                        <Badge variant="green" size="md">
-                            <Check />
-                            Completo
-                        </Badge>
-                    ) : (
-                        <Badge variant="orange" size="md">
-                            <AlertCircle />
-                            Incompleto
-                        </Badge>
-                    )}
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
-                {/* {!allMapped && (
+                {/* Aviso sobre colunas insuficientes */}
+                {hasInsufficientColumns && (
                     <div className="bg-muted/50 border rounded-lg p-4">
                         <div className="flex gap-3">
                             <div className="flex-shrink-0 text-orange-600 dark:text-orange-400">
-                                <AlertCircle className="w-5 h-5" />
+                                <CircleAlert className="size-4.5" />
                             </div>
                             <div className="text-sm">
-                                <p className="font-medium">
-                                    Mapeamento obrigatório
+                                <p className="font-medium mb-1">
+                                    Colunas insuficientes
                                 </p>
                                 <p className="text-muted-foreground">
-                                    É necessário mapear todas as variáveis antes
-                                    de gerar os certificados.
+                                    A fonte de dados possui apenas{' '}
+                                    {dataSourceColumns.length}{' '}
+                                    {dataSourceColumns.length === 1
+                                        ? 'coluna'
+                                        : 'colunas'}
+                                    , mas o template requer{' '}
+                                    {templateVariables.length} variáveis. Todas
+                                    as variáveis precisam ser mapeadas para
+                                    gerar certificados.
                                 </p>
+                                {/* <p className="text-muted-foreground">
+                                    Todas as variáveis precisam ser mapeadas
+                                    para gerar certificados.
+                                </p> */}
                             </div>
                         </div>
                     </div>
-                )} */}
+                )}
 
                 <div className="space-y-4">
                     <div className="grid grid-cols-[1fr_auto_1fr] gap-4 px-4 pb-2 border-b">
@@ -227,103 +242,30 @@ export function VariableMappingSection({
                     })}
                 </div>
 
-                {/* Action buttons */}
-                <div className="flex flex-col gap-4 pt-4 border-t">
-                    {/* {!mappingsSaved && (
-                        <div className="bg-muted/50 border rounded-lg p-4">
-                            <div className="flex gap-3">
-                                <div className="flex-shrink-0 text-blue-600 dark:text-blue-400">
-                                    <AlertCircle className="w-5 h-5" />
-                                </div>
-                                <div className="text-sm">
-                                    <p className="font-medium">
-                                        Passo 1: Salvar Mapeamento
-                                    </p>
-                                    <p className="text-muted-foreground">
-                                        Após mapear todas as variáveis, clique
-                                        em &quot;Salvar Mapeamento&quot; para
-                                        continuar.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    )} */}
+                <div className="flex gap-4 pt-8 border-t">
+                    <Button
+                        onClick={handleSave}
+                        disabled={mappingIsLoading || !hasChanges}
+                        variant={mappingsSaved ? 'outline' : 'default'}
+                    >
+                        {mappingIsLoading
+                            ? 'Salvando...'
+                            : mappingsSaved
+                              ? 'Mapeamento Salvo'
+                              : 'Salvar Mapeamento'}
+                    </Button>
 
-                    <div className="flex items-center justify-between gap-4">
-                        {/* <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                                {mappingsSaved ? (
-                                    <Badge variant="green" className="gap-1">
-                                        <Check className="h-3 w-3" />
-                                        Mapeamento Salvo
-                                    </Badge>
-                                ) : (
-                                    <Badge variant="outline">
-                                        Mapeamento Pendente
-                                    </Badge>
-                                )}
-                            </div>
-                            {!certificatesGenerated && (
-                                <Badge variant="green" className="gap-1">
-                                    <Check className="h-3 w-3" />
-                                    {totalRecords} Certificado
-                                    {totalRecords !== 1 ? 's' : ''} Gerado
-                                    {totalRecords !== 1 ? 's' : ''}
-                                </Badge>
-                            )}
-                        </div> */}
-
-                        <div className="flex gap-3">
-                            <Button
-                                onClick={handleSave}
-                                disabled={!canSave || mappingIsLoading}
-                                variant={mappingsSaved ? 'outline' : 'default'}
-                            >
-                                {mappingIsLoading
-                                    ? 'Salvando...'
-                                    : mappingsSaved
-                                      ? 'Mapeamento Salvo'
-                                      : 'Salvar Mapeamento'}
-                            </Button>
-
-                            {mappingsSaved && (
-                                <Button
-                                    onClick={handleGenerate}
-                                    disabled={!canGenerate || isGenerating}
-                                    size="lg"
-                                >
-                                    {isGenerating ? (
-                                        <>
-                                            <svg
-                                                className="animate-spin h-4 w-4 mr-2"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <circle
-                                                    className="opacity-25"
-                                                    cx="12"
-                                                    cy="12"
-                                                    r="10"
-                                                    stroke="currentColor"
-                                                    strokeWidth="4"
-                                                    fill="none"
-                                                />
-                                                <path
-                                                    className="opacity-75"
-                                                    fill="currentColor"
-                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                                />
-                                            </svg>
-                                            Gerando...
-                                        </>
-                                    ) : certificatesGenerated ? (
-                                        'Gerar Novamente'
-                                    ) : (
-                                        'Gerar Certificados'
-                                    )}
-                                </Button>
-                            )}
-                        </div>
-                    </div>
+                    {hasChanges && (
+                        <Button
+                            onClick={handleUndoChanges}
+                            disabled={mappingIsLoading}
+                            variant="outline"
+                            size="sm"
+                        >
+                            <Undo2 className="" />
+                            Desfazer Alterações
+                        </Button>
+                    )}
                 </div>
             </CardContent>
         </Card>

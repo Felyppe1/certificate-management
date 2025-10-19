@@ -1,6 +1,5 @@
 'use client'
 
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
     Card,
@@ -9,7 +8,13 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
-import { Download, FileCheck, Loader2, CheckCircle2 } from 'lucide-react'
+import {
+    Download,
+    FileCheck,
+    Loader2,
+    CheckCircle2,
+    CircleAlert,
+} from 'lucide-react'
 import { useState } from 'react'
 
 interface GenerateCertificatesSectionProps {
@@ -39,46 +44,25 @@ export function GenerateCertificatesSection({
     return (
         <Card>
             <CardHeader>
-                <div className="flex items-center justify-between">
-                    <div>
-                        <CardTitle>Gerar Certificados</CardTitle>
-                        <CardDescription>
-                            Gere os certificados para todos os participantes
-                        </CardDescription>
-                    </div>
-                    {certificatesGenerated ? (
-                        <Badge variant="green" className="gap-1">
-                            <CheckCircle2 className="h-3 w-3" />
-                            Gerado
-                        </Badge>
-                    ) : (
-                        <Badge variant="outline">Pendente</Badge>
-                    )}
-                </div>
+                <CardTitle>Geração de Certificados</CardTitle>
+                <CardDescription>
+                    Gere os arquivos do certificado para todos os participantes
+                </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 {!variablesMapped && (
                     <div className="bg-muted/50 border rounded-lg p-4">
                         <div className="flex gap-3">
                             <div className="flex-shrink-0 text-orange-600 dark:text-orange-400">
-                                <svg
-                                    className="w-5 h-5"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                >
-                                    <circle cx="12" cy="12" r="10" />
-                                    <path d="M12 16v-4M12 8h.01" />
-                                </svg>
+                                <CircleAlert className="size-4.5" />
                             </div>
                             <div className="text-sm">
-                                <p className="font-medium">
+                                <p className="font-medium mb-1">
                                     Mapeamento necessário
                                 </p>
                                 <p className="text-muted-foreground">
-                                    Complete o mapeamento de variáveis antes de
-                                    gerar os certificados.
+                                    Complete o mapeamento de variáveis para
+                                    poder gerar os certificados.
                                 </p>
                             </div>
                         </div>

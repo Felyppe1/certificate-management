@@ -31,7 +31,6 @@ export default async function CertificatePage({
         externalAccount => externalAccount.provider === 'GOOGLE',
     )
 
-    // TODO: Replace these with real data from API
     const hasTemplate =
         !!certificateEmissionResponse.certificateEmission.template
     const hasDataSource =
@@ -42,10 +41,11 @@ export default async function CertificatePage({
     const dataSourceColumns =
         certificateEmissionResponse.certificateEmission.dataSource?.columns ||
         []
-    const variablesMapped = false // TODO: Get from API
+    const variablesMapped = Object.values(
+        certificateEmissionResponse.certificateEmission.variableColumnMapping,
+    ).every(mapping => mapping !== null)
     const certificatesGenerated = false // TODO: Get from API
     const emailSent = false // TODO: Get from API
-    const totalRecords = 3 // TODO: Get from API
 
     return (
         <>
@@ -121,8 +121,6 @@ export default async function CertificatePage({
                             certificateId={certificateId}
                             templateVariables={templateVariables}
                             dataSourceColumns={dataSourceColumns}
-                            certificatesGenerated={certificatesGenerated}
-                            totalRecords={totalRecords}
                             existingMappings={
                                 certificateEmissionResponse.certificateEmission
                                     .variableColumnMapping
@@ -136,7 +134,10 @@ export default async function CertificatePage({
                         variablesMapped || templateVariables.length === 0
                     }
                     certificatesGenerated={certificatesGenerated}
-                    totalRecords={totalRecords}
+                    totalRecords={
+                        certificateEmissionResponse.certificateEmission
+                            .dataSource?.dataSet.rows.length || 0
+                    }
                 />
 
                 {hasTemplate && hasDataSource && (
