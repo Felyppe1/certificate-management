@@ -2,13 +2,19 @@ import { createId } from '@paralleldrive/cuid2'
 import { ValidationError } from './error/validation-error'
 import { AggregateRoot } from './primitives/aggregate-root'
 import { CertificateCreatedDomainEvent } from './events/certificate-created-domain-event'
-import { Template, TemplateOutput, UpdateTemplateInput } from './template'
+import {
+    Template,
+    TemplateOutput,
+    CreateTemplateInput,
+    UpdateTemplateInput,
+} from './template'
 import { TemplateSetDomainEvent } from './events/template-set-domain-event'
 import { ForbiddenError } from './error/forbidden-error'
 import { DomainEvent } from './primitives/domain-event'
 import {
     DataSource,
     DataSourceOutput,
+    CreateDataSourceInput,
     UpdateDataSourceInput,
 } from './data-source'
 
@@ -29,11 +35,12 @@ interface CertificateInput {
     variableColumnMapping: Record<string, string | null> | null
 }
 
-interface CreateCertificateInput
-    extends Omit<
-        CertificateInput,
-        'id' | 'status' | 'createdAt' | 'variableColumnMapping'
-    > {}
+interface CreateCertificateInput {
+    name: string
+    userId: string
+    template?: CreateTemplateInput | null
+    dataSource?: CreateDataSourceInput | null
+}
 
 interface UpdateCertificateInput
     extends Partial<
@@ -61,14 +68,22 @@ export class Certificate extends AggregateRoot {
     private variableColumnMapping: Record<string, string | null> | null
 
     static create(data: CreateCertificateInput): Certificate {
+        const template = data.template ? Template.create(data.template) : null
+        const dataSource = data.dataSource
+            ? DataSource.create(data.dataSource)
+            : null
+
         const variableColumnMapping = Certificate.mapVariablesToColumns(
-            data.template,
-            data.dataSource,
+            template,
+            dataSource,
         )
 
         const certificate = new Certificate({
-            ...data,
             id: createId(),
+            name: data.name,
+            userId: data.userId,
+            template,
+            dataSource,
             status: CERTIFICATE_STATUS.DRAFT,
             createdAt: new Date(),
             variableColumnMapping,
@@ -171,7 +186,8 @@ export class Certificate extends AggregateRoot {
         }
     }
 
-    setTemplate(template: Template) {
+    setTemplate(data: CreateTemplateInput) {
+        const template = Template.create(data)
         this.template = template
 
         this.variableColumnMapping = Certificate.mapVariablesToColumns(
@@ -233,7 +249,8 @@ export class Certificate extends AggregateRoot {
         return this.template?.getStorageFileUrl() ?? null
     }
 
-    setDataSource(dataSource: DataSource) {
+    setDataSource(data: CreateDataSourceInput) {
+        const dataSource = DataSource.create(data)
         this.dataSource = dataSource
 
         this.variableColumnMapping = Certificate.mapVariablesToColumns(

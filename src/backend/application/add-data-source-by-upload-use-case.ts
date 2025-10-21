@@ -87,8 +87,7 @@ export class AddDataSourceByUploadUseCase {
         if (certificate.hasDataSource()) {
             certificate.updateDataSource(newDataSourceInput)
         } else {
-            const newDataSource = DataSource.create(newDataSourceInput)
-            certificate.setDataSource(newDataSource)
+            certificate.setDataSource(newDataSourceInput)
         }
 
         const path = `users/${session.userId}/data-sources/${certificate.getDataSourceId()}-original.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`

@@ -27,7 +27,7 @@ interface DataSourceInput {
 
 export interface DataSourceOutput extends DataSourceInput {}
 
-interface CreateDataSourceInput extends Omit<DataSourceInput, 'id'> {}
+export interface CreateDataSourceInput extends Omit<DataSourceInput, 'id'> {}
 
 export interface UpdateDataSourceInput
     extends Partial<Omit<DataSourceInput, 'id'>> {}

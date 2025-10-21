@@ -92,8 +92,7 @@ export class AddDataSourceByUrlUseCase {
         if (certificate.hasDataSource()) {
             certificate.updateDataSource(newDataSourceInput)
         } else {
-            const newDataSource = DataSource.create(newDataSourceInput)
-            certificate.setDataSource(newDataSource)
+            certificate.setDataSource(newDataSourceInput)
         }
 
         await this.certificateEmissionsRepository.update(certificate)

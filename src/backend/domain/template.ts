@@ -27,7 +27,7 @@ interface TemplateInput {
 
 export interface TemplateOutput extends TemplateInput {}
 
-interface CreateTemplateInput extends Omit<TemplateInput, 'id'> {}
+export interface CreateTemplateInput extends Omit<TemplateInput, 'id'> {}
 
 export interface UpdateTemplateInput
     extends Partial<Omit<TemplateInput, 'id'>> {}

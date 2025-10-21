@@ -126,11 +126,10 @@ export class RefreshTemplateUseCase {
             thumbnailUrl,
         }
 
-        if (certificate.hasDataSource()) {
+        if (certificate.hasTemplate()) {
             certificate.updateTemplate(newTemplateInput)
         } else {
-            const newTemplate = Template.create(newTemplateInput)
-            certificate.setTemplate(newTemplate)
+            certificate.setTemplate(newTemplateInput)
         }
 
         await this.certificateEmissionsRepository.update(certificate)
