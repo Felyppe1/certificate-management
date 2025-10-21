@@ -67,8 +67,8 @@ export class Certificate extends AggregateRoot {
         )
 
         const certificate = new Certificate({
-            id: createId(),
             ...data,
+            id: createId(),
             status: CERTIFICATE_STATUS.DRAFT,
             createdAt: new Date(),
             variableColumnMapping,
