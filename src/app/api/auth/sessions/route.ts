@@ -5,7 +5,7 @@ import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prism
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
+import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 
 export async function GET() {
     const cookie = await cookies()
@@ -14,7 +14,7 @@ export async function GET() {
 
     try {
         if (!sessionToken) {
-            throw new UnauthorizedError('missing-session')
+            throw new AuthenticationError('missing-session')
             // return new NextResponse('No session token', { status: 401 })
         }
 
@@ -23,12 +23,12 @@ export async function GET() {
         )
 
         if (!session) {
-            throw new UnauthorizedError('session-not-found')
+            throw new AuthenticationError('session-not-found')
         }
 
         return NextResponse.json(session)
     } catch (error: any) {
-        if (error instanceof UnauthorizedError) {
+        if (error instanceof AuthenticationError) {
             return NextResponse.json(
                 {
                     type: error.type,

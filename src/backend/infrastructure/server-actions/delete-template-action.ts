@@ -1,6 +1,6 @@
 'use server'
 
-import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
+import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { DeleteTemplateUseCase } from '@/backend/application/delete-template-use-case'
@@ -21,7 +21,7 @@ export async function deleteTemplateAction(_: unknown, formData: FormData) {
         const sessionToken = cookie.get('session_token')?.value
 
         if (!sessionToken) {
-            throw new UnauthorizedError('missing-session')
+            throw new AuthenticationError('missing-session')
         }
 
         const parsedData = z
@@ -54,7 +54,7 @@ export async function deleteTemplateAction(_: unknown, formData: FormData) {
     } catch (error) {
         console.error('Error deleting template:', error)
 
-        if (error instanceof UnauthorizedError) {
+        if (error instanceof AuthenticationError) {
             await logoutAction()
         }
 

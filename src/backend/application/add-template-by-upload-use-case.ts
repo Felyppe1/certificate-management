@@ -1,6 +1,6 @@
 import { ForbiddenError } from '../domain/error/forbidden-error'
 import { NotFoundError } from '../domain/error/not-found-error'
-import { UnauthorizedError } from '../domain/error/unauthorized-error'
+import { AuthenticationError } from '../domain/error/authentication-error'
 import { ValidationError } from '../domain/error/validation-error'
 import {
     INPUT_METHOD,
@@ -41,7 +41,7 @@ export class AddTemplateByUploadUseCase {
         )
 
         if (!session) {
-            throw new UnauthorizedError('session-not-found')
+            throw new AuthenticationError('session-not-found')
         }
 
         const certificate = await this.certificatesRepository.getById(

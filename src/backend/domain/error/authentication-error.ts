@@ -1,6 +1,6 @@
 import { AppError } from './app-error'
 
-export type UnauthorizedErrorType =
+export type AuthenticationErrorType =
     | 'missing-session'
     | 'session-not-found'
     | 'external-account-not-found'
@@ -8,8 +8,8 @@ export type UnauthorizedErrorType =
     | 'insufficient-external-account-scopes'
     | 'incorrect-credentials'
 
-export class UnauthorizedError extends AppError<UnauthorizedErrorType> {
-    constructor(type: UnauthorizedErrorType, detail?: string) {
+export class AuthenticationError extends AppError<AuthenticationErrorType> {
+    constructor(type: AuthenticationErrorType, detail?: string) {
         const title = 'You are not authenticated'
 
         super(title, type, detail)

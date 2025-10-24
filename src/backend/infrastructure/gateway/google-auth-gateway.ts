@@ -1,5 +1,5 @@
 import { google, Auth } from 'googleapis'
-import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
+import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import {
     CheckOrRefreshAccessTokenInput,
     GetOAuth2ClientWithCredentials,
@@ -82,7 +82,7 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
         } catch (error: any) {
             console.error('Error refreshing access token:', error)
 
-            throw new UnauthorizedError('google-token-refresh-failed')
+            throw new AuthenticationError('google-token-refresh-failed')
         }
     }
 

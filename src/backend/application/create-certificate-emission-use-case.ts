@@ -1,5 +1,5 @@
 import { Certificate } from '../domain/certificate'
-import { UnauthorizedError } from '../domain/error/unauthorized-error'
+import { AuthenticationError } from '../domain/error/authentication-error'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 
@@ -18,7 +18,7 @@ export class CreateCertificateEmissionUseCase {
         const session = await this.sessionsRepository.getById(sessionToken)
 
         if (!session) {
-            throw new UnauthorizedError('session-not-found')
+            throw new AuthenticationError('session-not-found')
         }
 
         const newCertificate = Certificate.create({

@@ -1,7 +1,7 @@
 'use server'
 
 import { CreateCertificateEmissionUseCase } from '@/backend/application/create-certificate-emission-use-case'
-import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
+import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { revalidateTag } from 'next/cache'
@@ -43,7 +43,7 @@ export async function updateCertificateEmissionAction(
 
     try {
         if (!sessionToken) {
-            throw new UnauthorizedError('missing-session')
+            throw new AuthenticationError('missing-session')
         }
 
         const parsedData = updateCertificateEmissionActionSchema.parse(rawData)
@@ -68,7 +68,7 @@ export async function updateCertificateEmissionAction(
     } catch (error) {
         console.log(error)
 
-        if (error instanceof UnauthorizedError) {
+        if (error instanceof AuthenticationError) {
             await logoutAction()
         }
 

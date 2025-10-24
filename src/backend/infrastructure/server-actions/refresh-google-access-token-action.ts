@@ -1,6 +1,6 @@
 'use server'
 
-import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
+import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { cookies } from 'next/headers'
 import { PrismaSessionsRepository } from '../repository/prisma/prisma-sessions-repository'
 import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
@@ -16,7 +16,7 @@ export async function refreshGoogleAccessTokenAction() {
 
     try {
         if (!sessionToken) {
-            throw new UnauthorizedError('missing-session')
+            throw new AuthenticationError('missing-session')
         }
 
         const sessionsRepository = new PrismaSessionsRepository()
@@ -33,7 +33,7 @@ export async function refreshGoogleAccessTokenAction() {
 
         await refreshGoogleAccessTokenUseCase.execute({ sessionToken })
     } catch (error) {
-        if (error instanceof UnauthorizedError) {
+        if (error instanceof AuthenticationError) {
             if (
                 error.type === 'missing-session' ||
                 error.type === 'session-not-found'

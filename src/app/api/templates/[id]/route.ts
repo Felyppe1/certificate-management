@@ -3,7 +3,7 @@
 // import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 // import { cookies } from 'next/headers'
 // import { z } from 'zod'
-// import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
+// import { AuthenticationError } from '@/backend/domain/error/unauthorized-error'
 // import { NotFoundError } from '@/backend/domain/error/not-found-error'
 // import { ForbiddenError } from '@/backend/domain/error/forbidden-error'
 
@@ -19,14 +19,14 @@ export async function GET() {
     // try {
     //     const sessionToken = cookie.get('session_token')?.value
     //     if (!sessionToken) {
-    //         throw new UnauthorizedError('Session token not present')
+    //         throw new AuthenticationError('Session token not present')
     //     }
     //     const parsedData = getTemplateByIdSchema.parse({ templateId })
     //     const sessionsRepository = new PrismaSessionsRepository()
     //     const templatesRepository = new PrismaTemplatesRepository()
     //     const session = await sessionsRepository.getById(sessionToken)
     //     if (!session) {
-    //         throw new UnauthorizedError('Session not found')
+    //         throw new AuthenticationError('Session not found')
     //     }
     //     const template = await templatesRepository.getById(
     //         parsedData.templateId,
@@ -62,7 +62,7 @@ export async function GET() {
     //         )
     //     }
     //     let status: number
-    //     if (error instanceof UnauthorizedError) {
+    //     if (error instanceof AuthenticationError) {
     //         status = 401
     //     } else if (error instanceof NotFoundError) {
     //         status = 404

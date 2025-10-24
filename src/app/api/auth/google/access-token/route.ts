@@ -1,5 +1,5 @@
 import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-google-access-token'
-import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
+import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
@@ -13,7 +13,7 @@ export async function POST() {
 
     try {
         if (!sessionToken) {
-            throw new UnauthorizedError('missing-session')
+            throw new AuthenticationError('missing-session')
         }
 
         const sessionsRepository = new PrismaSessionsRepository()
@@ -34,7 +34,7 @@ export async function POST() {
 
         return NextResponse.json({ accessToken })
     } catch (error) {
-        if (error instanceof UnauthorizedError) {
+        if (error instanceof AuthenticationError) {
             return NextResponse.json(
                 { type: error.type, title: error.title },
                 { status: 401 },

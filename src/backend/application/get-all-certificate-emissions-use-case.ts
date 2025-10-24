@@ -1,4 +1,4 @@
-import { UnauthorizedError } from '../domain/error/unauthorized-error'
+import { AuthenticationError } from '../domain/error/authentication-error'
 import { prisma } from '../infrastructure/repository/prisma'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 
@@ -14,7 +14,7 @@ export class GetAllCertificateEmissionsUseCase {
         const session = await this.sessionsRepository.getById(sessionToken)
 
         if (!session) {
-            throw new UnauthorizedError('session-not-found')
+            throw new AuthenticationError('session-not-found')
         }
 
         const certificateEmissions = await prisma.certificateEmission.findMany({

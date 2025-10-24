@@ -1,7 +1,7 @@
 import { INPUT_METHOD, Template } from '../domain/template'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
-import { UnauthorizedError } from '../domain/error/unauthorized-error'
+import { AuthenticationError } from '../domain/error/authentication-error'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { NotFoundError } from '../domain/error/not-found-error'
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
@@ -40,7 +40,7 @@ export class AddDataSourceByDrivePickerUseCase {
         )
 
         if (!session) {
-            throw new UnauthorizedError('session-not-found')
+            throw new AuthenticationError('session-not-found')
         }
 
         const certificate = await this.certificateEmissionsRepository.getById(
@@ -58,7 +58,7 @@ export class AddDataSourceByDrivePickerUseCase {
             )
 
         if (!externalAccount) {
-            throw new UnauthorizedError('external-account-not-found')
+            throw new AuthenticationError('external-account-not-found')
         }
 
         const newData = await this.googleAuthGateway.checkOrGetNewAccessToken({

@@ -12,9 +12,10 @@ import {
     IFileContentExtractorStrategy,
     IFileContentExtractorFactory,
 } from './interfaces/ifile-content-extractor'
-import { UnauthorizedError } from '../domain/error/unauthorized-error'
+import { AuthenticationError } from '../domain/error/authentication-error'
 import { NotFoundError } from '../domain/error/not-found-error'
 import { ValidationError } from '../domain/error/validation-error'
+import { IBucket } from './interfaces/ibucket'
 
 describe('AddTemplateByUrlUseCase', () => {
     function createSession(id: string) {
@@ -35,6 +36,8 @@ describe('AddTemplateByUrlUseCase', () => {
             template: null,
             createdAt: new Date(),
             status: CERTIFICATE_STATUS.DRAFT,
+            dataSource: null,
+            variableColumnMapping: null,
         })
     }
 
@@ -67,6 +70,7 @@ describe('AddTemplateByUrlUseCase', () => {
                 return {
                     name: 'filename',
                     fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
+                    thumbnailUrl: null,
                 }
             }
 
@@ -87,16 +91,22 @@ describe('AddTemplateByUrlUseCase', () => {
             }
         }
 
+        class BucketStub implements Pick<IBucket, 'deleteObject'> {
+            async deleteObject() {}
+        }
+
         const sessionsRepositoryStub = new SessionsRepositoryStub()
         const googleDriveGatewayStub = new GoogleDriveGatewayStub()
         const fileContentExtractorFactoryStub =
             new FileContentExtractorFactoryStub()
+        const bucketStub = new BucketStub()
 
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificateEmissionsRepositoryMock,
             sessionsRepositoryStub,
             googleDriveGatewayStub,
             fileContentExtractorFactoryStub,
+            bucketStub,
         )
 
         await expect(
@@ -120,7 +130,7 @@ describe('AddTemplateByUrlUseCase', () => {
         expect(updateCallArg.hasTemplate()).toBe(true)
     })
 
-    it('should throw an unauthorized error when session is not found', async () => {
+    it('should throw an authentication error when session is not found', async () => {
         class SessionsRepositoryStub
             implements Pick<ISessionsRepository, 'getById'>
         {
@@ -136,6 +146,7 @@ describe('AddTemplateByUrlUseCase', () => {
             sessionsRepositoryStub,
             {} as IGoogleDriveGateway,
             {} as IFileContentExtractorFactory,
+            {} as IBucket,
         )
 
         await expect(
@@ -144,7 +155,7 @@ describe('AddTemplateByUrlUseCase', () => {
                 fileUrl: 'https://drive.google.com/file/d/1/view',
                 sessionToken: 'invalid-session-token',
             }),
-        ).rejects.toThrow(UnauthorizedError)
+        ).rejects.toThrow(AuthenticationError)
     })
 
     it('should throw a not found error when certificate is not found', async () => {
@@ -171,6 +182,7 @@ describe('AddTemplateByUrlUseCase', () => {
             sessionsRepositoryStub,
             {} as IGoogleDriveGateway,
             {} as IFileContentExtractorFactory,
+            {} as IBucket,
         )
 
         await expect(
@@ -215,6 +227,7 @@ describe('AddTemplateByUrlUseCase', () => {
             sessionsRepositoryStub,
             {} as IGoogleDriveGateway,
             {} as IFileContentExtractorFactory,
+            {} as IBucket,
         )
 
         await expect(

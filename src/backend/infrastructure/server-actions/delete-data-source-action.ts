@@ -1,6 +1,6 @@
 'use server'
 
-import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
+import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { revalidateTag } from 'next/cache'
@@ -25,7 +25,7 @@ export async function deleteDataSourceAction(_: unknown, formData: FormData) {
 
     try {
         if (!sessionToken) {
-            throw new UnauthorizedError('missing-session')
+            throw new AuthenticationError('missing-session')
         }
 
         const parsedData = deleteDataSourceSchema.parse(rawData)
@@ -48,7 +48,7 @@ export async function deleteDataSourceAction(_: unknown, formData: FormData) {
     } catch (error) {
         console.error('Error deleting data source:', error)
 
-        if (error instanceof UnauthorizedError) {
+        if (error instanceof AuthenticationError) {
             await logoutAction()
         }
 

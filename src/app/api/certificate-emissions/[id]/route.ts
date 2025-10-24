@@ -2,7 +2,7 @@ import { GetCertificateEmissionUseCase } from '@/backend/application/get-certifi
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
-import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
+import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import {
     INPUT_METHOD,
     TEMPLATE_FILE_EXTENSION,
@@ -64,7 +64,7 @@ export async function GET(
         const sessionToken = cookie.get('session_token')?.value
 
         if (!sessionToken) {
-            throw new UnauthorizedError('missing-session')
+            throw new AuthenticationError('missing-session')
         }
 
         const certificateEmission = await getCertificateUseCase.execute({
@@ -76,7 +76,7 @@ export async function GET(
     } catch (error: any) {
         console.log(error.message)
 
-        if (error instanceof UnauthorizedError) {
+        if (error instanceof AuthenticationError) {
             return Response.json(
                 { type: error.type, title: error.title },
                 { status: 401 },

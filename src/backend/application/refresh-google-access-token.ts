@@ -1,4 +1,4 @@
-import { UnauthorizedError } from '../domain/error/unauthorized-error'
+import { AuthenticationError } from '../domain/error/authentication-error'
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { ISessionsRepository } from './interfaces/isessions-repository'
@@ -18,7 +18,7 @@ export class RefreshGoogleAccessTokenUseCase {
         const session = await this.sessionsRepository.getById(sessionToken)
 
         if (!session) {
-            throw new UnauthorizedError('session-not-found')
+            throw new AuthenticationError('session-not-found')
         }
 
         const externalAccount =
@@ -28,7 +28,7 @@ export class RefreshGoogleAccessTokenUseCase {
             )
 
         if (!externalAccount) {
-            throw new UnauthorizedError('external-account-not-found')
+            throw new AuthenticationError('external-account-not-found')
         }
 
         const newToken = await this.googleAuthGateway.checkOrGetNewAccessToken({

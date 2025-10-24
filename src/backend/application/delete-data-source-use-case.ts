@@ -1,5 +1,5 @@
 import { NotFoundError } from '../domain/error/not-found-error'
-import { UnauthorizedError } from '../domain/error/unauthorized-error'
+import { AuthenticationError } from '../domain/error/authentication-error'
 import { IBucket } from './interfaces/ibucket'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { ISessionsRepository } from './interfaces/isessions-repository'
@@ -26,7 +26,7 @@ export class DeleteDataSourceUseCase {
         const session = await this.sessionsRepository.getById(sessionToken)
 
         if (!session) {
-            throw new UnauthorizedError('session-not-found')
+            throw new AuthenticationError('session-not-found')
         }
 
         const certificate =

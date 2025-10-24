@@ -5,7 +5,7 @@ import {
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { User, IUsersRepository } from './interfaces/iusers-repository'
 import crypto from 'crypto'
-import { UnauthorizedError } from '../domain/error/unauthorized-error'
+import { AuthenticationError } from '../domain/error/authentication-error'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 
 interface LoginGoogleUseCaseInput {
@@ -35,7 +35,9 @@ export class LoginGoogleUseCase {
         ].every(scope => tokenData.scopes.includes(scope))
 
         if (!hasAllScopes) {
-            throw new UnauthorizedError('insufficient-external-account-scopes')
+            throw new AuthenticationError(
+                'insufficient-external-account-scopes',
+            )
         }
 
         const userInfo = await this.googleAuthGateway.getUserInfo({

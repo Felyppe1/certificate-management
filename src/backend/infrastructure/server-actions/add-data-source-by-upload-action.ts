@@ -1,6 +1,6 @@
 'use server'
 
-import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
+import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { cookies } from 'next/headers'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
@@ -35,7 +35,7 @@ export async function addDataSourceByUploadAction(
 
     try {
         if (!sessionToken) {
-            throw new UnauthorizedError('missing-session')
+            throw new AuthenticationError('missing-session')
         }
 
         const parsedData = addDataSourceByUploadActionSchema.parse(rawData)

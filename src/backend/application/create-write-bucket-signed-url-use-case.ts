@@ -1,7 +1,7 @@
 import { IBucket } from './interfaces/ibucket'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { ISessionsRepository } from './interfaces/isessions-repository'
-import { UnauthorizedError } from '../domain/error/unauthorized-error'
+import { AuthenticationError } from '../domain/error/authentication-error'
 import { NotFoundError } from '../domain/error/not-found-error'
 import { ForbiddenError } from '../domain/error/forbidden-error'
 import { TEMPLATE_FILE_EXTENSION } from '../domain/template'
@@ -27,7 +27,7 @@ export class CreateWriteBucketSignedUrlUseCase {
         )
 
         if (!session) {
-            throw new UnauthorizedError('session-not-found')
+            throw new AuthenticationError('session-not-found')
         }
 
         const certificate = await this.certificateRepository.getById(

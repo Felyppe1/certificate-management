@@ -1,7 +1,7 @@
 import { GetMeUseCase } from '@/backend/application/get-me-use-case'
 import { Provider } from '@/backend/application/interfaces/iexternal-user-accounts-repository'
 import { NotFoundError } from '@/backend/domain/error/not-found-error'
-import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
+import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
@@ -31,7 +31,7 @@ export async function GET(): Promise<
 
     try {
         if (!sessionToken) {
-            throw new UnauthorizedError('missing-session')
+            throw new AuthenticationError('missing-session')
         }
 
         const sessionsRepository = new PrismaSessionsRepository()
@@ -56,7 +56,7 @@ export async function GET(): Promise<
             )
         }
 
-        if (error instanceof UnauthorizedError) {
+        if (error instanceof AuthenticationError) {
             return NextResponse.json(
                 { type: error.type, title: error.title },
                 { status: 401 },

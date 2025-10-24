@@ -2,7 +2,7 @@ import { DataSet } from '../domain/data-set'
 import { DataSource, INPUT_METHOD } from '../domain/data-source'
 import { ForbiddenError } from '../domain/error/forbidden-error'
 import { NotFoundError } from '../domain/error/not-found-error'
-import { UnauthorizedError } from '../domain/error/unauthorized-error'
+import { AuthenticationError } from '../domain/error/authentication-error'
 import { ValidationError } from '../domain/error/validation-error'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
@@ -37,7 +37,7 @@ export class RefreshDataSourceUseCase {
         )
 
         if (!session) {
-            throw new UnauthorizedError('session-not-found')
+            throw new AuthenticationError('session-not-found')
         }
 
         const certificate = await this.certificateEmissionsRepository.getById(

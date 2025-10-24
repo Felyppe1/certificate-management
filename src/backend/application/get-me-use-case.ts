@@ -1,5 +1,5 @@
 import { NotFoundError } from '../domain/error/not-found-error'
-import { UnauthorizedError } from '../domain/error/unauthorized-error'
+import { AuthenticationError } from '../domain/error/authentication-error'
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { IUsersRepository } from './interfaces/iusers-repository'
@@ -21,7 +21,7 @@ export class GetMeUseCase {
         const session = await this.sessionsRepository.getById(sessionToken)
 
         if (!session) {
-            throw new UnauthorizedError('session-not-found')
+            throw new AuthenticationError('session-not-found')
         }
 
         const user = await this.usersRepository.getById(session.userId)

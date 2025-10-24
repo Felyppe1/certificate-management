@@ -1,5 +1,5 @@
 import { GetAllCertificateEmissionsUseCase } from '@/backend/application/get-all-certificate-emissions-use-case'
-import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
+import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -26,7 +26,7 @@ export async function GET(/*request: Request, { params }: { params: Promise<{ id
 
         return NextResponse.json({ certificateEmissions })
     } catch (error: any) {
-        if (error instanceof UnauthorizedError) {
+        if (error instanceof AuthenticationError) {
             return NextResponse.json(
                 { type: error.type, title: error.title },
                 { status: 401 },

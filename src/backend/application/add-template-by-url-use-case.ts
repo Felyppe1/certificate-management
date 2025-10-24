@@ -7,7 +7,7 @@ import { ValidationError } from '../domain/error/validation-error'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'
-import { UnauthorizedError } from '../domain/error/unauthorized-error'
+import { AuthenticationError } from '../domain/error/authentication-error'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { NotFoundError } from '../domain/error/not-found-error'
 import { IBucket } from './interfaces/ibucket'
@@ -42,7 +42,7 @@ export class AddTemplateByUrlUseCase {
         )
 
         if (!session) {
-            throw new UnauthorizedError('session-not-found')
+            throw new AuthenticationError('session-not-found')
         }
 
         const certificate = await this.certificateEmissionsRepository.getById(

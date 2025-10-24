@@ -1,7 +1,7 @@
 'use server'
 
 import { FileUrlNotFoundError } from '@/backend/domain/error/file-url-not-found-error'
-import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
+import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
@@ -34,7 +34,7 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
 
     try {
         if (!sessionToken) {
-            throw new UnauthorizedError('missing-session')
+            throw new AuthenticationError('missing-session')
         }
 
         const parsedData = addDataSourceByUrlActionSchema.parse(rawData)
@@ -76,7 +76,7 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
             },
         })
 
-        if (error instanceof UnauthorizedError) {
+        if (error instanceof AuthenticationError) {
             await logoutAction()
         }
 

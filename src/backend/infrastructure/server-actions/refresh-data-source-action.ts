@@ -7,7 +7,7 @@ import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
 import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
-import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
+import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { logoutAction } from './logout-action'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { RefreshDataSourceUseCase } from '@/backend/application/refresh-data-source-use-case'
@@ -63,7 +63,7 @@ export async function refreshDataSourceAction(_: unknown, formData: FormData) {
     } catch (error) {
         console.error(error)
 
-        if (error instanceof UnauthorizedError) {
+        if (error instanceof AuthenticationError) {
             if (
                 error.type === 'missing-session' ||
                 error.type === 'session-not-found'

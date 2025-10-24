@@ -1,7 +1,7 @@
 'use server'
 
 import { AddTemplateByDrivePickerUseCase } from '@/backend/application/add-template-by-drive-picker-use-case'
-import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
+import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
@@ -40,7 +40,7 @@ export async function addDataSourceByDrivePickerAction(
 
     try {
         if (!sessionToken) {
-            throw new UnauthorizedError('missing-session')
+            throw new AuthenticationError('missing-session')
         }
 
         const parsedData = addDataSourceByDrivePickerActionSchema.parse(rawData)
@@ -77,7 +77,7 @@ export async function addDataSourceByDrivePickerAction(
     } catch (error: any) {
         console.log(error)
 
-        if (error instanceof UnauthorizedError) {
+        if (error instanceof AuthenticationError) {
             if (
                 error.type === 'missing-session' ||
                 error.type === 'session-not-found'

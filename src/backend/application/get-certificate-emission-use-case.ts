@@ -3,7 +3,7 @@ import { GENERATION_STATUS } from '../domain/data-set'
 import { DATA_SOURCE_FILE_EXTENSION } from '../domain/data-source'
 import { ForbiddenError } from '../domain/error/forbidden-error'
 import { NotFoundError } from '../domain/error/not-found-error'
-import { UnauthorizedError } from '../domain/error/unauthorized-error'
+import { AuthenticationError } from '../domain/error/authentication-error'
 import { INPUT_METHOD, TEMPLATE_FILE_EXTENSION } from '../domain/template'
 import { prisma } from '../infrastructure/repository/prisma'
 import { ISessionsRepository } from './interfaces/isessions-repository'
@@ -23,7 +23,7 @@ export class GetCertificateEmissionUseCase {
         const session = await this.sessionsRepository.getById(sessionToken)
 
         if (!session) {
-            throw new UnauthorizedError('session-not-found')
+            throw new AuthenticationError('session-not-found')
         }
 
         const certificateEmission = await prisma.certificateEmission.findUnique(

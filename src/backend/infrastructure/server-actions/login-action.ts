@@ -1,7 +1,7 @@
 'use server'
 
 import { LoginUseCase } from '@/backend/application/login-use-case'
-import { UnauthorizedError } from '@/backend/domain/error/unauthorized-error'
+import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { ActionResponse } from '@/types'
@@ -68,7 +68,7 @@ export async function loginAction(
             }
         }
 
-        if (error instanceof UnauthorizedError) {
+        if (error instanceof AuthenticationError) {
             return {
                 success: false,
                 message: 'Email ou senha incorretos.',
