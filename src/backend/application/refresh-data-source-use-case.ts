@@ -1,6 +1,9 @@
 import { DataSet } from '../domain/data-set'
 import { DataSource, INPUT_METHOD } from '../domain/data-source'
-import { ForbiddenError } from '../domain/error/forbidden-error'
+import {
+    FORBIDDEN_ERROR_TYPE,
+    ForbiddenError,
+} from '../domain/error/forbidden-error'
 import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
@@ -52,9 +55,7 @@ export class RefreshDataSourceUseCase {
         }
 
         if (certificate.getUserId() !== session.userId) {
-            throw new ForbiddenError(
-                'You do not have permission to update this certificate',
-            )
+            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
         if (!certificate.hasDataSource()) {

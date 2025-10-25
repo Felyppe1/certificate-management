@@ -1,7 +1,10 @@
 import { CERTIFICATE_STATUS } from '../domain/certificate'
 import { GENERATION_STATUS } from '../domain/data-set'
 import { DATA_SOURCE_FILE_EXTENSION } from '../domain/data-source'
-import { ForbiddenError } from '../domain/error/forbidden-error'
+import {
+    FORBIDDEN_ERROR_TYPE,
+    ForbiddenError,
+} from '../domain/error/forbidden-error'
 import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
@@ -55,9 +58,7 @@ export class GetCertificateEmissionUseCase {
         }
 
         if (certificateEmission.user_id !== session.userId) {
-            throw new ForbiddenError(
-                'You do not have permission to view this certificate emission',
-            )
+            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
         const certificate = {

@@ -1,5 +1,8 @@
 import { AuthenticationError } from '../domain/error/authentication-error'
-import { ForbiddenError } from '../domain/error/forbidden-error'
+import {
+    FORBIDDEN_ERROR_TYPE,
+    ForbiddenError,
+} from '../domain/error/forbidden-error'
 import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
@@ -39,9 +42,7 @@ export class UpdateCertificateEmissionUseCase {
         }
 
         if (certificate.getUserId() !== session.userId) {
-            throw new ForbiddenError(
-                'User is not allowed to update this certificate',
-            )
+            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
         certificate.update({

@@ -9,7 +9,7 @@ import {
     UpdateTemplateInput,
 } from './template'
 import { TemplateSetDomainEvent } from './events/template-set-domain-event'
-import { ForbiddenError } from './error/forbidden-error'
+import { FORBIDDEN_ERROR_TYPE, ForbiddenError } from './error/forbidden-error'
 import { DomainEvent } from './primitives/domain-event'
 import {
     DataSource,
@@ -203,9 +203,7 @@ export class Certificate extends AggregateRoot {
 
     removeTemplate(userIdTryingToRemove: string) {
         if (this.userId !== userIdTryingToRemove) {
-            throw new ForbiddenError(
-                'Only the owner of the certificate can remove the template',
-            )
+            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
         if (!this.template) {
@@ -286,9 +284,7 @@ export class Certificate extends AggregateRoot {
 
     removeDataSource(userIdTryingToRemove: string) {
         if (this.userId !== userIdTryingToRemove) {
-            throw new ForbiddenError(
-                'Only the owner of the certificate can remove the data source',
-            )
+            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
         if (!this.dataSource) {

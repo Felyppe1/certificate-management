@@ -6,7 +6,10 @@ import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
-import { ForbiddenError } from '../domain/error/forbidden-error'
+import {
+    FORBIDDEN_ERROR_TYPE,
+    ForbiddenError,
+} from '../domain/error/forbidden-error'
 import { TEMPLATE_FILE_EXTENSION } from '../domain/template'
 
 interface CreateWriteBucketSignedUrlUseCaseInput {
@@ -42,7 +45,7 @@ export class CreateWriteBucketSignedUrlUseCase {
         }
 
         if (certificate.getUserId() !== session.userId) {
-            throw new ForbiddenError('Forbidden')
+            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
         // if (!certificate.hasTemplate()) {
         //     throw new ValidationError('Certificate does not have a template')
