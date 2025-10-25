@@ -1,5 +1,9 @@
+import { AuthenticationError } from '../domain/error/authentication-error'
 import { ForbiddenError } from '../domain/error/forbidden-error'
-import { NotFoundError } from '../domain/error/not-found-error'
+import {
+    NOT_FOUND_ERROR_TYPE,
+    NotFoundError,
+} from '../domain/error/not-found-error'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 
@@ -23,7 +27,7 @@ export class UpdateCertificateEmissionUseCase {
         const session = await this.sessionsRepository.getById(data.sessionToken)
 
         if (!session) {
-            throw new NotFoundError('Session not found')
+            throw new AuthenticationError('session-not-found')
         }
 
         const certificate = await this.certificateEmissionsRepository.getById(
@@ -31,7 +35,7 @@ export class UpdateCertificateEmissionUseCase {
         )
 
         if (!certificate) {
-            throw new NotFoundError('Certificate not found')
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
         if (certificate.getUserId() !== session.userId) {

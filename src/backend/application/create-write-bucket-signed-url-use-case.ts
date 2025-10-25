@@ -2,7 +2,10 @@ import { IBucket } from './interfaces/ibucket'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { AuthenticationError } from '../domain/error/authentication-error'
-import { NotFoundError } from '../domain/error/not-found-error'
+import {
+    NOT_FOUND_ERROR_TYPE,
+    NotFoundError,
+} from '../domain/error/not-found-error'
 import { ForbiddenError } from '../domain/error/forbidden-error'
 import { TEMPLATE_FILE_EXTENSION } from '../domain/template'
 
@@ -35,7 +38,7 @@ export class CreateWriteBucketSignedUrlUseCase {
         )
 
         if (!certificate) {
-            throw new NotFoundError('Certificate not found')
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
         if (certificate.getUserId() !== session.userId) {

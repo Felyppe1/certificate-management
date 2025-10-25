@@ -1,6 +1,15 @@
-export class NotFoundError extends Error {
-    constructor(message: string) {
-        super(message)
-        this.name = 'NotFoundError'
+import { AppError } from './app-error'
+
+export enum NOT_FOUND_ERROR_TYPE {
+    CERTIFICATE = 'certificate-not-found',
+    TEMPLATE = 'template-not-found',
+    USER = 'user-not-found',
+}
+
+export class NotFoundError extends AppError<NOT_FOUND_ERROR_TYPE> {
+    constructor(type: NOT_FOUND_ERROR_TYPE, detail?: string) {
+        const title = 'Resource not found'
+
+        super(title, type, detail)
     }
 }

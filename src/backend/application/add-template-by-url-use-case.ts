@@ -9,7 +9,10 @@ import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'
 import { AuthenticationError } from '../domain/error/authentication-error'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
-import { NotFoundError } from '../domain/error/not-found-error'
+import {
+    NOT_FOUND_ERROR_TYPE,
+    NotFoundError,
+} from '../domain/error/not-found-error'
 import { IBucket } from './interfaces/ibucket'
 
 interface AddTemplateByUrlUseCaseInput {
@@ -50,7 +53,7 @@ export class AddTemplateByUrlUseCase {
         )
 
         if (!certificate) {
-            throw new NotFoundError('Certificate not found')
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
         const driveFileId = Template.getFileIdFromUrl(input.fileUrl)

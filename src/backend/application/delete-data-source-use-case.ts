@@ -1,4 +1,7 @@
-import { NotFoundError } from '../domain/error/not-found-error'
+import {
+    NOT_FOUND_ERROR_TYPE,
+    NotFoundError,
+} from '../domain/error/not-found-error'
 import { AuthenticationError } from '../domain/error/authentication-error'
 import { IBucket } from './interfaces/ibucket'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
@@ -33,7 +36,7 @@ export class DeleteDataSourceUseCase {
             await this.certificateEmissionsRepository.getById(certificateId)
 
         if (!certificate) {
-            throw new NotFoundError('Certificate not found')
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
         const storageFileUrl = certificate.getDataSourceStorageFileUrl()

@@ -1,5 +1,8 @@
 import { ForbiddenError } from '../domain/error/forbidden-error'
-import { NotFoundError } from '../domain/error/not-found-error'
+import {
+    NOT_FOUND_ERROR_TYPE,
+    NotFoundError,
+} from '../domain/error/not-found-error'
 import { AuthenticationError } from '../domain/error/authentication-error'
 import { ValidationError } from '../domain/error/validation-error'
 import {
@@ -49,7 +52,7 @@ export class AddTemplateByUploadUseCase {
         )
 
         if (!certificate) {
-            throw new NotFoundError('Certificate not found')
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
         if (certificate.getUserId() !== session.userId) {

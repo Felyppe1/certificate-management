@@ -2,7 +2,10 @@ import { CERTIFICATE_STATUS } from '../domain/certificate'
 import { GENERATION_STATUS } from '../domain/data-set'
 import { DATA_SOURCE_FILE_EXTENSION } from '../domain/data-source'
 import { ForbiddenError } from '../domain/error/forbidden-error'
-import { NotFoundError } from '../domain/error/not-found-error'
+import {
+    NOT_FOUND_ERROR_TYPE,
+    NotFoundError,
+} from '../domain/error/not-found-error'
 import { AuthenticationError } from '../domain/error/authentication-error'
 import { INPUT_METHOD, TEMPLATE_FILE_EXTENSION } from '../domain/template'
 import { prisma } from '../infrastructure/repository/prisma'
@@ -48,7 +51,7 @@ export class GetCertificateEmissionUseCase {
         )
 
         if (!certificateEmission) {
-            throw new NotFoundError('Certificate not found')
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
         if (certificateEmission.user_id !== session.userId) {
