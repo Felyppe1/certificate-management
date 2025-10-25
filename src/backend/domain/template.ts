@@ -51,29 +51,29 @@ export class Template {
 
     constructor(data: TemplateInput) {
         if (!data.id) {
-            throw new ValidationError('Template ID is required')
+            throw new Error('Template ID is required')
         }
 
         if (!data.inputMethod) {
-            throw new ValidationError('Template input method is required')
+            throw new Error('Template input method is required')
         }
 
         if (!data.variables) {
-            throw new ValidationError('Template variables is required')
+            throw new Error('Template variables is required')
         }
 
         if (!data.fileName) {
             // TODO: validate regex for file name
-            throw new ValidationError('Template file name is required')
+            throw new Error('Template file name is required')
         }
 
         if (!data.fileExtension) {
-            throw new ValidationError('Template file extension is required')
+            throw new Error('Template file extension is required')
         }
 
         if (data.driveFileId) {
             if (data.inputMethod === INPUT_METHOD.UPLOAD) {
-                throw new ValidationError(
+                throw new Error(
                     'Drive file ID should not be provided for UPLOAD input method',
                 )
             }
@@ -81,7 +81,7 @@ export class Template {
 
         if (data.storageFileUrl) {
             if (data.inputMethod !== INPUT_METHOD.UPLOAD) {
-                throw new ValidationError(
+                throw new Error(
                     'File storage URL should only be provided for UPLOAD input method',
                 )
             }
@@ -143,7 +143,7 @@ export class Template {
     // TODO: use this in the constructor as well
     private validateDriveFileId(driveFileId: string | null) {
         if (this.inputMethod === INPUT_METHOD.UPLOAD && driveFileId) {
-            throw new ValidationError(
+            throw new Error(
                 'Drive file ID should not be provided for UPLOAD input method',
             )
         }
@@ -151,7 +151,7 @@ export class Template {
 
     private validateStorageFileUrl(storageFileUrl: string | null) {
         if (this.inputMethod !== INPUT_METHOD.UPLOAD && storageFileUrl) {
-            throw new ValidationError(
+            throw new Error(
                 'File storage URL should only be provided for UPLOAD input method',
             )
         }

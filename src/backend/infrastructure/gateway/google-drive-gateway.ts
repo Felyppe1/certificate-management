@@ -4,7 +4,10 @@ import {
     IGoogleDriveGateway,
 } from '@/backend/application/interfaces/igoogle-drive-gateway'
 import { IGoogleAuthGateway } from '@/backend/application/interfaces/igoogle-auth-gateway'
-import { ValidationError } from '@/backend/domain/error/validation-error'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '@/backend/domain/error/validation-error'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { google } from 'googleapis'
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
@@ -42,7 +45,9 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
             const mimeType = file.data.mimeType
 
             if (!mimeType) {
-                throw new ValidationError('File mime type not found')
+                throw new ValidationError(
+                    VALIDATION_ERROR_TYPE.MIMETYPE_MISSING,
+                )
             }
 
             // TODO: check if I will still use it...
@@ -90,7 +95,7 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
                 url = `https://docs.google.com/spreadsheets/d/${driveFileId}/export?format=csv`
                 break
             default:
-                throw new ValidationError('File extension not supported')
+                throw new Error('Unsupported file extension for download')
         }
 
         const headers: Record<string, string> = {}

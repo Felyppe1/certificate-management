@@ -7,7 +7,10 @@ import {
     NotFoundError,
 } from '../domain/error/not-found-error'
 import { AuthenticationError } from '../domain/error/authentication-error'
-import { ValidationError } from '../domain/error/validation-error'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '../domain/error/validation-error'
 import { INPUT_METHOD, Template } from '../domain/template'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
@@ -56,15 +59,15 @@ export class RefreshTemplateUseCase {
         }
 
         if (!certificate.hasTemplate()) {
-            throw new ValidationError(
-                'Certificate does not have a template to refresh',
-            )
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
         }
 
         const driveFileId = certificate.getDriveTemplateFileId()
 
         if (!driveFileId) {
-            throw new ValidationError('Template does not have a drive file ID')
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.UNEXISTENT_TEMPLATE_DRIVE_FILE_ID,
+            )
         }
 
         const externalAccount =
@@ -103,7 +106,7 @@ export class RefreshTemplateUseCase {
 
         if (!Template.isValidFileExtension(fileExtension)) {
             throw new ValidationError(
-                'File extension not supported for template',
+                VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE,
             )
         }
 

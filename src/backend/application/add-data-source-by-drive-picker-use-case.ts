@@ -12,7 +12,10 @@ import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IBucket } from './interfaces/ibucket'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 import { DATA_SOURCE_FILE_EXTENSION, DataSource } from '../domain/data-source'
-import { ValidationError } from '../domain/error/validation-error'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '../domain/error/validation-error'
 import { DataSet } from '../domain/data-set'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 
@@ -88,7 +91,7 @@ export class AddDataSourceByDrivePickerUseCase {
 
         if (!DataSource.isValidFileExtension(fileExtension)) {
             throw new ValidationError(
-                'File extension not supported for data source',
+                VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
             )
         }
 

@@ -1,5 +1,8 @@
 import { IFileContentExtractorStrategy } from '../../application/interfaces/ifile-content-extractor'
-import { ValidationError } from '../../domain/error/validation-error'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '../../domain/error/validation-error'
 import { DocxContentExtractorStrategy } from './strategy/docx-content-extractor-strategy'
 import { PptxContentExtractorStrategy } from './strategy/pptx-content-extractor-strategy'
 import { IFileContentExtractorFactory } from '../../application/interfaces/ifile-content-extractor'
@@ -25,6 +28,8 @@ export class FileContentExtractorFactory
             return new DocxContentExtractorStrategy()
         }
 
-        throw new ValidationError('Unsupported template file extension')
+        throw new ValidationError(
+            VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE,
+        )
     }
 }

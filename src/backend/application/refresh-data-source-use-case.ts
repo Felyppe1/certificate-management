@@ -9,7 +9,10 @@ import {
     NotFoundError,
 } from '../domain/error/not-found-error'
 import { AuthenticationError } from '../domain/error/authentication-error'
-import { ValidationError } from '../domain/error/validation-error'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '../domain/error/validation-error'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
@@ -59,16 +62,14 @@ export class RefreshDataSourceUseCase {
         }
 
         if (!certificate.hasDataSource()) {
-            throw new ValidationError(
-                'Certificate does not have a data source to refresh',
-            )
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }
 
         const driveFileId = certificate.getDriveDataSourceFileId()
 
         if (!driveFileId) {
             throw new ValidationError(
-                'Data source does not have a drive file ID',
+                VALIDATION_ERROR_TYPE.UNEXISTENT_DATA_SOURCE_DRIVE_FILE_ID,
             )
         }
 
@@ -110,7 +111,7 @@ export class RefreshDataSourceUseCase {
 
         if (!DataSource.isValidFileExtension(fileExtension)) {
             throw new ValidationError(
-                'File extension not supported for data source',
+                VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
             )
         }
 

@@ -17,6 +17,7 @@ import {
     CreateDataSourceInput,
     UpdateDataSourceInput,
 } from './data-source'
+import { NOT_FOUND_ERROR_TYPE, NotFoundError } from './error/not-found-error'
 
 export enum CERTIFICATE_STATUS {
     DRAFT = 'DRAFT',
@@ -102,23 +103,23 @@ export class Certificate extends AggregateRoot {
         super()
 
         if (!data.id) {
-            throw new ValidationError('Certificate ID is required')
+            throw new Error('Certificate ID is required')
         }
 
         if (!data.name) {
-            throw new ValidationError('Certificate name is required')
+            throw new Error('Certificate name is required')
         }
 
         if (!data.userId) {
-            throw new ValidationError('Certificate user ID is required')
+            throw new Error('Certificate user ID is required')
         }
 
         if (!data.status) {
-            throw new ValidationError('Certificate status is required')
+            throw new Error('Certificate status is required')
         }
 
         if (!data.createdAt) {
-            throw new ValidationError('Certificate creation date is required')
+            throw new Error('Certificate creation date is required')
         }
 
         this.id = data.id
@@ -154,7 +155,7 @@ export class Certificate extends AggregateRoot {
             this.template !== null && this.template.getVariables().length > 0
 
         if (templateHasVariable && !this.variableColumnMapping) {
-            throw new ValidationError(
+            throw new Error(
                 'Variable-column mapping is required when a template with variables is set',
             )
         }
@@ -169,7 +170,7 @@ export class Certificate extends AggregateRoot {
                 .some(variable => variable === mappedVariable)
 
             if (mappedVariable && !variableExistsInTemplate) {
-                throw new ValidationError(
+                throw new Error(
                     `Variable "${mappedVariable}" does not exist in the template`,
                 )
             }
@@ -179,7 +180,7 @@ export class Certificate extends AggregateRoot {
                 .some(column => column === mappedColumn)
 
             if (mappedColumn && !columnExistsInDataSource) {
-                throw new ValidationError(
+                throw new Error(
                     `Column "${mappedColumn}" does not exist in the data source`,
                 )
             }
@@ -207,7 +208,7 @@ export class Certificate extends AggregateRoot {
         }
 
         if (!this.template) {
-            throw new ValidationError('Certificate does not have a template')
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
         }
 
         this.template = null
@@ -229,7 +230,7 @@ export class Certificate extends AggregateRoot {
 
     setTemplateStorageFileUrl(url: string) {
         if (!this.template) {
-            throw new ValidationError('Certificate does not have a template')
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
         }
 
         this.template.setStorageFileUrl(url)
@@ -237,7 +238,7 @@ export class Certificate extends AggregateRoot {
 
     setTemplateThumbnailUrl(url: string) {
         if (!this.template) {
-            throw new ValidationError('Certificate does not have a template')
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
         }
 
         this.template.setThumbnailUrl(url)
@@ -276,7 +277,7 @@ export class Certificate extends AggregateRoot {
 
     setDataSourceStorageFileUrl(url: string) {
         if (!this.dataSource) {
-            throw new ValidationError('Certificate does not have a data source')
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }
 
         this.dataSource.setStorageFileUrl(url)
@@ -288,7 +289,7 @@ export class Certificate extends AggregateRoot {
         }
 
         if (!this.dataSource) {
-            throw new ValidationError('Certificate does not have a data source')
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }
 
         this.dataSource = null
@@ -301,7 +302,7 @@ export class Certificate extends AggregateRoot {
 
     updateDataSource(data: UpdateDataSourceInput) {
         if (!this.dataSource) {
-            throw new ValidationError('Certificate does not have a data source')
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }
 
         this.dataSource.update(data)
@@ -315,7 +316,7 @@ export class Certificate extends AggregateRoot {
 
     updateTemplate(data: UpdateTemplateInput) {
         if (!this.template) {
-            throw new ValidationError('Certificate does not have a template')
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }
 
         this.template.update(data)

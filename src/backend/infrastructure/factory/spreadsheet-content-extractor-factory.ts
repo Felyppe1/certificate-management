@@ -4,7 +4,10 @@ import {
 } from '@/backend/application/interfaces/ispreadsheet-content-extractor-factory'
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
 import { CsvSpreadsheetContentExtractorStrategy } from './strategy/csv-spreadsheet-content-extractor-strategy'
-import { ValidationError } from '@/backend/domain/error/validation-error'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '@/backend/domain/error/validation-error'
 import { ExcelSpreadsheetContentExtractorStrategy } from './strategy/excel-spreadsheet-content-extractor-strategy'
 
 export class SpreadsheetContentExtractorFactory
@@ -23,7 +26,7 @@ export class SpreadsheetContentExtractorFactory
 
             default:
                 throw new ValidationError(
-                    'Unsupported data source file extension',
+                    VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
                 )
         }
     }

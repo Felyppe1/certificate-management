@@ -3,7 +3,10 @@ import {
     Template,
     TEMPLATE_FILE_EXTENSION,
 } from '../domain/template'
-import { ValidationError } from '../domain/error/validation-error'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '../domain/error/validation-error'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'
@@ -59,7 +62,9 @@ export class AddTemplateByUrlUseCase {
         const driveFileId = Template.getFileIdFromUrl(input.fileUrl)
 
         if (!driveFileId) {
-            throw new ValidationError('Invalid file URL')
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.UNEXISTENT_TEMPLATE_DRIVE_FILE_ID,
+            )
         }
 
         const { name, fileExtension, thumbnailUrl } =
@@ -69,7 +74,7 @@ export class AddTemplateByUrlUseCase {
 
         if (!Template.isValidFileExtension(fileExtension)) {
             throw new ValidationError(
-                'File extension not supported for template',
+                VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE,
             )
         }
 

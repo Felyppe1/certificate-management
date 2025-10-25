@@ -11,7 +11,10 @@ import {
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IBucket } from './interfaces/ibucket'
-import { ValidationError } from '../domain/error/validation-error'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '../domain/error/validation-error'
 
 interface AddTemplateByDrivePickerUseCaseInput {
     certificateId: string
@@ -85,7 +88,7 @@ export class AddTemplateByDrivePickerUseCase {
 
         if (!Template.isValidFileExtension(fileExtension)) {
             throw new ValidationError(
-                'File extension not supported for template',
+                VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE,
             )
         }
 

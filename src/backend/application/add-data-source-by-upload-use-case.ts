@@ -13,7 +13,10 @@ import {
     NotFoundError,
 } from '../domain/error/not-found-error'
 import { AuthenticationError } from '../domain/error/authentication-error'
-import { ValidationError } from '../domain/error/validation-error'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '../domain/error/validation-error'
 import { IBucket } from './interfaces/ibucket'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
@@ -65,7 +68,7 @@ export class AddDataSourceByUploadUseCase {
 
         if (!DataSource.isValidFileExtension(fileExtension)) {
             throw new ValidationError(
-                'File extension not supported for data source',
+                VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
             )
         }
 

@@ -37,19 +37,19 @@ export class DataSet extends AggregateRoot {
         super()
 
         if (!data.id) {
-            throw new ValidationError('DataSet ID is required')
+            throw new Error('DataSet ID is required')
         }
 
         if (!data.dataSourceId) {
-            throw new ValidationError('DataSource ID is required')
+            throw new Error('DataSource ID is required')
         }
 
         if (!data.generationStatus) {
-            throw new ValidationError('Generation status is required')
+            throw new Error('Generation status is required')
         }
 
         if (!data.rows) {
-            throw new ValidationError('DataSet rows are required')
+            throw new Error('DataSet rows are required')
         }
 
         this.id = data.id

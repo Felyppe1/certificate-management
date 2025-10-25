@@ -7,7 +7,10 @@ import {
     NotFoundError,
 } from '../domain/error/not-found-error'
 import { AuthenticationError } from '../domain/error/authentication-error'
-import { ValidationError } from '../domain/error/validation-error'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '../domain/error/validation-error'
 import {
     INPUT_METHOD,
     Template,
@@ -66,7 +69,7 @@ export class AddTemplateByUploadUseCase {
 
         if (!Template.isValidFileExtension(fileExtension)) {
             throw new ValidationError(
-                'File extension not supported for template',
+                VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE,
             )
         }
 

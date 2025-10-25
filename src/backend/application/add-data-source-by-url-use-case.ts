@@ -1,4 +1,7 @@
-import { ValidationError } from '../domain/error/validation-error'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '../domain/error/validation-error'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { AuthenticationError } from '../domain/error/authentication-error'
@@ -55,7 +58,9 @@ export class AddDataSourceByUrlUseCase {
         const driveFileId = DataSource.getFileIdFromUrl(input.fileUrl)
 
         if (!driveFileId) {
-            throw new ValidationError('Invalid file URL')
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.UNEXISTENT_DATA_SOURCE_DRIVE_FILE_ID,
+            )
         }
 
         const { name, fileExtension, thumbnailUrl } =
@@ -65,7 +70,7 @@ export class AddDataSourceByUrlUseCase {
 
         if (!DataSource.isValidFileExtension(fileExtension)) {
             throw new ValidationError(
-                'File extension not supported for data source',
+                VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
             )
         }
 
