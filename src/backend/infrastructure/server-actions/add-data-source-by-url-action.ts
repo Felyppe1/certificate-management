@@ -1,6 +1,5 @@
 'use server'
 
-import { FileUrlNotFoundError } from '@/backend/domain/error/file-url-not-found-error'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
@@ -14,6 +13,7 @@ import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { AddDataSourceByUrlUseCase } from '@/backend/application/add-data-source-by-url-use-case'
 import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
+import { NotFoundError } from '@/backend/domain/error/not-found-error'
 
 const addDataSourceByUrlActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -80,12 +80,18 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
             await logoutAction()
         }
 
+        if (error instanceof NotFoundError) {
+            if (error.type === 'drive-file-not-found') {
+                return {
+                    success: false,
+                    message: 'Arquivo não encontrado',
+                }
+            }
+        }
+
         return {
             success: false,
-            message:
-                error instanceof FileUrlNotFoundError
-                    ? 'Arquivo não encontrado'
-                    : 'Ocorreu um erro ao adicionar template',
+            message: 'Ocorreu um erro ao adicionar template',
         }
     }
 

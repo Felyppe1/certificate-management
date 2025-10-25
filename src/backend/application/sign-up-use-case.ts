@@ -1,4 +1,7 @@
-import { UserAlreadyExistsError } from '../domain/error/user-already-exists-error'
+import {
+    CONFLICT_ERROR_TYPE,
+    ConflictError,
+} from '../domain/error/conflict-error'
 import { IUsersRepository } from './interfaces/iusers-repository'
 import bcrypt from 'bcrypt'
 
@@ -15,7 +18,7 @@ export class SignUpUseCase {
         const userExists = await this.usersRepository.getByEmail(data.email)
 
         if (userExists) {
-            throw new UserAlreadyExistsError()
+            throw new ConflictError(CONFLICT_ERROR_TYPE.USER)
         }
 
         const passwordHash = await bcrypt.hash(data.password, 10)

@@ -4,11 +4,14 @@ import {
     IGoogleDriveGateway,
 } from '@/backend/application/interfaces/igoogle-drive-gateway'
 import { IGoogleAuthGateway } from '@/backend/application/interfaces/igoogle-auth-gateway'
-import { FileUrlNotFoundError } from '@/backend/domain/error/file-url-not-found-error'
 import { ValidationError } from '@/backend/domain/error/validation-error'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { google } from 'googleapis'
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
+import {
+    NOT_FOUND_ERROR_TYPE,
+    NotFoundError,
+} from '@/backend/domain/error/not-found-error'
 
 export class GoogleDriveGateway implements IGoogleDriveGateway {
     constructor(private readonly googleAuthGateway: IGoogleAuthGateway) {}
@@ -58,7 +61,7 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
                 throw error
             }
 
-            throw new FileUrlNotFoundError('File not found')
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DRIVE_FILE)
         }
     }
 

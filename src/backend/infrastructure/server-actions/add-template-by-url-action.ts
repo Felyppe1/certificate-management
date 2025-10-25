@@ -1,7 +1,6 @@
 'use server'
 
 import { AddTemplateByUrlUseCase } from '@/backend/application/add-template-by-url-use-case'
-import { FileUrlNotFoundError } from '@/backend/domain/error/file-url-not-found-error'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
@@ -13,6 +12,7 @@ import { cookies } from 'next/headers'
 import z from 'zod'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
+import { NotFoundError } from '@/backend/domain/error/not-found-error'
 
 const addTemplateByUrlActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -76,12 +76,18 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
             await logoutAction()
         }
 
+        if (error instanceof NotFoundError) {
+            if (error.type === 'drive-file-not-found') {
+                return {
+                    success: false,
+                    message: 'Arquivo não encontrado',
+                }
+            }
+        }
+
         return {
             success: false,
-            message:
-                error instanceof FileUrlNotFoundError
-                    ? 'Arquivo não encontrado'
-                    : 'Ocorreu um erro ao adicionar template',
+            message: 'Ocorreu um erro ao adicionar template',
         }
     }
 

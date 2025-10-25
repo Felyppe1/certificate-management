@@ -1,4 +1,4 @@
-import { SessionNotFoundError } from '../domain/error/session-not-found-error'
+import { AuthenticationError } from '../domain/error/authentication-error'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 
 export class LogoutUseCase {
@@ -8,7 +8,7 @@ export class LogoutUseCase {
         const session = await this.sessionsRepository.getById(tokenId)
 
         if (!session) {
-            throw new SessionNotFoundError()
+            throw new AuthenticationError('session-not-found')
         }
 
         await this.sessionsRepository.deleteById(tokenId)
