@@ -1,4 +1,5 @@
 import { GetCertificateEmissionUseCase } from '@/backend/application/get-certificate-emission-use-case'
+import { UpdateCertificateEmissionUseCase } from '@/backend/application/update-certificate-emission-use-case'
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
@@ -8,7 +9,12 @@ import {
     TEMPLATE_FILE_EXTENSION,
 } from '@/backend/domain/template'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { cookies } from 'next/headers'
+import { NextRequest } from 'next/server'
+import { getSessionToken } from '@/utils/middleware/getSessionToken'
+import { handleError } from '@/utils/handle-error'
+import z from 'zod'
 
 export interface GetCertificateEmissionControllerResponse {
     certificateEmission: {
@@ -91,5 +97,51 @@ export async function GET(
             },
             { status: 500 },
         )
+    }
+}
+
+const updateCertificateEmissionSchema = z.object({
+    name: z
+        .string()
+        .min(1, 'Emission name must have at least 3 characters')
+        .max(100, 'Emission name must have at most 100 characters')
+        .optional(),
+    variableColumnMapping: z
+        .record(z.string(), z.string().nullable())
+        .nullable()
+        .optional(),
+})
+
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: Promise<{ certificateEmissionId: string }> },
+) {
+    const certificateEmissionId = (await params).certificateEmissionId
+
+    try {
+        const sessionToken = await getSessionToken(request)
+
+        const body = await request.json()
+        const parsed = updateCertificateEmissionSchema.parse(body)
+
+        const certificatesRepository = new PrismaCertificatesRepository()
+        const sessionsRepository = new PrismaSessionsRepository()
+
+        const updateCertificateEmissionUseCase =
+            new UpdateCertificateEmissionUseCase(
+                certificatesRepository,
+                sessionsRepository,
+            )
+
+        await updateCertificateEmissionUseCase.execute({
+            id: certificateEmissionId,
+            name: parsed.name,
+            variableColumnMapping: parsed.variableColumnMapping,
+            sessionToken,
+        })
+
+        return new Response(null, { status: 204 })
+    } catch (error: any) {
+        await handleError(error)
     }
 }

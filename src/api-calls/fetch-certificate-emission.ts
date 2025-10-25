@@ -1,4 +1,4 @@
-import { GetCertificateEmissionControllerResponse } from '@/app/api/certificate-emissions/[id]/route'
+import { GetCertificateEmissionControllerResponse } from '@/app/api/certificate-emissions/[certificateEmissionId]/route'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 
