@@ -12,6 +12,9 @@ export enum DATA_SOURCE_FILE_EXTENSION {
     XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     ODS = 'application/vnd.oasis.opendocument.spreadsheet',
     GOOGLE_SHEETS = 'application/vnd.google-apps.spreadsheet',
+    JPEG = 'image/jpeg',
+    JPG = 'image/jpg',
+    PNG = 'image/png',
 }
 
 interface DataSourceInput {

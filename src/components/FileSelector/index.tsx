@@ -105,11 +105,16 @@ export function FileSelector({
 
         const file = acceptedFiles[0]
 
+        console.log(file.type)
+
         if (
             file.type != TEMPLATE_FILE_EXTENSION.DOCX &&
             file.type != TEMPLATE_FILE_EXTENSION.PPTX &&
             file.type != DATA_SOURCE_FILE_EXTENSION.CSV &&
-            file.type != DATA_SOURCE_FILE_EXTENSION.XLSX
+            file.type != DATA_SOURCE_FILE_EXTENSION.XLSX &&
+            file.type != DATA_SOURCE_FILE_EXTENSION.JPEG &&
+            file.type != DATA_SOURCE_FILE_EXTENSION.JPG &&
+            file.type != DATA_SOURCE_FILE_EXTENSION.PNG
         ) {
             console.log('Formato de arquivo não suportado')
             return
@@ -328,6 +333,9 @@ export function FileSelector({
                                   DATA_SOURCE_FILE_EXTENSION.CSV,
                                   DATA_SOURCE_FILE_EXTENSION.XLSX,
                                   DATA_SOURCE_FILE_EXTENSION.GOOGLE_SHEETS,
+                                  DATA_SOURCE_FILE_EXTENSION.PNG,
+                                  DATA_SOURCE_FILE_EXTENSION.JPEG,
+                                  DATA_SOURCE_FILE_EXTENSION.JPG,
                               ]
                         ).join(',')}
                     ></drive-picker-docs-view>

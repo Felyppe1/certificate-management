@@ -17,6 +17,7 @@
     "src/**/*.{ts,tsx}": "prettier --write --ignore-unknown"
   },
   "dependencies": {
+    "@google-cloud/documentai": "^9.5.0",
     "@google-cloud/storage": "^7.17.2",
     "@googleworkspace/drive-picker-element": "^0.6.2",
     "@next/third-parties": "^15.5.3",
