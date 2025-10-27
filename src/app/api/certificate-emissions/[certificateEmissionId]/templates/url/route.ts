@@ -52,6 +52,6 @@ export async function PUT(
 
         return new Response(null, { status: 204 })
     } catch (error: any) {
-        await handleError(error)
+        return await handleError(error)
     }
 }

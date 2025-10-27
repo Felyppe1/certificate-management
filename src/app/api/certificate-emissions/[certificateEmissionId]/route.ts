@@ -54,11 +54,11 @@ export interface GetCertificateEmissionControllerResponse {
 
 export async function GET(
     request: Request,
-    { params }: { params: Promise<{ id: string }> },
+    { params }: { params: Promise<{ certificateEmissionId: string }> },
 ) {
     const cookie = await cookies()
 
-    const { id: certificateId } = await params
+    const { certificateEmissionId } = await params
 
     const sessionsRepository = new PrismaSessionsRepository()
 
@@ -74,7 +74,7 @@ export async function GET(
         }
 
         const certificateEmission = await getCertificateUseCase.execute({
-            certificateId,
+            certificateId: certificateEmissionId,
             sessionToken,
         })
 
@@ -142,6 +142,6 @@ export async function PUT(
 
         return new Response(null, { status: 204 })
     } catch (error: any) {
-        await handleError(error)
+        return await handleError(error)
     }
 }

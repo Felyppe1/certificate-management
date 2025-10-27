@@ -4,19 +4,14 @@ import { LoginUseCase } from '@/backend/application/login-use-case'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
+import { getSessionToken } from '@/utils/middleware/getSessionToken'
+import { handleError } from '@/utils/handle-error'
 
-export async function GET() {
-    const cookie = await cookies()
-
-    const sessionToken = cookie.get('session_token')?.value
-
+export async function GET(request: NextRequest) {
     try {
-        if (!sessionToken) {
-            throw new AuthenticationError('missing-session')
-            // return new NextResponse('No session token', { status: 401 })
-        }
+        const sessionToken = await getSessionToken(request)
 
         const session = await new PrismaSessionsRepository().getById(
             sessionToken,
@@ -28,23 +23,7 @@ export async function GET() {
 
         return NextResponse.json(session)
     } catch (error: any) {
-        if (error instanceof AuthenticationError) {
-            return NextResponse.json(
-                {
-                    type: error.type,
-                    title: error.title,
-                },
-                { status: 401 },
-            )
-        }
-
-        return NextResponse.json(
-            {
-                type: 'internal-server-error',
-                title: 'An unexpected error occurred while getting the session',
-            },
-            { status: 500 },
-        )
+        return await handleError(error)
     }
 }
 

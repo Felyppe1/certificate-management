@@ -48,6 +48,6 @@ export async function POST(request: NextRequest) {
 
         return Response.json({ signedUrl }, { status: 200 })
     } catch (error: any) {
-        await handleError(error)
+        return await handleError(error)
     }
 }

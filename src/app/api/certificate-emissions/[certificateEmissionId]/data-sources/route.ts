@@ -41,7 +41,7 @@ export async function DELETE(
 
         return new Response(null, { status: 204 })
     } catch (error: any) {
-        await handleError(error)
+        return await handleError(error)
     }
 }
 
@@ -81,6 +81,6 @@ export async function PATCH(
 
         return new Response(null, { status: 204 })
     } catch (error: any) {
-        await handleError(error)
+        return await handleError(error)
     }
 }

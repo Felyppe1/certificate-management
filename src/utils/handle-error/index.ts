@@ -6,6 +6,9 @@ import { NextResponse } from 'next/server'
 import z from 'zod'
 
 export async function handleError(error: any) {
+    // TODO: send to observability service
+    console.error(error)
+
     if (error instanceof z.ZodError) {
         return NextResponse.json(
             {
@@ -50,9 +53,6 @@ export async function handleError(error: any) {
             { status: 422 },
         )
     }
-
-    // TODO: send to observability service
-    console.log(error)
 
     return NextResponse.json(
         {

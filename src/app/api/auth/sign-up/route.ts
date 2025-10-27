@@ -32,6 +32,6 @@ export async function POST(request: NextRequest) {
 
         return new Response(null, { status: 201 })
     } catch (error: any) {
-        await handleError(error)
+        return await handleError(error)
     }
 }

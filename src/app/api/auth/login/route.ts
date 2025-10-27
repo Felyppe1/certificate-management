@@ -40,6 +40,6 @@ export async function POST(request: NextRequest) {
             },
         )
     } catch (error: any) {
-        await handleError(error)
+        return await handleError(error)
     }
 }

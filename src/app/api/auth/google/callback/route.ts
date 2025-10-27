@@ -39,7 +39,7 @@ export async function GET(request: Request) {
             httpOnly: true,
             path: '/',
             // secure: true,
-            // sameSite: "strict"
+            // sameSite: "strict" // TODO: use sameSite
         })
 
         return NextResponse.redirect(process.env.NEXT_PUBLIC_BASE_URL + '/')

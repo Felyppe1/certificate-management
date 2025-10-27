@@ -40,7 +40,7 @@ export async function DELETE(
 
         return new Response(null, { status: 204 })
     } catch (error: any) {
-        await handleError(error)
+        return await handleError(error)
     }
 }
 
@@ -75,8 +75,10 @@ export async function PATCH(
             certificateId: certificateEmissionId,
         })
 
+        console.log('PASSOU')
+
         return new Response(null, { status: 204 })
     } catch (error: any) {
-        await handleError(error)
+        return await handleError(error)
     }
 }
