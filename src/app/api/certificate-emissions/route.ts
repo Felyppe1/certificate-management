@@ -2,6 +2,7 @@ import { GetAllCertificateEmissionsUseCase } from '@/backend/application/get-all
 import { CreateCertificateEmissionUseCase } from '@/backend/application/create-certificate-emission-use-case'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
     try {
         const sessionToken = await getSessionToken(request)
 
-        const sessionsRepository = new PrismaSessionsRepository()
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
 
         const getAllCertificatesUseCase = new GetAllCertificateEmissionsUseCase(
             sessionsRepository,
@@ -42,8 +43,8 @@ export async function POST(request: NextRequest) {
         const body = await request.json()
         const parsed = createCertificateEmissionSchema.parse(body)
 
-        const certificatesRepository = new PrismaCertificatesRepository()
-        const sessionsRepository = new PrismaSessionsRepository()
+        const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
 
         const createCertificateEmissionUseCase =
             new CreateCertificateEmissionUseCase(

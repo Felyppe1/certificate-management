@@ -3,6 +3,7 @@
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { DeleteTemplateUseCase } from '@/backend/application/delete-template-use-case'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
@@ -32,9 +33,10 @@ export async function deleteTemplateAction(_: unknown, formData: FormData) {
             })
             .parse(rawData)
 
-        const sessionsRepository = new PrismaSessionsRepository()
-        const certificateEmissionsRepository =
-            new PrismaCertificatesRepository()
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
+        const certificateEmissionsRepository = new PrismaCertificatesRepository(
+            prisma,
+        )
         const bucket = new GcpBucket()
 
         const deleteTemplateUseCase = new DeleteTemplateUseCase(

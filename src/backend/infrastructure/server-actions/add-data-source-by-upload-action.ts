@@ -10,6 +10,7 @@ import { revalidateTag } from 'next/cache'
 import { AddDataSourceByUploadUseCase } from '@/backend/application/add-data-source-by-upload-use-case'
 import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 
 const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
 
@@ -41,9 +42,9 @@ export async function addDataSourceByUploadAction(
         const parsedData = addDataSourceByUploadActionSchema.parse(rawData)
 
         const bucket = new GcpBucket()
-        const certificatesRepository = new PrismaCertificatesRepository()
-        const dataSetsRepository = new PrismaDataSetsRepository()
-        const sessionsRepository = new PrismaSessionsRepository()
+        const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
 

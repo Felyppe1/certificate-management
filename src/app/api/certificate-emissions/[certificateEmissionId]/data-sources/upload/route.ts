@@ -5,6 +5,7 @@ import { AddDataSourceByUploadUseCase } from '@/backend/application/add-data-sou
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { SpreadsheetContentExtractorFactory } from '@/backend/infrastructure/factory/spreadsheet-content-extractor-factory'
 import z from 'zod'
@@ -34,9 +35,9 @@ export async function PUT(
         const parsed = addDataSourceByUploadSchema.parse({ file })
 
         const bucket = new GcpBucket()
-        const certificatesRepository = new PrismaCertificatesRepository()
-        const dataSetsRepository = new PrismaDataSetsRepository()
-        const sessionsRepository = new PrismaSessionsRepository()
+        const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
 

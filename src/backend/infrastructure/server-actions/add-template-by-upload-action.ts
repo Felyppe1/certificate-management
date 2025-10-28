@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '../repository/prisma/prisma-sessions-repository'
+import { prisma } from '../repository/prisma'
 import z from 'zod'
 import { AddTemplateByUploadUseCase } from '@/backend/application/add-template-by-upload-use-case'
 import { FileContentExtractorFactory } from '../factory/file-content-extractor-factory'
@@ -40,8 +41,8 @@ export async function addTemplateByUploadAction(
         const parsedData = addTemplateByUploadActionActionSchema.parse(rawData)
 
         const bucket = new GcpBucket()
-        const certificatesRepository = new PrismaCertificatesRepository()
-        const sessionsRepository = new PrismaSessionsRepository()
+        const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
 
         const addTemplateByUploadUseCase = new AddTemplateByUploadUseCase(

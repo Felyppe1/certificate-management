@@ -3,6 +3,7 @@
 import { NextRequest } from 'next/server'
 import { SignUpUseCase } from '@/backend/application/sign-up-use-case'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { handleError } from '@/utils/handle-error'
 import z from 'zod'
 
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
         const body = await request.json()
         const parsed = signUpSchema.parse(body)
 
-        const usersRepository = new PrismaUsersRepository()
+        const usersRepository = new PrismaUsersRepository(prisma)
 
         const signUpUseCase = new SignUpUseCase(usersRepository)
 

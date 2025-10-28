@@ -10,6 +10,7 @@ import {
 } from '@/backend/domain/template'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { cookies } from 'next/headers'
 import { NextRequest } from 'next/server'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
@@ -60,7 +61,7 @@ export async function GET(
 
     const { certificateEmissionId } = await params
 
-    const sessionsRepository = new PrismaSessionsRepository()
+    const sessionsRepository = new PrismaSessionsRepository(prisma)
 
     const getCertificateUseCase = new GetCertificateEmissionUseCase(
         sessionsRepository,
@@ -124,8 +125,8 @@ export async function PUT(
         const body = await request.json()
         const parsed = updateCertificateEmissionSchema.parse(body)
 
-        const certificatesRepository = new PrismaCertificatesRepository()
-        const sessionsRepository = new PrismaSessionsRepository()
+        const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
 
         const updateCertificateEmissionUseCase =
             new UpdateCertificateEmissionUseCase(

@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '../repository/prisma/prisma-sessions-repository'
+import { prisma } from '../repository/prisma'
 import { CreateWriteBucketSignedUrlUseCase } from '@/backend/application/create-write-bucket-signed-url-use-case'
 import z from 'zod'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
@@ -42,8 +43,8 @@ export async function createWriteBucketSignedUrlAction(
         const parsedData = createWriteBucketSignedUrlActionSchema.parse(rawData)
 
         const bucket = new GcpBucket()
-        const certificatesRepository = new PrismaCertificatesRepository()
-        const sessionsRepository = new PrismaSessionsRepository()
+        const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
 
         const createWriteBucketSignedUrlUseCase =
             new CreateWriteBucketSignedUrlUseCase(

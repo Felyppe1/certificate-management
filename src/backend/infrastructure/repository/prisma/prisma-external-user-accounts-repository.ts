@@ -3,13 +3,15 @@ import {
     IExternalUserAccountsRepository,
     Provider,
 } from '@/backend/application/interfaces/iexternal-user-accounts-repository'
-import { prisma } from '.'
+import { PrismaClient } from '@prisma/client'
 
 export class PrismaExternalUserAccountsRepository
     implements IExternalUserAccountsRepository
 {
+    constructor(private readonly prisma: PrismaClient) {}
+
     async getById(userId: string, provider: Provider) {
-        const account = await prisma.externalUserAccount.findUnique({
+        const account = await this.prisma.externalUserAccount.findUnique({
             where: {
                 user_id_provider: {
                     user_id: userId,
@@ -34,7 +36,7 @@ export class PrismaExternalUserAccountsRepository
     }
 
     async save(account: ExternalUserAccount) {
-        await prisma.externalUserAccount.create({
+        await this.prisma.externalUserAccount.create({
             data: {
                 user_id: account.userId,
                 provider: account.provider,
@@ -49,7 +51,7 @@ export class PrismaExternalUserAccountsRepository
     }
 
     async getManyByUserId(userId: string) {
-        const accounts = await prisma.externalUserAccount.findMany({
+        const accounts = await this.prisma.externalUserAccount.findMany({
             where: {
                 user_id: userId,
             },
@@ -67,7 +69,7 @@ export class PrismaExternalUserAccountsRepository
     }
 
     async update(account: ExternalUserAccount) {
-        await prisma.externalUserAccount.update({
+        await this.prisma.externalUserAccount.update({
             where: {
                 user_id_provider: {
                     user_id: account.userId,

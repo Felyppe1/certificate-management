@@ -1,12 +1,14 @@
 import { IDataSetsRepository } from '@/backend/application/interfaces/idata-sets-repository'
 import { DataSet, GENERATION_STATUS } from '@/backend/domain/data-set'
-import { prisma } from '.'
+import { PrismaClient } from '@prisma/client'
 
 export class PrismaDataSetsRepository implements IDataSetsRepository {
+    constructor(private readonly prisma: PrismaClient) {}
+
     async save(dataSet: DataSet): Promise<void> {
         const { id, dataSourceId, rows, generationStatus } = dataSet.serialize()
 
-        await prisma.dataSet.create({
+        await this.prisma.dataSet.create({
             data: {
                 id,
                 data_source_id: dataSourceId,
@@ -17,7 +19,7 @@ export class PrismaDataSetsRepository implements IDataSetsRepository {
     }
 
     async getById(dataSetId: string): Promise<DataSet | null> {
-        const dataSet = await prisma.dataSet.findUnique({
+        const dataSet = await this.prisma.dataSet.findUnique({
             where: { id: dataSetId },
         })
 
@@ -41,7 +43,7 @@ export class PrismaDataSetsRepository implements IDataSetsRepository {
         const { id, dataSourceId, rows, generationStatus } = dataSet.serialize()
 
         // TODO: CONSERTAR ISSO AQUI DE UPSET PRA UPDATE
-        await prisma.dataSet.upsert({
+        await this.prisma.dataSet.upsert({
             where: { data_source_id: dataSourceId },
             create: {
                 id,

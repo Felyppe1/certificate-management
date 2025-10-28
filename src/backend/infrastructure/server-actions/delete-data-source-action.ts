@@ -3,6 +3,7 @@
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
@@ -30,9 +31,10 @@ export async function deleteDataSourceAction(_: unknown, formData: FormData) {
 
         const parsedData = deleteDataSourceSchema.parse(rawData)
 
-        const sessionsRepository = new PrismaSessionsRepository()
-        const certificateEmissionsRepository =
-            new PrismaCertificatesRepository()
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
+        const certificateEmissionsRepository = new PrismaCertificatesRepository(
+            prisma,
+        )
         const bucket = new GcpBucket()
 
         const deleteDataSourceUseCase = new DeleteDataSourceUseCase(

@@ -1,8 +1,6 @@
 'use server'
 
-import { AddTemplateByDrivePickerUseCase } from '@/backend/application/add-template-by-drive-picker-use-case'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
@@ -16,6 +14,7 @@ import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { AddDataSourceByDrivePickerUseCase } from '@/backend/application/add-data-source-by-drive-picker-use-case'
 import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 
 const addDataSourceByDrivePickerActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -45,16 +44,17 @@ export async function addDataSourceByDrivePickerAction(
 
         const parsedData = addDataSourceByDrivePickerActionSchema.parse(rawData)
 
-        const sessionsRepository = new PrismaSessionsRepository()
-        const certificateEmissionsRepository =
-            new PrismaCertificatesRepository()
-        const dataSetsRepository = new PrismaDataSetsRepository()
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
+        const certificateEmissionsRepository = new PrismaCertificatesRepository(
+            prisma,
+        )
+        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
         const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository()
+            new PrismaExternalUserAccountsRepository(prisma)
         const bucket = new GcpBucket()
 
         const addDataSourceByDrivePickerUseCase =

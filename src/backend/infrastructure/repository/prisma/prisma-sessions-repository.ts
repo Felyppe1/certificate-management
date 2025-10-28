@@ -2,11 +2,13 @@ import {
     Session,
     ISessionsRepository,
 } from '@/backend/application/interfaces/isessions-repository'
-import { prisma } from '.'
+import { PrismaClient } from '@prisma/client'
 
 export class PrismaSessionsRepository implements ISessionsRepository {
+    constructor(private readonly prisma: PrismaClient) {}
+
     async getById(token: string) {
-        const session = await prisma.session.findUnique({
+        const session = await this.prisma.session.findUnique({
             where: {
                 token,
             },
@@ -21,7 +23,7 @@ export class PrismaSessionsRepository implements ISessionsRepository {
     }
 
     async save(session: Session) {
-        await prisma.session.create({
+        await this.prisma.session.create({
             data: {
                 user_id: session.userId,
                 token: session.token,
@@ -30,7 +32,7 @@ export class PrismaSessionsRepository implements ISessionsRepository {
     }
 
     async deleteById(tokenId: string) {
-        await prisma.session.delete({
+        await this.prisma.session.delete({
             where: {
                 token: tokenId,
             },

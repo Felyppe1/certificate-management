@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 import { CreateWriteBucketSignedUrlUseCase } from '@/backend/application/create-write-bucket-signed-url-use-case'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import z from 'zod'
@@ -28,8 +29,8 @@ export async function POST(request: NextRequest) {
         const parsed = createWriteBucketSignedUrlSchema.parse(body)
 
         const bucket = new GcpBucket()
-        const certificatesRepository = new PrismaCertificatesRepository()
-        const sessionsRepository = new PrismaSessionsRepository()
+        const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
 
         const createWriteBucketSignedUrlUseCase =
             new CreateWriteBucketSignedUrlUseCase(

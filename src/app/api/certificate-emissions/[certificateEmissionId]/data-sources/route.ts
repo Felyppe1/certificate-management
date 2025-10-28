@@ -9,6 +9,7 @@ import { PrismaCertificatesRepository } from '@/backend/infrastructure/repositor
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { SpreadsheetContentExtractorFactory } from '@/backend/infrastructure/factory/spreadsheet-content-extractor-factory'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
@@ -23,9 +24,10 @@ export async function DELETE(
     try {
         const sessionToken = await getSessionToken(request)
 
-        const sessionsRepository = new PrismaSessionsRepository()
-        const certificateEmissionsRepository =
-            new PrismaCertificatesRepository()
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
+        const certificateEmissionsRepository = new PrismaCertificatesRepository(
+            prisma,
+        )
         const bucket = new GcpBucket()
 
         const deleteDataSourceUseCase = new DeleteDataSourceUseCase(
@@ -54,15 +56,15 @@ export async function PATCH(
     try {
         const sessionToken = await getSessionToken(request)
 
-        const sessionsRepository = new PrismaSessionsRepository()
-        const certificatesRepository = new PrismaCertificatesRepository()
-        const dataSetsRepository = new PrismaDataSetsRepository()
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
+        const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
         const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository()
+            new PrismaExternalUserAccountsRepository(prisma)
 
         const refreshDataSourceUseCase = new RefreshDataSourceUseCase(
             certificatesRepository,
