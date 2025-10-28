@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "test:integration": "vitest --config vitest.config.integration.ts",
     "build": "next build",
     "start": "prisma migrate deploy && next start",
     "lint": "next lint",
@@ -62,6 +63,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@testcontainers/postgresql": "^11.7.2",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^20",
     "@types/pg": "^8.15.5",
