@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "test:integration": "vitest --config vitest.config.integration.ts",
+    "test": "vitest run --config vitest.config.integration.ts",
     "build": "next build",
     "start": "prisma migrate deploy && next start",
     "lint": "next lint",

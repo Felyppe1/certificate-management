@@ -6,9 +6,9 @@ import {
 import { IBucket } from '@/backend/application/interfaces/ibucket'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 import { DeleteTemplateUseCase } from '@/backend/application/delete-template-use-case'
+import { prisma } from '@/tests/setup.integration'
 
 describe('DeleteTemplateUseCase (Integration)', () => {
     it('should delete a template successfully', async () => {
@@ -52,9 +52,10 @@ describe('DeleteTemplateUseCase (Integration)', () => {
             async deleteObject() {}
         }
 
-        const certificateEmissionsRepository =
-            new PrismaCertificatesRepository()
-        const sessionsRepository = new PrismaSessionsRepository()
+        const certificateEmissionsRepository = new PrismaCertificatesRepository(
+            prisma,
+        )
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const bucketStub = new BucketStub()
 
         const deleteTemplateUseCase = new DeleteTemplateUseCase(
