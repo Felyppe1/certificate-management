@@ -3,43 +3,77 @@ import {
     StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql'
 import util from 'util'
-import { exec } from 'child_process'
-import { afterAll, beforeAll, beforeEach } from 'vitest'
+import { exec, execSync } from 'child_process'
+import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest'
 import { PrismaClient } from '@prisma/client'
+import { randomUUID } from 'crypto'
 
-const execAsync = util.promisify(exec)
+const username = 'root'
+const password = 'password'
 
 let postgresContainer: StartedPostgreSqlContainer
+let adminDbUrl: string
+let adminPrismaClient: PrismaClient
+
+let testDatabaseName: string
+let testDatabaseUrl: string
+
 export let prisma: PrismaClient
 
 beforeAll(async () => {
     postgresContainer = await new PostgreSqlContainer('postgres')
+        .withUsername(username)
+        .withPassword(password)
         .withReuse()
         .start()
 
-    process.env.DB_URL = postgresContainer.getConnectionUri()
-    process.env.DB_DIRECT_URL = postgresContainer.getConnectionUri()
+    adminDbUrl = postgresContainer.getConnectionUri()
 
-    await execAsync('npx prisma generate && npx prisma migrate deploy')
-
-    prisma = new PrismaClient()
+    adminPrismaClient = new PrismaClient({
+        datasources: {
+            db: {
+                url: adminDbUrl,
+            },
+        },
+    })
 }, 60000)
 
 beforeEach(async () => {
-    const tablenames = await prisma.$queryRaw<{ tablename: string }[]>`
-        SELECT tablename FROM pg_tables WHERE schemaname='public'
-    `
+    testDatabaseName = `test_${randomUUID().substring(0, 18).replace(/-/g, '_')}`
+    testDatabaseUrl = `postgresql://${username}:${password}@${postgresContainer.getHost()}:${postgresContainer.getPort()}/${testDatabaseName}`
 
-    for (const { tablename } of tablenames) {
-        if (tablename !== '_prisma_migrations') {
-            await prisma.$executeRawUnsafe(
-                `TRUNCATE TABLE "${tablename}" RESTART IDENTITY CASCADE;`,
-            )
-        }
+    await adminPrismaClient.$queryRawUnsafe(
+        `CREATE DATABASE "${testDatabaseName}";`,
+    )
+
+    process.env.DB_URL = testDatabaseUrl
+    process.env.DB_DIRECT_URL = testDatabaseUrl
+
+    execSync('npx prisma db push --skip-generate' /* , { stdio: 'ignore' } */)
+
+    prisma = new PrismaClient({
+        datasources: {
+            db: {
+                url: testDatabaseUrl,
+            },
+        },
+    })
+})
+
+afterEach(async () => {
+    if (prisma) {
+        await prisma.$disconnect()
+    }
+
+    // WITH (FORCE) to disconnect any active connections
+    if (adminPrismaClient && testDatabaseName) {
+        await adminPrismaClient.$queryRawUnsafe(
+            `DROP DATABASE "${testDatabaseName}" WITH (FORCE);`,
+        )
     }
 })
 
 afterAll(async () => {
-    await prisma.$disconnect()
+    await adminPrismaClient?.$disconnect()
     await postgresContainer?.stop()
 })
