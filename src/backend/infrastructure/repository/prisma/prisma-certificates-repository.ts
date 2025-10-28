@@ -1,6 +1,6 @@
 import { ICertificatesRepository } from '@/backend/application/interfaces/icertificates-repository'
 import { Certificate, CERTIFICATE_STATUS } from '@/backend/domain/certificate'
-import { prisma } from '.'
+import { PrismaClient } from '@prisma/client'
 import {
     INPUT_METHOD,
     Template,
@@ -12,6 +12,8 @@ import {
 } from '@/backend/domain/data-source'
 
 export class PrismaCertificatesRepository implements ICertificatesRepository {
+    constructor(private readonly prisma: PrismaClient) {}
+
     async save(certificate: Certificate) {
         const {
             id,
@@ -25,8 +27,8 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
             domainEvents,
         } = certificate.serialize()
 
-        await prisma.$transaction([
-            prisma.certificateEmission.create({
+        await this.prisma.$transaction([
+            this.prisma.certificateEmission.create({
                 data: {
                     id,
                     title: name,
@@ -90,7 +92,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                 },
             }),
 
-            prisma.outbox.createMany({
+            this.prisma.outbox.createMany({
                 data: domainEvents.map(event => ({
                     id: event.id,
                     event_type: event.name,
@@ -111,8 +113,8 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
             domainEvents,
         } = certificate.serialize()
 
-        const previousCertificate = await prisma.certificateEmission.findUnique(
-            {
+        const previousCertificate =
+            await this.prisma.certificateEmission.findUnique({
                 where: { id },
                 include: {
                     Template: {
@@ -126,10 +128,9 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                         },
                     },
                 },
-            },
-        )
+            })
 
-        await prisma.$transaction(async tx => {
+        await this.prisma.$transaction(async tx => {
             if (!template && previousCertificate?.Template) {
                 await tx.template.delete({
                     where: { id: previousCertificate.Template.id },
@@ -267,7 +268,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
     }
 
     async getById(id: string): Promise<Certificate | null> {
-        const certificate = await prisma.certificateEmission.findUnique({
+        const certificate = await this.prisma.certificateEmission.findUnique({
             where: { id },
             include: {
                 Template: {

@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 import { AddTemplateByUploadUseCase } from '@/backend/application/add-template-by-upload-use-case'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import z from 'zod'
@@ -33,8 +34,8 @@ export async function PUT(
         const parsed = addTemplateByUploadSchema.parse({ file })
 
         const bucket = new GcpBucket()
-        const certificatesRepository = new PrismaCertificatesRepository()
-        const sessionsRepository = new PrismaSessionsRepository()
+        const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
 
         const addTemplateByUploadUseCase = new AddTemplateByUploadUseCase(

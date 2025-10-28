@@ -14,6 +14,7 @@ import { AddDataSourceByUrlUseCase } from '@/backend/application/add-data-source
 import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { NotFoundError } from '@/backend/domain/error/not-found-error'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 
 const addDataSourceByUrlActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -39,10 +40,11 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
 
         const parsedData = addDataSourceByUrlActionSchema.parse(rawData)
 
-        const sessionsRepository = new PrismaSessionsRepository()
-        const certificateEmissionsRepository =
-            new PrismaCertificatesRepository()
-        const dataSetsRepository = new PrismaDataSetsRepository()
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
+        const certificateEmissionsRepository = new PrismaCertificatesRepository(
+            prisma,
+        )
+        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const spreadsheetContentExtractorFactory =

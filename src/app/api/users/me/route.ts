@@ -5,6 +5,7 @@ import { AuthenticationError } from '@/backend/domain/error/authentication-error
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
@@ -32,10 +33,10 @@ export async function GET(
     try {
         const sessionToken = await getSessionToken(request)
 
-        const sessionsRepository = new PrismaSessionsRepository()
-        const usersRepository = new PrismaUsersRepository()
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
+        const usersRepository = new PrismaUsersRepository(prisma)
         const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository()
+            new PrismaExternalUserAccountsRepository(prisma)
 
         const getMeUseCase = new GetMeUseCase(
             sessionsRepository,

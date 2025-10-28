@@ -1,5 +1,6 @@
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { LoginGoogleUseCase } from '@/backend/application/login-google-use-case'
@@ -17,10 +18,10 @@ export async function GET(request: Request) {
         )
     }
 
-    const usersRepository = new PrismaUsersRepository()
+    const usersRepository = new PrismaUsersRepository(prisma)
     const externalUserAccountsRepository =
-        new PrismaExternalUserAccountsRepository()
-    const sessionsRepository = new PrismaSessionsRepository()
+        new PrismaExternalUserAccountsRepository(prisma)
+    const sessionsRepository = new PrismaSessionsRepository(prisma)
     const googleAuthGateway = new GoogleAuthGateway()
 
     const loginGoogleUseCase = new LoginGoogleUseCase(

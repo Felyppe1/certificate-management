@@ -3,6 +3,7 @@
 import { LoginUseCase } from '@/backend/application/login-use-case'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
     try {
         const sessionToken = await getSessionToken(request)
 
-        const session = await new PrismaSessionsRepository().getById(
+        const session = await new PrismaSessionsRepository(prisma).getById(
             sessionToken,
         )
 
@@ -38,8 +39,8 @@ export async function POST(
 ): Promise<NextResponse<LoginResponse>> {
     const { email, password } = await request.json()
 
-    const usersRepository = new PrismaUsersRepository()
-    const sessionsRepository = new PrismaSessionsRepository()
+    const usersRepository = new PrismaUsersRepository(prisma)
+    const sessionsRepository = new PrismaSessionsRepository(prisma)
 
     const loginUseCase = new LoginUseCase(usersRepository, sessionsRepository)
 

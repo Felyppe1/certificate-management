@@ -3,6 +3,7 @@
 import { LoginUseCase } from '@/backend/application/login-use-case'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { z, ZodError } from 'zod'
@@ -24,8 +25,8 @@ export async function loginAction(data: LoginInput) {
     try {
         const parsedData = loginSchema.parse(data)
 
-        const usersRepository = new PrismaUsersRepository()
-        const sessionsRepository = new PrismaSessionsRepository()
+        const usersRepository = new PrismaUsersRepository(prisma)
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
 
         const loginUseCase = new LoginUseCase(
             usersRepository,

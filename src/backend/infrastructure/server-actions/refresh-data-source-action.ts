@@ -13,6 +13,7 @@ import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { RefreshDataSourceUseCase } from '@/backend/application/refresh-data-source-use-case'
 import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 
 const refreshDataSourceActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -30,15 +31,15 @@ export async function refreshDataSourceAction(_: unknown, formData: FormData) {
 
         const parsedData = refreshDataSourceActionSchema.parse(rawData)
 
-        const sessionsRepository = new PrismaSessionsRepository()
-        const certificatesRepository = new PrismaCertificatesRepository()
-        const dataSetsRepository = new PrismaDataSetsRepository()
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
+        const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
         const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository()
+            new PrismaExternalUserAccountsRepository(prisma)
 
         const refreshDataSourceUseCase = new RefreshDataSourceUseCase(
             certificatesRepository,

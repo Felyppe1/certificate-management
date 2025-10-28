@@ -2,6 +2,7 @@
 
 import { SignUpUseCase } from '@/backend/application/sign-up-use-case'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { redirect } from 'next/navigation'
 
 export async function signUpAction(formData: FormData): Promise<void> {
@@ -10,7 +11,7 @@ export async function signUpAction(formData: FormData): Promise<void> {
     const name = formData.get('name') as string
     const password = formData.get('password') as string
 
-    const usersRepository = new PrismaUsersRepository()
+    const usersRepository = new PrismaUsersRepository(prisma)
 
     const signUpUseCase = new SignUpUseCase(usersRepository)
 

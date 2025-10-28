@@ -12,6 +12,7 @@ import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prism
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { logoutAction } from './logout-action'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 
 const refreshTemplateActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -29,13 +30,13 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
 
         const parsedData = refreshTemplateActionSchema.parse(rawData)
 
-        const sessionsRepository = new PrismaSessionsRepository()
-        const certificatesRepository = new PrismaCertificatesRepository()
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
+        const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository()
+            new PrismaExternalUserAccountsRepository(prisma)
 
         const refreshTemplateUseCase = new RefreshTemplateUseCase(
             certificatesRepository,

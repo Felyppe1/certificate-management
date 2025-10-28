@@ -7,6 +7,7 @@ import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import z from 'zod'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
@@ -28,9 +29,10 @@ export async function PUT(
         const body = await request.json()
         const parsed = addTemplateByUrlSchema.parse(body)
 
-        const sessionsRepository = new PrismaSessionsRepository()
-        const certificateEmissionsRepository =
-            new PrismaCertificatesRepository()
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
+        const certificateEmissionsRepository = new PrismaCertificatesRepository(
+            prisma,
+        )
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()

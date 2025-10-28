@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 import { LoginUseCase } from '@/backend/application/login-use-case'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { handleError } from '@/utils/handle-error'
 import z from 'zod'
 
@@ -20,8 +21,8 @@ export async function POST(request: NextRequest) {
         const body = await request.json()
         const parsed = loginSchema.parse(body)
 
-        const usersRepository = new PrismaUsersRepository()
-        const sessionsRepository = new PrismaSessionsRepository()
+        const usersRepository = new PrismaUsersRepository(prisma)
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
 
         const loginUseCase = new LoginUseCase(
             usersRepository,

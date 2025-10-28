@@ -4,6 +4,7 @@ import { AuthenticationError } from '@/backend/domain/error/authentication-error
 import { cookies } from 'next/headers'
 import { PrismaSessionsRepository } from '../repository/prisma/prisma-sessions-repository'
 import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
+import { prisma } from '../repository/prisma'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-google-access-token'
 import { logoutAction } from './logout-action'
@@ -19,9 +20,9 @@ export async function refreshGoogleAccessTokenAction() {
             throw new AuthenticationError('missing-session')
         }
 
-        const sessionsRepository = new PrismaSessionsRepository()
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository()
+            new PrismaExternalUserAccountsRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
 
         const refreshGoogleAccessTokenUseCase =

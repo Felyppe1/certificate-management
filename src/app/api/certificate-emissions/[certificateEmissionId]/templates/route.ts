@@ -9,6 +9,7 @@ import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-driv
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
@@ -22,9 +23,10 @@ export async function DELETE(
     try {
         const sessionToken = await getSessionToken(request)
 
-        const sessionsRepository = new PrismaSessionsRepository()
-        const certificateEmissionsRepository =
-            new PrismaCertificatesRepository()
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
+        const certificateEmissionsRepository = new PrismaCertificatesRepository(
+            prisma,
+        )
         const bucket = new GcpBucket()
 
         const deleteTemplateUseCase = new DeleteTemplateUseCase(
@@ -53,13 +55,13 @@ export async function PATCH(
     try {
         const sessionToken = await getSessionToken(request)
 
-        const sessionsRepository = new PrismaSessionsRepository()
-        const certificatesRepository = new PrismaCertificatesRepository()
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
+        const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository()
+            new PrismaExternalUserAccountsRepository(prisma)
 
         const refreshTemplateUseCase = new RefreshTemplateUseCase(
             certificatesRepository,

@@ -4,6 +4,7 @@ import { LoginUseCase } from '@/backend/application/login-use-case'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { ActionResponse } from '@/types'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -36,8 +37,8 @@ export async function loginAction(
     try {
         const parsedData = loginSchema.parse(rawData)
 
-        const usersRepository = new PrismaUsersRepository()
-        const sessionsRepository = new PrismaSessionsRepository()
+        const usersRepository = new PrismaUsersRepository(prisma)
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
 
         const loginUseCase = new LoginUseCase(
             usersRepository,

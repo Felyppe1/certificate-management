@@ -4,6 +4,7 @@ import { CreateCertificateEmissionUseCase } from '@/backend/application/create-c
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
@@ -48,8 +49,8 @@ export async function updateCertificateEmissionAction(
 
         const parsedData = updateCertificateEmissionActionSchema.parse(rawData)
 
-        const certificatesRepository = new PrismaCertificatesRepository()
-        const sessionsRepository = new PrismaSessionsRepository()
+        const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
 
         const updateCertificateEmissionUseCase =
             new UpdateCertificateEmissionUseCase(

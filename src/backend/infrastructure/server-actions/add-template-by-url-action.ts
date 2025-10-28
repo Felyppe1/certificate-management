@@ -7,6 +7,7 @@ import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
@@ -38,9 +39,10 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
 
         const parsedData = addTemplateByUrlActionSchema.parse(rawData)
 
-        const sessionsRepository = new PrismaSessionsRepository()
-        const certificateEmissionsRepository =
-            new PrismaCertificatesRepository()
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
+        const certificateEmissionsRepository = new PrismaCertificatesRepository(
+            prisma,
+        )
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()

@@ -2,11 +2,13 @@ import {
     User,
     IUsersRepository,
 } from '@/backend/application/interfaces/iusers-repository'
-import { prisma } from '.'
+import { PrismaClient } from '@prisma/client'
 
 export class PrismaUsersRepository implements IUsersRepository {
+    constructor(private readonly prisma: PrismaClient) {}
+
     async getByEmail(email: string) {
-        const user = await prisma.user.findUnique({
+        const user = await this.prisma.user.findUnique({
             where: {
                 email,
             },
@@ -23,7 +25,7 @@ export class PrismaUsersRepository implements IUsersRepository {
     }
 
     async getById(id: string) {
-        const user = await prisma.user.findUnique({
+        const user = await this.prisma.user.findUnique({
             where: {
                 id,
             },
@@ -40,7 +42,7 @@ export class PrismaUsersRepository implements IUsersRepository {
     }
 
     async save(user: User) {
-        await prisma.user.create({
+        await this.prisma.user.create({
             data: {
                 id: user.id,
                 email: user.email,
