@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prisma:generate": "npx prisma generate --schema src/backend/infrastructure/repository/prisma/schema.prisma",
+    "prisma:migrate:dev": "npx prisma migrate dev --schema src/backend/infrastructure/repository/prisma/schema.prisma",
     "dev": "next dev --turbopack",
     "test": "vitest run --config vitest.config.integration.ts",
     "build": "next build",
@@ -10,9 +12,6 @@
     "lint": "next lint",
     "prepare": "husky",
     "postinstall": "prisma generate"
-  },
-  "prisma": {
-    "schema": "src/backend/infrastructure/repository/prisma/schema.prisma"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": "prettier --write --ignore-unknown"

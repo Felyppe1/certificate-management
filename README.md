@@ -61,8 +61,7 @@ Dessa forma, a plataforma atende à necessidade de reduzir esforços manuais ou 
 
 6. **Execute as migrações do banco**:
     ```bash
-    npx prisma generate
-    npx prisma migrate dev
+    npm run prisma:migrate:dev
     ```
 
 6. **Inicie o servidor**:

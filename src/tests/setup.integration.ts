@@ -5,8 +5,8 @@ import {
 import util from 'util'
 import { exec, execSync } from 'child_process'
 import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest'
-import { PrismaClient } from '@prisma/client'
 import { randomUUID } from 'crypto'
+import { PrismaClient } from '@/backend/infrastructure/repository/prisma/client/client'
 
 const username = 'root'
 const password = 'password'
@@ -49,7 +49,9 @@ beforeEach(async () => {
     process.env.DB_URL = testDatabaseUrl
     process.env.DB_DIRECT_URL = testDatabaseUrl
 
-    execSync('npx prisma db push --skip-generate' /* , { stdio: 'ignore' } */)
+    execSync(
+        'npx prisma db push --skip-generate --schema src/backend/infrastructure/repository/prisma/schema.prisma',
+    )
 
     prisma = new PrismaClient({
         datasources: {
