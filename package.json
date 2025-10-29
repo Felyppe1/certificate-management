@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prisma:generate": "prisma generate --schema src/backend/infrastructure/repository/prisma/schema.prisma",
-    "prisma:dev": "prisma migrate dev --schema src/backend/infrastructure/repository/prisma/schema.prisma",
-    "prisma:deploy": "prisma migrate deploy --schema=src/backend/infrastructure/repository/prisma/schema.prisma",
+    "prisma:generate": "npx prisma generate --schema src/backend/infrastructure/repository/prisma/schema.prisma",
+    "prisma:dev": "npx prisma migrate dev --schema src/backend/infrastructure/repository/prisma/schema.prisma",
+    "prisma:deploy": "npx prisma migrate deploy --schema=src/backend/infrastructure/repository/prisma/schema.prisma",
     "dev": "next dev --turbopack",
     "test": "vitest run --config vitest.config.integration.ts --no-file-parallelism",
     "build": "npm run prisma:generate && next build",
