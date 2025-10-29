@@ -28,7 +28,6 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          export_default_credentials: true
 
       # jq is a utilitary to handle JSON in bash
       # -n is for creating new empty JSON
@@ -133,7 +132,6 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          export_default_credentials: true
 
       # jq is a utilitary to handle JSON in bash
       # -n is for creating new empty JSON
@@ -263,7 +261,10 @@ jobs:
         run: echo "ARTIFACT_PATH=$(cat artifact_path.txt)" >> $GITHUB_ENV
 
       - name: Build Docker image
-        run: docker build -t $ARTIFACT_PATH:$GITHUB_SHA .
+        run: docker build \
+              --build-arg DB_URL=${{ secrets.DB_URL }} \
+              --build-arg DB_DIRECT_URL=${{ secrets.DB_DIRECT_URL }} \
+              -t $ARTIFACT_PATH:$GITHUB_SHA .
 
       - name: Push image
         run: |

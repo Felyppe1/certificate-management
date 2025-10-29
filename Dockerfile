@@ -24,6 +24,11 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+ARG DB_URL
+ARG DB_DIRECT_URL
+
+ENV DB_URL=$DB_URL
+ENV DB_DIRECT_URL=$DB_DIRECT_URL
 ENV NODE_ENV=production
 ENV PORT=8080
 # Cloud Run define PORT automaticamente, então:
