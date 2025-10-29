@@ -7,9 +7,109 @@ on:
       - develop
 
 jobs:
-  terraform:
+  terraform-plan:
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
+
+    env:
+      REGION: us-central1
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.SERVICE_ACCOUNT }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          export_default_credentials: true
+
+      # jq is a utilitary to handle JSON in bash
+      # -n is for creating new empty JSON
+      # -c is for compact output (no new lines)
+      - name: Export Terraform variables (TF_VAR_*)
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_DIRECT_URL: ${{ secrets.DB_DIRECT_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          LOKI_URL: ${{ secrets.LOKI_URL }}
+          OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: ${{ secrets.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+        run: |
+          echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
+          echo "TF_VAR_region=${{ env.REGION }}" >> $GITHUB_ENV
+          echo "TF_VAR_branch=${{ github.ref_name }}" >> $GITHUB_ENV
+          TF_ENV_VARS=$(jq -nc '{
+            DB_USER: env.DB_USER,
+            DB_PASSWORD: env.DB_PASSWORD,
+            DB_NAME: env.DB_NAME,
+            DB_PORT: env.DB_PORT,
+            DB_HOST: env.DB_HOST,
+            DB_URL: env.DB_URL,
+            DB_DIRECT_URL: env.DB_DIRECT_URL,
+            REDIS_URL: env.REDIS_URL,
+            LOKI_URL: env.LOKI_URL,
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: env.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+            GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
+            GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
+            GOOGLE_API_KEY: env.GOOGLE_API_KEY,
+            SESSION_SECRET: env.SESSION_SECRET
+          }')
+
+          echo "TF_VAR_environment_variables=$TF_ENV_VARS" >> $GITHUB_ENV
+
+      - name: Export Terraform backend
+        working-directory: ./terraform
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then SUFFIX=""; else SUFFIX="-${{ github.ref_name }}"; fi
+          PROJECT_HASH=$(echo -n "${{ env.GCP_PROJECT_ID }}" | sha256sum | cut -c1-8)
+          echo "TF_BACKEND_BUCKET=tf-state${SUFFIX}-${PROJECT_HASH}" >> $GITHUB_ENV
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Create Terraform state bucket if not exists
+        run: |
+          if ! gcloud storage buckets describe gs://$TF_BACKEND_BUCKET --project=${{ env.GCP_PROJECT_ID }} > /dev/null 2>&1; then
+            gcloud storage buckets create gs://$TF_BACKEND_BUCKET --project=${{ env.GCP_PROJECT_ID }} --location=${{ env.REGION }} --uniform-bucket-level-access
+          fi
+
+      - name: Enable required GCP API
+        run: |
+          gcloud services enable cloudresourcemanager.googleapis.com --project=${{ env.GCP_PROJECT_ID }}
+
+      - name: Terraform Init
+        working-directory: ./terraform
+        run: terraform init -backend-config="bucket=$TF_BACKEND_BUCKET"
+
+      - name: Terraform Plan
+        working-directory: ./terraform
+        run: terraform plan -out=tfplan
+
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: ./terraform/tfplan
+
+  terraform-apply:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
+    needs: terraform-plan
 
     outputs:
       artifact_path: ${{ steps.get_artifact_path.outputs.artifact_path }}
@@ -35,29 +135,54 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           export_default_credentials: true
 
+      # jq is a utilitary to handle JSON in bash
+      # -n is for creating new empty JSON
+      # -c is for compact output (no new lines)
       - name: Export Terraform variables (TF_VAR_*)
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_DIRECT_URL: ${{ secrets.DB_DIRECT_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          LOKI_URL: ${{ secrets.LOKI_URL }}
+          OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: ${{ secrets.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
         run: |
           echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "TF_VAR_region=${{ env.REGION }}" >> $GITHUB_ENV
           echo "TF_VAR_branch=${{ github.ref_name }}" >> $GITHUB_ENV
-          echo 'TF_VAR_environment_variables={"DB_USER":"${{ secrets.DB_USER }}","DB_PASSWORD":"${{ secrets.DB_PASSWORD }}","DB_NAME":"${{ secrets.DB_NAME }}","DB_PORT":"${{ secrets.DB_PORT }}","DB_HOST":"${{ secrets.DB_HOST }}","DB_URL":"${{ secrets.DB_URL }}","DB_DIRECT_URL":"${{ secrets.DB_DIRECT_URL }}","REDIS_URL":"${{ secrets.REDIS_URL }}","LOKI_URL":"${{ secrets.LOKI_URL }}","OTEL_EXPORTER_OTLP_LOGS_ENDPOINT":"${{ secrets.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT }}","GOOGLE_CLIENT_ID":"${{ secrets.GOOGLE_CLIENT_ID }}","GOOGLE_CLIENT_SECRET":"${{ secrets.GOOGLE_CLIENT_SECRET }}","GOOGLE_API_KEY":"${{ secrets.GOOGLE_API_KEY }}","SESSION_SECRET":"${{ secrets.SESSION_SECRET }}"}' >> $GITHUB_ENV
+          TF_ENV_VARS=$(jq -nc '{
+            DB_USER: env.DB_USER,
+            DB_PASSWORD: env.DB_PASSWORD,
+            DB_NAME: env.DB_NAME,
+            DB_PORT: env.DB_PORT,
+            DB_HOST: env.DB_HOST,
+            DB_URL: env.DB_URL,
+            DB_DIRECT_URL: env.DB_DIRECT_URL,
+            REDIS_URL: env.REDIS_URL,
+            LOKI_URL: env.LOKI_URL,
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: env.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+            GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
+            GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
+            GOOGLE_API_KEY: env.GOOGLE_API_KEY,
+            SESSION_SECRET: env.SESSION_SECRET
+          }')
 
-      - name: Set Terraform backend
+          echo "TF_VAR_environment_variables=$TF_ENV_VARS" >> $GITHUB_ENV
+
+      - name: Export Terraform backend
         working-directory: ./terraform
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then SUFFIX=""; else SUFFIX="-${{ github.ref_name }}"; fi
           PROJECT_HASH=$(echo -n "${{ env.GCP_PROJECT_ID }}" | sha256sum | cut -c1-8)
           echo "TF_BACKEND_BUCKET=tf-state${SUFFIX}-${PROJECT_HASH}" >> $GITHUB_ENV
-
-      - name: Create Terraform state bucket if not exists
-        run: |
-          if ! gcloud storage buckets describe gs://$TF_BACKEND_BUCKET --project=${{ env.GCP_PROJECT_ID }} > /dev/null 2>&1; then
-            gcloud storage buckets create gs://$TF_BACKEND_BUCKET --project=${{ env.GCP_PROJECT_ID }} --location=${{ env.REGION }} --uniform-bucket-level-access
-          fi
-
-      - name: Enable required GCP API
-        run: |
-          gcloud services enable cloudresourcemanager.googleapis.com --project=${{ env.GCP_PROJECT_ID }}
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
@@ -66,9 +191,11 @@ jobs:
         working-directory: ./terraform
         run: terraform init -backend-config="bucket=$TF_BACKEND_BUCKET"
 
-      - name: Terraform Plan
-        working-directory: ./terraform
-        run: terraform plan -out=tfplan
+      - name: Download Terraform Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: ./terraform
 
       - name: Terraform Apply
         working-directory: ./terraform
@@ -104,12 +231,12 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
 
-    needs: terraform
+    needs: terraform-apply
 
     env:
       REGION: us-central1
-      CLOUD_RUN_URL: ${{ needs.terraform.outputs.cloud_run_url }}
-      CLOUD_RUN_NAME: ${{ needs.terraform.outputs.cloud_run_name }}
+      CLOUD_RUN_URL: ${{ needs.terraform-apply.outputs.cloud_run_url }}
+      CLOUD_RUN_NAME: ${{ needs.terraform-apply.outputs.cloud_run_name }}
 
     steps:
       - name: Checkout code
