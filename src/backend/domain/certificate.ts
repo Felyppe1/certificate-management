@@ -17,6 +17,7 @@ import {
     UpdateDataSourceInput,
 } from './data-source'
 import { NOT_FOUND_ERROR_TYPE, NotFoundError } from './error/not-found-error'
+import { DataSourceSetDomainEvent } from './events/data-source-set-domain-event'
 
 export enum CERTIFICATE_STATUS {
     DRAFT = 'DRAFT',
@@ -256,6 +257,10 @@ export class Certificate extends AggregateRoot {
             dataSource,
             this.variableColumnMapping,
         )
+
+        const domainEvent = new DataSourceSetDomainEvent(dataSource.getId())
+
+        this.addDomainEvent(domainEvent)
     }
 
     getDataSourceId() {
@@ -372,21 +377,33 @@ export class Certificate extends AggregateRoot {
                 }
             }
 
-            const hasAlreadyMapped = Object.values(variableColumnMapping).some(
-                mappedColumn =>
-                    columns.some(
-                        column =>
-                            normalizeString(column) ===
-                            normalizeString(mappedColumn || ''),
-                    ),
-            )
+            const column = variableColumnMapping[variable]
 
-            const sameName = columns.find(
-                column => normalizeString(column) === normalizeString(variable),
-            )
+            const hasAlreadyBeenMapped = column
+                ? Object.values(variableColumnMapping).some(mappedColumn => {
+                      return (
+                          normalizeString(column) ===
+                          normalizeString(mappedColumn || '')
+                      )
+                  })
+                : false
+
+            const sameNameNotMapped = columns.find(column => {
+                return (
+                    normalizeString(column) === normalizeString(variable) &&
+                    Object.values(variableColumnMapping).every(mappedColumn => {
+                        return (
+                            normalizeString(mappedColumn || '') !==
+                            normalizeString(column)
+                        )
+                    })
+                )
+            })
 
             variableColumnMapping[variable] =
-                sameName && !hasAlreadyMapped ? sameName : null
+                sameNameNotMapped && !hasAlreadyBeenMapped
+                    ? sameNameNotMapped
+                    : null
         }
 
         return variableColumnMapping
