@@ -1,81 +1,59 @@
-import {
-    PostgreSqlContainer,
-    StartedPostgreSqlContainer,
-} from '@testcontainers/postgresql'
-import util from 'util'
-import { exec, execSync } from 'child_process'
+import { execSync } from 'child_process'
 import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest'
-import { randomUUID } from 'crypto'
 import { PrismaClient } from '@/backend/infrastructure/repository/prisma/client/client'
-
-const username = 'root'
-const password = 'password'
-
-let postgresContainer: StartedPostgreSqlContainer
-let adminDbUrl: string
-let adminPrismaClient: PrismaClient
-
-let testDatabaseName: string
-let testDatabaseUrl: string
 
 export let prisma: PrismaClient
 
 beforeAll(async () => {
-    postgresContainer = await new PostgreSqlContainer('postgres')
-        .withUsername(username)
-        .withPassword(password)
-        .withReuse()
-        .start()
+    console.log('Setting up test database...')
 
-    adminDbUrl = postgresContainer.getConnectionUri()
+    const host = process.env.TEST_DB_HOST
+    const port = process.env.TEST_DB_PORT
+    const username = process.env.TEST_DB_USERNAME
+    const password = process.env.TEST_DB_PASSWORD
+    const database = process.env.TEST_DB_NAME
 
-    adminPrismaClient = new PrismaClient({
+    const testDbUrl = `postgresql://${username}:${password}@${host}:${port}/${database}`
+
+    process.env.DB_URL = testDbUrl
+    process.env.DB_DIRECT_URL = testDbUrl
+
+    execSync(
+        'npx prisma db push --skip-generate --schema src/backend/infrastructure/repository/prisma/schema.prisma',
+        { stdio: 'ignore' },
+    )
+
+    prisma = new PrismaClient({
         datasources: {
             db: {
-                url: adminDbUrl,
+                url: testDbUrl,
             },
         },
     })
 }, 60000)
 
 beforeEach(async () => {
-    testDatabaseName = `test_${randomUUID().substring(0, 18).replace(/-/g, '_')}`
-    testDatabaseUrl = `postgresql://${username}:${password}@${postgresContainer.getHost()}:${postgresContainer.getPort()}/${testDatabaseName}`
+    // Truncate all tables and reset sequences
+    const tables = await prisma.$queryRaw<Array<{ tablename: string }>>`
+        SELECT tablename 
+        FROM pg_tables 
+        WHERE schemaname = 'public'
+    `
 
-    await adminPrismaClient.$queryRawUnsafe(
-        `CREATE DATABASE "${testDatabaseName}";`,
-    )
-
-    process.env.DB_URL = testDatabaseUrl
-    process.env.DB_DIRECT_URL = testDatabaseUrl
-
-    execSync(
-        'npx prisma db push --skip-generate --schema src/backend/infrastructure/repository/prisma/schema.prisma',
-    )
-
-    prisma = new PrismaClient({
-        datasources: {
-            db: {
-                url: testDatabaseUrl,
-            },
-        },
-    })
-})
-
-afterEach(async () => {
-    if (prisma) {
-        await prisma.$disconnect()
-    }
-
-    // WITH (FORCE) to disconnect any active connections
-    if (adminPrismaClient && testDatabaseName) {
-        await adminPrismaClient.$queryRawUnsafe(
-            `DROP DATABASE "${testDatabaseName}" WITH (FORCE);`,
-        )
+    for (const { tablename } of tables) {
+        if (tablename !== '_prisma_migrations') {
+            await prisma.$executeRawUnsafe(
+                `TRUNCATE TABLE "public"."${tablename}" RESTART IDENTITY CASCADE;`,
+            )
+        }
     }
 })
 
 afterAll(async () => {
-    await adminPrismaClient?.$disconnect()
-    await postgresContainer?.stop()
+    console.log('Disconnecting from test database...')
+
+    // Disconnect only once at the end
+    if (prisma) {
+        await prisma.$disconnect()
+    }
 })

@@ -13,6 +13,7 @@ export default defineConfig({
     test: {
         globals: true,
         include: ['src/**/*.integration.test.ts'],
+        globalSetup: ['src/tests/global-setup.integration.ts'],
         setupFiles: ['src/tests/setup.integration.ts'],
         environment: 'node',
     },

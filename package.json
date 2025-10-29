@@ -6,7 +6,7 @@
     "prisma:generate": "npx prisma generate --schema src/backend/infrastructure/repository/prisma/schema.prisma",
     "prisma:migrate:dev": "npx prisma migrate dev --schema src/backend/infrastructure/repository/prisma/schema.prisma",
     "dev": "next dev --turbopack",
-    "test": "vitest run --config vitest.config.integration.ts",
+    "test": "vitest run --config vitest.config.integration.ts --no-file-parallelism",
     "build": "next build",
     "start": "prisma migrate deploy && next start",
     "lint": "next lint",
