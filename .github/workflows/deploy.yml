@@ -47,7 +47,7 @@ jobs:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          GA_ID: ${{ secrets.GA_ID }}
         run: |
           echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "TF_VAR_region=${{ env.REGION }}" >> $GITHUB_ENV
@@ -66,7 +66,7 @@ jobs:
             GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
             GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
             GOOGLE_API_KEY: env.GOOGLE_API_KEY,
-            SESSION_SECRET: env.SESSION_SECRET
+            GA_ID: env.GA_ID
           }')
 
           echo "TF_VAR_environment_variables=$TF_ENV_VARS" >> $GITHUB_ENV
@@ -151,7 +151,7 @@ jobs:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          GA_ID: ${{ secrets.GA_ID }}
         run: |
           echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "TF_VAR_region=${{ env.REGION }}" >> $GITHUB_ENV
@@ -170,7 +170,7 @@ jobs:
             GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
             GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
             GOOGLE_API_KEY: env.GOOGLE_API_KEY,
-            SESSION_SECRET: env.SESSION_SECRET
+            GA_ID: env.GA_ID
           }')
 
           echo "TF_VAR_environment_variables=$TF_ENV_VARS" >> $GITHUB_ENV
