@@ -3,7 +3,7 @@ import {
     IExternalUserAccountsRepository,
     Provider,
 } from '@/backend/application/interfaces/iexternal-user-accounts-repository'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from './client/client'
 
 export class PrismaExternalUserAccountsRepository
     implements IExternalUserAccountsRepository

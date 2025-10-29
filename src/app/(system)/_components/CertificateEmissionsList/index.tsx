@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { List } from './components/List'
 import { CreationForm } from './components/CreationForm'
-import { Card, CardDescription, CardTitle } from '@/components/ui/card'
+import { Card, CardTitle } from '@/components/ui/card'
 import {
     InputGroup,
     InputGroupAddon,

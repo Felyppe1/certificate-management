@@ -1,6 +1,5 @@
 'use server'
 
-import { CreateCertificateEmissionUseCase } from '@/backend/application/create-certificate-emission-use-case'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'

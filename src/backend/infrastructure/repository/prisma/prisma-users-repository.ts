@@ -2,7 +2,7 @@ import {
     User,
     IUsersRepository,
 } from '@/backend/application/interfaces/iusers-repository'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from './client/client'
 
 export class PrismaUsersRepository implements IUsersRepository {
     constructor(private readonly prisma: PrismaClient) {}

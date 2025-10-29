@@ -4,7 +4,7 @@ import {
     GetFileMetadataOutput,
     IGoogleDriveGateway,
 } from './interfaces/igoogle-drive-gateway'
-import { INPUT_METHOD, TEMPLATE_FILE_EXTENSION } from '../domain/template'
+import { TEMPLATE_FILE_EXTENSION } from '../domain/template'
 import {
     IFileContentExtractorFactory,
     IFileContentExtractorStrategy,

@@ -1,5 +1,4 @@
 import { createId } from '@paralleldrive/cuid2'
-import { ValidationError } from './error/validation-error'
 import { AggregateRoot } from './primitives/aggregate-root'
 import { CertificateCreatedDomainEvent } from './events/certificate-created-domain-event'
 import {

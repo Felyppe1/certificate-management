@@ -1,6 +1,6 @@
 import { IDataSetsRepository } from '@/backend/application/interfaces/idata-sets-repository'
 import { DataSet, GENERATION_STATUS } from '@/backend/domain/data-set'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from './client/client'
 
 export class PrismaDataSetsRepository implements IDataSetsRepository {
     constructor(private readonly prisma: PrismaClient) {}

@@ -1,10 +1,10 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-interface AddTemplateByUrlOutput {
-    type: 'certificate-not-found' | 'about:blank'
-    title: string
-}
+// interface AddTemplateByUrlOutput {
+//     type: 'certificate-not-found' | 'about:blank'
+//     title: string
+// }
 
 export async function addTemplateByUrl(
     certificateId: string,

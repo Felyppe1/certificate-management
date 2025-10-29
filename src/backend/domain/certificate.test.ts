@@ -17,6 +17,7 @@ describe('Certificate', () => {
                 })),
         ).not.toThrow()
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { domainEvents, ...serialized } = certificate.serialize()
 
         expect(serialized).toEqual({

@@ -2,7 +2,7 @@ import {
     Session,
     ISessionsRepository,
 } from '@/backend/application/interfaces/isessions-repository'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from './client/client'
 
 export class PrismaSessionsRepository implements ISessionsRepository {
     constructor(private readonly prisma: PrismaClient) {}

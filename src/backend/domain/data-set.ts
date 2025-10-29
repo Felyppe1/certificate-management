@@ -1,5 +1,4 @@
 import { createId } from '@paralleldrive/cuid2'
-import { ValidationError } from './error/validation-error'
 import { AggregateRoot } from './primitives/aggregate-root'
 
 export enum GENERATION_STATUS {

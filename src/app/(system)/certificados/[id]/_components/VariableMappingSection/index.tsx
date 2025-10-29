@@ -63,9 +63,9 @@ export function VariableMappingSection({
 
     const hasChanges = hasMappingChanges()
 
-    const allInitiallyMapped = templateVariables.every(
-        variable => existingMappings?.[variable],
-    )
+    // const allInitiallyMapped = templateVariables.every(
+    //     variable => existingMappings?.[variable],
+    // )
 
     const hasInsufficientColumns =
         dataSourceColumns.length < templateVariables.length

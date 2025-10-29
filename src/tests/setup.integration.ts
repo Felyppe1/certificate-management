@@ -1,5 +1,5 @@
 import { execSync } from 'child_process'
-import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest'
+import { afterAll, beforeAll, beforeEach } from 'vitest'
 import { PrismaClient } from '@/backend/infrastructure/repository/prisma/client/client'
 
 export let prisma: PrismaClient

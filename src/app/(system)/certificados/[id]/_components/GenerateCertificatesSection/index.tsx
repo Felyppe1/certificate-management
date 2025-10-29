@@ -25,7 +25,7 @@ interface GenerateCertificatesSectionProps {
 }
 
 export function GenerateCertificatesSection({
-    certificateId,
+    // certificateId,
     variablesMapped,
     certificatesGenerated,
     totalRecords,

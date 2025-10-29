@@ -32,7 +32,7 @@ interface EmailSendingSectionProps {
 }
 
 export function EmailSendingSection({
-    certificateId,
+    // certificateId,
     dataSourceColumns,
     variablesMapped,
     emailSent,

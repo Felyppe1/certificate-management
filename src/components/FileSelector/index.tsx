@@ -8,7 +8,7 @@ import {
     CardHeader,
     CardTitle,
 } from '../ui/card'
-import { FileText, Link, Upload, Loader2 } from 'lucide-react'
+import { Link, Upload, Loader2 } from 'lucide-react'
 import { Input } from '../ui/input'
 import { Button } from '../ui/button'
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
@@ -23,9 +23,6 @@ import { FileRejection, useDropzone } from 'react-dropzone'
 import { cn } from '@/lib/utils'
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
-import { AiIcon3 } from '../svg/AiIcon3'
-import { AiIcon } from '../svg/AiIcon'
-import { Badge } from '../ui/badge'
 import { GoogleDriveIcon } from '../svg/GoogleDriveIcon'
 
 type SelectOption = 'upload' | 'link' | 'drive'
@@ -116,6 +113,7 @@ export function FileSelector({
         }
 
         onSubmitUpload(file)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const onDropRejected = useCallback((fileRejections: FileRejection[]) => {
@@ -198,6 +196,7 @@ export function FileSelector({
                 handlePickerError,
             )
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedOption, googleOAuthToken])
 
     const allAreLoading =

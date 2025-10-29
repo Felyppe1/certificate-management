@@ -1,5 +1,4 @@
 import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-google-access-token'
-import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'

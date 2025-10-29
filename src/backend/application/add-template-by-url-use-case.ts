@@ -1,8 +1,4 @@
-import {
-    INPUT_METHOD,
-    Template,
-    TEMPLATE_FILE_EXTENSION,
-} from '../domain/template'
+import { INPUT_METHOD, Template } from '../domain/template'
 import {
     VALIDATION_ERROR_TYPE,
     ValidationError,

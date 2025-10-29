@@ -8,7 +8,7 @@
     "prisma:deploy": "prisma migrate deploy --schema=src/backend/infrastructure/repository/prisma/schema.prisma",
     "dev": "next dev --turbopack",
     "test": "vitest run --config vitest.config.integration.ts --no-file-parallelism",
-    "build": "npm run prisma:generate && next build",
+    "build": "npm run prisma:generate && npm run prisma:deploy && next build",
     "start": "npm run prisma:deploy && node server.js",
     "lint": "next lint",
     "prepare": "husky"

@@ -1,6 +1,6 @@
 import { ICertificatesRepository } from '@/backend/application/interfaces/icertificates-repository'
 import { Certificate, CERTIFICATE_STATUS } from '@/backend/domain/certificate'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from './client/client'
 import {
     INPUT_METHOD,
     Template,
@@ -10,6 +10,7 @@ import {
     DATA_SOURCE_FILE_EXTENSION,
     DataSource,
 } from '@/backend/domain/data-source'
+import { TransactionClient } from './client/internal/prismaNamespace'
 
 export class PrismaCertificatesRepository implements ICertificatesRepository {
     constructor(private readonly prisma: PrismaClient) {}
@@ -130,7 +131,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                 },
             })
 
-        await this.prisma.$transaction(async tx => {
+        await this.prisma.$transaction(async (tx: TransactionClient) => {
             if (!template && previousCertificate?.Template) {
                 await tx.template.delete({
                     where: { id: previousCertificate.Template.id },
