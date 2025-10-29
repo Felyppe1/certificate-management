@@ -49,4 +49,4 @@ USER nextjs
 EXPOSE 8080
 # O arquivo gerado pelo Next standalone é server.js (no root da standalone)
 # Executa migrations antes de iniciar o servidor
-CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+CMD ["npm", "start"]
