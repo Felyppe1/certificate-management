@@ -5,7 +5,8 @@ WORKDIR /app
 
 COPY package*.json ./
 # Copia o schema do Prisma e as migrações antes do npm ci (necessário para prisma generate no postinstall)
-COPY src/backend/infrastructure/repository/prisma ./src/backend/infrastructure/repository/prisma
+# COPY src/backend/infrastructure/repository/prisma ./src/backend/infrastructure/repository/prisma
+
 # Usa npm ci para builds reprodutíveis. Instala exatamente o que está no package-lock.json e nunca altera o lockfile
 RUN npm ci
 

@@ -4,14 +4,14 @@
   "private": true,
   "scripts": {
     "prisma:generate": "prisma generate --schema src/backend/infrastructure/repository/prisma/schema.prisma",
-    "prisma:migrate:dev": "prisma migrate dev --schema src/backend/infrastructure/repository/prisma/schema.prisma",
+    "prisma:dev": "prisma migrate dev --schema src/backend/infrastructure/repository/prisma/schema.prisma",
+    "prisma:deploy": "prisma migrate deploy --schema=src/backend/infrastructure/repository/prisma/schema.prisma",
     "dev": "next dev --turbopack",
     "test": "vitest run --config vitest.config.integration.ts --no-file-parallelism",
-    "build": "next build",
-    "start": "prisma migrate deploy --schema=src/backend/infrastructure/repository/prisma/schema.prisma && node server.js",
+    "build": "npm run prisma:generate && next build",
+    "start": "npm run prisma:deploy && node server.js",
     "lint": "next lint",
-    "prepare": "husky",
-    "postinstall": "prisma generate --schema=src/backend/infrastructure/repository/prisma/schema.prisma"
+    "prepare": "husky"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": "prettier --write --ignore-unknown"
