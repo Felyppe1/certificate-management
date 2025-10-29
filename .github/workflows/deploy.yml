@@ -263,8 +263,6 @@ jobs:
       - name: Build Docker image
         run: |
           docker build \
-            --build-arg DB_URL=${{ secrets.DB_URL }} \
-            --build-arg DB_DIRECT_URL=${{ secrets.DB_DIRECT_URL }} \
             -t $ARTIFACT_PATH:$GITHUB_SHA .
 
       - name: Push image
