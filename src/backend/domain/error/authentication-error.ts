@@ -7,6 +7,8 @@ export type AuthenticationErrorType =
     | 'google-token-refresh-failed'
     | 'insufficient-external-account-scopes'
     | 'incorrect-credentials'
+    | 'invalid-service-account'
+    | 'invalid-service-token'
 
 export class AuthenticationError extends AppError<AuthenticationErrorType> {
     constructor(type: AuthenticationErrorType, detail?: string) {

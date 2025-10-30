@@ -46,4 +46,5 @@ export interface IGoogleAuthGateway {
         credentials: GetOAuth2ClientWithCredentials,
     ): any
     getAuthClient(): any
+    getOAuth2Client(): any
 }

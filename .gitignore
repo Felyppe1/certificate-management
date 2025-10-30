@@ -58,4 +58,7 @@ terraform/*.tfplan
 *-key.json
 *-sa.json
 github-actions-key.json
+
 client/
+
+__pycache__

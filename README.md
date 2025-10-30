@@ -15,7 +15,7 @@ Dessa forma, a plataforma atende à necessidade de reduzir esforços manuais ou 
 
 ![alt text](architecture.png)
 
-## Como rodar (primeira vez)
+## Como rodar o sistema (primeira vez)
 
 ### Pré‑requisitos
 - Node.js 20+ e npm
@@ -71,7 +71,7 @@ Dessa forma, a plataforma atende à necessidade de reduzir esforços manuais ou 
 
     Acessível via: http://localhost:3000
 
-## Como rodar nas próximas vezes
+### Como rodar o sistema nas próximas vezes
 1. **Rodar containers**:
     
     Com o Docker rodando, rode os containers já criados:
@@ -86,6 +86,47 @@ Dessa forma, a plataforma atende à necessidade de reduzir esforços manuais ou 
     ```
 
     Acessível via: http://localhost:3000
+
+
+## Como rodar as cloud functions localmente
+
+### Pré‑requisitos
+- Python 3.14+
+
+Todas as Cloud Functions estão dentro da pasta `cloud-functions/`.  
+Para rodar uma função específica:
+
+1. **Exporte as credenciais da Service Account da Google**:
+
+    ```bash
+    export GOOGLE_APPLICATION_CREDENTIALS=caminho-da-sua-service-account
+    ```
+
+2. **Entre na pasta da função desejada**:
+
+    ```bash
+    cd cloud-functions/nome-da-funcao
+    ```
+
+3. **Crie um ambiente virtual Python**:
+    ```bash
+    python -m venv .venv
+    source .venv/bin/activate
+    ```
+
+4. **Instale as dependências**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+5. **Rode a função localmente**:
+    ```bash
+    functions-framework --target=main --port=8080 --debug
+    ```
+
+A função ficará acessível em: `http://localhost:8080`.
+
+> Dica: você pode abrir várias abas/terminais para rodar múltiplas funções ao mesmo tempo, cada uma em uma porta diferente.
 
 ## Modelagem do banco
 

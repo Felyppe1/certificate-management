@@ -30,23 +30,21 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
         return this.authClient
     }
 
+    getOAuth2Client() {
+        return this.oauth2Client
+    }
+
     getOAuth2ClientWithCredentials(
         credentials: GetOAuth2ClientWithCredentials,
     ) {
-        const client = new google.auth.OAuth2({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            redirectUri:
-                process.env.NEXT_PUBLIC_BASE_URL + '/api/auth/google/callback',
-        })
-
-        client.setCredentials({
+        const client = this.oauth2Client.setCredentials({
             access_token: credentials.accessToken,
             refresh_token: credentials.refreshToken,
         })
 
         return client
     }
+
     async checkOrGetNewAccessToken({
         accessToken,
         refreshToken,

@@ -1,5 +1,6 @@
 'use client'
 
+import { generateCertificatesAction } from '@/backend/infrastructure/server-actions/generate-certificates-action'
 import { Button } from '@/components/ui/button'
 import {
     Card,
@@ -15,7 +16,7 @@ import {
     CheckCircle2,
     CircleAlert,
 } from 'lucide-react'
-import { useState } from 'react'
+import { startTransition, useActionState } from 'react'
 
 interface GenerateCertificatesSectionProps {
     certificateId: string
@@ -25,18 +26,23 @@ interface GenerateCertificatesSectionProps {
 }
 
 export function GenerateCertificatesSection({
-    // certificateId,
+    certificateId,
     variablesMapped,
     certificatesGenerated,
     totalRecords,
 }: GenerateCertificatesSectionProps) {
-    const [isGenerating, setIsGenerating] = useState(false)
+    const [state, action, isPending] = useActionState(
+        generateCertificatesAction,
+        null,
+    )
 
     const handleGenerate = async () => {
-        setIsGenerating(true)
-        // TODO: Call API to generate certificates
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        setIsGenerating(false)
+        const formData = new FormData()
+        formData.append('certificateId', certificateId)
+
+        startTransition(() => {
+            action(formData)
+        })
     }
 
     const canGenerate = variablesMapped && !certificatesGenerated
@@ -112,9 +118,9 @@ export function GenerateCertificatesSection({
                     <Button
                         size="lg"
                         onClick={handleGenerate}
-                        disabled={!canGenerate || isGenerating}
+                        disabled={!canGenerate || isPending}
                     >
-                        {isGenerating ? (
+                        {isPending ? (
                             <>
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                 Gerando...

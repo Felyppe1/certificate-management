@@ -4,6 +4,7 @@ export enum NOT_FOUND_ERROR_TYPE {
     CERTIFICATE = 'certificate-not-found',
     TEMPLATE = 'template-not-found',
     DATA_SOURCE = 'data-source-not-found',
+    DATA_SET = 'data-set-not-found',
     USER = 'user-not-found',
     DRIVE_FILE = 'drive-file-not-found',
 }
