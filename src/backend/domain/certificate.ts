@@ -74,7 +74,7 @@ export class Certificate extends AggregateRoot {
             ? DataSource.create(data.dataSource)
             : null
 
-        const variableColumnMapping = Certificate.mapVariablesToColumns(
+        const variableColumnMapping = this.mapVariablesToColumns(
             template,
             dataSource,
         )
@@ -332,7 +332,7 @@ export class Certificate extends AggregateRoot {
         )
     }
 
-    static mapVariablesToColumns(
+    private static mapVariablesToColumns(
         template: Template | null,
         dataSource: DataSource | null,
         previousMapping?: Record<string, string | null> | null,

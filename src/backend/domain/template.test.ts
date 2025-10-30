@@ -1,21 +1,31 @@
 import { describe, expect, it } from 'vitest'
-import { INPUT_METHOD, Template, TEMPLATE_FILE_EXTENSION } from './template'
-import { ValidationError } from './error/validation-error'
+import {
+    INPUT_METHOD,
+    Template,
+    TEMPLATE_FILE_EXTENSION,
+    TemplateInput,
+} from './template'
+
+const createTemplateData = (
+    overrides?: Partial<TemplateInput>,
+): TemplateInput => ({
+    id: '1',
+    fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
+    inputMethod: INPUT_METHOD.URL,
+    driveFileId: '1',
+    storageFileUrl: null,
+    fileName: 'File Name',
+    variables: [],
+    thumbnailUrl: null,
+    ...overrides,
+})
 
 describe('Template', () => {
     it('should create a template successfully only with necessary data', () => {
         let template!: Template
 
         expect(
-            () =>
-                (template = Template.create({
-                    fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
-                    inputMethod: INPUT_METHOD.URL,
-                    driveFileId: '1',
-                    storageFileUrl: null,
-                    fileName: 'File Name',
-                    variables: [],
-                })),
+            () => (template = Template.create(createTemplateData())),
         ).not.toThrow()
 
         const serialized = template.serialize()
@@ -28,51 +38,46 @@ describe('Template', () => {
             storageFileUrl: null,
             fileName: 'File Name',
             variables: [],
+            thumbnailUrl: null,
         })
     })
 
     it('should not add a storage URL if the input method is not UPLOAD', () => {
         expect(
             () =>
-                new Template({
-                    id: '1',
-                    inputMethod: INPUT_METHOD.URL,
-                    variables: [],
-                    storageFileUrl: 'http://storage-url',
-                    fileName: 'File Name',
-                    driveFileId: null,
-                    fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
-                }),
-        ).toThrow(ValidationError)
+                new Template(
+                    createTemplateData({
+                        inputMethod: INPUT_METHOD.URL,
+                        storageFileUrl: 'http://storage-url',
+                    }),
+                ),
+        ).toThrow(
+            'File storage URL should only be provided for UPLOAD input method',
+        )
     })
 
     it('should not add a Drive file ID if the input method is UPLOAD', () => {
         expect(
             () =>
-                new Template({
-                    id: '1',
-                    inputMethod: INPUT_METHOD.UPLOAD,
-                    variables: [],
-                    storageFileUrl: null,
-                    fileName: 'File Name',
-                    driveFileId: '1',
-                    fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
-                }),
-        ).toThrow(ValidationError)
+                new Template(
+                    createTemplateData({
+                        inputMethod: INPUT_METHOD.UPLOAD,
+                        driveFileId: '1',
+                    }),
+                ),
+        ).toThrow(
+            'Drive file ID should not be provided for UPLOAD input method',
+        )
     })
 
     it('should throw validation error when required data is missing', () => {
         expect(
             () =>
-                new Template({
-                    id: '',
-                    inputMethod: INPUT_METHOD.UPLOAD,
-                    variables: [],
-                    storageFileUrl: null,
-                    fileName: 'File Name',
-                    driveFileId: '1',
-                    fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
-                }),
+                new Template(
+                    createTemplateData({
+                        id: '',
+                    }),
+                ),
         ).toThrow('Template ID is required')
     })
 

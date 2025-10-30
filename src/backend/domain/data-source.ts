@@ -70,20 +70,8 @@ export class DataSource {
             throw new Error('DataSource file extension is required')
         }
 
-        if (data.inputMethod === INPUT_METHOD.UPLOAD && data.driveFileId) {
-            throw new Error(
-                'Drive file ID should not be provided for UPLOAD input method',
-            )
-        }
-
-        if (data.inputMethod !== INPUT_METHOD.UPLOAD && data.storageFileUrl) {
-            throw new Error(
-                'File storage URL should only be provided for UPLOAD input method',
-            )
-        }
-
-        this.validateDriveFileId(data.driveFileId)
-        this.validateStorageFileUrl(data.storageFileUrl)
+        this.validateDriveFileId(data.driveFileId, data.inputMethod)
+        this.validateStorageFileUrl(data.storageFileUrl, data.inputMethod)
 
         this.id = data.id
         this.driveFileId = data.driveFileId
@@ -99,12 +87,12 @@ export class DataSource {
         if (data.inputMethod) this.inputMethod = data.inputMethod
 
         if (data.driveFileId) {
-            this.validateDriveFileId(data.driveFileId)
+            this.validateDriveFileId(data.driveFileId, this.inputMethod)
             this.driveFileId = data.driveFileId
         }
 
         if (data.storageFileUrl) {
-            this.validateStorageFileUrl(data.storageFileUrl)
+            this.validateStorageFileUrl(data.storageFileUrl, this.inputMethod)
             this.storageFileUrl = data.storageFileUrl
         }
 
@@ -114,16 +102,22 @@ export class DataSource {
         if (data.thumbnailUrl) this.thumbnailUrl = data.thumbnailUrl
     }
 
-    private validateDriveFileId(driveFileId: string | null) {
-        if (this.inputMethod === INPUT_METHOD.UPLOAD && driveFileId) {
+    private validateDriveFileId(
+        driveFileId: string | null,
+        inputMethod: INPUT_METHOD,
+    ) {
+        if (inputMethod === INPUT_METHOD.UPLOAD && driveFileId) {
             throw new Error(
                 'Drive file ID should not be provided for UPLOAD input method',
             )
         }
     }
 
-    private validateStorageFileUrl(storageFileUrl: string | null) {
-        if (this.inputMethod !== INPUT_METHOD.UPLOAD && storageFileUrl) {
+    private validateStorageFileUrl(
+        storageFileUrl: string | null,
+        inputMethod: INPUT_METHOD,
+    ) {
+        if (inputMethod !== INPUT_METHOD.UPLOAD && storageFileUrl) {
             throw new Error(
                 'File storage URL should only be provided for UPLOAD input method',
             )
