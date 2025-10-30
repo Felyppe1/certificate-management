@@ -3,6 +3,8 @@ resource "google_cloud_run_v2_service" "app" {
   location = var.region
   project  = var.project_id
 
+  deletion_protection = false
+
   depends_on = [
     google_project_service.gcp_services
   ]

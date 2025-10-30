@@ -75,7 +75,7 @@ jobs:
         working-directory: ./terraform
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then SUFFIX=""; else SUFFIX="-${{ github.ref_name }}"; fi
-          PROJECT_HASH=$(echo -n "${{ env.GCP_PROJECT_ID }}" | sha256sum | cut -c1-8)
+          PROJECT_HASH=$(echo -n "${{ env.GCP_PROJECT_ID }}" | md5sum | cut -c1-8)
           echo "TF_BACKEND_BUCKET=tf-state${SUFFIX}-${PROJECT_HASH}" >> $GITHUB_ENV
 
       - name: Install Terraform
@@ -179,7 +179,7 @@ jobs:
         working-directory: ./terraform
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then SUFFIX=""; else SUFFIX="-${{ github.ref_name }}"; fi
-          PROJECT_HASH=$(echo -n "${{ env.GCP_PROJECT_ID }}" | sha256sum | cut -c1-8)
+          PROJECT_HASH=$(echo -n "${{ env.GCP_PROJECT_ID }}" | md5sum | cut -c1-8)
           echo "TF_BACKEND_BUCKET=tf-state${SUFFIX}-${PROJECT_HASH}" >> $GITHUB_ENV
 
       - name: Install Terraform
