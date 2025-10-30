@@ -13,7 +13,7 @@ export enum DATA_SOURCE_FILE_EXTENSION {
     GOOGLE_SHEETS = 'application/vnd.google-apps.spreadsheet',
 }
 
-interface DataSourceInput {
+export interface DataSourceInput {
     id: string
     driveFileId: string | null
     storageFileUrl: string | null
@@ -43,8 +43,8 @@ export class DataSource {
 
     static create(data: CreateDataSourceInput): DataSource {
         return new DataSource({
-            id: createId(),
             ...data,
+            id: createId(),
         })
     }
 

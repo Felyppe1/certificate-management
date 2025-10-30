@@ -25,7 +25,7 @@ export enum CERTIFICATE_STATUS {
     SCHEDULED = 'SCHEDULED',
 }
 
-interface CertificateInput {
+export interface CertificateInput {
     id: string
     name: string
     template: Template | null

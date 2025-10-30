@@ -13,7 +13,7 @@ export enum TEMPLATE_FILE_EXTENSION {
     DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 }
 
-interface TemplateInput {
+export interface TemplateInput {
     id: string
     driveFileId: string | null
     storageFileUrl: string | null
@@ -43,8 +43,8 @@ export class Template {
 
     static create(data: CreateTemplateInput): Template {
         return new Template({
-            id: createId(),
             ...data,
+            id: createId(),
         })
     }
 

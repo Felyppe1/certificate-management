@@ -26,9 +26,9 @@ export class DataSet extends AggregateRoot {
 
     static create(data: CreateDataSet): DataSet {
         return new DataSet({
+            ...data,
             id: createId(),
             generationStatus: GENERATION_STATUS.PENDING,
-            ...data,
         })
     }
 

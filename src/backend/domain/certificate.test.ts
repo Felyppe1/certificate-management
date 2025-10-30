@@ -1,7 +1,62 @@
 import { describe, expect, it } from 'vitest'
-import { Certificate, CERTIFICATE_STATUS } from './certificate'
-import { Template, INPUT_METHOD, TEMPLATE_FILE_EXTENSION } from './template'
-import { DATA_SOURCE_FILE_EXTENSION, DataSource } from './data-source'
+import {
+    Certificate,
+    CERTIFICATE_STATUS,
+    CertificateInput,
+} from './certificate'
+import {
+    Template,
+    INPUT_METHOD,
+    TEMPLATE_FILE_EXTENSION,
+    TemplateInput,
+} from './template'
+import {
+    DATA_SOURCE_FILE_EXTENSION,
+    DataSource,
+    DataSourceInput,
+} from './data-source'
+
+const createTemplateData = (
+    overrides?: Partial<TemplateInput>,
+): TemplateInput => ({
+    id: '1',
+    fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
+    inputMethod: INPUT_METHOD.URL,
+    driveFileId: '1',
+    storageFileUrl: null,
+    fileName: 'File Name',
+    variables: [],
+    thumbnailUrl: null,
+    ...overrides,
+})
+
+const createDataSourceData = (
+    overrides?: Partial<DataSourceInput>,
+): DataSourceInput => ({
+    id: '1',
+    fileExtension: DATA_SOURCE_FILE_EXTENSION.CSV,
+    inputMethod: INPUT_METHOD.URL,
+    driveFileId: '1',
+    storageFileUrl: null,
+    fileName: 'File Name',
+    columns: [],
+    thumbnailUrl: null,
+    ...overrides,
+})
+
+const createCertificateData = (
+    overrides?: Partial<CertificateInput>,
+): CertificateInput => ({
+    id: '1',
+    name: 'Name',
+    userId: '1',
+    template: null,
+    createdAt: new Date(),
+    status: CERTIFICATE_STATUS.DRAFT,
+    dataSource: null,
+    variableColumnMapping: null,
+    ...overrides,
+})
 
 describe('Certificate', () => {
     it('should create a certificate emission successfully only with necessary data', () => {
@@ -35,27 +90,10 @@ describe('Certificate', () => {
     })
 
     it('should add a template successfully', () => {
-        const certificate = new Certificate({
-            id: '1',
-            name: 'Name',
-            userId: '1',
-            template: null,
-            createdAt: new Date(),
-            status: CERTIFICATE_STATUS.DRAFT,
-            dataSource: null,
-            variableColumnMapping: null,
-        })
+        const certificate = new Certificate(createCertificateData())
 
         expect(() => {
-            certificate.setTemplate({
-                fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
-                inputMethod: INPUT_METHOD.URL,
-                driveFileId: '1',
-                storageFileUrl: null,
-                fileName: 'File Name',
-                variables: [],
-                thumbnailUrl: null,
-            })
+            certificate.setTemplate(createTemplateData())
         }).not.toThrow()
 
         expect(certificate.hasTemplate()).toBe(true)
@@ -63,25 +101,11 @@ describe('Certificate', () => {
     })
 
     it('should remove a template successfully', () => {
-        const certificate = new Certificate({
-            id: '1',
-            name: 'Name',
-            userId: '1',
-            template: new Template({
-                id: '1',
-                fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
-                inputMethod: INPUT_METHOD.URL,
-                driveFileId: '1',
-                storageFileUrl: null,
-                fileName: 'File Name',
-                variables: [],
-                thumbnailUrl: null,
+        const certificate = new Certificate(
+            createCertificateData({
+                template: new Template(createTemplateData()),
             }),
-            createdAt: new Date(),
-            status: CERTIFICATE_STATUS.DRAFT,
-            dataSource: null,
-            variableColumnMapping: null,
-        })
+        )
 
         expect(certificate.hasTemplate()).toBe(true)
 
@@ -91,27 +115,14 @@ describe('Certificate', () => {
     })
 
     it('should add a data source successfully', () => {
-        const certificate = new Certificate({
-            id: '1',
-            name: 'Name',
-            userId: '1',
-            template: null,
-            createdAt: new Date(),
-            status: CERTIFICATE_STATUS.DRAFT,
-            dataSource: null,
-            variableColumnMapping: null,
-        })
+        const certificate = new Certificate(createCertificateData())
 
         expect(() => {
-            certificate.setDataSource({
-                fileExtension: DATA_SOURCE_FILE_EXTENSION.CSV,
-                inputMethod: INPUT_METHOD.URL,
-                driveFileId: '1',
-                storageFileUrl: null,
-                fileName: 'File Name',
-                columns: ['column1'],
-                thumbnailUrl: null,
-            })
+            certificate.setDataSource(
+                createDataSourceData({
+                    columns: ['column1'],
+                }),
+            )
         }).not.toThrow()
 
         expect(certificate.hasDataSource()).toBe(true)
@@ -119,25 +130,11 @@ describe('Certificate', () => {
     })
 
     it('should remove a data source successfully', () => {
-        const certificate = new Certificate({
-            id: '1',
-            name: 'Name',
-            userId: '1',
-            template: null,
-            createdAt: new Date(),
-            status: CERTIFICATE_STATUS.DRAFT,
-            dataSource: new DataSource({
-                id: '1',
-                fileExtension: DATA_SOURCE_FILE_EXTENSION.CSV,
-                inputMethod: INPUT_METHOD.URL,
-                driveFileId: '1',
-                storageFileUrl: null,
-                fileName: 'File Name',
-                columns: ['column1'],
-                thumbnailUrl: null,
+        const certificate = new Certificate(
+            createCertificateData({
+                dataSource: new DataSource(createDataSourceData()),
             }),
-            variableColumnMapping: null,
-        })
+        )
 
         expect(certificate.hasDataSource()).toBe(true)
 
@@ -148,36 +145,21 @@ describe('Certificate', () => {
 
     describe('should preserve existing mapping and try to auto-map new variables with columns that are not being used when updating the', () => {
         it('template', () => {
-            const certificate = new Certificate({
-                id: '1',
-                name: 'Name',
-                userId: '1',
-                template: new Template({
-                    id: '1',
-                    fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
-                    inputMethod: INPUT_METHOD.URL,
-                    driveFileId: '1',
-                    storageFileUrl: null,
-                    fileName: 'File Name',
-                    variables: ['variable1'],
-                    thumbnailUrl: null,
+            const certificate = new Certificate(
+                createCertificateData({
+                    template: new Template(
+                        createTemplateData({ variables: ['variable1'] }),
+                    ),
+                    dataSource: new DataSource(
+                        createDataSourceData({
+                            columns: ['column1', 'column2'],
+                        }),
+                    ),
+                    variableColumnMapping: {
+                        variable1: 'column1',
+                    },
                 }),
-                createdAt: new Date(),
-                status: CERTIFICATE_STATUS.DRAFT,
-                dataSource: new DataSource({
-                    id: '1',
-                    fileExtension: DATA_SOURCE_FILE_EXTENSION.CSV,
-                    inputMethod: INPUT_METHOD.URL,
-                    driveFileId: '1',
-                    storageFileUrl: null,
-                    fileName: 'File Name',
-                    columns: ['column1', 'column2'],
-                    thumbnailUrl: null,
-                }),
-                variableColumnMapping: {
-                    variable1: 'column1',
-                },
-            })
+            )
 
             certificate.updateTemplate({
                 variables: ['variable1', 'column1', 'column2'],
@@ -193,37 +175,22 @@ describe('Certificate', () => {
         })
 
         it('data source', () => {
-            const certificate = new Certificate({
-                id: '1',
-                name: 'Name',
-                userId: '1',
-                template: new Template({
-                    id: '1',
-                    fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
-                    inputMethod: INPUT_METHOD.URL,
-                    driveFileId: '1',
-                    storageFileUrl: null,
-                    fileName: 'File Name',
-                    variables: ['variable1', 'column2'],
-                    thumbnailUrl: null,
+            const certificate = new Certificate(
+                createCertificateData({
+                    template: new Template(
+                        createTemplateData({
+                            variables: ['variable1', 'column2'],
+                        }),
+                    ),
+                    dataSource: new DataSource(
+                        createDataSourceData({ columns: ['column1'] }),
+                    ),
+                    variableColumnMapping: {
+                        variable1: 'column1',
+                        column2: null,
+                    },
                 }),
-                createdAt: new Date(),
-                status: CERTIFICATE_STATUS.DRAFT,
-                dataSource: new DataSource({
-                    id: '1',
-                    fileExtension: DATA_SOURCE_FILE_EXTENSION.CSV,
-                    inputMethod: INPUT_METHOD.URL,
-                    driveFileId: '1',
-                    storageFileUrl: null,
-                    fileName: 'File Name',
-                    columns: ['column1'],
-                    thumbnailUrl: null,
-                }),
-                variableColumnMapping: {
-                    variable1: 'column1',
-                    column2: null,
-                },
-            })
+            )
 
             certificate.updateDataSource({
                 columns: ['column3', 'column2', 'column1'],
@@ -240,35 +207,19 @@ describe('Certificate', () => {
 
     describe('should automatically map variables to columns with matching normalized names when adding a new', () => {
         it('template', () => {
-            const certificate = new Certificate({
-                id: '1',
-                name: 'Name',
-                userId: '1',
-                template: null,
-                createdAt: new Date(),
-                status: CERTIFICATE_STATUS.DRAFT,
-                dataSource: new DataSource({
-                    id: '1',
-                    fileExtension: DATA_SOURCE_FILE_EXTENSION.CSV,
-                    inputMethod: INPUT_METHOD.URL,
-                    driveFileId: '1',
-                    storageFileUrl: null,
-                    fileName: 'File Name',
-                    columns: ['Name', 'E-mail'],
-                    thumbnailUrl: null,
+            const certificate = new Certificate(
+                createCertificateData({
+                    dataSource: new DataSource(
+                        createDataSourceData({ columns: ['Name', 'E-mail'] }),
+                    ),
                 }),
-                variableColumnMapping: null,
-            })
+            )
 
-            certificate.setTemplate({
-                fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
-                inputMethod: INPUT_METHOD.URL,
-                driveFileId: '1',
-                storageFileUrl: null,
-                fileName: 'File Name',
-                variables: ['name', 'random', 'email'],
-                thumbnailUrl: null,
-            })
+            certificate.setTemplate(
+                createTemplateData({
+                    variables: ['name', 'random', 'email'],
+                }),
+            )
 
             const { variableColumnMapping } = certificate.serialize()
 
@@ -280,39 +231,26 @@ describe('Certificate', () => {
         })
 
         it('data source', () => {
-            const certificate = new Certificate({
-                id: '1',
-                name: 'Name',
-                userId: '1',
-                template: new Template({
-                    id: '1',
-                    fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
-                    inputMethod: INPUT_METHOD.URL,
-                    driveFileId: '1',
-                    storageFileUrl: null,
-                    fileName: 'File Name',
-                    variables: ['name', 'random', 'email'],
-                    thumbnailUrl: null,
+            const certificate = new Certificate(
+                createCertificateData({
+                    template: new Template(
+                        createTemplateData({
+                            variables: ['name', 'random', 'email'],
+                        }),
+                    ),
+                    variableColumnMapping: {
+                        name: null,
+                        random: null,
+                        email: null,
+                    },
                 }),
-                createdAt: new Date(),
-                status: CERTIFICATE_STATUS.DRAFT,
-                dataSource: null,
-                variableColumnMapping: {
-                    name: null,
-                    random: null,
-                    email: null,
-                },
-            })
+            )
 
-            certificate.setDataSource({
-                fileExtension: DATA_SOURCE_FILE_EXTENSION.CSV,
-                inputMethod: INPUT_METHOD.URL,
-                driveFileId: '1',
-                storageFileUrl: null,
-                fileName: 'File Name',
-                columns: ['Name', 'E-mail'],
-                thumbnailUrl: null,
-            })
+            certificate.setDataSource(
+                createDataSourceData({
+                    columns: ['Name', 'E-mail'],
+                }),
+            )
 
             const { variableColumnMapping } = certificate.serialize()
 
