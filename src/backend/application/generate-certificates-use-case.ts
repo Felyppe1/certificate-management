@@ -130,7 +130,10 @@ export class GenerateCertificatesUseCase {
             },
         }
 
-        const cloudFunctionUrl = process.env.CLOUD_FUNCTION_BASE_URL
+        const cloudFunctionUrl =
+            process.env.CLOUD_FUNCTION_BASE_URL +
+            '/generate-pdfs' +
+            process.env.SUFFIX
 
         if (!cloudFunctionUrl) {
             throw new Error('CLOUD_FUNCTION_BASE_URL not configured')

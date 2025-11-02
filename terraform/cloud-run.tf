@@ -40,6 +40,11 @@ resource "google_cloud_run_v2_service" "app" {
       }
 
       env {
+        name = "SUFFIX"
+        value = local.suffix
+      }
+
+      env {
         name  = "CERTIFICATES_BUCKET"
         value = google_storage_bucket.certificates.name
       }
@@ -47,6 +52,11 @@ resource "google_cloud_run_v2_service" "app" {
       env {
         name = "GCP_PROJECT_ID"
         value = var.project_id
+      }
+
+      env {
+        name = "CLOUD_FUNCTION_BASE_URL"
+        value = "https://${var.region}-${data.google_project.project.project_id}.cloudfunctions.net"
       }
     }
 

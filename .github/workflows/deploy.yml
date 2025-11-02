@@ -66,7 +66,8 @@ jobs:
             GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
             GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
             GOOGLE_API_KEY: env.GOOGLE_API_KEY,
-            GA_ID: env.GA_ID
+            GA_ID: env.GA_ID,
+            SUFFIX: env.SUFFIX
           }')
 
           echo "TF_VAR_environment_variables=$TF_ENV_VARS" >> $GITHUB_ENV
@@ -170,7 +171,8 @@ jobs:
             GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
             GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
             GOOGLE_API_KEY: env.GOOGLE_API_KEY,
-            GA_ID: env.GA_ID
+            GA_ID: env.GA_ID,
+            SUFFIX: env.SUFFIX
           }')
 
           echo "TF_VAR_environment_variables=$TF_ENV_VARS" >> $GITHUB_ENV

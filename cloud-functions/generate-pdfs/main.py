@@ -10,15 +10,27 @@ import re
 import traceback
 import google.auth.transport.requests
 import google.oauth2.id_token
+import io
+import zipfile
+
+import tempfile
+import subprocess
+
+from google.auth import default
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
+# from google.oauth2 import service_account
 
 load_dotenv()
 
 APP_BASE_URL = os.getenv('APP_BASE_URL')
+SOFFICE_PATH = os.getenv('SOFFICE_PATH')
 CERTIFICATES_BUCKET = os.getenv('CERTIFICATES_BUCKET')
 
 for var_name, var_value in {
     "APP_BASE_URL": APP_BASE_URL,
-    # "CERTIFICATES_BUCKET": CERTIFICATES_BUCKET,
+    "SOFFICE_PATH": SOFFICE_PATH,
+    "CERTIFICATES_BUCKET": CERTIFICATES_BUCKET,
 }.items():
     if not var_value:
         raise ValueError(f"Environment variable '{var_name}' is not set.")
@@ -31,31 +43,24 @@ def download_file_from_url(url):
     return BytesIO(response.content)
 
 def replace_variables_in_docx(template_buffer, variable_mapping):
-    doc = Document(template_buffer)
-    
     pattern = re.compile(r"\{\{\s*(\w+)\s*\}\}")
 
-    def replace_in_text(text):
-        def replacer(match):
-            key = match.group(1)
-            return str(variable_mapping.get(key, ''))
-        return pattern.sub(replacer, text)
-
-    for paragraph in doc.paragraphs:
-        for run in paragraph.runs:
-            run.text = replace_in_text(run.text)
-
-    for table in doc.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                for paragraph in cell.paragraphs:
-                    for run in paragraph.runs:
-                        run.text = replace_in_text(run.text)
-
-    output_buffer = BytesIO()
-    doc.save(output_buffer)
-    output_buffer.seek(0)
-    return output_buffer
+    with zipfile.ZipFile(template_buffer, 'r') as zin:
+        out_buffer = BytesIO()
+        with zipfile.ZipFile(out_buffer, 'w') as zout:
+            for item in zin.infolist():
+                data = zin.read(item.filename)
+                # Replace only on XML contents (document, headers, footers, drawings)
+                if item.filename.endswith(('.xml',)):
+                    text = data.decode('utf-8')
+                    def replacer(match):
+                        key = match.group(1)
+                        return str(variable_mapping.get(key, ''))
+                    text = pattern.sub(replacer, text)
+                    data = text.encode('utf-8')
+                zout.writestr(item, data)
+        out_buffer.seek(0)
+    return out_buffer
 
 def replace_variables_in_pptx(template_buffer, variable_mapping):
     prs = Presentation(template_buffer)
@@ -67,28 +72,129 @@ def replace_variables_in_pptx(template_buffer, variable_mapping):
             return str(variable_mapping.get(key, ''))
         return pattern.sub(replacer, text)
 
+    def process_shape(shape):
+        if hasattr(shape, "text_frame") and shape.text_frame:
+            for paragraph in shape.text_frame.paragraphs:
+                full_text = "".join(run.text for run in paragraph.runs)
+                new_text = replace_in_text(full_text)
+                for run in paragraph.runs:
+                    run.text = ""
+                if paragraph.runs:
+                    paragraph.runs[0].text = new_text
+                else:
+                    paragraph.add_run().text = new_text
+
+        if shape.has_table:
+            for row in shape.table.rows:
+                for cell in row.cells:
+                    for paragraph in cell.text_frame.paragraphs:
+                        full_text = "".join(run.text for run in paragraph.runs)
+                        new_text = replace_in_text(full_text)
+                        for run in paragraph.runs:
+                            run.text = ""
+                        if paragraph.runs:
+                            paragraph.runs[0].text = new_text
+                        else:
+                            paragraph.add_run().text = new_text
+
+        if shape.shape_type == 6:  # 6 == MSO_SHAPE_TYPE.GROUP
+            for subshape in shape.shapes:
+                process_shape(subshape)
+
+
+    # Percorre slides e shapes recursivamente
     for slide in prs.slides:
         for shape in slide.shapes:
-            # Replace in text boxes and placeholders
-            if hasattr(shape, "text_frame") and shape.text_frame:
-                for paragraph in shape.text_frame.paragraphs:
-                    for run in paragraph.runs:
-                        new_text = replace_in_text(run.text)
-                        run.text = new_text
+            process_shape(shape)
+    # for slide in prs.slides:
+    #     for shape in slide.shapes:
+    #         # Replace in text boxes and placeholders
+    #         if hasattr(shape, "text_frame") and shape.text_frame:
+    #             for paragraph in shape.text_frame.paragraphs:
+    #                 for run in paragraph.runs:
+    #                     new_text = replace_in_text(run.text)
+    #                     run.text = new_text
 
-            # Replace in tables
-            if shape.has_table:
-                for row in shape.table.rows:
-                    for cell in row.cells:
-                        for paragraph in cell.text_frame.paragraphs:
-                            for run in paragraph.runs:
-                                new_text = replace_in_text(run.text)
-                                run.text = new_text
+    #         # Replace in tables
+    #         if shape.has_table:
+    #             for row in shape.table.rows:
+    #                 for cell in row.cells:
+    #                     for paragraph in cell.text_frame.paragraphs:
+    #                         for run in paragraph.runs:
+    #                             new_text = replace_in_text(run.text)
+    #                             run.text = new_text
 
     output_buffer = BytesIO()
     prs.save(output_buffer)
     output_buffer.seek(0)
     return output_buffer
+
+def convert_to_pdf_with_libreoffice(input_bytes: BytesIO, input_ext: str) -> BytesIO:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        input_path = os.path.join(tmpdir, f"input.{input_ext}")
+        output_path = os.path.join(tmpdir, f"input.pdf")
+
+        with open(input_path, "wb") as f:
+            f.write(input_bytes.read())
+
+        subprocess.run([
+            SOFFICE_PATH,
+            "--headless",
+            "--convert-to", "pdf:draw_pdf_Export",
+            "--outdir", tmpdir,
+            input_path
+        ], check=True)
+
+        with open(output_path, "rb") as pdf_file:
+            pdf_bytes = BytesIO(pdf_file.read())
+
+    pdf_bytes.seek(0)
+    return pdf_bytes
+
+# def get_drive_service():
+#     creds, _ = default(scopes=["https://www.googleapis.com/auth/drive"])
+
+#     return build("drive", "v3", credentials=creds)
+
+# def convert_to_pdf_via_google_drive(file_bytes: bytes, file_extension: str) -> bytes:
+#     FOLDER_ID = '189e7d3DtkzqfS4qrnOM_3wIG-PZMo39B'
+
+#     ext = file_extension.lower().lstrip(".")
+
+#     if ext == "docx":
+#         mime_type_upload = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+#         mime_type_convert = "application/vnd.google-apps.document"
+#     elif ext == "pptx":
+#         mime_type_upload = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+#         mime_type_convert = "application/vnd.google-apps.presentation"
+#     else:
+#         raise ValueError(f"Extensão {ext} não suportada para conversão")
+
+#     service = get_drive_service()
+
+#     filename = f"input.{ext}"
+
+#     media = MediaIoBaseUpload(file_bytes, mimetype=mime_type_upload)
+
+#     file_metadata = {"name": filename, "mimeType": mime_type_upload, "parents": [FOLDER_ID]}
+#     uploaded = service.files().create(
+#         body=file_metadata, media_body=media, fields="id"
+#     ).execute()
+#     file_id = uploaded.get("id")
+
+#     request = service.files().export_media(fileId=file_id, mimeType="application/pdf")
+#     pdf_bytes = io.BytesIO()
+#     downloader = MediaIoBaseDownload(pdf_bytes, request)
+
+#     done = False
+#     while not done:
+#         status, done = downloader.next_chunk()
+
+#     pdf_bytes.seek(0)
+
+#     service.files().delete(fileId=file_id).execute()
+
+#     return pdf_bytes.read()
 
 def upload_to_bucket(file_buffer, file_path):
     bucket = storage_client.bucket(CERTIFICATES_BUCKET)
@@ -160,7 +266,6 @@ def main(request):
             if not drive_file_id:
                 return {'error': 'Template driveFileId not found'}, 404
             
-            # Montar URL de export do Google Drive baseado no tipo
             mime_types_for_docx = [
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                 'application/vnd.google-apps.document'
@@ -180,10 +285,8 @@ def main(request):
             else:
                 return {'error': f'Unsupported template file extension: {file_mime_type}'}, 400
             
-            # Baixar o template
             template_buffer = download_file_from_url(template_url)
             
-            # Gerar PDFs para cada row
             user_id = certificate_emission.get('userId')
             generated_files = []
 
@@ -197,7 +300,6 @@ def main(request):
                     if column_name and column_name in row:
                         row_variable_mapping[template_var] = row[column_name]
                 
-                # Substituir variáveis no template
                 template_buffer.seek(0)
                 if is_docx:
                     filled_buffer = replace_variables_in_docx(BytesIO(template_buffer.read()), row_variable_mapping)
@@ -206,31 +308,30 @@ def main(request):
                     filled_buffer = replace_variables_in_pptx(BytesIO(template_buffer.read()), row_variable_mapping)
                     file_extension_str = 'pptx'
             
-                # TODO: transform to PDF before saving to bucket
+                pdf_buffer = convert_to_pdf_with_libreoffice(filled_buffer, file_extension_str)
+                # pdf_buffer = convert_to_pdf_via_google_drive(filled_buffer, file_extension_str)
 
-                # file_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.{file_extension_str}"
-                # upload_to_bucket(filled_buffer, file_path)
+                # Save file
+                # file_path = f"output/certificate-{index + 1}.pdf"
+                # save_to_local(pdf_buffer, file_path)
 
-                file_path = f"output/certificate-{index + 1}.{file_extension_str}"
-                save_to_local(filled_buffer, file_path)
+                # file_path = f"output/certificate-{index + 1}.{file_extension_str}"
+                # save_to_local(filled_buffer, file_path)
 
-                generated_files.append(file_path)
+                # Uploading to bucket
+                file_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.{file_extension_str}"
+                upload_to_bucket(filled_buffer, file_path)
+
+                pdf_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.pdf"
+                upload_to_bucket(pdf_buffer, pdf_path)
         else:
             pass
-            # TODO: transform to PDF before saving to bucket
         
         # update_data_set_status(data_set_id, 'COMPLETED')
         
-        return {
-            'success': True,
-            'message': f'Generated {len(generated_files)} certificates successfully',
-            'files': generated_files
-        }, 200
+        return "", 204
         
     except Exception as e:
-        print(f"Error generating certificates: {str(e)}")
-        print(traceback.format_exc())
-        
         # try:
         #     if 'data_set_id' in locals():
         #         update_data_set_status(data_set_id, 'FAILED')

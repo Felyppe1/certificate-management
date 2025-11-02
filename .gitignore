@@ -62,3 +62,5 @@ github-actions-key.json
 client/
 
 __pycache__
+
+output/
