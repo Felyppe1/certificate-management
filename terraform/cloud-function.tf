@@ -1,7 +1,7 @@
 data "archive_file" "generate_pdfs_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../cloud-functions/generate-pdfs"
-  output_path = "${path.module}/generate-pdfs.zip"
+  output_path = "${path.module}/../cloud-functions/builds/generate-pdfs.zip"
 
   excludes = [
     ".git",
