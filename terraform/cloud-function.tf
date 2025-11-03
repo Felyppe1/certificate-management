@@ -1,7 +1,7 @@
 data "archive_file" "generate_pdfs_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../cloud-functions/generate-pdfs"
-  output_path = "${path.module}/../cloud-functions/generate-pdfs.zip"
+  output_path = "${path.module}/generate-pdfs.zip"
 
   excludes = [
     ".git",
@@ -18,8 +18,6 @@ resource "google_storage_bucket_object" "generate_pdfs_object" {
   name   = "generate-pdfs${local.suffix}-${data.archive_file.generate_pdfs_zip.output_md5}.zip"
   bucket = google_storage_bucket.cloud_functions.name
   source = data.archive_file.generate_pdfs_zip.output_path
-
-  depends_on = [data.archive_file.generate_pdfs_zip]
 }
 
 resource "google_cloudfunctions2_function" "generate_pdfs_function" {
