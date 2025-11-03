@@ -19,6 +19,8 @@ resource "google_storage_bucket_object" "generate_pdfs_object" {
   bucket = google_storage_bucket.cloud_functions.name
   content_type = "application/zip"
   source = data.archive_file.generate_pdfs_zip.output_path
+
+  depends_on = [ data.archive_file.generate_pdfs_zip ]
 }
 
 resource "google_cloudfunctions2_function" "generate_pdfs_function" {
@@ -59,6 +61,8 @@ resource "google_cloudfunctions2_function" "generate_pdfs_function" {
     
     service_account_email = google_service_account.app_service_account.email
   }
+
+  depends_on = [ google_storage_bucket_object.generate_pdfs_object ]
 }
 
 resource "google_artifact_registry_repository" "cloud_functions_repository" {
