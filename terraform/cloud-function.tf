@@ -17,6 +17,7 @@ data "archive_file" "generate_pdfs_zip" {
 resource "google_storage_bucket_object" "generate_pdfs_object" {
   name   = "generate-pdfs${local.suffix}-${data.archive_file.generate_pdfs_zip.output_md5}.zip"
   bucket = google_storage_bucket.cloud_functions.name
+  content_type = "application/zip"
   source = data.archive_file.generate_pdfs_zip.output_path
 }
 
