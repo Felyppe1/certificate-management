@@ -8,6 +8,8 @@ import { logoutAction } from './logout-action'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { GenerateCertificatesUseCase } from '@/backend/application/generate-certificates-use-case'
+import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
+import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 
 const generateCertificatesActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -27,12 +29,15 @@ export async function generateCertificatesAction(
         const parsedData = generateCertificatesActionSchema.parse(rawData)
 
         const sessionsRepository = new PrismaSessionsRepository(prisma)
-        // const certificateEmissionsRepository = new PrismaCertificatesRepository(
-        //     prisma,
-        // )
+        const certificateEmissionsRepository = new PrismaCertificatesRepository(
+            prisma,
+        )
+        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
 
         const generateCertificatesUseCase = new GenerateCertificatesUseCase(
             sessionsRepository,
+            certificateEmissionsRepository,
+            dataSetsRepository,
         )
 
         await generateCertificatesUseCase.execute({

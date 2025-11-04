@@ -46,7 +46,8 @@ export interface GetCertificateEmissionControllerResponse {
             thumbnailUrl: string | null
             dataSet: {
                 id: string
-                generationStatus: GENERATION_STATUS
+                generationStatus: GENERATION_STATUS | null
+                totalBytes: number
                 rows: Record<string, any>[]
             }
         } | null

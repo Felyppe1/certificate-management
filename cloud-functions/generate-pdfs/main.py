@@ -200,15 +200,15 @@ def upload_to_bucket(file_buffer, file_path):
     bucket = storage_client.bucket(CERTIFICATES_BUCKET)
     blob = bucket.blob(file_path)
     blob.upload_from_file(file_buffer, rewind=True)
-    return file_path
+    return blob
 
 def save_to_local(buffer, file_path):
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, 'wb') as f:
         f.write(buffer.getvalue())
 
-def update_data_set_status(data_set_id, status):
-    url = f"{APP_BASE_URL}/api/internal/data-sets/{data_set_id}/status"
+def update_data_set_status(data_set_id, status, total_bytes=None):
+    url = f"{APP_BASE_URL}/api/internal/data-sets/{data_set_id}"
     auth_req = google.auth.transport.requests.Request()
 
     id_token = google.oauth2.id_token.fetch_id_token(auth_req, APP_BASE_URL)
@@ -217,8 +217,13 @@ def update_data_set_status(data_set_id, status):
         "Authorization": f"Bearer {id_token}",
         "Content-Type": "application/json",
     }
+    
+    body = {
+        "generationStatus": status,
+        "totalBytes": total_bytes
+    }
 
-    response = requests.put(url, json={"generationStatus": status}, headers=headers)
+    response = requests.patch(url, json=body, headers=headers)
     response.raise_for_status()
 
 @functions_framework.http
@@ -233,27 +238,30 @@ def main(request):
     if not certificate_emission:
         return {'error': 'certificateEmission is required'}, 400
     
+    certificate_emission_id = certificate_emission.get('id')
+    template = certificate_emission.get('template')
+    data_source = certificate_emission.get('dataSource')
+    
+    if not template:
+        return {'error': 'Template is missing'}, 400
+    
+    if not data_source:
+        return {'error': 'Data source is missing'}, 400
+    
+    data_set = data_source.get('dataSet')
+    if not data_set:
+        return {'error': 'Data set is missing'}, 400
+    
+    data_set_id = data_set.get('id')
+    if not data_set_id:
+        return {'error': 'Data set id is missing'}, 400
+    
+    rows = data_set.get('rows', [])
+    if not rows:
+        return {'error': 'Data set rows are empty'}, 400
+    
     try:
-        certificate_emission_id = certificate_emission.get('id')
-        template = certificate_emission.get('template')
-        data_source = certificate_emission.get('dataSource')
         variable_mapping = certificate_emission.get('variableColumnMapping', {})
-        
-        if not template:
-            return {'error': 'Template is missing'}, 400
-        
-        if not data_source:
-            return {'error': 'Data source is missing'}, 400
-        
-        data_set = data_source.get('dataSet')
-        if not data_set:
-            return {'error': 'DataSet is missing'}, 400
-        
-        data_set_id = data_set.get('id')
-        rows = data_set.get('rows', [])
-        
-        if not rows:
-            return {'error': 'DataSet rows are empty'}, 400
         
         template_buffer = None
         user_id = None
@@ -264,7 +272,7 @@ def main(request):
             file_mime_type = template.get('fileExtension')
             
             if not drive_file_id:
-                return {'error': 'Template driveFileId not found'}, 404
+                return {'error': 'Template driveFileId not found'}, 400
             
             mime_types_for_docx = [
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -283,7 +291,7 @@ def main(request):
                 template_url = f"https://docs.google.com/presentation/d/{drive_file_id}/export?format=pptx"
                 is_docx = False
             else:
-                return {'error': f'Unsupported template file extension: {file_mime_type}'}, 400
+                return {'error': f'Unsupported template file extension: {file_mime_type}'}, 422
             
             template_buffer = download_file_from_url(template_url)
             
@@ -292,6 +300,8 @@ def main(request):
 
         # TODO: get the template from other input method options
         
+        total_bytes = 0
+
         if variable_mapping:
             for index, row in enumerate(rows):
                 print(row)
@@ -323,22 +333,29 @@ def main(request):
                 upload_to_bucket(filled_buffer, file_path)
 
                 pdf_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.pdf"
-                upload_to_bucket(pdf_buffer, pdf_path)
+                blob = upload_to_bucket(pdf_buffer, pdf_path)
+
+                total_bytes += blob.size
+
         else:
             pass
         
-        # update_data_set_status(data_set_id, 'COMPLETED')
+        update_data_set_status(data_set_id, 'COMPLETED', total_bytes)
         
         return "", 204
         
     except Exception as e:
-        # try:
-        #     if 'data_set_id' in locals():
-        #         update_data_set_status(data_set_id, 'FAILED')
-        # except:
-        #     pass
-        
+        original_error = str(e)
+        update_error = None
+
+        try:
+            update_data_set_status(data_set_id, 'FAILED')
+        except Exception as inner_e:
+            update_error = str(inner_e)
+
+        details = original_error if not update_error else f'Original error: {original_error}; Update error: {update_error}'
+
         return {
-            'error': 'Failed to generate certificates',
-            'details': str(e)
+            'title': 'Failed to generate certificates',
+            'details': details
         }, 500

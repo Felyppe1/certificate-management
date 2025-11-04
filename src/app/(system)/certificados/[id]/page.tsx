@@ -41,11 +41,14 @@ export default async function CertificatePage({
     const dataSourceColumns =
         certificateEmissionResponse.certificateEmission.dataSource?.columns ||
         []
+    const dataSet =
+        certificateEmissionResponse.certificateEmission.dataSource?.dataSet ??
+        null
     const variablesMapped = Object.values(
         certificateEmissionResponse.certificateEmission.variableColumnMapping ||
             {},
     ).every(mapping => mapping !== null)
-    const certificatesGenerated = false // TODO: Get from API
+
     const emailSent = false // TODO: Get from API
 
     return (
@@ -109,10 +112,6 @@ export default async function CertificatePage({
                         certificateEmissionResponse.certificateEmission
                             .dataSource
                     }
-                    rows={
-                        certificateEmissionResponse.certificateEmission
-                            .dataSource?.dataSet.rows || []
-                    }
                 />
 
                 {hasTemplate &&
@@ -131,14 +130,10 @@ export default async function CertificatePage({
 
                 <GenerateCertificatesSection
                     certificateId={certificateId}
-                    variablesMapped={
+                    allVariablesWereMapped={
                         variablesMapped || templateVariables.length === 0
                     }
-                    certificatesGenerated={certificatesGenerated}
-                    totalRecords={
-                        certificateEmissionResponse.certificateEmission
-                            .dataSource?.dataSet.rows.length || 0
-                    }
+                    dataSet={dataSet}
                 />
 
                 {hasTemplate && hasDataSource && (

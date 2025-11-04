@@ -36,6 +36,7 @@ import {
 import { deleteDataSourceAction } from '@/backend/infrastructure/server-actions/delete-data-source-action'
 import { refreshDataSourceAction } from '@/backend/infrastructure/server-actions/refresh-data-source-action'
 import { SourceIcon } from '@/components/svg/SourceIcon'
+import { GENERATION_STATUS } from '@/backend/domain/data-set'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -50,6 +51,19 @@ function getInputMethodLabel(method: string) {
     }
 }
 
+function formatBytes(bytes: number, decimals = 2) {
+    if (bytes === 0) return '0 Bytes'
+
+    const k = 1024
+    const dm = decimals < 0 ? 0 : decimals
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB']
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    const size = parseFloat((bytes / Math.pow(k, i)).toFixed(dm))
+
+    return `${size} ${sizes[i]}`
+}
+
 interface DataSourceDisplayProps {
     dataSource: {
         id: string
@@ -60,22 +74,21 @@ interface DataSourceDisplayProps {
         fileExtension: DATA_SOURCE_FILE_EXTENSION
         columns: string[]
         thumbnailUrl: string | null
+        dataSet: {
+            id: string
+            rows: Record<string, any>[]
+            totalBytes: number
+            generationStatus: GENERATION_STATUS | null
+        }
     }
     certificateId: string
     onEdit: () => void
-    // Mock data - TODO: Replace with real data from API
-    rows: Array<Record<string, string>>
-    certificatesGenerated?: boolean
-    totalSize?: string
 }
 
 export function DataSourceDisplay({
     dataSource,
     certificateId,
     onEdit,
-    rows,
-    certificatesGenerated = false,
-    totalSize = '0 KB',
 }: DataSourceDisplayProps) {
     const [showAllRows, setShowAllRows] = useState(false)
 
@@ -115,6 +128,10 @@ export function DataSourceDisplay({
             window.open(driveUrl, '_blank')
         }
     }
+
+    const certificatesGenerated =
+        dataSource.dataSet.generationStatus === GENERATION_STATUS.COMPLETED
+    const rows = dataSource.dataSet.rows
 
     return (
         <div className="space-y-4">
@@ -420,14 +437,18 @@ export function DataSourceDisplay({
                                                     {certificatesGenerated && (
                                                         <>
                                                             <Button size="sm">
-                                                                <FileDown className="h-4 w-4" />
+                                                                <Download />
                                                                 Baixar Todos
                                                             </Button>
 
                                                             <p className="text-sm text-muted-foreground">
                                                                 Tamanho total:{' '}
                                                                 <span className="font-medium text-foreground">
-                                                                    {totalSize}
+                                                                    {formatBytes(
+                                                                        dataSource
+                                                                            .dataSet
+                                                                            .totalBytes,
+                                                                    )}
                                                                 </span>
                                                             </p>
                                                         </>

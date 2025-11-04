@@ -6,7 +6,7 @@ datasource db {
 
 generator client {
     provider = "prisma-client"
-    output = "client"
+    output   = "client"
 }
 
 model User {
@@ -128,9 +128,10 @@ model DataSourceColumn {
 }
 
 model DataSet {
-    id   String @id @default(cuid())
-    generation_status String // "PENDING" | "COMPLETED" | "FAILED"
-    rows Json
+    id                String  @id @default(cuid())
+    generation_status String? // "PENDING" | "COMPLETED" | "FAILED"
+    total_bytes       Int
+    rows              Json
 
     data_source_id String @unique
 

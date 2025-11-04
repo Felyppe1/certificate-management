@@ -114,6 +114,9 @@ export class GetCertificateEmissionUseCase {
                       dataSet: {
                           id: certificateEmission.DataSource.DataSet!.id,
                           rows: certificateEmission.DataSource.DataSet!.rows,
+                          totalBytes:
+                              certificateEmission.DataSource.DataSet!
+                                  .total_bytes,
                           generationStatus: certificateEmission.DataSource
                               .DataSet!.generation_status as GENERATION_STATUS,
                       },

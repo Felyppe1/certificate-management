@@ -1,5 +1,6 @@
 'use client'
 
+import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { generateCertificatesAction } from '@/backend/infrastructure/server-actions/generate-certificates-action'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,16 +21,18 @@ import { startTransition, useActionState } from 'react'
 
 interface GenerateCertificatesSectionProps {
     certificateId: string
-    variablesMapped: boolean
-    certificatesGenerated: boolean
-    totalRecords: number
+    allVariablesWereMapped: boolean
+    dataSet: {
+        id: string
+        rows: Record<string, any>[]
+        generationStatus: GENERATION_STATUS | null
+    } | null
 }
 
 export function GenerateCertificatesSection({
     certificateId,
-    variablesMapped,
-    certificatesGenerated,
-    totalRecords,
+    allVariablesWereMapped,
+    dataSet,
 }: GenerateCertificatesSectionProps) {
     const [state, action, isPending] = useActionState(
         generateCertificatesAction,
@@ -45,7 +48,10 @@ export function GenerateCertificatesSection({
         })
     }
 
-    const canGenerate = variablesMapped && !certificatesGenerated
+    const totalRecords = dataSet?.rows.length || 0
+    const certificatesWereGenerated =
+        dataSet?.generationStatus === GENERATION_STATUS.COMPLETED
+    const canGenerate = allVariablesWereMapped && !certificatesWereGenerated
 
     return (
         <Card>
@@ -56,7 +62,7 @@ export function GenerateCertificatesSection({
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                {!variablesMapped && (
+                {!allVariablesWereMapped && (
                     <div className="bg-muted/50 border rounded-lg p-4">
                         <div className="flex gap-3">
                             <div className="flex-shrink-0 text-orange-600 dark:text-orange-400">
@@ -75,7 +81,7 @@ export function GenerateCertificatesSection({
                     </div>
                 )}
 
-                {certificatesGenerated && (
+                {certificatesWereGenerated && (
                     <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-lg p-4">
                         <div className="flex gap-3">
                             <div className="flex-shrink-0 text-green-600 dark:text-green-400">
@@ -104,13 +110,19 @@ export function GenerateCertificatesSection({
                         </div>
                         <div>
                             <p className="font-medium text-lg">
-                                {totalRecords} certificado
-                                {totalRecords !== 1 ? 's' : ''}
+                                {totalRecords}{' '}
+                                {totalRecords === 1
+                                    ? 'certificado'
+                                    : 'certificados'}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                                {certificatesGenerated
-                                    ? 'Gerados e disponíveis'
-                                    : 'Serão gerados'}
+                                {certificatesWereGenerated
+                                    ? totalRecords === 1
+                                        ? 'Gerado e disponível'
+                                        : 'Gerados e disponíveis'
+                                    : totalRecords === 1
+                                      ? 'será gerado'
+                                      : 'serão gerados'}
                             </p>
                         </div>
                     </div>
@@ -118,14 +130,14 @@ export function GenerateCertificatesSection({
                     <Button
                         size="lg"
                         onClick={handleGenerate}
-                        disabled={!canGenerate || isPending}
+                        disabled={/* !canGenerate || */ isPending}
                     >
                         {isPending ? (
                             <>
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                 Gerando...
                             </>
-                        ) : certificatesGenerated ? (
+                        ) : certificatesWereGenerated ? (
                             <>
                                 <Download className="h-4 w-4 mr-2" />
                                 Gerar Novamente

@@ -2,7 +2,7 @@ import { createId } from '@paralleldrive/cuid2'
 import { AggregateRoot } from './primitives/aggregate-root'
 
 export enum GENERATION_STATUS {
-    PENDING = 'PENDING',
+    PENDING = 'PENDING', // TODO: change to IN_PROGRESS
     COMPLETED = 'COMPLETED',
     FAILED = 'FAILED',
 }
@@ -10,25 +10,29 @@ export enum GENERATION_STATUS {
 interface DataSetInput {
     id: string
     dataSourceId: string
-    generationStatus: GENERATION_STATUS
+    generationStatus: GENERATION_STATUS | null
+    totalBytes: number
     rows: Record<string, any>[]
 }
 
-interface CreateDataSet extends Omit<DataSetInput, 'id' | 'generationStatus'> {}
+interface CreateDataSet
+    extends Omit<DataSetInput, 'id' | 'generationStatus' | 'totalBytes'> {}
 
 interface DataSetOutput extends DataSetInput {}
 
 export class DataSet extends AggregateRoot {
     private id: string
     private dataSourceId: string
-    private generationStatus: GENERATION_STATUS
+    private generationStatus: GENERATION_STATUS | null
+    private totalBytes: number
     private rows: Record<string, any>[]
 
     static create(data: CreateDataSet): DataSet {
         return new DataSet({
             ...data,
             id: createId(),
-            generationStatus: GENERATION_STATUS.PENDING,
+            generationStatus: null,
+            totalBytes: 0,
         })
     }
 
@@ -43,23 +47,31 @@ export class DataSet extends AggregateRoot {
             throw new Error('DataSource ID is required')
         }
 
-        if (!data.generationStatus) {
-            throw new Error('Generation status is required')
-        }
-
         if (!data.rows) {
             throw new Error('DataSet rows are required')
+        }
+
+        if (data.totalBytes === undefined || data.totalBytes === null) {
+            throw new Error('DataSet totalBytes is required')
         }
 
         this.id = data.id
         this.dataSourceId = data.dataSourceId
         this.generationStatus = data.generationStatus
+        this.totalBytes = data.totalBytes
         this.rows = data.rows
+    }
+
+    hasRows() {
+        return this.rows.length > 0
     }
 
     update(data: Partial<Omit<DataSetInput, 'id'>>) {
         if (data.dataSourceId) this.dataSourceId = data.dataSourceId
-        if (data.generationStatus) this.generationStatus = data.generationStatus
+        // TODO: could validate that from null -> IN_PROGRESS -> COMPLETED/FAILED
+        if (data.generationStatus !== undefined)
+            this.generationStatus = data.generationStatus
+        if (data.totalBytes !== undefined) this.totalBytes = data.totalBytes
         if (data.rows) this.rows = data.rows
     }
 
@@ -68,6 +80,7 @@ export class DataSet extends AggregateRoot {
             id: this.id,
             dataSourceId: this.dataSourceId,
             generationStatus: this.generationStatus,
+            totalBytes: this.totalBytes,
             rows: this.rows,
         }
     }

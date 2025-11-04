@@ -20,6 +20,7 @@ import { addDataSourceByDrivePickerAction } from '@/backend/infrastructure/serve
 import { addDataSourceByUploadAction } from '@/backend/infrastructure/server-actions/add-data-source-by-upload-action'
 import { Badge } from '@/components/ui/badge'
 import { AiIcon3 } from '@/components/svg/AiIcon3'
+import { GENERATION_STATUS } from '@/backend/domain/data-set'
 
 interface DataSourceSectionProps {
     certificateId: string
@@ -32,10 +33,15 @@ interface DataSourceSectionProps {
         fileExtension: DATA_SOURCE_FILE_EXTENSION
         columns: string[]
         thumbnailUrl: string | null
+        dataSet: {
+            id: string
+            rows: Record<string, any>[]
+            totalBytes: number
+            generationStatus: GENERATION_STATUS | null
+        }
     } | null
     googleOAuthToken: string | null
     googleOAuthTokenExpiry: Date | null
-    rows: Record<string, any>[]
 }
 
 export function DataSourceSection({
@@ -43,7 +49,6 @@ export function DataSourceSection({
     dataSource,
     googleOAuthToken,
     googleOAuthTokenExpiry,
-    rows,
 }: DataSourceSectionProps) {
     const [isEditing, setIsEditing] = useState(false)
     const [urlState, urlAction, urlIsLoading] = useActionState(
@@ -158,7 +163,6 @@ export function DataSourceSection({
                 dataSource={dataSource}
                 certificateId={certificateId}
                 onEdit={handleEdit}
-                rows={rows}
             />
         )
     }

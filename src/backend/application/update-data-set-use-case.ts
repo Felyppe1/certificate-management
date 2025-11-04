@@ -9,8 +9,9 @@ import { ISessionsRepository } from './interfaces/isessions-repository'
 
 interface UpdateDataSetUseCaseInput {
     dataSetId: string
-    generationStatus: GENERATION_STATUS
     sessionToken: string | null
+    generationStatus?: GENERATION_STATUS | null
+    totalBytes?: number
 }
 
 export class UpdateDataSetUseCase {
@@ -41,6 +42,7 @@ export class UpdateDataSetUseCase {
 
         dataSet.update({
             generationStatus: input.generationStatus,
+            totalBytes: input.totalBytes,
         })
 
         await this.dataSetsRepository.upsert(dataSet)
