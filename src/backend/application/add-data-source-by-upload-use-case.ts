@@ -99,7 +99,7 @@ export class AddDataSourceByUploadUseCase {
             certificate.setDataSource(newDataSourceInput)
         }
 
-        const path = `users/${session.userId}/data-sources/${certificate.getDataSourceId()}-original.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
+        const path = `users/${session.userId}/certificates/${certificate.getId()}/data-source.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
 
         certificate.setDataSourceStorageFileUrl(path)
 

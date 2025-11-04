@@ -103,7 +103,7 @@ export class AddTemplateByUploadUseCase {
             certificate.setTemplate(newTemplateInput)
         }
 
-        const path = `users/${session.userId}/templates/${certificate.getTemplateId()}-original.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
+        const path = `users/${session.userId}/certificates/${certificate.getId()}/template.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
 
         certificate.setTemplateStorageFileUrl(path)
 
