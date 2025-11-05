@@ -18,7 +18,7 @@ resource "google_cloud_run_v2_service" "app" {
     }
 
     containers {
-      image = "gcr.io/cloudrun/hello"
+      image = "us-docker.pkg.dev/cloudrun/container/hello"
 
       ports {
         container_port = 8080
