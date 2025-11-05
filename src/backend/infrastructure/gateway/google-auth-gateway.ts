@@ -37,12 +37,12 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
     getOAuth2ClientWithCredentials(
         credentials: GetOAuth2ClientWithCredentials,
     ) {
-        const client = this.oauth2Client.setCredentials({
+        this.oauth2Client.setCredentials({
             access_token: credentials.accessToken,
             refresh_token: credentials.refreshToken,
         })
 
-        return client
+        return this.oauth2Client
     }
 
     async checkOrGetNewAccessToken({
