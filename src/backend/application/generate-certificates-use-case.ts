@@ -30,7 +30,7 @@ export class GenerateCertificatesUseCase {
         >,
         private dataSetsRepository: Pick<
             IDataSetsRepository,
-            'getByDataSourceId'
+            'getByDataSourceId' | 'upsert'
         >,
     ) {}
 
@@ -99,7 +99,7 @@ export class GenerateCertificatesUseCase {
             '/generate-pdfs' +
             process.env.SUFFIX
 
-        const response = await fetch(cloudFunctionUrl, {
+        /* const response = await  */ fetch(cloudFunctionUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -107,8 +107,10 @@ export class GenerateCertificatesUseCase {
             body: JSON.stringify(body),
         })
 
-        if (!response.ok) {
-            throw new Error('Cloud function invocation failed')
-        }
+        await this.dataSetsRepository.upsert(dataSet)
+
+        // if (!response.ok) {
+        //     throw new Error('Cloud function invocation failed')
+        // }
     }
 }

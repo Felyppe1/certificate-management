@@ -17,7 +17,8 @@ import {
     CheckCircle2,
     CircleAlert,
 } from 'lucide-react'
-import { startTransition, useActionState } from 'react'
+import { useRouter } from 'next/navigation'
+import { startTransition, useActionState, useEffect, useRef } from 'react'
 
 interface GenerateCertificatesSectionProps {
     certificateId: string
@@ -34,10 +35,14 @@ export function GenerateCertificatesSection({
     allVariablesWereMapped,
     dataSet,
 }: GenerateCertificatesSectionProps) {
-    const [state, action, isPending] = useActionState(
+    const [state, action, isGeneratePending] = useActionState(
         generateCertificatesAction,
         null,
     )
+
+    useDataSetPolling(dataSet?.id || null, {
+        enabled: dataSet?.generationStatus === GENERATION_STATUS.PENDING,
+    })
 
     const handleGenerate = async () => {
         const formData = new FormData()
@@ -52,6 +57,10 @@ export function GenerateCertificatesSection({
     const certificatesWereGenerated =
         dataSet?.generationStatus === GENERATION_STATUS.COMPLETED
     const canGenerate = allVariablesWereMapped && !certificatesWereGenerated
+
+    const isPending =
+        isGeneratePending ||
+        dataSet?.generationStatus === GENERATION_STATUS.PENDING
 
     return (
         <Card>
@@ -153,4 +162,73 @@ export function GenerateCertificatesSection({
             </CardContent>
         </Card>
     )
+}
+
+interface UseDataSetPollingOptions {
+    enabled: boolean
+    onComplete?: (status: GENERATION_STATUS) => void
+}
+
+export function useDataSetPolling(
+    dataSetId: string | null,
+    options: UseDataSetPollingOptions,
+) {
+    const router = useRouter()
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const attemptsRef = useRef(0)
+
+    const { enabled, onComplete } = options
+
+    useEffect(() => {
+        if (!dataSetId || !enabled) return
+
+        const checkStatus = async (): Promise<boolean> => {
+            console.log(`Tentativa ${attemptsRef.current}`)
+            try {
+                const response = await fetch(`/api/data-sets/${dataSetId}`, {
+                    cache: 'no-store',
+                })
+
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar status')
+                }
+
+                const { dataSet } = await response.json()
+
+                const isComplete =
+                    dataSet.generationStatus !== GENERATION_STATUS.PENDING
+
+                if (isComplete) {
+                    onComplete?.(dataSet.generationStatus)
+                    router.refresh()
+
+                    return true
+                }
+
+                return false
+            } catch (error) {
+                console.error('Erro no polling:', error)
+                return false
+            }
+        }
+
+        const scheduleNext = () => {
+            timeoutRef.current = setTimeout(async () => {
+                attemptsRef.current++
+                const shouldStop = await checkStatus()
+
+                if (!shouldStop) {
+                    scheduleNext()
+                }
+            }, 5000)
+        }
+
+        scheduleNext()
+
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current)
+            }
+        }
+    }, [dataSetId, enabled, onComplete, router])
 }
