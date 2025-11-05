@@ -4,6 +4,8 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { handleError } from '@/utils/handle-error'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { NextRequest } from 'next/server'
+import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
+import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 
 export async function POST(
     request: NextRequest,
@@ -15,9 +17,15 @@ export async function POST(
         const sessionToken = await getSessionToken(request)
 
         const sessionsRepository = new PrismaSessionsRepository(prisma)
+        const certificateEmissionsRepository = new PrismaCertificatesRepository(
+            prisma,
+        )
+        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
 
         const generateCertificatesUseCase = new GenerateCertificatesUseCase(
             sessionsRepository,
+            certificateEmissionsRepository,
+            dataSetsRepository,
         )
 
         await generateCertificatesUseCase.execute({
