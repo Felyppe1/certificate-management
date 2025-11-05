@@ -7,7 +7,7 @@ import { NextRequest } from 'next/server'
 import { handleError } from '@/utils/handle-error'
 import z from 'zod'
 import { verifyServiceAccountToken } from '@/utils/middleware/verifyServiceAccountToken'
-import { sseBroker } from '@/app/api/data-sets/[dataSetId]/events/route'
+import { sseBroker } from '@/backend/infrastructure/sse'
 
 const updateDataSetSchema = z.object({
     generationStatus: z.enum(GENERATION_STATUS).optional(),
