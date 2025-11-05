@@ -7,6 +7,7 @@ import { NextRequest } from 'next/server'
 import { handleError } from '@/utils/handle-error'
 import z from 'zod'
 import { verifyServiceAccountToken } from '@/utils/middleware/verifyServiceAccountToken'
+import { sseBroker } from '@/app/api/data-sets/[dataSetId]/events/route'
 
 const updateDataSetSchema = z.object({
     generationStatus: z.enum(GENERATION_STATUS).optional(),
@@ -38,6 +39,10 @@ export async function PATCH(
             generationStatus: parsed.generationStatus,
             totalBytes: parsed.totalBytes,
             sessionToken: null,
+        })
+
+        sseBroker.sendEvent(dataSetId, {
+            generationStatus: parsed.generationStatus,
         })
 
         return new Response(null, { status: 204 })

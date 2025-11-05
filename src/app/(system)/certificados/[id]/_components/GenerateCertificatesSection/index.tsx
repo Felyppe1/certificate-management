@@ -40,9 +40,21 @@ export function GenerateCertificatesSection({
         null,
     )
 
-    useDataSetPolling(dataSet?.id || null, {
-        enabled: dataSet?.generationStatus === GENERATION_STATUS.PENDING,
-    })
+    // useDataSetPolling(dataSet?.id || null, {
+    //     enabled: dataSet?.generationStatus === GENERATION_STATUS.PENDING,
+    // })
+
+    const router = useRouter()
+
+    useDataSetSSE(
+        dataSet?.id || null,
+        dataSet?.generationStatus === GENERATION_STATUS.PENDING,
+        data => {
+            if (data.generationStatus) {
+                router.refresh()
+            }
+        },
+    )
 
     const handleGenerate = async () => {
         const formData = new FormData()
@@ -231,4 +243,31 @@ export function useDataSetPolling(
             }
         }
     }, [dataSetId, enabled, onComplete, router])
+}
+
+export function useDataSetSSE(
+    dataSetId: string | null,
+    enabled: boolean,
+    onEvent?: (data: any) => void,
+) {
+    useEffect(() => {
+        if (!dataSetId || !enabled) return
+
+        const eventSource = new EventSource(
+            `/api/data-sets/${dataSetId}/events`,
+        )
+
+        eventSource.onmessage = event => {
+            const data = JSON.parse(event.data)
+            console.log('Evento SSE:', data)
+            onEvent?.(data)
+        }
+
+        eventSource.onerror = err => {
+            console.error('Erro SSE:', err)
+            eventSource.close()
+        }
+
+        return () => eventSource.close()
+    }, [dataSetId, enabled, onEvent])
 }
