@@ -58,6 +58,11 @@ resource "google_cloud_run_v2_service" "app" {
         name = "CLOUD_FUNCTION_BASE_URL"
         value = "https://${var.region}-${data.google_project.project.project_id}.cloudfunctions.net"
       }
+
+      env {
+        name = "CLOUD_FUNCTIONS_SA_EMAIL"
+        value = google_service_account.app_service_account.email
+      }
     }
 
     timeout = "600s"
