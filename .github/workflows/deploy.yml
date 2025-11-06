@@ -249,16 +249,71 @@ jobs:
         run: |
           echo "generate_pdfs_cloud_run_name=$(terraform output -raw generate_pdfs_cloud_run_name)" >> $GITHUB_OUTPUT
 
-  deploy:
+  deploy-certificate-management:
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
-
     needs: terraform-apply
 
     env:
       REGION: us-central1
       CLOUD_RUN_URL: ${{ needs.terraform-apply.outputs.cloud_run_url }}
       CLOUD_RUN_NAME: ${{ needs.terraform-apply.outputs.cloud_run_name }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.SERVICE_ACCOUNT }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          export_default_credentials: true
+
+      - name: Download Artifact Path
+        uses: actions/download-artifact@v4
+        with:
+          name: artifact-registry-path
+
+      - name: Read Artifact Registry Path
+        id: read_artifact_registry_path
+        run: echo "ARTIFACT_REGISTRY_PATH=$(cat artifact_registry_path.txt)" >> $GITHUB_ENV
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA .
+
+      - name: Push image
+        run: |
+          gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+          docker push $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy $CLOUD_RUN_NAME \
+            --image $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA \
+            --region $REGION \
+            --platform managed \
+            --allow-unauthenticated
+
+      - name: Inject NEXT_PUBLIC_BASE_URL via gcloud
+        run: |
+          gcloud run services update $CLOUD_RUN_NAME \
+            --region $REGION \
+            --update-env-vars=NEXT_PUBLIC_BASE_URL=$CLOUD_RUN_URL
+            
+  deploy-generate-pdfs:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
+    needs: terraform-apply
+
+    env:
+      REGION: us-central1
       GENERATE_PDFS_CLOUD_RUN_NAME: ${{ needs.terraform-apply.outputs.generate_pdfs_cloud_run_name }}
 
     steps:
@@ -285,32 +340,6 @@ jobs:
         id: read_artifact_registry_path
         run: echo "ARTIFACT_REGISTRY_PATH=$(cat artifact_registry_path.txt)" >> $GITHUB_ENV
 
-      # certificate-management
-      - name: Build Docker image
-        run: |
-          docker build \
-            -t $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA .
-
-      - name: Push image
-        run: |
-          gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
-          docker push $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA
-
-      - name: Deploy to Cloud Run
-        run: |
-          gcloud run deploy $CLOUD_RUN_NAME \
-            --image $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA \
-            --region $REGION \
-            --platform managed \
-            --allow-unauthenticated
-
-      - name: Inject NEXT_PUBLIC_BASE_URL via gcloud
-        run: |
-          gcloud run services update $CLOUD_RUN_NAME \
-            --region $REGION \
-            --update-env-vars=NEXT_PUBLIC_BASE_URL=$CLOUD_RUN_URL
-      
-      # generate-pdfs
       - name: Build Docker image (generate-pdfs)
         working-directory: ./cloud-functions/generate-pdfs
         run: |
@@ -329,3 +358,4 @@ jobs:
             --region $REGION \
             --platform managed \
             --no-allow-unauthenticated
+

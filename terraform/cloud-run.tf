@@ -147,14 +147,6 @@ resource "google_cloud_run_v2_service" "generate_pdfs" {
       #   }
       # }
 
-      dynamic "env" {
-        for_each = var.environment_variables
-        content {
-          name  = env.key
-          value = env.value
-        }
-      }
-
       env {
         name = "APP_BASE_URL"
         value = "https://${local.app_name}-${data.google_project.project.number}.${var.region}.run.app"
