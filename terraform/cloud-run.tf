@@ -1,5 +1,10 @@
+locals {
+  app_name = "certificate-management${local.suffix}"
+  generate_pdfs_name = "generate-pdfs${local.suffix}"
+}
+
 resource "google_cloud_run_v2_service" "app" {
-  name     = "certificate-management${local.suffix}"
+  name     = local.app_name
   location = var.region
   project  = var.project_id
 
@@ -108,7 +113,7 @@ output "cloud_run_name" {
 
 
 resource "google_cloud_run_v2_service" "generate_pdfs" {
-  name     = "generate-pdfs${local.suffix}"
+  name     = local.generate_pdfs_name
   location = var.region
   project  = var.project_id
 
@@ -152,7 +157,7 @@ resource "google_cloud_run_v2_service" "generate_pdfs" {
 
       env {
         name = "APP_BASE_URL"
-        value = "https://${google_cloud_run_v2_service.app.name}-${data.google_project.project.number}.${google_cloud_run_v2_service.app.location}.run.app"
+        value = "https://${local.app_name}-${data.google_project.project.number}.${var.region}.run.app"
       }
 
       env {

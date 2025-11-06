@@ -94,12 +94,9 @@ export class GenerateCertificatesUseCase {
             },
         }
 
-        const cloudFunctionUrl =
-            process.env.CLOUD_FUNCTION_BASE_URL +
-            '/generate-pdfs' +
-            process.env.SUFFIX
+        const generatePdfsUrl = process.env.GENERATE_PDFS_URL!
 
-        /* const response = await  */ fetch(cloudFunctionUrl, {
+        /* const response = await  */ fetch(generatePdfsUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
