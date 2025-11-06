@@ -122,6 +122,7 @@ jobs:
       artifact_path: ${{ steps.get_artifact_path.outputs.artifact_path }}
       cloud_run_url: ${{ steps.get_url.outputs.cloud_run_url }}
       cloud_run_name: ${{ steps.get_service_name.outputs.cloud_run_name }}
+      generate_pdfs_cloud_run_name: ${{ steps.get_generate_pdfs_service_name.outputs.generate_pdfs_cloud_run_name }}
 
     env:
       REGION: us-central1
