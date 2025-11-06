@@ -209,6 +209,7 @@ def save_to_local(buffer, file_path):
         f.write(buffer.getvalue())
 
 def update_data_set_status(data_set_id, status, total_bytes=None):
+    print('Inside update')
     url = f"{APP_BASE_URL}/api/internal/data-sets/{data_set_id}"
     auth_req = google.auth.transport.requests.Request()
 
@@ -224,6 +225,7 @@ def update_data_set_status(data_set_id, status, total_bytes=None):
         "totalBytes": total_bytes
     }
 
+    print('before sending patch')
     response = requests.patch(url, json=body, headers=headers)
     response.raise_for_status()
 
@@ -261,6 +263,7 @@ def main(request):
     if not rows:
         return {'error': 'Data set rows are empty'}, 400
     
+    print('before try')
     try:
         variable_mapping = certificate_emission.get('variableColumnMapping', {})
         
@@ -303,6 +306,7 @@ def main(request):
         
         total_bytes = 0
 
+        print('before if variable mapping')
         if variable_mapping:
             for index, row in enumerate(rows):
                 print(row)
@@ -341,6 +345,7 @@ def main(request):
         else:
             pass
         
+        print('before update')
         update_data_set_status(data_set_id, 'COMPLETED', total_bytes)
         
         return "", 204
@@ -350,12 +355,14 @@ def main(request):
         update_error = None
 
         try:
+            print('before error update')
             update_data_set_status(data_set_id, 'FAILED')
         except Exception as inner_e:
             update_error = str(inner_e)
 
         details = original_error if not update_error else f'Original error: {original_error}; Update error: {update_error}'
 
+        print('Error details:', details)
         return {
             'title': 'Failed to generate certificates',
             'details': details
