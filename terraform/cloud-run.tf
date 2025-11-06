@@ -123,7 +123,7 @@ resource "google_cloud_run_v2_service" "generate_pdfs" {
     google_project_service.gcp_services
   ]
 
-  ingress = "INGRESS_TRAFFIC_INTERNAL_ONLY"
+  # ingress = "INGRESS_TRAFFIC_INTERNAL_ONLY"
 
   template {
     service_account = google_service_account.app_service_account.email
@@ -176,12 +176,20 @@ resource "google_cloud_run_v2_service" "generate_pdfs" {
 # This is not necessary because the SA already has the permission in the project scope.
 # However, for clarity, we add it here to show that the app service can invoke the generate_pdfs service.
 # This permission is in the service scope.
-resource "google_cloud_run_v2_service_iam_member" "allow_app_to_invoke_generate_pdfs" {
+# resource "google_cloud_run_v2_service_iam_member" "allow_app_to_invoke_generate_pdfs" {
+#   project  = var.project_id
+#   location = google_cloud_run_v2_service.generate_pdfs.location
+#   name     = google_cloud_run_v2_service.generate_pdfs.name
+#   role     = "roles/run.invoker"
+#   member   = "serviceAccount:${google_service_account.app_service_account.email}"
+# }
+
+resource "google_cloud_run_v2_service_iam_member" "public_access" {
   project  = var.project_id
   location = google_cloud_run_v2_service.generate_pdfs.location
   name     = google_cloud_run_v2_service.generate_pdfs.name
   role     = "roles/run.invoker"
-  member   = "serviceAccount:${google_service_account.app_service_account.email}"
+  member   = "allUsers"
 }
 
 output "generate_pdfs_cloud_run_name" {
