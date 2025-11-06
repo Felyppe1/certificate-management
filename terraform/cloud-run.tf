@@ -184,7 +184,7 @@ resource "google_cloud_run_v2_service" "generate_pdfs" {
 #   member   = "serviceAccount:${google_service_account.app_service_account.email}"
 # }
 
-resource "google_cloud_run_v2_service_iam_member" "public_access" {
+resource "google_cloud_run_v2_service_iam_member" "generate_pdfs_public_access" {
   project  = var.project_id
   location = google_cloud_run_v2_service.generate_pdfs.location
   name     = google_cloud_run_v2_service.generate_pdfs.name
