@@ -215,19 +215,20 @@ jobs:
         working-directory: ./terraform
         run: terraform apply -auto-approve tfplan
 
-      - name: Get Artifact Path from Terraform
-        id: get_artifact_path
+      # Why save ${REPO_PATH}/certificate-management to a file and upload as artifact?
+      - name: Get Artifact Registry Path from Terraform
+        id: get_artifact_registry_path
         working-directory: ./terraform
         run: |
           REPO_PATH=$(terraform output -raw artifact_registry_path)
-          echo "artifact_path=${REPO_PATH}/certificate-management" >> $GITHUB_OUTPUT
-          echo "${REPO_PATH}/certificate-management" > artifact_path.txt
+          echo "artifact_registry_path=${REPO_PATH}" >> $GITHUB_OUTPUT
+          echo "${REPO_PATH}" > artifact_registry_path.txt
 
-      - name: Upload Artifact Path
+      - name: Upload Artifact Registry Path
         uses: actions/upload-artifact@v4
         with:
-          name: artifact-path
-          path: ./terraform/artifact_path.txt
+          name: artifact-registry-path
+          path: ./terraform/artifact_registry_path.txt
 
       - name: Get Cloud Run URL from Terraform
         id: get_url
@@ -241,6 +242,12 @@ jobs:
         run: |
           echo "cloud_run_name=$(terraform output -raw cloud_run_name)" >> $GITHUB_OUTPUT
 
+      - name: Get generate_pdfs Service Name from Terraform
+        id: get_service_name
+        working-directory: ./terraform
+        run: |
+          echo "generate_pdfs_cloud_run_name=$(terraform output -raw generate_pdfs_cloud_run_name)" >> $GITHUB_OUTPUT
+
   deploy:
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
@@ -251,6 +258,7 @@ jobs:
       REGION: us-central1
       CLOUD_RUN_URL: ${{ needs.terraform-apply.outputs.cloud_run_url }}
       CLOUD_RUN_NAME: ${{ needs.terraform-apply.outputs.cloud_run_name }}
+      GENERATE_PDFS_CLOUD_RUN_NAME: ${{ needs.terraform-apply.outputs.generate_pdfs_cloud_run_name }}
 
     steps:
       - name: Checkout code
@@ -270,26 +278,27 @@ jobs:
       - name: Download Artifact Path
         uses: actions/download-artifact@v4
         with:
-          name: artifact-path
+          name: artifact-registry-path
 
-      - name: Read Artifact Path
-        id: read_artifact_path
-        run: echo "ARTIFACT_PATH=$(cat artifact_path.txt)" >> $GITHUB_ENV
+      - name: Read Artifact Registry Path
+        id: read_artifact_registry_path
+        run: echo "ARTIFACT_REGISTRY_PATH=$(cat artifact_registry_path.txt)" >> $GITHUB_ENV
 
+      # certificate-management
       - name: Build Docker image
         run: |
           docker build \
-            -t $ARTIFACT_PATH:$GITHUB_SHA .
+            -t $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA .
 
       - name: Push image
         run: |
           gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
-          docker push $ARTIFACT_PATH:$GITHUB_SHA
+          docker push $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA
 
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy $CLOUD_RUN_NAME \
-            --image $ARTIFACT_PATH:$GITHUB_SHA \
+            --image $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA \
             --region $REGION \
             --platform managed \
             --allow-unauthenticated
@@ -299,3 +308,23 @@ jobs:
           gcloud run services update $CLOUD_RUN_NAME \
             --region $REGION \
             --update-env-vars=NEXT_PUBLIC_BASE_URL=$CLOUD_RUN_URL
+      
+      # generate-pdfs
+      - name: Build Docker image (generate-pdfs)
+        working-directory: ./cloud-functions/generate-pdfs
+        run: |
+          docker build \
+            -t $ARTIFACT_REGISTRY_PATH/generate-pdfs:$GITHUB_SHA .
+
+      - name: Push image (generate-pdfs)
+        run: |
+          gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+          docker push $ARTIFACT_REGISTRY_PATH/generate-pdfs:$GITHUB_SHA
+
+      - name: Deploy to Cloud Run (generate-pdfs)
+        run: |
+          gcloud run deploy $GENERATE_PDFS_CLOUD_RUN_NAME \
+            --image $ARTIFACT_REGISTRY_PATH/generate-pdfs:$GITHUB_SHA \
+            --region $REGION \
+            --platform managed \
+            --no-allow-unauthenticated
