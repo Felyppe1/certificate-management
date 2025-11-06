@@ -243,7 +243,7 @@ jobs:
           echo "cloud_run_name=$(terraform output -raw cloud_run_name)" >> $GITHUB_OUTPUT
 
       - name: Get generate_pdfs Service Name from Terraform
-        id: get_service_name
+        id: get_generate_pdfs_service_name
         working-directory: ./terraform
         run: |
           echo "generate_pdfs_cloud_run_name=$(terraform output -raw generate_pdfs_cloud_run_name)" >> $GITHUB_OUTPUT
