@@ -24,6 +24,7 @@ from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
 load_dotenv()
 
 APP_BASE_URL = os.getenv('APP_BASE_URL')
+AUDIENCE = os.getenv("TOKEN_AUDIENCE", APP_BASE_URL) # For local environments
 SOFFICE_PATH = os.getenv('SOFFICE_PATH')
 CERTIFICATES_BUCKET = os.getenv('CERTIFICATES_BUCKET')
 
@@ -211,7 +212,7 @@ def update_data_set_status(data_set_id, status, total_bytes=None):
     url = f"{APP_BASE_URL}/api/internal/data-sets/{data_set_id}"
     auth_req = google.auth.transport.requests.Request()
 
-    id_token = google.oauth2.id_token.fetch_id_token(auth_req, APP_BASE_URL)
+    id_token = google.oauth2.id_token.fetch_id_token(auth_req, AUDIENCE)
 
     headers = {
         "Authorization": f"Bearer {id_token}",
