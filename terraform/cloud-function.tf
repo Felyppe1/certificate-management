@@ -28,8 +28,8 @@ resource "google_cloudfunctions2_function" "generate_pdfs_function" {
   location = var.region
   
   build_config {
-    runtime     = "python311"  # Runtime base (pode ser qualquer um suportado)
-    entry_point = "main"       # Função de entrada no seu código
+    # runtime     = "python311"
+    entry_point = "main"
     
     # O Terraform vai usar Cloud Build automaticamente para buildar o Docker
     source {
