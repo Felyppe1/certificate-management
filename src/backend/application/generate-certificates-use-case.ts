@@ -107,7 +107,7 @@ export class GenerateCertificatesUseCase {
 
         const generatePdfsUrl = process.env.GENERATE_PDFS_URL!
 
-        const response = await fetch(generatePdfsUrl, {
+        /* const response = await  */ fetch(generatePdfsUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -115,10 +115,10 @@ export class GenerateCertificatesUseCase {
             body: JSON.stringify(body),
         })
 
-        if (!response.ok) {
-            const text = await response.text()
-            throw new Error(`Failed (${response.status}): ${text}`)
-        }
+        // if (!response.ok) {
+        //     const text = await response.text()
+        //     throw new Error(`Failed (${response.status}): ${text}`)
+        // }
 
         await this.dataSetsRepository.upsert(dataSet)
 
