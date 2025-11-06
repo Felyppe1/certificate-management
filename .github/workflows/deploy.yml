@@ -306,7 +306,7 @@ jobs:
           gcloud run services update $CLOUD_RUN_NAME \
             --region $REGION \
             --update-env-vars=NEXT_PUBLIC_BASE_URL=$CLOUD_RUN_URL
-            
+
   deploy-generate-pdfs:
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
@@ -357,5 +357,6 @@ jobs:
             --image $ARTIFACT_REGISTRY_PATH/generate-pdfs:$GITHUB_SHA \
             --region $REGION \
             --platform managed \
-            --no-allow-unauthenticated
+            --allow-unauthenticated
+      # --no-allow-unauthenticated
 
