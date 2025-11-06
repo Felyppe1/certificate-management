@@ -15,6 +15,7 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
+import { GoogleAuth } from 'google-auth-library'
 
 interface GenerateCertificatesUseCaseInput {
     certificateEmissionId: string
@@ -95,14 +96,24 @@ export class GenerateCertificatesUseCase {
         }
 
         const generatePdfsUrl = process.env.GENERATE_PDFS_URL!
+        const auth = new GoogleAuth()
 
-        /* const response = await  */ fetch(generatePdfsUrl, {
+        const client = await auth.getIdTokenClient(generatePdfsUrl)
+        client.request({
+            url: generatePdfsUrl,
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body),
+            data: body,
         })
+
+        // const generatePdfsUrl = process.env.GENERATE_PDFS_URL!
+
+        // /* const response = await  */ fetch(generatePdfsUrl, {
+        //     method: 'POST',
+        //     headers: {
+        //         'Content-Type': 'application/json',
+        //     },
+        //     body: JSON.stringify(body),
+        // })
 
         await this.dataSetsRepository.upsert(dataSet)
 
