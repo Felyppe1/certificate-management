@@ -95,25 +95,30 @@ export class GenerateCertificatesUseCase {
             },
         }
 
-        const generatePdfsUrl = process.env.GENERATE_PDFS_URL!
-        const auth = new GoogleAuth()
+        // const generatePdfsUrl = process.env.GENERATE_PDFS_URL!
+        // const auth = new GoogleAuth()
 
-        const client = await auth.getIdTokenClient(generatePdfsUrl)
-        client.request({
-            url: generatePdfsUrl,
+        // const client = await auth.getIdTokenClient(generatePdfsUrl)
+        // await client.request({
+        //     url: generatePdfsUrl,
+        //     method: 'POST',
+        //     data: body,
+        // })
+
+        const generatePdfsUrl = process.env.GENERATE_PDFS_URL!
+
+        const response = await fetch(generatePdfsUrl, {
             method: 'POST',
-            data: body,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
         })
 
-        // const generatePdfsUrl = process.env.GENERATE_PDFS_URL!
-
-        // /* const response = await  */ fetch(generatePdfsUrl, {
-        //     method: 'POST',
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //     },
-        //     body: JSON.stringify(body),
-        // })
+        if (!response.ok) {
+            const text = await response.text()
+            throw new Error(`Failed (${response.status}): ${text}`)
+        }
 
         await this.dataSetsRepository.upsert(dataSet)
 
