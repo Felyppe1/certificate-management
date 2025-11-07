@@ -203,6 +203,11 @@ def upload_to_bucket(file_buffer, file_path):
     blob.upload_from_file(file_buffer, rewind=True)
     return blob
 
+def get_from_bucket(file_path):
+    bucket = storage_client.bucket(CERTIFICATES_BUCKET)
+    blob = bucket.blob(file_path)
+    return blob.download_as_bytes()
+
 def save_to_local(buffer, file_path):
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, 'wb') as f:
@@ -220,10 +225,10 @@ def update_data_set_status(data_set_id, status, total_bytes=None):
         "Content-Type": "application/json",
     }
     
-    body = {
+    body = {k: v for k, v in {
         "generationStatus": status,
-        "totalBytes": total_bytes
-    }
+        "totalBytes": total_bytes,
+    }.items() if v is not None}
 
     print('before sending patch')
     response = requests.patch(url, json=body, headers=headers)
@@ -242,12 +247,18 @@ def main(request):
         return {'error': 'certificateEmission is required'}, 400
     
     certificate_emission_id = certificate_emission.get('id')
-    template = certificate_emission.get('template')
-    data_source = certificate_emission.get('dataSource')
+    if not certificate_emission_id:
+        return {'error': 'certificateEmission id is missing'}, 400
+
+    user_id = certificate_emission.get('userId')
+    if not user_id:
+        return {'error': 'User id is missing'}, 400
     
+    template = certificate_emission.get('template')
     if not template:
         return {'error': 'Template is missing'}, 400
     
+    data_source = certificate_emission.get('dataSource')
     if not data_source:
         return {'error': 'Data source is missing'}, 400
     
@@ -263,87 +274,132 @@ def main(request):
     if not rows:
         return {'error': 'Data set rows are empty'}, 400
     
+    input_method = template.get('inputMethod')
+    if not input_method:
+        return {'error': 'Template inputMethod is missing'}, 400
+    
+    file_mime_type = template.get('fileExtension')
+    if not file_mime_type:
+        return {'error': 'Template fileExtension is missing'}, 400
+    
+    variable_mapping = certificate_emission.get('variableColumnMapping', {})
+
     print('before try')
     try:
-        variable_mapping = certificate_emission.get('variableColumnMapping', {})
-        
         template_buffer = None
-        user_id = None
-        input_method = template.get('inputMethod')
+        is_docx = None
+
+        mime_types_for_docx = [
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.google-apps.document'
+        ]
+
+        mime_types_for_pptx = [
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'application/vnd.google-apps.presentation'
+        ]
+
+        if file_mime_type in mime_types_for_docx:
+            is_docx = True
+        elif file_mime_type in mime_types_for_pptx:
+            is_docx = False
+        else:
+            return {'error': f'Unsupported template file extension: {file_mime_type}'}, 422
 
         if input_method == 'URL':
             drive_file_id = template.get('driveFileId')
-            file_mime_type = template.get('fileExtension')
-            
             if not drive_file_id:
                 return {'error': 'Template driveFileId not found'}, 400
-            
-            mime_types_for_docx = [
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'application/vnd.google-apps.document'
-            ]
 
-            mime_types_for_pptx = [
-                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                'application/vnd.google-apps.presentation'
-            ]
-
-            if file_mime_type in mime_types_for_docx:
+            if is_docx:
                 template_url = f"https://docs.google.com/document/d/{drive_file_id}/export?format=docx"
-                is_docx = True
-            elif file_mime_type in mime_types_for_pptx:
-                template_url = f"https://docs.google.com/presentation/d/{drive_file_id}/export?format=pptx"
-                is_docx = False
             else:
-                return {'error': f'Unsupported template file extension: {file_mime_type}'}, 422
+                template_url = f"https://docs.google.com/presentation/d/{drive_file_id}/export?format=pptx"
             
             template_buffer = download_file_from_url(template_url)
+
+        elif input_method == 'UPLOAD':
+            storage_file_url = template.get('storageFileUrl')
+            if not storage_file_url:
+                return {'error': 'Template storageFileUrl not found'}, 400
             
-            user_id = certificate_emission.get('userId')
-            generated_files = []
+            template_bytes = get_from_bucket(storage_file_url)
+            template_buffer = BytesIO(template_bytes)
 
         # TODO: get the template from other input method options
-        
+
+        if is_docx:
+            file_extension_str = 'docx'
+        else:
+            file_extension_str = 'pptx'
+
         total_bytes = 0
 
         print('before if variable mapping')
-        if variable_mapping:
-            for index, row in enumerate(rows):
-                print(row)
+        for index, row in enumerate(rows):
+            print(row)
+            if variable_mapping:
                 row_variable_mapping = {}
                 for template_var, column_name in variable_mapping.items():
                     if column_name and column_name in row:
                         row_variable_mapping[template_var] = row[column_name]
                 
-                template_buffer.seek(0)
                 if is_docx:
-                    filled_buffer = replace_variables_in_docx(BytesIO(template_buffer.read()), row_variable_mapping)
-                    file_extension_str = 'docx'
+                    template_buffer = replace_variables_in_docx(template_buffer, row_variable_mapping)
                 else:
-                    filled_buffer = replace_variables_in_pptx(BytesIO(template_buffer.read()), row_variable_mapping)
-                    file_extension_str = 'pptx'
+                    template_buffer = replace_variables_in_pptx(template_buffer, row_variable_mapping)
             
-                pdf_buffer = convert_to_pdf_with_libreoffice(filled_buffer, file_extension_str)
-                # pdf_buffer = convert_to_pdf_via_google_drive(filled_buffer, file_extension_str)
+            pdf_buffer = convert_to_pdf_with_libreoffice(template_buffer, file_extension_str)
+            # pdf_buffer = convert_to_pdf_via_google_drive(template_buffer, file_extension_str)
 
-                # Save file
-                # file_path = f"output/certificate-{index + 1}.pdf"
-                # save_to_local(pdf_buffer, file_path)
+            # Save file
+            # file_path = f"output/certificate-{index + 1}.pdf"
+            # save_to_local(pdf_buffer, file_path)
 
-                # file_path = f"output/certificate-{index + 1}.{file_extension_str}"
-                # save_to_local(filled_buffer, file_path)
+            # file_path = f"output/certificate-{index + 1}.{file_extension_str}"
+            # save_to_local(filled_buffer, file_path)
 
-                # Uploading to bucket
-                file_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.{file_extension_str}"
-                upload_to_bucket(filled_buffer, file_path)
+            # Uploading to bucket
+            pdf_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.pdf"
+            blob = upload_to_bucket(pdf_buffer, pdf_path)
 
-                pdf_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.pdf"
-                blob = upload_to_bucket(pdf_buffer, pdf_path)
+            file_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.{file_extension_str}"
+            upload_to_bucket(template_buffer, file_path)
 
-                total_bytes += blob.size
+            total_bytes += blob.size
+        # if variable_mapping:
+        #     for index, row in enumerate(rows):
+        #         print(row)
+        #         row_variable_mapping = {}
+        #         for template_var, column_name in variable_mapping.items():
+        #             if column_name and column_name in row:
+        #                 row_variable_mapping[template_var] = row[column_name]
+                
+        #         if is_docx:
+        #             filled_buffer = replace_variables_in_docx(template_buffer, row_variable_mapping)
+        #             file_extension_str = 'docx'
+        #         else:
+        #             filled_buffer = replace_variables_in_pptx(template_buffer, row_variable_mapping)
+        #             file_extension_str = 'pptx'
+            
+        #         pdf_buffer = convert_to_pdf_with_libreoffice(filled_buffer, file_extension_str)
+        #         # pdf_buffer = convert_to_pdf_via_google_drive(filled_buffer, file_extension_str)
 
-        else:
-            pass
+        #         # Save file
+        #         # file_path = f"output/certificate-{index + 1}.pdf"
+        #         # save_to_local(pdf_buffer, file_path)
+
+        #         # file_path = f"output/certificate-{index + 1}.{file_extension_str}"
+        #         # save_to_local(filled_buffer, file_path)
+
+        #         # Uploading to bucket
+        #         file_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.{file_extension_str}"
+        #         upload_to_bucket(filled_buffer, file_path)
+
+        #         pdf_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.pdf"
+        #         blob = upload_to_bucket(pdf_buffer, pdf_path)
+
+        #         total_bytes += blob.size
         
         print('before update')
         update_data_set_status(data_set_id, 'COMPLETED', total_bytes)
