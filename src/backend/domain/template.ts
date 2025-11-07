@@ -44,6 +44,7 @@ export class Template {
     }
 
     constructor(data: TemplateInput) {
+        console.log(data)
         if (!data.id) {
             throw new Error('Template ID is required')
         }
@@ -98,6 +99,10 @@ export class Template {
         return this.variables
     }
 
+    getInputMethod() {
+        return this.inputMethod
+    }
+
     setStorageFileUrl(url: string) {
         this.storageFileUrl = url
     }
@@ -113,12 +118,12 @@ export class Template {
     update(data: Partial<Omit<TemplateInput, 'id'>>) {
         if (data.inputMethod) this.inputMethod = data.inputMethod
 
-        if (data.driveFileId) {
+        if (data.driveFileId !== undefined) {
             Template.validateDriveFileId(data.driveFileId, data.inputMethod)
             this.driveFileId = data.driveFileId
         }
 
-        if (data.storageFileUrl) {
+        if (data.storageFileUrl !== undefined) {
             Template.validateStorageFileUrl(
                 data.storageFileUrl,
                 data.inputMethod,
@@ -129,7 +134,8 @@ export class Template {
         if (data.fileName) this.fileName = data.fileName
         if (data.fileExtension) this.fileExtension = data.fileExtension
         if (data.variables) this.variables = data.variables
-        if (data.thumbnailUrl) this.thumbnailUrl = data.thumbnailUrl
+        if (data.thumbnailUrl !== undefined)
+            this.thumbnailUrl = data.thumbnailUrl
     }
 
     private static validateDriveFileId(

@@ -81,12 +81,12 @@ export class DataSource {
     update(data: Partial<Omit<DataSourceInput, 'id'>>) {
         if (data.inputMethod) this.inputMethod = data.inputMethod
 
-        if (data.driveFileId) {
+        if (data.driveFileId !== undefined) {
             this.validateDriveFileId(data.driveFileId, this.inputMethod)
             this.driveFileId = data.driveFileId
         }
 
-        if (data.storageFileUrl) {
+        if (data.storageFileUrl !== undefined) {
             this.validateStorageFileUrl(data.storageFileUrl, this.inputMethod)
             this.storageFileUrl = data.storageFileUrl
         }
@@ -94,7 +94,8 @@ export class DataSource {
         if (data.fileName) this.fileName = data.fileName
         if (data.fileExtension) this.fileExtension = data.fileExtension
         if (data.columns) this.columns = data.columns
-        if (data.thumbnailUrl) this.thumbnailUrl = data.thumbnailUrl
+        if (data.thumbnailUrl !== undefined)
+            this.thumbnailUrl = data.thumbnailUrl
     }
 
     private validateDriveFileId(
@@ -137,6 +138,10 @@ export class DataSource {
 
     getColumns() {
         return this.columns
+    }
+
+    getInputMethod() {
+        return this.inputMethod
     }
 
     setThumbnailUrl(url: string) {

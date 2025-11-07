@@ -226,6 +226,10 @@ export class Certificate extends AggregateRoot {
         return !!this.template
     }
 
+    getTemplateInputMethod() {
+        return this.template?.getInputMethod() ?? null
+    }
+
     getTemplateId() {
         return this.template?.getId() ?? null
     }
@@ -283,6 +287,10 @@ export class Certificate extends AggregateRoot {
 
     getDriveDataSourceFileId() {
         return this.dataSource?.getDriveFileId() ?? null
+    }
+
+    getDataSourceInputMethod() {
+        return this.dataSource?.getInputMethod() ?? null
     }
 
     setDataSourceStorageFileUrl(url: string) {

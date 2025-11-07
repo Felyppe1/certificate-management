@@ -74,15 +74,19 @@ export class RefreshDataSourceUseCase {
             )
         }
 
-        console.log(certificate.getDataSourceStorageFileUrl())
-
         const externalAccount =
             await this.externalUserAccountsRepository.getById(
                 certificate.getUserId(),
                 'GOOGLE',
             )
 
-        if (externalAccount) {
+        if (
+            certificate.getTemplateInputMethod() === INPUT_METHOD.GOOGLE_DRIVE
+        ) {
+            if (!externalAccount) {
+                throw new AuthenticationError('external-account-not-found')
+            }
+
             const newData =
                 await this.googleAuthGateway.checkOrGetNewAccessToken({
                     accessToken: externalAccount.accessToken,
@@ -106,8 +110,12 @@ export class RefreshDataSourceUseCase {
         const { name, fileExtension, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
-                userAccessToken: externalAccount?.accessToken,
-                userRefreshToken: externalAccount?.refreshToken ?? undefined,
+                ...(certificate.getTemplateInputMethod() ===
+                    INPUT_METHOD.GOOGLE_DRIVE && {
+                    userAccessToken: externalAccount?.accessToken,
+                    userRefreshToken:
+                        externalAccount?.refreshToken ?? undefined,
+                }),
             })
 
         if (!DataSource.isValidFileExtension(fileExtension)) {
@@ -119,7 +127,10 @@ export class RefreshDataSourceUseCase {
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
             fileExtension: fileExtension,
-            accessToken: externalAccount?.accessToken,
+            ...(certificate.getTemplateInputMethod() ===
+                INPUT_METHOD.GOOGLE_DRIVE && {
+                accessToken: externalAccount?.accessToken,
+            }),
         })
 
         const contentExtractor =
