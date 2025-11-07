@@ -15,7 +15,7 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
-import { GoogleAuth } from 'google-auth-library'
+import { IExternalProcessing } from './interfaces/iexternal-processing'
 
 interface GenerateCertificatesUseCaseInput {
     certificateEmissionId: string
@@ -32,6 +32,10 @@ export class GenerateCertificatesUseCase {
         private dataSetsRepository: Pick<
             IDataSetsRepository,
             'getByDataSourceId' | 'upsert'
+        >,
+        private externalProcessing: Pick<
+            IExternalProcessing,
+            'triggerGenerateCertificatePDFs'
         >,
     ) {}
 
@@ -82,18 +86,21 @@ export class GenerateCertificatesUseCase {
             generationStatus: GENERATION_STATUS.PENDING,
         })
 
-        const { dataSource, ...certificateEmissionData } =
+        const { dataSource, template, ...certificateEmissionData } =
             certificateEmission.serialize()
 
         const body = {
             certificateEmission: {
                 ...certificateEmissionData,
+                template: template!,
                 dataSource: {
-                    ...dataSource,
+                    ...dataSource!,
                     dataSet: dataSet.serialize(),
                 },
             },
         }
+
+        await this.externalProcessing.triggerGenerateCertificatePDFs(body)
 
         // const generatePdfsUrl = process.env.GENERATE_PDFS_URL!
 
@@ -104,34 +111,6 @@ export class GenerateCertificatesUseCase {
         //     data: body,
         // })
 
-        const generatePdfsUrl = process.env.GENERATE_PDFS_URL!
-
-        const auth = new GoogleAuth()
-        const client = await auth.getIdTokenClient(generatePdfsUrl)
-        const idToken =
-            await client.idTokenProvider.fetchIdToken(generatePdfsUrl)
-
-        console.log('Token gerado:', idToken)
-        console.log('Chamando URL:', generatePdfsUrl)
-
-        const response = await fetch(generatePdfsUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                // Authorization: `Bearer ${idToken}`,
-            },
-            body: JSON.stringify(body),
-        })
-
-        if (!response.ok) {
-            const text = await response.text()
-            throw new Error(`Failed (${response.status}): ${text}`)
-        }
-
         await this.dataSetsRepository.upsert(dataSet)
-
-        // if (!response.ok) {
-        //     throw new Error('Cloud function invocation failed')
-        // }
     }
 }
