@@ -74,9 +74,12 @@ export class DataSet extends AggregateRoot {
         if (data.dataSourceId) this.dataSourceId = data.dataSourceId
         // TODO: could validate that from null -> IN_PROGRESS -> COMPLETED/FAILED
         if (data.generationStatus !== undefined) {
-            if (data.generationStatus === GENERATION_STATUS.PENDING) {
+            if (
+                this.generationStatus === GENERATION_STATUS.PENDING &&
+                data.generationStatus === GENERATION_STATUS.PENDING
+            ) {
                 throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.CERTIFICATES_GENERATION_IN_PROGRESS,
+                    VALIDATION_ERROR_TYPE.GENERATION_ALREADY_IN_PROGRESS,
                 )
             }
 
