@@ -21,7 +21,7 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
         })
 
         this.authClient = new google.auth.GoogleAuth({
-            apiKey: process.env.GOOGLE_API_KEY,
+            // apiKey: process.env.GOOGLE_API_KEY,
             scopes: ['https://www.googleapis.com/auth/drive.readonly'],
         })
     }
