@@ -1,3 +1,5 @@
+import { Auth } from 'googleapis'
+
 export interface CheckOrRefreshAccessTokenInput {
     accessTokenExpiryDateTime: Date
     refreshToken: string
@@ -36,6 +38,8 @@ export interface GetOAuth2ClientWithCredentials {
     refreshToken: string
 }
 
+export type GetAuthClientInput = Auth.GoogleAuthOptions<Auth.AuthClient>
+
 export interface IGoogleAuthGateway {
     checkOrGetNewAccessToken(
         input: CheckOrRefreshAccessTokenInput,
@@ -45,6 +49,6 @@ export interface IGoogleAuthGateway {
     getOAuth2ClientWithCredentials(
         credentials: GetOAuth2ClientWithCredentials,
     ): any
-    getAuthClient(): any
+    getAuthClient(options?: GetAuthClientInput): any
     getOAuth2Client(): any
 }

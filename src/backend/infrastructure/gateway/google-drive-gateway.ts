@@ -28,7 +28,9 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
                   })
                 : null
 
-        const authClient = this.googleAuthGateway.getAuthClient()
+        const authClient = this.googleAuthGateway.getAuthClient({
+            scopes: ['https://www.googleapis.com/auth/drive.readonly'],
+        })
 
         const drive = google.drive({
             version: 'v3',

@@ -2,6 +2,7 @@ import { google, Auth } from 'googleapis'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import {
     CheckOrRefreshAccessTokenInput,
+    GetAuthClientInput,
     GetOAuth2ClientWithCredentials,
     GetTokenInput,
     GetUserInfoInput,
@@ -10,7 +11,6 @@ import {
 
 export class GoogleAuthGateway implements IGoogleAuthGateway {
     private readonly oauth2Client: Auth.OAuth2Client
-    private readonly authClient: Auth.GoogleAuth
 
     constructor() {
         this.oauth2Client = new google.auth.OAuth2({
@@ -19,15 +19,10 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
             redirectUri:
                 process.env.NEXT_PUBLIC_BASE_URL + '/api/auth/google/callback',
         })
-
-        this.authClient = new google.auth.GoogleAuth({
-            // apiKey: process.env.GOOGLE_API_KEY,
-            scopes: ['https://www.googleapis.com/auth/drive.readonly'],
-        })
     }
 
-    getAuthClient() {
-        return this.authClient
+    getAuthClient(options?: GetAuthClientInput) {
+        return new google.auth.GoogleAuth(options)
     }
 
     getOAuth2Client() {
