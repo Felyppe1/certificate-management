@@ -123,8 +123,8 @@ resource "google_cloud_run_v2_service" "generate_pdfs" {
     google_project_service.gcp_services
   ]
 
-  ingress = "INGRESS_TRAFFIC_INTERNAL_ONLY"
-  # ingress = "INGRESS_TRAFFIC_ALL"
+  # ingress = "INGRESS_TRAFFIC_INTERNAL_ONLY"
+  ingress = "INGRESS_TRAFFIC_ALL"
 
   template {
     service_account = google_service_account.app_service_account.email
