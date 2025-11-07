@@ -15,4 +15,4 @@ COPY main.py .
 
 EXPOSE 8080
 
-CMD ["functions-framework", "--target=main", "--port=8080"]
+CMD ["functions-framework", "--target=main", "--signature-type=http", "--port=8080"]
