@@ -6,6 +6,8 @@ import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { NextRequest } from 'next/server'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
+import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
+import { CloudRunExternalProcessing } from '@/backend/infrastructure/gateway/cloud-run-external-processing'
 
 export async function POST(
     request: NextRequest,
@@ -21,11 +23,16 @@ export async function POST(
             prisma,
         )
         const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const googleAuthGateway = new GoogleAuthGateway()
+        const externalProcessing = new CloudRunExternalProcessing(
+            googleAuthGateway,
+        )
 
         const generateCertificatesUseCase = new GenerateCertificatesUseCase(
             sessionsRepository,
             certificateEmissionsRepository,
             dataSetsRepository,
+            externalProcessing,
         )
 
         await generateCertificatesUseCase.execute({
