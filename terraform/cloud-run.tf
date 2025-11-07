@@ -61,7 +61,7 @@ resource "google_cloud_run_v2_service" "app" {
 
       env {
         name = "GENERATE_PDFS_URL"
-        value = google_cloud_run_v2_service.generate_pdfs.uri
+        value = "https://${google_cloud_run_v2_service.generate_pdfs.name}-${data.google_project.project.number}.${google_cloud_run_v2_service.generate_pdfs.location}.run.app"
       }
 
       env {
