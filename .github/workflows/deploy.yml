@@ -357,6 +357,5 @@ jobs:
             --image $ARTIFACT_REGISTRY_PATH/generate-pdfs:$GITHUB_SHA \
             --region $REGION \
             --platform managed \
-            --allow-unauthenticated
       # --no-allow-unauthenticated
 

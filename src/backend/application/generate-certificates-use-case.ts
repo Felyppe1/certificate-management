@@ -96,7 +96,6 @@ export class GenerateCertificatesUseCase {
         }
 
         // const generatePdfsUrl = process.env.GENERATE_PDFS_URL!
-        // const auth = new GoogleAuth()
 
         // const client = await auth.getIdTokenClient(generatePdfsUrl)
         // await client.request({
@@ -107,10 +106,16 @@ export class GenerateCertificatesUseCase {
 
         const generatePdfsUrl = process.env.GENERATE_PDFS_URL!
 
+        const auth = new GoogleAuth()
+        const client = await auth.getIdTokenClient(generatePdfsUrl)
+        const idToken =
+            await client.idTokenProvider.fetchIdToken(generatePdfsUrl)
+
         /* const response = await  */ fetch(generatePdfsUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                Authorization: `Bearer ${idToken}`,
             },
             body: JSON.stringify(body),
         })
