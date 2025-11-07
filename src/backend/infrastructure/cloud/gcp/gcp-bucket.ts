@@ -1,6 +1,7 @@
 import { Storage } from '@google-cloud/storage'
 import {
     DeleteObjectInput,
+    DeleteObjectsWithPrefixInput,
     GenerateSignedUrlInput,
     IBucket,
     UploadObjectInput,
@@ -46,5 +47,18 @@ export class GcpBucket implements IBucket {
         if (exists) {
             await file.delete()
         }
+    }
+
+    async deleteObjectsWithPrefix(input: DeleteObjectsWithPrefixInput) {
+        const bucket = this.storage.bucket(input.bucketName)
+
+        const [files] = await bucket.getFiles({ prefix: input.prefix })
+
+        if (files.length === 0) {
+            console.log('No objects found')
+            return
+        }
+
+        await Promise.all(files.map(file => file.delete()))
     }
 }

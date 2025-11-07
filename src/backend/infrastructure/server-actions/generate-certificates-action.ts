@@ -12,6 +12,7 @@ import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certif
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { CloudRunExternalProcessing } from '../gateway/cloud-run-external-processing'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
+import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 
 const generateCertificatesActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -39,12 +40,14 @@ export async function generateCertificatesAction(
         const externalProcessing = new CloudRunExternalProcessing(
             googleAuthGateway,
         )
+        const bucket = new GcpBucket()
 
         const generateCertificatesUseCase = new GenerateCertificatesUseCase(
             sessionsRepository,
             certificateEmissionsRepository,
             dataSetsRepository,
             externalProcessing,
+            bucket,
         )
 
         await generateCertificatesUseCase.execute({

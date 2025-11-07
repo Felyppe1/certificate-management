@@ -16,6 +16,7 @@ import {
     ValidationError,
 } from '../domain/error/validation-error'
 import { IExternalProcessing } from './interfaces/iexternal-processing'
+import { IBucket } from './interfaces/ibucket'
 
 interface GenerateCertificatesUseCaseInput {
     certificateEmissionId: string
@@ -37,6 +38,7 @@ export class GenerateCertificatesUseCase {
             IExternalProcessing,
             'triggerGenerateCertificatePDFs'
         >,
+        private bucket: Pick<IBucket, 'deleteObjectsWithPrefix'>,
     ) {}
 
     async execute({
@@ -86,6 +88,13 @@ export class GenerateCertificatesUseCase {
             generationStatus: GENERATION_STATUS.PENDING,
         })
 
+        // TODO: should it be here or in the cloud function?
+        await this.bucket.deleteObjectsWithPrefix({
+            bucketName: process.env.CERTIFICATES_BUCKET!,
+            // This prefix is on the cloud function that generates the PDFs
+            prefix: `users/${certificateEmission.getUserId()}/certificates/${certificateEmissionId}/certificate`,
+        })
+
         const { dataSource, template, ...certificateEmissionData } =
             certificateEmission.serialize()
 
@@ -100,17 +109,19 @@ export class GenerateCertificatesUseCase {
             },
         }
 
-        await this.externalProcessing.triggerGenerateCertificatePDFs(body)
+        try {
+            // In case the external processing fails, instantly mark the data set as failed
+            await this.externalProcessing.triggerGenerateCertificatePDFs(body)
 
-        // const generatePdfsUrl = process.env.GENERATE_PDFS_URL!
+            await this.dataSetsRepository.upsert(dataSet)
+        } catch (error: any) {
+            dataSet.update({
+                generationStatus: GENERATION_STATUS.FAILED,
+            })
 
-        // const client = await auth.getIdTokenClient(generatePdfsUrl)
-        // await client.request({
-        //     url: generatePdfsUrl,
-        //     method: 'POST',
-        //     data: body,
-        // })
+            await this.dataSetsRepository.upsert(dataSet)
 
-        await this.dataSetsRepository.upsert(dataSet)
+            throw error
+        }
     }
 }

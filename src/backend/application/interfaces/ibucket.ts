@@ -17,8 +17,14 @@ export interface DeleteObjectInput {
     bucketName: string
 }
 
+export interface DeleteObjectsWithPrefixInput {
+    bucketName: string
+    prefix: string
+}
+
 export interface IBucket {
     generateSignedUrl(input: GenerateSignedUrlInput): Promise<string>
     uploadObject(input: UploadObjectInput): Promise<string>
     deleteObject(input: DeleteObjectInput): Promise<void>
+    deleteObjectsWithPrefix(input: DeleteObjectsWithPrefixInput): Promise<void>
 }
