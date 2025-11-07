@@ -111,6 +111,9 @@ export class GenerateCertificatesUseCase {
         const idToken =
             await client.idTokenProvider.fetchIdToken(generatePdfsUrl)
 
+        console.log('Token gerado:', idToken)
+        console.log('Chamando URL:', generatePdfsUrl)
+
         const response = await fetch(generatePdfsUrl, {
             method: 'POST',
             headers: {
