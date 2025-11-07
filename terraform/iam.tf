@@ -16,7 +16,8 @@ resource "google_project_iam_member" "sa_roles_runner" {
     "roles/logging.logWriter",
     "roles/secretmanager.secretAccessor",
     "roles/cloudsql.client",
-    "roles/storage.objectAdmin"
+    "roles/storage.objectAdmin",
+    "roles/iam.serviceAccountOpenIdTokenCreator",
   ])
 
   role    = each.value
