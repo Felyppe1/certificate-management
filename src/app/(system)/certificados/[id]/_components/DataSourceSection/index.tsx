@@ -11,10 +11,8 @@ import {
     CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import {
-    DATA_SOURCE_FILE_EXTENSION,
-    INPUT_METHOD,
-} from '@/backend/domain/data-source'
+import { INPUT_METHOD } from '@/backend/domain/certificate'
+import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
 import { addDataSourceByUrlAction } from '@/backend/infrastructure/server-actions/add-data-source-by-url-action'
 import { addDataSourceByDrivePickerAction } from '@/backend/infrastructure/server-actions/add-data-source-by-drive-picker-action'
 import { addDataSourceByUploadAction } from '@/backend/infrastructure/server-actions/add-data-source-by-upload-action'

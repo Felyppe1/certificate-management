@@ -3,13 +3,9 @@ import {
     Certificate,
     CERTIFICATE_STATUS,
     CertificateInput,
-} from './certificate'
-import {
-    Template,
     INPUT_METHOD,
-    TEMPLATE_FILE_EXTENSION,
-    TemplateInput,
-} from './template'
+} from './certificate'
+import { Template, TEMPLATE_FILE_EXTENSION, TemplateInput } from './template'
 import {
     DATA_SOURCE_FILE_EXTENSION,
     DataSource,

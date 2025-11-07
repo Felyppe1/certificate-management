@@ -13,10 +13,8 @@ import { RefreshCw, Edit3, Trash2, ALargeSmall } from 'lucide-react'
 import { startTransition, useActionState } from 'react'
 import { refreshTemplateAction } from '@/backend/infrastructure/server-actions/refresh-template-action'
 import { deleteTemplateAction } from '@/backend/infrastructure/server-actions/delete-template-action'
-import {
-    INPUT_METHOD,
-    TEMPLATE_FILE_EXTENSION,
-} from '@/backend/domain/template'
+import { INPUT_METHOD } from '@/backend/domain/certificate'
+import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { SourceIcon } from '@/components/svg/SourceIcon'
 
 function getInputMethodLabel(method: string) {

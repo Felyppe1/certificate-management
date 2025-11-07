@@ -4,10 +4,8 @@ import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import {
-    INPUT_METHOD,
-    TEMPLATE_FILE_EXTENSION,
-} from '@/backend/domain/template'
+import { INPUT_METHOD } from '@/backend/domain/certificate'
+import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'

@@ -19,6 +19,12 @@ import {
 import { NOT_FOUND_ERROR_TYPE, NotFoundError } from './error/not-found-error'
 import { DataSourceSetDomainEvent } from './events/data-source-set-domain-event'
 
+export enum INPUT_METHOD {
+    URL = 'URL',
+    GOOGLE_DRIVE = 'GOOGLE_DRIVE',
+    UPLOAD = 'UPLOAD',
+}
+
 export enum CERTIFICATE_STATUS {
     DRAFT = 'DRAFT',
     PUBLISHED = 'EMITTED',

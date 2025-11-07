@@ -1,5 +1,6 @@
 import { DataSet } from '../domain/data-set'
-import { DataSource, INPUT_METHOD } from '../domain/data-source'
+import { INPUT_METHOD } from '../domain/certificate'
+import { DataSource } from '../domain/data-source'
 import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,

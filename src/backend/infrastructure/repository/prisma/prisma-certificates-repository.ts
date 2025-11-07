@@ -1,11 +1,11 @@
 import { ICertificatesRepository } from '@/backend/application/interfaces/icertificates-repository'
-import { Certificate, CERTIFICATE_STATUS } from '@/backend/domain/certificate'
-import { PrismaClient } from './client/client'
 import {
+    Certificate,
+    CERTIFICATE_STATUS,
     INPUT_METHOD,
-    Template,
-    TEMPLATE_FILE_EXTENSION,
-} from '@/backend/domain/template'
+} from '@/backend/domain/certificate'
+import { PrismaClient } from './client/client'
+import { Template, TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import {
     DATA_SOURCE_FILE_EXTENSION,
     DataSource,

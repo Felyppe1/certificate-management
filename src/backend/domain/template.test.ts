@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import {
-    INPUT_METHOD,
-    Template,
-    TEMPLATE_FILE_EXTENSION,
-    TemplateInput,
-} from './template'
+import { INPUT_METHOD } from './certificate'
+import { Template, TEMPLATE_FILE_EXTENSION, TemplateInput } from './template'
 
 const createTemplateData = (
     overrides?: Partial<TemplateInput>,

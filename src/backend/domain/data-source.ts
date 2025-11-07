@@ -1,10 +1,5 @@
 import { createId } from '@paralleldrive/cuid2'
-
-export enum INPUT_METHOD {
-    URL = 'URL',
-    GOOGLE_DRIVE = 'GOOGLE_DRIVE',
-    UPLOAD = 'UPLOAD',
-}
+import { INPUT_METHOD } from './certificate'
 
 export enum DATA_SOURCE_FILE_EXTENSION {
     CSV = 'text/csv',

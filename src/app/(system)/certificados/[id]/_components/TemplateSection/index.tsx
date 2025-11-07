@@ -13,10 +13,8 @@ import {
 } from '@/components/ui/card'
 import { addTemplateByDrivePickerAction } from '@/backend/infrastructure/server-actions/add-template-by-drive-picker-action'
 import { Button } from '@/components/ui/button'
-import {
-    INPUT_METHOD,
-    TEMPLATE_FILE_EXTENSION,
-} from '@/backend/domain/template'
+import { INPUT_METHOD } from '@/backend/domain/certificate'
+import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { addTemplateByUploadAction } from '@/backend/infrastructure/server-actions/add-template-by-upload-action'
 
 interface TemplateSectionProps {

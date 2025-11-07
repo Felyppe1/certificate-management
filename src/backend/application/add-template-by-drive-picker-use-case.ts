@@ -1,4 +1,5 @@
-import { INPUT_METHOD, Template } from '../domain/template'
+import { INPUT_METHOD } from '../domain/certificate'
+import { Template } from '../domain/template'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'

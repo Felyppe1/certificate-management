@@ -1,4 +1,4 @@
-import { INPUT_METHOD } from '../domain/template'
+import { INPUT_METHOD } from '../domain/certificate'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { AuthenticationError } from '../domain/error/authentication-error'

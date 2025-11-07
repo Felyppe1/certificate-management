@@ -29,10 +29,8 @@ import {
     ALargeSmall,
 } from 'lucide-react'
 import { startTransition, useActionState, useState } from 'react'
-import {
-    INPUT_METHOD,
-    DATA_SOURCE_FILE_EXTENSION,
-} from '@/backend/domain/data-source'
+import { INPUT_METHOD } from '@/backend/domain/certificate'
+import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
 import { deleteDataSourceAction } from '@/backend/infrastructure/server-actions/delete-data-source-action'
 import { refreshDataSourceAction } from '@/backend/infrastructure/server-actions/refresh-data-source-action'
 import { SourceIcon } from '@/components/svg/SourceIcon'

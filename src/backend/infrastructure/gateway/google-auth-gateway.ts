@@ -84,6 +84,7 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
         }
     }
 
+    // TODO: check if id_token is the same as the one from authclient
     async getToken({ code }: GetTokenInput) {
         const { tokens } = await this.oauth2Client.getToken(code)
 

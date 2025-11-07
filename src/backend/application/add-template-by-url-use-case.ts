@@ -1,4 +1,5 @@
-import { INPUT_METHOD, Template } from '../domain/template'
+import { INPUT_METHOD } from '../domain/certificate'
+import { Template } from '../domain/template'
 import {
     VALIDATION_ERROR_TYPE,
     ValidationError,

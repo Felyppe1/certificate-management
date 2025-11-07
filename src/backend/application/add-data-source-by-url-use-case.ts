@@ -12,7 +12,8 @@ import {
 } from '../domain/error/not-found-error'
 import { IBucket } from './interfaces/ibucket'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
-import { DataSource, INPUT_METHOD } from '../domain/data-source'
+import { INPUT_METHOD } from '../domain/certificate'
+import { DataSource } from '../domain/data-source'
 import { DataSet } from '../domain/data-set'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 

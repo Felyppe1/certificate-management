@@ -10,7 +10,8 @@ import {
     NotFoundError,
 } from '../domain/error/not-found-error'
 import { AuthenticationError } from '../domain/error/authentication-error'
-import { INPUT_METHOD, TEMPLATE_FILE_EXTENSION } from '../domain/template'
+import { INPUT_METHOD } from '../domain/certificate'
+import { TEMPLATE_FILE_EXTENSION } from '../domain/template'
 import { prisma } from '../infrastructure/repository/prisma'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 

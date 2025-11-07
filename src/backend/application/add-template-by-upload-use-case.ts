@@ -11,11 +11,8 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
-import {
-    INPUT_METHOD,
-    Template,
-    TEMPLATE_FILE_EXTENSION,
-} from '../domain/template'
+import { INPUT_METHOD } from '../domain/certificate'
+import { Template, TEMPLATE_FILE_EXTENSION } from '../domain/template'
 import { IBucket } from './interfaces/ibucket'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'
