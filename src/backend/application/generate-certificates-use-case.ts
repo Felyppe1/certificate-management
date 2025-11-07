@@ -118,7 +118,7 @@ export class GenerateCertificatesUseCase {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${idToken}`,
+                // Authorization: `Bearer ${idToken}`,
             },
             body: JSON.stringify(body),
         })

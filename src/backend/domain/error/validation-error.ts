@@ -8,6 +8,7 @@ export enum VALIDATION_ERROR_TYPE {
     UNEXISTENT_TEMPLATE_DRIVE_FILE_ID = 'unexistent-template-drive-file-id',
     MIMETYPE_MISSING = 'mimetype-missing',
     NO_DATA_SET_ROWS = 'no-data-set-rows',
+    CERTIFICATES_GENERATION_IN_PROGRESS = 'certificates-generation-in-progress',
 }
 
 export class ValidationError extends AppError<VALIDATION_ERROR_TYPE> {

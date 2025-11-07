@@ -1,5 +1,9 @@
 import { createId } from '@paralleldrive/cuid2'
 import { AggregateRoot } from './primitives/aggregate-root'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from './error/validation-error'
 
 export enum GENERATION_STATUS {
     PENDING = 'PENDING', // TODO: change to IN_PROGRESS
@@ -69,8 +73,15 @@ export class DataSet extends AggregateRoot {
     update(data: Partial<Omit<DataSetInput, 'id'>>) {
         if (data.dataSourceId) this.dataSourceId = data.dataSourceId
         // TODO: could validate that from null -> IN_PROGRESS -> COMPLETED/FAILED
-        if (data.generationStatus !== undefined)
+        if (data.generationStatus !== undefined) {
+            if (data.generationStatus === GENERATION_STATUS.PENDING) {
+                throw new ValidationError(
+                    VALIDATION_ERROR_TYPE.CERTIFICATES_GENERATION_IN_PROGRESS,
+                )
+            }
+
             this.generationStatus = data.generationStatus
+        }
         if (data.totalBytes !== undefined) this.totalBytes = data.totalBytes
         if (data.rows) this.rows = data.rows
     }
