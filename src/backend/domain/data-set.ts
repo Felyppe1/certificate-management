@@ -11,7 +11,7 @@ export enum GENERATION_STATUS {
     FAILED = 'FAILED',
 }
 
-interface DataSetInput {
+export interface DataSetInput {
     id: string
     dataSourceId: string
     generationStatus: GENERATION_STATUS | null
@@ -70,8 +70,7 @@ export class DataSet extends AggregateRoot {
         return this.rows.length > 0
     }
 
-    update(data: Partial<Omit<DataSetInput, 'id'>>) {
-        if (data.dataSourceId) this.dataSourceId = data.dataSourceId
+    update(data: Partial<Omit<DataSetInput, 'id' | 'dataSourceId'>>) {
         // TODO: could validate that from null -> IN_PROGRESS -> COMPLETED/FAILED
         if (data.generationStatus !== undefined) {
             if (
