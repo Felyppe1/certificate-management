@@ -44,10 +44,13 @@ export default async function CertificatePage({
     const dataSet =
         certificateEmissionResponse.certificateEmission.dataSource?.dataSet ??
         null
-    const variablesMapped = Object.values(
-        certificateEmissionResponse.certificateEmission.variableColumnMapping ||
-            {},
-    ).every(mapping => mapping !== null)
+    const variablesMapped =
+        templateVariables.length === 0
+            ? true
+            : Object.values(
+                  certificateEmissionResponse.certificateEmission
+                      .variableColumnMapping,
+              ).every(mapping => mapping !== null)
 
     const emailSent = false // TODO: Get from API
 
@@ -128,13 +131,15 @@ export default async function CertificatePage({
                         />
                     )}
 
-                <GenerateCertificatesSection
-                    certificateId={certificateId}
-                    allVariablesWereMapped={
-                        variablesMapped || templateVariables.length === 0
-                    }
-                    dataSet={dataSet}
-                />
+                {hasTemplate && hasDataSource && variablesMapped && (
+                    <GenerateCertificatesSection
+                        certificateId={certificateId}
+                        allVariablesWereMapped={
+                            variablesMapped || templateVariables.length === 0
+                        }
+                        dataSet={dataSet}
+                    />
+                )}
 
                 {hasTemplate && hasDataSource && (
                     <EmailSendingSection
