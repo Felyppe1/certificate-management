@@ -64,7 +64,6 @@ function formatBytes(bytes: number, decimals = 2) {
 
 interface DataSourceDisplayProps {
     dataSource: {
-        id: string
         driveFileId: string | null
         storageFileUrl: string | null
         inputMethod: INPUT_METHOD

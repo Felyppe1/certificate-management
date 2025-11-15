@@ -6,13 +6,18 @@ export class PrismaDataSetsRepository implements IDataSetsRepository {
     constructor(private readonly prisma: PrismaClient) {}
 
     async save(dataSet: DataSet): Promise<void> {
-        const { id, dataSourceId, rows, generationStatus, totalBytes } =
-            dataSet.serialize()
+        const {
+            id,
+            certificateEmissionId,
+            rows,
+            generationStatus,
+            totalBytes,
+        } = dataSet.serialize()
 
         await this.prisma.dataSet.create({
             data: {
                 id,
-                data_source_id: dataSourceId,
+                certificate_emission_id: certificateEmissionId,
                 rows,
                 generation_status: generationStatus,
                 total_bytes: totalBytes,
@@ -36,15 +41,17 @@ export class PrismaDataSetsRepository implements IDataSetsRepository {
         return new DataSet({
             generationStatus: dataSet.generation_status as GENERATION_STATUS,
             id: dataSet.id,
-            dataSourceId: dataSet.data_source_id,
+            certificateEmissionId: dataSet.certificate_emission_id,
             totalBytes: dataSet.total_bytes,
             rows,
         })
     }
 
-    async getByDataSourceId(dataSourceId: string): Promise<DataSet | null> {
+    async getByCertificateEmissionId(
+        certificateEmissionId: string,
+    ): Promise<DataSet | null> {
         const dataSet = await this.prisma.dataSet.findUnique({
-            where: { data_source_id: dataSourceId },
+            where: { certificate_emission_id: certificateEmissionId },
         })
 
         if (!dataSet) {
@@ -58,22 +65,27 @@ export class PrismaDataSetsRepository implements IDataSetsRepository {
         return new DataSet({
             generationStatus: dataSet.generation_status as GENERATION_STATUS,
             id: dataSet.id,
-            dataSourceId: dataSet.data_source_id,
+            certificateEmissionId: dataSet.certificate_emission_id,
             totalBytes: dataSet.total_bytes,
             rows,
         })
     }
 
     async upsert(dataSet: DataSet): Promise<void> {
-        const { id, dataSourceId, rows, generationStatus, totalBytes } =
-            dataSet.serialize()
+        const {
+            id,
+            certificateEmissionId,
+            rows,
+            generationStatus,
+            totalBytes,
+        } = dataSet.serialize()
 
         // TODO: CONSERTAR ISSO AQUI DE UPSET PRA UPDATE
         await this.prisma.dataSet.upsert({
-            where: { data_source_id: dataSourceId },
+            where: { certificate_emission_id: certificateEmissionId },
             create: {
                 id,
-                data_source_id: dataSourceId,
+                certificate_emission_id: certificateEmissionId,
                 rows,
                 generation_status: generationStatus,
                 total_bytes: totalBytes,

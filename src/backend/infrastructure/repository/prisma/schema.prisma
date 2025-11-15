@@ -65,7 +65,7 @@ model CertificateEmission {
 }
 
 model Template {
-    id String @id @default(cuid())
+    certificate_emission_id String @id
 
     drive_file_id    String?
     storage_file_url String?
@@ -73,8 +73,6 @@ model Template {
     file_name        String
     input_method     String // "URL" | "GOOGLE_DRIVE" | "UPLOAD"
     file_extension   String
-
-    certificate_emission_id String @unique
 
     TemplateVariable    TemplateVariable[]
     CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id])
@@ -89,7 +87,7 @@ model TemplateVariable {
     data_source_id   String?
     data_source_name String?
 
-    Template         Template          @relation(fields: [template_id], references: [id], onDelete: Cascade)
+    Template         Template          @relation(fields: [template_id], references: [certificate_emission_id], onDelete: Cascade)
     DataSourceColumn DataSourceColumn? @relation(fields: [data_source_id, data_source_name], references: [data_source_id, name])
 
     @@id([name, template_id])
@@ -98,7 +96,7 @@ model TemplateVariable {
 }
 
 model DataSource {
-    id String @id @default(cuid())
+    certificate_emission_id String @id
 
     drive_file_id    String?
     storage_file_url String?
@@ -106,8 +104,6 @@ model DataSource {
     file_name        String
     input_method     String // "URL" | "GOOGLE_DRIVE" | "UPLOAD"
     file_extension   String
-
-    certificate_emission_id String @unique
 
     DataSourceColumn    DataSourceColumn[]
     CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id])
@@ -120,7 +116,7 @@ model DataSourceColumn {
     data_source_id String
     name           String
 
-    DataSource       DataSource        @relation(fields: [data_source_id], references: [id], onDelete: Cascade)
+    DataSource       DataSource        @relation(fields: [data_source_id], references: [certificate_emission_id], onDelete: Cascade)
     TemplateVariable TemplateVariable?
 
     @@id([name, data_source_id])
@@ -133,9 +129,9 @@ model DataSet {
     total_bytes       Int
     rows              Json
 
-    data_source_id String @unique
+    certificate_emission_id String @unique
 
-    DataSource DataSource @relation(fields: [data_source_id], references: [id], onDelete: Cascade)
+    DataSource DataSource @relation(fields: [certificate_emission_id], references: [certificate_emission_id], onDelete: Cascade)
 
     @@map("data_sets")
 }

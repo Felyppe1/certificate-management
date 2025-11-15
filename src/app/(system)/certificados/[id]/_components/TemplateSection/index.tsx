@@ -20,7 +20,6 @@ import { addTemplateByUploadAction } from '@/backend/infrastructure/server-actio
 interface TemplateSectionProps {
     certificateId: string
     template: {
-        id: string
         driveFileId: string | null
         storageFileUrl: string | null
         inputMethod: INPUT_METHOD

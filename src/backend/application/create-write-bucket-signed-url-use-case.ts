@@ -54,7 +54,8 @@ export class CreateWriteBucketSignedUrlUseCase {
         const extension =
             input.mimeType === TEMPLATE_FILE_EXTENSION.PPTX ? 'pptx' : 'docx'
 
-        const path = `users/${session.userId}/templates/${certificate.getTemplateId()}/original.${extension}`
+        // TODO: it's not this path
+        const path = `users/${session.userId}/certificates/${certificate.getId()}/original.${extension}`
 
         const signedUrl = await this.bucket.generateSignedUrl({
             bucketName: process.env.CERTIFICATES_BUCKET!,

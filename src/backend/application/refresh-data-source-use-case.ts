@@ -148,16 +148,12 @@ export class RefreshDataSourceUseCase {
             thumbnailUrl,
         }
 
-        if (certificate.hasDataSource()) {
-            certificate.updateDataSource(newDataSourceInput)
-        } else {
-            certificate.setDataSource(newDataSourceInput)
-        }
+        certificate.setDataSource(newDataSourceInput)
 
         await this.certificateEmissionsRepository.update(certificate)
 
         const newDataSet = DataSet.create({
-            dataSourceId: certificate.getDataSourceId()!,
+            certificateEmissionId: certificate.getId(),
             rows,
         })
 

@@ -118,11 +118,7 @@ export class AddTemplateByDrivePickerUseCase {
             thumbnailUrl,
         }
 
-        if (certificate.hasTemplate()) {
-            certificate.updateTemplate(newTemplateInput)
-        } else {
-            certificate.setTemplate(newTemplateInput)
-        }
+        certificate.setTemplate(newTemplateInput)
 
         await this.certificateEmissionsRepository.update(certificate)
 

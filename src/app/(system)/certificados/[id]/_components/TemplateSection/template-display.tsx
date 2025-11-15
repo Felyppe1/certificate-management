@@ -32,7 +32,6 @@ function getInputMethodLabel(method: string) {
 
 interface TemplateDisplayProps {
     template: {
-        id: string
         driveFileId: string | null
         storageFileUrl: string | null
         inputMethod: INPUT_METHOD

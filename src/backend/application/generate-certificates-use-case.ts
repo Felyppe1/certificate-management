@@ -32,7 +32,7 @@ export class GenerateCertificatesUseCase {
         >,
         private dataSetsRepository: Pick<
             IDataSetsRepository,
-            'getByDataSourceId' | 'upsert'
+            'getByCertificateEmissionId' | 'upsert'
         >,
         private externalProcessing: Pick<
             IExternalProcessing,
@@ -72,9 +72,10 @@ export class GenerateCertificatesUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }
 
-        const dataSet = await this.dataSetsRepository.getByDataSourceId(
-            certificateEmission.getDataSourceId()!,
-        )
+        const dataSet =
+            await this.dataSetsRepository.getByCertificateEmissionId(
+                certificateEmission.getId(),
+            )
 
         if (!dataSet) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SET)

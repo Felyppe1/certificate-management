@@ -42,7 +42,7 @@ export class GetDataSetUseCase {
             generationStatus: dataSet.generation_status as GENERATION_STATUS,
             totalBytes: dataSet.total_bytes,
             rows: dataSet.rows as Record<string, any>[],
-            dataSourceId: dataSet.data_source_id,
+            certificateEmissionId: dataSet.certificate_emission_id,
         }
     }
 }

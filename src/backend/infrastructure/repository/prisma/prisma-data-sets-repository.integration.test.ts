@@ -22,7 +22,7 @@ const createDataSetData = (
     overrides?: Partial<DataSetInput>,
 ): DataSetInput => ({
     id: '1',
-    dataSourceId: '1',
+    certificateEmissionId: '1',
     generationStatus: null,
     totalBytes: 0,
     rows: [{ column: 'variable' }],
@@ -58,7 +58,6 @@ describe('PrismaDataSetsRepository Integration Tests', () => {
             variableColumnMapping: null,
             template: null,
             dataSource: new DataSource({
-                id: '1',
                 fileName: 'filename.csv',
                 fileExtension: DATA_SOURCE_FILE_EXTENSION.CSV,
                 thumbnailUrl: null,
@@ -85,7 +84,7 @@ describe('PrismaDataSetsRepository Integration Tests', () => {
 
         expect(createdDataSet).toEqual({
             id: '1',
-            data_source_id: '1',
+            certificate_emission_id: '1',
             generation_status: null,
             total_bytes: 0,
             rows: [{ column: 'variable' }],
@@ -111,7 +110,7 @@ describe('PrismaDataSetsRepository Integration Tests', () => {
 
         expect(updatedDataSet).toEqual({
             id: '1',
-            data_source_id: '1',
+            certificate_emission_id: '1',
             generation_status: GENERATION_STATUS.PENDING,
             total_bytes: 10,
             rows: [],

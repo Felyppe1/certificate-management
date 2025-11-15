@@ -22,7 +22,6 @@ import {
 const createTemplateData = (
     overrides?: Partial<TemplateInput>,
 ): TemplateInput => ({
-    id: '1',
     fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
     inputMethod: INPUT_METHOD.URL,
     driveFileId: '1',
@@ -36,7 +35,6 @@ const createTemplateData = (
 const createDataSourceData = (
     overrides?: Partial<DataSourceInput>,
 ): DataSourceInput => ({
-    id: '1',
     fileExtension: DATA_SOURCE_FILE_EXTENSION.CSV,
     inputMethod: INPUT_METHOD.URL,
     driveFileId: '1',
@@ -119,7 +117,6 @@ describe('PrismaCertificateEmissionsRepository Integration Tests', () => {
         })
 
         expect(createdTemplate).toEqual({
-            id: expect.any(String),
             certificate_emission_id: '1',
             file_extension: TEMPLATE_FILE_EXTENSION.DOCX,
             input_method: INPUT_METHOD.URL,
@@ -168,7 +165,6 @@ describe('PrismaCertificateEmissionsRepository Integration Tests', () => {
         })
 
         expect(createdDataSource).toEqual({
-            id: expect.any(String),
             certificate_emission_id: '1',
             file_extension: DATA_SOURCE_FILE_EXTENSION.CSV,
             input_method: INPUT_METHOD.URL,
@@ -223,9 +219,11 @@ describe('PrismaCertificateEmissionsRepository Integration Tests', () => {
                 certificateEmissionsRepository.save(certificate),
             ).resolves.not.toThrow()
 
-            certificate.updateTemplate({
-                variables: ['variable1', 'column1', 'column2'],
-            })
+            certificate.setTemplate(
+                createTemplateData({
+                    variables: ['variable1', 'column1', 'column2'],
+                }),
+            )
 
             await expect(
                 certificateEmissionsRepository.update(certificate),
@@ -287,9 +285,11 @@ describe('PrismaCertificateEmissionsRepository Integration Tests', () => {
                 certificateEmissionsRepository.save(certificate),
             ).resolves.not.toThrow()
 
-            certificate.updateDataSource({
-                columns: ['column3', 'column2', 'column1'],
-            })
+            certificate.setDataSource(
+                createDataSourceData({
+                    columns: ['column3', 'column2', 'column1'],
+                }),
+            )
 
             await expect(
                 certificateEmissionsRepository.update(certificate),

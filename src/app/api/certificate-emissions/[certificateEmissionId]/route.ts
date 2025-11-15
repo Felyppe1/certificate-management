@@ -24,7 +24,6 @@ export interface GetCertificateEmissionControllerResponse {
         createdAt: Date
         variableColumnMapping: Record<string, string | null>
         template: {
-            id: string
             driveFileId: string | null
             storageFileUrl: string | null
             inputMethod: INPUT_METHOD
@@ -34,7 +33,6 @@ export interface GetCertificateEmissionControllerResponse {
             thumbnailUrl: string | null
         } | null
         dataSource: {
-            id: string
             driveFileId: string | null
             storageFileUrl: string | null
             inputMethod: INPUT_METHOD

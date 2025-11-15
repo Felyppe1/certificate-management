@@ -1,12 +1,7 @@
 import { createId } from '@paralleldrive/cuid2'
 import { AggregateRoot } from './primitives/aggregate-root'
 import { CertificateCreatedDomainEvent } from './events/certificate-created-domain-event'
-import {
-    Template,
-    TemplateOutput,
-    CreateTemplateInput,
-    UpdateTemplateInput,
-} from './template'
+import { Template, TemplateOutput, CreateTemplateInput } from './template'
 import { TemplateSetDomainEvent } from './events/template-set-domain-event'
 import { FORBIDDEN_ERROR_TYPE, ForbiddenError } from './error/forbidden-error'
 import { DomainEvent } from './primitives/domain-event'
@@ -14,10 +9,10 @@ import {
     DataSource,
     DataSourceOutput,
     CreateDataSourceInput,
-    UpdateDataSourceInput,
 } from './data-source'
 import { NOT_FOUND_ERROR_TYPE, NotFoundError } from './error/not-found-error'
 import { DataSourceSetDomainEvent } from './events/data-source-set-domain-event'
+// import { Email, EmailOutput } from './email'
 
 export enum INPUT_METHOD {
     URL = 'URL',
@@ -36,6 +31,7 @@ export interface CertificateInput {
     name: string
     template: Template | null
     dataSource: DataSource | null
+    // email: Email
     status: CERTIFICATE_STATUS
     userId: string
     createdAt: Date
@@ -53,14 +49,21 @@ interface UpdateCertificateInput
     extends Partial<
         Omit<
             CertificateInput,
-            'id' | 'userId' | 'createdAt' | 'status' | 'template' | 'dataSource'
+            | 'id'
+            | 'userId'
+            | 'createdAt'
+            | 'status'
+            | 'template'
+            | 'dataSource'
+            | 'email'
         >
     > {}
 
 interface CertificateOutput
-    extends Omit<CertificateInput, 'template' | 'dataSource'> {
+    extends Omit<CertificateInput, 'template' | 'dataSource' | 'email'> {
     template: TemplateOutput | null
     dataSource: DataSourceOutput | null
+    // email: EmailOutput
     domainEvents: DomainEvent[]
 }
 
@@ -69,15 +72,16 @@ export class Certificate extends AggregateRoot {
     private name: string
     private template: Template | null
     private dataSource: DataSource | null
+    // private email: Email
     private status: CERTIFICATE_STATUS
     private userId: string
     private createdAt: Date
     private variableColumnMapping: Record<string, string | null> | null
 
     static create(data: CreateCertificateInput): Certificate {
-        const template = data.template ? Template.create(data.template) : null
+        const template = data.template ? new Template(data.template) : null
         const dataSource = data.dataSource
-            ? DataSource.create(data.dataSource)
+            ? new DataSource(data.dataSource)
             : null
 
         const variableColumnMapping = this.mapVariablesToColumns(
@@ -85,12 +89,20 @@ export class Certificate extends AggregateRoot {
             dataSource,
         )
 
+        // const email = Email.create({
+        //     subject: null,
+        //     body: null,
+        //     emailColumn: null,
+        //     areAllRecordsValid: false,
+        // })
+
         const certificate = new Certificate({
             id: createId(),
             name: data.name,
             userId: data.userId,
             template,
             dataSource,
+            // email,
             status: CERTIFICATE_STATUS.DRAFT,
             createdAt: new Date(),
             variableColumnMapping,
@@ -194,7 +206,7 @@ export class Certificate extends AggregateRoot {
     }
 
     setTemplate(data: CreateTemplateInput) {
-        const template = Template.create(data)
+        const template = new Template(data)
         this.template = template
 
         this.variableColumnMapping = Certificate.mapVariablesToColumns(
@@ -203,7 +215,7 @@ export class Certificate extends AggregateRoot {
             this.variableColumnMapping,
         )
 
-        const domainEvent = new TemplateSetDomainEvent(template.getId())
+        const domainEvent = new TemplateSetDomainEvent(this.id)
 
         this.addDomainEvent(domainEvent)
     }
@@ -228,10 +240,6 @@ export class Certificate extends AggregateRoot {
 
     getTemplateInputMethod() {
         return this.template?.getInputMethod() ?? null
-    }
-
-    getTemplateId() {
-        return this.template?.getId() ?? null
     }
 
     getDriveTemplateFileId() {
@@ -259,7 +267,7 @@ export class Certificate extends AggregateRoot {
     }
 
     setDataSource(data: CreateDataSourceInput) {
-        const dataSource = DataSource.create(data)
+        const dataSource = new DataSource(data)
         this.dataSource = dataSource
 
         this.variableColumnMapping = Certificate.mapVariablesToColumns(
@@ -268,13 +276,9 @@ export class Certificate extends AggregateRoot {
             this.variableColumnMapping,
         )
 
-        const domainEvent = new DataSourceSetDomainEvent(dataSource.getId())
+        const domainEvent = new DataSourceSetDomainEvent(this.id)
 
         this.addDomainEvent(domainEvent)
-    }
-
-    getDataSourceId() {
-        return this.dataSource?.getId() ?? null
     }
 
     hasDataSource() {
@@ -318,33 +322,19 @@ export class Certificate extends AggregateRoot {
         )
     }
 
-    updateDataSource(data: UpdateDataSourceInput) {
-        if (!this.dataSource) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
-        }
+    // updateTemplate(data: UpdateTemplateInput) {
+    //     if (!this.template) {
+    //         throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
+    //     }
 
-        this.dataSource.update(data)
+    //     this.template.update(data)
 
-        this.variableColumnMapping = Certificate.mapVariablesToColumns(
-            this.template,
-            this.dataSource,
-            this.variableColumnMapping,
-        )
-    }
-
-    updateTemplate(data: UpdateTemplateInput) {
-        if (!this.template) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
-        }
-
-        this.template.update(data)
-
-        this.variableColumnMapping = Certificate.mapVariablesToColumns(
-            this.template,
-            this.dataSource,
-            this.variableColumnMapping,
-        )
-    }
+    //     this.variableColumnMapping = Certificate.mapVariablesToColumns(
+    //         this.template,
+    //         this.dataSource,
+    //         this.variableColumnMapping,
+    //     )
+    // }
 
     private static mapVariablesToColumns(
         template: Template | null,
@@ -429,6 +419,7 @@ export class Certificate extends AggregateRoot {
             name: this.name,
             template: this.template?.serialize() ?? null,
             dataSource: this.dataSource?.serialize() ?? null,
+            // email: this.email.serialize(),
             status: this.status,
             createdAt: this.createdAt,
             userId: this.userId,

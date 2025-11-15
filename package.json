@@ -7,6 +7,8 @@
     "prisma:dev": "npx prisma migrate dev --schema src/backend/infrastructure/repository/prisma/schema.prisma",
     "prisma:deploy": "npx prisma migrate deploy --schema=src/backend/infrastructure/repository/prisma/schema.prisma",
     "prisma:studio": "npx prisma studio --schema=src/backend/infrastructure/repository/prisma/schema.prisma",
+    "prisma:reset": "npx prisma migrate reset --schema src/backend/infrastructure/repository/prisma/schema.prisma",
+    "prisma:push": "npx prisma db push --schema src/backend/infrastructure/repository/prisma/schema.prisma",
     "dev": "next dev --turbopack",
     "test": "vitest run --config vitest.config.integration.ts --no-file-parallelism",
     "build": "npm run prisma:generate && next build",

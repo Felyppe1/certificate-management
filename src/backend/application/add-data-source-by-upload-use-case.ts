@@ -90,11 +90,7 @@ export class AddDataSourceByUploadUseCase {
             thumbnailUrl: null,
         }
 
-        if (certificate.hasDataSource()) {
-            certificate.updateDataSource(newDataSourceInput)
-        } else {
-            certificate.setDataSource(newDataSourceInput)
-        }
+        certificate.setDataSource(newDataSourceInput)
 
         const path = `users/${session.userId}/certificates/${certificate.getId()}/data-source.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
 
@@ -110,7 +106,7 @@ export class AddDataSourceByUploadUseCase {
         await this.certificatesRepository.update(certificate)
 
         const newDataSet = DataSet.create({
-            dataSourceId: certificate.getDataSourceId()!,
+            certificateEmissionId: certificate.getId(),
             rows,
         })
 

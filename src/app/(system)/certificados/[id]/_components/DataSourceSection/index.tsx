@@ -23,7 +23,6 @@ import { GENERATION_STATUS } from '@/backend/domain/data-set'
 interface DataSourceSectionProps {
     certificateId: string
     dataSource: {
-        id: string
         driveFileId: string | null
         storageFileUrl: string | null
         inputMethod: INPUT_METHOD

@@ -1,4 +1,3 @@
-import { createId } from '@paralleldrive/cuid2'
 import { INPUT_METHOD } from './certificate'
 
 export enum TEMPLATE_FILE_EXTENSION {
@@ -9,7 +8,6 @@ export enum TEMPLATE_FILE_EXTENSION {
 }
 
 export interface TemplateInput {
-    id: string
     driveFileId: string | null
     storageFileUrl: string | null
     inputMethod: INPUT_METHOD
@@ -21,13 +19,12 @@ export interface TemplateInput {
 
 export interface TemplateOutput extends TemplateInput {}
 
-export interface CreateTemplateInput extends Omit<TemplateInput, 'id'> {}
+export interface CreateTemplateInput extends TemplateInput {}
 
-export interface UpdateTemplateInput
-    extends Partial<Omit<TemplateInput, 'id'>> {}
+// export interface UpdateTemplateInput
+//     extends Partial<Omit<TemplateInput, 'id'>> {}
 
 export class Template {
-    private id: string
     private driveFileId: string | null
     private storageFileUrl: string | null
     private inputMethod: INPUT_METHOD
@@ -36,19 +33,7 @@ export class Template {
     private variables: string[]
     private thumbnailUrl: string | null
 
-    static create(data: CreateTemplateInput): Template {
-        return new Template({
-            ...data,
-            id: createId(),
-        })
-    }
-
     constructor(data: TemplateInput) {
-        console.log(data)
-        if (!data.id) {
-            throw new Error('Template ID is required')
-        }
-
         if (!data.inputMethod) {
             throw new Error('Template input method is required')
         }
@@ -77,7 +62,6 @@ export class Template {
             )
         }
 
-        this.id = data.id
         this.driveFileId = data.driveFileId
         this.storageFileUrl = data.storageFileUrl
         this.inputMethod = data.inputMethod
@@ -85,10 +69,6 @@ export class Template {
         this.fileExtension = data.fileExtension
         this.variables = data.variables
         this.thumbnailUrl = data.thumbnailUrl
-    }
-
-    getId() {
-        return this.id
     }
 
     getDriveFileId() {
@@ -183,7 +163,6 @@ export class Template {
 
     serialize(): TemplateOutput {
         return {
-            id: this.id,
             driveFileId: this.driveFileId,
             storageFileUrl: this.storageFileUrl,
             inputMethod: this.inputMethod,

@@ -1,4 +1,3 @@
-import { createId } from '@paralleldrive/cuid2'
 import { INPUT_METHOD } from './certificate'
 
 export enum DATA_SOURCE_FILE_EXTENSION {
@@ -9,7 +8,6 @@ export enum DATA_SOURCE_FILE_EXTENSION {
 }
 
 export interface DataSourceInput {
-    id: string
     driveFileId: string | null
     storageFileUrl: string | null
     inputMethod: INPUT_METHOD
@@ -21,13 +19,12 @@ export interface DataSourceInput {
 
 export interface DataSourceOutput extends DataSourceInput {}
 
-export interface CreateDataSourceInput extends Omit<DataSourceInput, 'id'> {}
+export interface CreateDataSourceInput extends DataSourceInput {}
 
-export interface UpdateDataSourceInput
-    extends Partial<Omit<DataSourceInput, 'id'>> {}
+// export interface UpdateDataSourceInput
+//     extends Partial<Omit<DataSourceInput>> {}
 
 export class DataSource {
-    private id: string
     private driveFileId: string | null
     private storageFileUrl: string | null
     private inputMethod: INPUT_METHOD
@@ -36,18 +33,7 @@ export class DataSource {
     private columns: string[]
     private thumbnailUrl: string | null
 
-    static create(data: CreateDataSourceInput): DataSource {
-        return new DataSource({
-            ...data,
-            id: createId(),
-        })
-    }
-
     constructor(data: DataSourceInput) {
-        if (!data.id) {
-            throw new Error('DataSource ID is required')
-        }
-
         if (!data.inputMethod) {
             throw new Error('DataSource input method is required')
         }
@@ -68,7 +54,6 @@ export class DataSource {
         this.validateDriveFileId(data.driveFileId, data.inputMethod)
         this.validateStorageFileUrl(data.storageFileUrl, data.inputMethod)
 
-        this.id = data.id
         this.driveFileId = data.driveFileId
         this.storageFileUrl = data.storageFileUrl
         this.inputMethod = data.inputMethod
@@ -78,25 +63,25 @@ export class DataSource {
         this.thumbnailUrl = data.thumbnailUrl
     }
 
-    update(data: Partial<Omit<DataSourceInput, 'id'>>) {
-        if (data.inputMethod) this.inputMethod = data.inputMethod
+    // update(data: Partial<Omit<DataSourceInput, 'id'>>) {
+    //     if (data.inputMethod) this.inputMethod = data.inputMethod
 
-        if (data.driveFileId !== undefined) {
-            this.validateDriveFileId(data.driveFileId, this.inputMethod)
-            this.driveFileId = data.driveFileId
-        }
+    //     if (data.driveFileId !== undefined) {
+    //         this.validateDriveFileId(data.driveFileId, this.inputMethod)
+    //         this.driveFileId = data.driveFileId
+    //     }
 
-        if (data.storageFileUrl !== undefined) {
-            this.validateStorageFileUrl(data.storageFileUrl, this.inputMethod)
-            this.storageFileUrl = data.storageFileUrl
-        }
+    //     if (data.storageFileUrl !== undefined) {
+    //         this.validateStorageFileUrl(data.storageFileUrl, this.inputMethod)
+    //         this.storageFileUrl = data.storageFileUrl
+    //     }
 
-        if (data.fileName) this.fileName = data.fileName
-        if (data.fileExtension) this.fileExtension = data.fileExtension
-        if (data.columns) this.columns = data.columns
-        if (data.thumbnailUrl !== undefined)
-            this.thumbnailUrl = data.thumbnailUrl
-    }
+    //     if (data.fileName) this.fileName = data.fileName
+    //     if (data.fileExtension) this.fileExtension = data.fileExtension
+    //     if (data.columns) this.columns = data.columns
+    //     if (data.thumbnailUrl !== undefined)
+    //         this.thumbnailUrl = data.thumbnailUrl
+    // }
 
     private validateDriveFileId(
         driveFileId: string | null,
@@ -118,10 +103,6 @@ export class DataSource {
                 'File storage URL should only be provided for UPLOAD input method',
             )
         }
-    }
-
-    getId() {
-        return this.id
     }
 
     getDriveFileId() {
@@ -171,7 +152,6 @@ export class DataSource {
 
     serialize(): DataSourceOutput {
         return {
-            id: this.id,
             driveFileId: this.driveFileId,
             storageFileUrl: this.storageFileUrl,
             inputMethod: this.inputMethod,

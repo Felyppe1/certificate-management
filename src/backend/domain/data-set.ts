@@ -13,7 +13,7 @@ export enum GENERATION_STATUS {
 
 export interface DataSetInput {
     id: string
-    dataSourceId: string
+    certificateEmissionId: string
     generationStatus: GENERATION_STATUS | null
     totalBytes: number
     rows: Record<string, any>[]
@@ -26,7 +26,7 @@ interface DataSetOutput extends DataSetInput {}
 
 export class DataSet extends AggregateRoot {
     private id: string
-    private dataSourceId: string
+    private certificateEmissionId: string
     private generationStatus: GENERATION_STATUS | null
     private totalBytes: number
     private rows: Record<string, any>[]
@@ -47,8 +47,8 @@ export class DataSet extends AggregateRoot {
             throw new Error('DataSet ID is required')
         }
 
-        if (!data.dataSourceId) {
-            throw new Error('DataSource ID is required')
+        if (!data.certificateEmissionId) {
+            throw new Error('DataSet certificateEmissionId is required')
         }
 
         if (!data.rows) {
@@ -60,7 +60,7 @@ export class DataSet extends AggregateRoot {
         }
 
         this.id = data.id
-        this.dataSourceId = data.dataSourceId
+        this.certificateEmissionId = data.certificateEmissionId
         this.generationStatus = data.generationStatus
         this.totalBytes = data.totalBytes
         this.rows = data.rows
@@ -70,7 +70,7 @@ export class DataSet extends AggregateRoot {
         return this.rows.length > 0
     }
 
-    update(data: Partial<Omit<DataSetInput, 'id' | 'dataSourceId'>>) {
+    update(data: Partial<Omit<DataSetInput, 'id' | 'certificateEmissionId'>>) {
         // TODO: could validate that from null -> IN_PROGRESS -> COMPLETED/FAILED
         if (data.generationStatus !== undefined) {
             if (
@@ -91,7 +91,7 @@ export class DataSet extends AggregateRoot {
     serialize(): DataSetOutput {
         return {
             id: this.id,
-            dataSourceId: this.dataSourceId,
+            certificateEmissionId: this.certificateEmissionId,
             generationStatus: this.generationStatus,
             totalBytes: this.totalBytes,
             rows: this.rows,

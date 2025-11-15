@@ -39,7 +39,6 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                     ...(dataSource && {
                         DataSource: {
                             create: {
-                                id: dataSource.id,
                                 drive_file_id: dataSource.driveFileId,
                                 storage_file_url: dataSource.storageFileUrl,
                                 input_method: dataSource.inputMethod,
@@ -61,7 +60,6 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                     ...(template && {
                         Template: {
                             create: {
-                                id: template.id,
                                 drive_file_id: template.driveFileId,
                                 storage_file_url: template.storageFileUrl,
                                 input_method: template.inputMethod,
@@ -77,7 +75,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                                     variableColumnMapping?.[
                                                         variable
                                                     ]
-                                                        ? dataSource?.id
+                                                        ? id
                                                         : null,
                                                 data_source_name:
                                                     variableColumnMapping?.[
@@ -118,29 +116,21 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
             await this.prisma.certificateEmission.findUnique({
                 where: { id },
                 include: {
-                    Template: {
-                        select: {
-                            id: true,
-                        },
-                    },
-                    DataSource: {
-                        select: {
-                            id: true,
-                        },
-                    },
+                    Template: true,
+                    DataSource: true,
                 },
             })
 
         await this.prisma.$transaction(async (tx: TransactionClient) => {
             if (!template && previousCertificate?.Template) {
                 await tx.template.delete({
-                    where: { id: previousCertificate.Template.id },
+                    where: { certificate_emission_id: previousCertificate.id },
                 })
             }
 
             if (!dataSource && previousCertificate?.DataSource) {
                 await tx.dataSource.delete({
-                    where: { id: previousCertificate.DataSource.id },
+                    where: { certificate_emission_id: previousCertificate.id },
                 })
             }
 
@@ -152,7 +142,6 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                         ...(dataSource && {
                             upsert: {
                                 create: {
-                                    id: dataSource.id,
                                     drive_file_id: dataSource.driveFileId,
                                     storage_file_url: dataSource.storageFileUrl,
                                     input_method: dataSource.inputMethod,
@@ -195,7 +184,6 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                         ...(template && {
                             upsert: {
                                 create: {
-                                    id: template.id,
                                     drive_file_id: template.driveFileId,
                                     storage_file_url: template.storageFileUrl,
                                     input_method: template.inputMethod,
@@ -211,7 +199,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                                         variableColumnMapping?.[
                                                             variable
                                                         ]
-                                                            ? dataSource?.id
+                                                            ? id
                                                             : null,
                                                     data_source_name:
                                                         variableColumnMapping?.[
@@ -239,7 +227,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                                         variableColumnMapping?.[
                                                             variable
                                                         ]
-                                                            ? dataSource?.id
+                                                            ? id
                                                             : null,
                                                     data_source_name:
                                                         variableColumnMapping?.[
@@ -291,7 +279,6 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
 
         const template = certificate.Template
             ? new Template({
-                  id: certificate.Template.id,
                   driveFileId: certificate.Template.drive_file_id,
                   storageFileUrl: certificate.Template.storage_file_url,
                   inputMethod: certificate.Template
@@ -308,7 +295,6 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
 
         const dataSource = certificate.DataSource
             ? new DataSource({
-                  id: certificate.DataSource.id,
                   driveFileId: certificate.DataSource.drive_file_id,
                   storageFileUrl: certificate.DataSource.storage_file_url,
                   inputMethod: certificate.DataSource

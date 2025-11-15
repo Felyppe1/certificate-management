@@ -79,7 +79,6 @@ export class GetCertificateEmissionUseCase {
                 ) ?? null,
             template: certificateEmission.Template
                 ? {
-                      id: certificateEmission.Template.id,
                       driveFileId: certificateEmission.Template.drive_file_id,
                       storageFileUrl:
                           certificateEmission.Template.storage_file_url,
@@ -97,7 +96,6 @@ export class GetCertificateEmissionUseCase {
                 : null,
             dataSource: certificateEmission.DataSource
                 ? {
-                      id: certificateEmission.DataSource.id,
                       driveFileId: certificateEmission.DataSource.drive_file_id,
                       storageFileUrl:
                           certificateEmission.DataSource.storage_file_url,

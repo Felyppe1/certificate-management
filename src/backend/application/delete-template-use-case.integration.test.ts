@@ -34,7 +34,6 @@ describe('DeleteTemplateUseCase (Integration)', () => {
                 status: CERTIFICATE_STATUS.DRAFT,
                 Template: {
                     create: {
-                        id: '1',
                         file_extension: TEMPLATE_FILE_EXTENSION.DOCX,
                         file_name: 'filename',
                         input_method: INPUT_METHOD.URL,
