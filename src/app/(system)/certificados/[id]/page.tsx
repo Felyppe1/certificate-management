@@ -117,19 +117,17 @@ export default async function CertificatePage({
                     }
                 />
 
-                {hasTemplate &&
-                    hasDataSource &&
-                    templateVariables.length > 0 && (
-                        <VariableMappingSection
-                            certificateId={certificateId}
-                            templateVariables={templateVariables}
-                            dataSourceColumns={dataSourceColumns}
-                            existingMappings={
-                                certificateEmissionResponse.certificateEmission
-                                    .variableColumnMapping
-                            }
-                        />
-                    )}
+                {hasTemplate && hasDataSource && variablesMapped && (
+                    <VariableMappingSection
+                        certificateId={certificateId}
+                        templateVariables={templateVariables}
+                        dataSourceColumns={dataSourceColumns}
+                        existingMappings={
+                            certificateEmissionResponse.certificateEmission
+                                .variableColumnMapping
+                        }
+                    />
+                )}
 
                 {hasTemplate && hasDataSource && variablesMapped && (
                     <GenerateCertificatesSection
@@ -141,7 +139,7 @@ export default async function CertificatePage({
                     />
                 )}
 
-                {hasTemplate && hasDataSource && (
+                {hasTemplate && hasDataSource && variablesMapped && (
                     <EmailSendingSection
                         certificateId={certificateId}
                         dataSourceColumns={dataSourceColumns}
