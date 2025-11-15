@@ -58,7 +58,7 @@ const alertMessageDescriptionVariants = cva('', {
             success: 'text-green-700 dark:text-green-300',
             error: 'text-red-700 dark:text-red-300',
             warning: 'text-orange-700 dark:text-orange-300',
-            info: 'text-blue-900 dark:text-blue-100',
+            info: 'text-blue-900 dark:text-blue-300',
             purple: 'text-purple-700 dark:text-purple-300',
             muted: 'text-muted-foreground',
         },

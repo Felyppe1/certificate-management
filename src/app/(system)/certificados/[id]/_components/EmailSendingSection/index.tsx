@@ -100,20 +100,12 @@ export function EmailSendingSection({
             <CardContent className="space-y-6">
                 {/* Alert: Mapping Required */}
                 {!isEmailColumnSaved && !emailSent && !isScheduled && (
-                    <div className="bg-muted/50 border rounded-lg p-4">
-                        <div className="flex gap-3">
-                            <div className="flex-shrink-0 text-orange-600 dark:text-orange-400">
-                                <AlertCircle className="w-5 h-5" />
-                            </div>
-                            <div className="text-sm">
-                                <p className="font-medium">Coluna necessária</p>
-                                <p className="text-muted-foreground">
-                                    Selecione e salve a coluna que contém os
-                                    emails dos destinatários para continuar.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                    <AlertMessage
+                        variant="warning"
+                        icon={<AlertCircle className="w-5 h-5" />}
+                        text="Coluna de email necessária"
+                        description="Selecione e salve a coluna que contém os emails dos destinatários para continuar."
+                    />
                 )}
 
                 {/* Alert: Already Scheduled */}

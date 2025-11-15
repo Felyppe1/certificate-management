@@ -91,12 +91,9 @@ export function EmailForm({
             <div className="space-y-3">
                 <Label htmlFor={`email-message-${sendMode}`}>Mensagem</Label>
                 <Textarea
-                    className={
-                        sendMode === 'scheduled' ? 'resize-none min-h-24' : ''
-                    }
+                    className="resize-none min-h-24"
                     id={`email-message-${sendMode}`}
                     placeholder="Digite o corpo do email que será enviado"
-                    rows={sendMode === 'scheduled' ? 20 : 7}
                     value={message}
                     onChange={e => onMessageChange(e.target.value)}
                     disabled={isDisabled}
