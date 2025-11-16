@@ -60,6 +60,7 @@ model CertificateEmission {
     User       User        @relation(fields: [user_id], references: [id])
     Template   Template?
     DataSource DataSource?
+    Email      Email?
 
     @@map("certificate_emissions")
 }
@@ -134,6 +135,22 @@ model DataSet {
     DataSource DataSource @relation(fields: [certificate_emission_id], references: [certificate_emission_id], onDelete: Cascade)
 
     @@map("data_sets")
+}
+
+model Email {
+    id               String    @id @default(cuid())
+    subject          String?
+    body             String?
+    email_column     String?
+    scheduled_at     DateTime?
+    status           String // "PENDING" | "RUNNING" | "COMPLETED" | "FAILED"
+    email_error_type String?
+
+    certificate_emission_id String @unique
+
+    CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id])
+
+    @@map("emails")
 }
 
 model Outbox {

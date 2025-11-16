@@ -121,6 +121,10 @@ export class DataSource {
         return this.columns
     }
 
+    hasColumn(columnName: string): boolean {
+        return this.columns.includes(columnName)
+    }
+
     getInputMethod() {
         return this.inputMethod
     }

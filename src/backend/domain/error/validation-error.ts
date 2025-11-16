@@ -9,6 +9,8 @@ export enum VALIDATION_ERROR_TYPE {
     MIMETYPE_MISSING = 'mimetype-missing',
     NO_DATA_SET_ROWS = 'no-data-set-rows',
     GENERATION_ALREADY_IN_PROGRESS = 'generation-already-in-progress',
+    UNEXISTENT_DATA_SOURCE_COLUMN = 'unexistent-data-source-column',
+    INVALID_RECIPIENT_EMAIL = 'invalid-recipient-email',
 }
 
 export class ValidationError extends AppError<VALIDATION_ERROR_TYPE> {

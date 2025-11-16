@@ -70,6 +70,10 @@ export class DataSet extends AggregateRoot {
         return this.rows.length > 0
     }
 
+    getRowsFromColumn(columnName: string): any[] {
+        return this.rows.map(row => row[columnName])
+    }
+
     update(data: Partial<Omit<DataSetInput, 'id' | 'certificateEmissionId'>>) {
         // TODO: could validate that from null -> IN_PROGRESS -> COMPLETED/FAILED
         if (data.generationStatus !== undefined) {

@@ -19,7 +19,14 @@ import {
     CircleAlert,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { startTransition, useActionState, useEffect, useRef } from 'react'
+import {
+    startTransition,
+    useActionState,
+    useEffect,
+    useRef,
+    useState,
+} from 'react'
+import z from 'zod'
 
 interface GenerateCertificatesSectionProps {
     certificateId: string
@@ -40,6 +47,7 @@ export function GenerateCertificatesSection({
         generateCertificatesAction,
         null,
     )
+    const [teste, setTeste] = useState('')
 
     // useDataSetPolling(dataSet?.id || null, {
     //     enabled: dataSet?.generationStatus === GENERATION_STATUS.PENDING,

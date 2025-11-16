@@ -7,6 +7,7 @@ export enum NOT_FOUND_ERROR_TYPE {
     DATA_SET = 'data-set-not-found',
     USER = 'user-not-found',
     DRIVE_FILE = 'drive-file-not-found',
+    EMAIL = 'email-not-found',
 }
 
 export class NotFoundError extends AppError<NOT_FOUND_ERROR_TYPE> {

@@ -4,7 +4,9 @@ import {
 } from '@/backend/application/interfaces/iexternal-processing'
 import { IGoogleAuthGateway } from '@/backend/application/interfaces/igoogle-auth-gateway'
 
-export class CloudRunExternalProcessing implements IExternalProcessing {
+export class CloudRunExternalProcessing
+    implements Pick<IExternalProcessing, 'triggerGenerateCertificatePDFs'>
+{
     constructor(private googleAuthGateway: IGoogleAuthGateway) {}
 
     async triggerGenerateCertificatePDFs(

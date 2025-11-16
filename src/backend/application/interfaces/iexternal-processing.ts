@@ -39,8 +39,20 @@ export interface TriggerGenerateCertificatePDFsInput {
     }
 }
 
+export interface TriggerSendCertificateEmails {
+    certificateEmissionId: string
+    emailId: string
+    sender: string
+    subject: string
+    body: string
+    recipients: string[]
+}
+
 export interface IExternalProcessing {
     triggerGenerateCertificatePDFs(
         data: TriggerGenerateCertificatePDFsInput,
+    ): Promise<void>
+    triggerSendCertificateEmails(
+        data: TriggerSendCertificateEmails,
     ): Promise<void>
 }

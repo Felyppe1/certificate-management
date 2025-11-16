@@ -49,18 +49,13 @@ interface UpdateCertificateInput
     extends Partial<
         Omit<
             CertificateInput,
-            | 'id'
-            | 'userId'
-            | 'createdAt'
-            | 'status'
-            | 'template'
-            | 'dataSource'
-            | 'email'
+            'id' | 'userId' | 'createdAt' | 'status' | 'template' | 'dataSource'
+            // | 'email'
         >
     > {}
 
 interface CertificateOutput
-    extends Omit<CertificateInput, 'template' | 'dataSource' | 'email'> {
+    extends Omit<CertificateInput, 'template' | 'dataSource' /*  | 'email' */> {
     template: TemplateOutput | null
     dataSource: DataSourceOutput | null
     // email: EmailOutput
@@ -89,15 +84,19 @@ export class Certificate extends AggregateRoot {
             dataSource,
         )
 
+        const certificateEmissionId = createId()
+
         // const email = Email.create({
+        //     certificateEmissionId,
         //     subject: null,
         //     body: null,
         //     emailColumn: null,
-        //     areAllRecordsValid: false,
+        //     scheduledAt: null,
+        //     emailErrorType: null,
         // })
 
         const certificate = new Certificate({
-            id: createId(),
+            id: certificateEmissionId,
             name: data.name,
             userId: data.userId,
             template,
@@ -158,6 +157,10 @@ export class Certificate extends AggregateRoot {
 
     getUserId() {
         return this.userId
+    }
+
+    setStatus(status: CERTIFICATE_STATUS) {
+        this.status = status
     }
 
     update(data: UpdateCertificateInput) {
@@ -283,6 +286,10 @@ export class Certificate extends AggregateRoot {
 
     hasDataSource() {
         return !!this.dataSource
+    }
+
+    hasDataSourceColumn(columnName: string): boolean {
+        return this.dataSource?.hasColumn(columnName) ?? false
     }
 
     getDataSourceStorageFileUrl() {

@@ -67,6 +67,7 @@ resource "google_cloud_run_v2_service" "app" {
       env {
         name = "CLOUD_FUNCTIONS_SA_EMAIL"
         value = google_service_account.app_service_account.email
+        # value = google_cloud_run_v2_service.generate_pdfs.template[0].service_account # TODO
       }
     }
 
