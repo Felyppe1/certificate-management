@@ -21,16 +21,25 @@ export class PrismaEmailsRepository implements IEmailsRepository {
             emailErrorType,
         } = email.serialize()
 
-        await this.prisma.email.create({
+        await this.prisma.dataSourceColumn.update({
+            where: {
+                name_data_source_id: {
+                    name: emailColumn!,
+                    data_source_id: certificateEmissionId,
+                },
+            },
             data: {
-                id,
-                certificate_emission_id: certificateEmissionId,
-                subject,
-                body,
-                email_column: emailColumn,
-                scheduled_at: scheduledAt,
-                status,
-                email_error_type: emailErrorType,
+                Email: {
+                    create: {
+                        id,
+                        certificate_emission_id: certificateEmissionId,
+                        subject,
+                        body,
+                        scheduled_at: scheduledAt,
+                        status,
+                        email_error_type: emailErrorType,
+                    },
+                },
             },
         })
     }

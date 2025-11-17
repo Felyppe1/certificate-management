@@ -119,6 +119,7 @@ model DataSourceColumn {
 
     DataSource       DataSource        @relation(fields: [data_source_id], references: [certificate_emission_id], onDelete: Cascade)
     TemplateVariable TemplateVariable?
+    Email            Email?
 
     @@id([name, data_source_id])
     @@map("data_source_columns")
@@ -141,15 +142,18 @@ model Email {
     id               String    @id @default(cuid())
     subject          String?
     body             String?
-    email_column     String?
     scheduled_at     DateTime?
     status           String // "PENDING" | "RUNNING" | "COMPLETED" | "FAILED"
     email_error_type String?
 
-    certificate_emission_id String @unique
+    certificate_emission_id String  @unique
+    email_column            String?
+    email_data_source_id    String?
 
     CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id])
+    DataSourceColumn    DataSourceColumn?   @relation(fields: [email_column, email_data_source_id], references: [name, data_source_id], onDelete: SetNull)
 
+    @@unique([email_column, email_data_source_id])
     @@map("emails")
 }
 
