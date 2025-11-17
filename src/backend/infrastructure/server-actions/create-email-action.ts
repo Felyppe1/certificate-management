@@ -13,6 +13,10 @@ import { AuthenticationError } from '@/backend/domain/error/authentication-error
 import { logoutAction } from './logout-action'
 import { revalidateTag } from 'next/cache'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '@/backend/domain/error/validation-error'
 
 const createEmailActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -89,6 +93,17 @@ export async function createEmailAction(_: unknown, formData: FormData) {
             return {
                 success: false,
                 message: 'Sua conta da Google precisa ser reconectada',
+            }
+        }
+
+        if (
+            error instanceof ValidationError &&
+            error.type === VALIDATION_ERROR_TYPE.INVALID_RECIPIENT_EMAIL
+        ) {
+            return {
+                success: false,
+                message:
+                    'Há pelo menos um e-mail inválido na coluna selecionada',
             }
         }
 

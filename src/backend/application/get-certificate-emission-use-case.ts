@@ -14,6 +14,7 @@ import { INPUT_METHOD } from '../domain/certificate'
 import { TEMPLATE_FILE_EXTENSION } from '../domain/template'
 import { prisma } from '../infrastructure/repository/prisma'
 import { ISessionsRepository } from './interfaces/isessions-repository'
+import { EMAIL_ERROR_TYPE_ENUM, PROCESSING_STATUS_ENUM } from '../domain/email'
 
 interface GetCertificateEmissionUseCaseInput {
     certificateId: string
@@ -50,6 +51,7 @@ export class GetCertificateEmissionUseCase {
                             DataSet: true,
                         },
                     },
+                    Email: true,
                 },
             },
         )
@@ -119,6 +121,18 @@ export class GetCertificateEmissionUseCase {
                           generationStatus: certificateEmission.DataSource
                               .DataSet!.generation_status as GENERATION_STATUS,
                       },
+                  }
+                : null,
+            email: certificateEmission.Email
+                ? {
+                      subject: certificateEmission.Email.subject,
+                      body: certificateEmission.Email.body,
+                      scheduledAt: certificateEmission.Email.scheduled_at,
+                      emailColumn: certificateEmission.Email.email_column,
+                      emailErrorType: certificateEmission.Email
+                          .email_error_type as EMAIL_ERROR_TYPE_ENUM | null,
+                      status: certificateEmission.Email
+                          .status as PROCESSING_STATUS_ENUM,
                   }
                 : null,
         }

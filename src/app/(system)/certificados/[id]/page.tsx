@@ -7,6 +7,7 @@ import { DataSourceSection } from './_components/DataSourceSection'
 import { VariableMappingSection } from './_components/VariableMappingSection'
 import { EmailSendingSection } from './_components/EmailSendingSection'
 import { GenerateCertificatesSection } from './_components/GenerateCertificatesSection'
+import { GENERATION_STATUS } from '@/backend/domain/data-set'
 
 const statusMapping = {
     DRAFT: 'Rascunho',
@@ -148,6 +149,10 @@ export default async function CertificatePage({
                         }
                         emailSent={emailSent}
                         totalRecipients={dataSet?.rows.length || 0}
+                        certificatesGenerated={
+                            dataSet?.generationStatus ===
+                            GENERATION_STATUS.COMPLETED
+                        }
                     />
                 )}
             </div>

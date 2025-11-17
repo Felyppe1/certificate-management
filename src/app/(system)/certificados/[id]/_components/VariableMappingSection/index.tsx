@@ -17,7 +17,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import { ArrowRight, Undo2, CircleAlert } from 'lucide-react'
+import { ArrowRight, Undo2, CircleAlert, Loader2 } from 'lucide-react'
 import { startTransition, useActionState, useEffect, useState } from 'react'
 
 interface VariableMappingSectionProps {
@@ -248,11 +248,16 @@ export function VariableMappingSection({
                         disabled={mappingIsLoading || !hasChanges}
                         variant={mappingsSaved ? 'outline' : 'default'}
                     >
-                        {mappingIsLoading
-                            ? 'Salvando...'
-                            : mappingsSaved
-                              ? 'Mapeamento Salvo'
-                              : 'Salvar Mapeamento'}
+                        {mappingIsLoading ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Salvando...
+                            </>
+                        ) : mappingsSaved ? (
+                            'Mapeamento Salvo'
+                        ) : (
+                            'Salvar Mapeamento'
+                        )}
                     </Button>
 
                     {hasChanges && (

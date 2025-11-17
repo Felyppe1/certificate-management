@@ -21,6 +21,7 @@ interface EmailSendingSectionProps {
     emailSent: boolean
     scheduledDate?: Date | null
     totalRecipients: number
+    certificatesGenerated: boolean
 }
 
 export function EmailSendingSection({
@@ -30,8 +31,11 @@ export function EmailSendingSection({
     emailSent,
     scheduledDate,
     totalRecipients,
+    certificatesGenerated,
 }: EmailSendingSectionProps) {
     const [state, action, isPending] = useActionState(createEmailAction, null)
+
+    console.log(state)
 
     const [emailColumn, setEmailColumn] = useState('')
     const [sendMode, setSendMode] = useState<'now' | 'scheduled'>('now')
@@ -157,8 +161,15 @@ export function EmailSendingSection({
                                     onEmailColumnChange={setEmailColumn}
                                     onSubmit={handleSend}
                                     isSending={isPending}
-                                    isDisabled={emailSent || isScheduled}
+                                    isDisabled={
+                                        emailSent ||
+                                        isScheduled ||
+                                        !certificatesGenerated
+                                    }
                                     sendMode="now"
+                                    certificatesGenerated={
+                                        certificatesGenerated
+                                    }
                                 />
                             </TabsContent>
 
@@ -183,7 +194,11 @@ export function EmailSendingSection({
                                     onEmailColumnChange={setEmailColumn}
                                     onSubmit={handleSend}
                                     isSending={isPending}
-                                    isDisabled={emailSent || isScheduled}
+                                    isDisabled={
+                                        emailSent ||
+                                        isScheduled ||
+                                        !certificatesGenerated
+                                    }
                                     sendMode="scheduled"
                                     scheduledDateTime={scheduledDateTime}
                                     scheduledTime={scheduledTime}
@@ -191,6 +206,9 @@ export function EmailSendingSection({
                                         setScheduledDateTime
                                     }
                                     onScheduledTimeChange={setScheduledTime}
+                                    certificatesGenerated={
+                                        certificatesGenerated
+                                    }
                                 />
                             </TabsContent>
                         </Tabs>

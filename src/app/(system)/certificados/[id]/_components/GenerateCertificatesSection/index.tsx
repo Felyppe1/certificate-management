@@ -156,17 +156,17 @@ export function GenerateCertificatesSection({
                     >
                         {isPending ? (
                             <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                <Loader2 className="h-4 w-4 animate-spin" />
                                 Gerando...
                             </>
                         ) : certificatesWereGenerated ? (
                             <>
-                                <Download className="h-4 w-4 mr-2" />
+                                <FileCheck className="h-4 w-4" />
                                 Gerar Novamente
                             </>
                         ) : (
                             <>
-                                <FileCheck className="h-4 w-4 mr-2" />
+                                <FileCheck className="h-4 w-4" />
                                 Gerar Certificados
                             </>
                         )}

@@ -9,8 +9,16 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import { Mail, Send, Calendar, FileCheck } from 'lucide-react'
+import {
+    Mail,
+    Send,
+    Calendar,
+    FileCheck,
+    Loader2,
+    AlertCircle,
+} from 'lucide-react'
 import { FormEvent } from 'react'
+import { AlertMessage } from '@/components/ui/alert-message'
 
 interface EmailFormProps {
     subject: string
@@ -22,6 +30,7 @@ interface EmailFormProps {
     onMessageChange: (value: string) => void
     onEmailColumnChange: (value: string) => void
     onSubmit: () => void
+    certificatesGenerated: boolean
     isSending: boolean
     isDisabled: boolean
     sendMode: 'now' | 'scheduled'
@@ -41,6 +50,7 @@ export function EmailForm({
     onMessageChange,
     onEmailColumnChange,
     onSubmit,
+    certificatesGenerated,
     isSending,
     isDisabled,
     sendMode,
@@ -56,8 +66,22 @@ export function EmailForm({
         }
     }
 
+    const allFieldsAreFilled =
+        subject.trim() !== '' &&
+        message.trim() !== '' &&
+        emailColumn.trim() !== '' &&
+        (sendMode === 'now' || (scheduledDateTime && scheduledTime))
+
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
+            {!certificatesGenerated && (
+                <AlertMessage
+                    variant="warning"
+                    icon={<AlertCircle className="w-5 h-5" />}
+                    text="Para enviar os emails agora, é necessário gerar os certificados antes."
+                />
+            )}
+
             <div className="space-y-3">
                 <Label htmlFor={`email-column-${sendMode}`}>
                     Coluna com Email dos Destinatários
@@ -141,21 +165,21 @@ export function EmailForm({
             <div className="flex gap-4 items-center justify-between p-6 border rounded-lg dark:bg-input/30 mt-10">
                 <div className="flex items-center gap-4">
                     <div className="p-3 rounded-full bg-primary/10">
-                        <FileCheck className="h-6 w-6 text-primary" />
+                        <Mail className="h-6 w-6 text-primary" />
                     </div>
                     <div>
                         <p className="font-medium text-lg">
                             {totalRecords}{' '}
-                            {totalRecords === 1
+                            {totalRecords <= 1
                                 ? 'destinatário'
                                 : 'destinatários'}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                            {true /* certificatesWereGenerated */
-                                ? totalRecords === 1
+                            {true /* certificatesGenerated */
+                                ? totalRecords <= 1
                                     ? 'receberá o certificado'
                                     : 'receberão os certificados'
-                                : totalRecords === 1
+                                : totalRecords <= 1
                                   ? 'será gerado'
                                   : 'serão gerados'}
                         </p>
@@ -164,11 +188,11 @@ export function EmailForm({
                 <Button
                     type="submit"
                     size="lg"
-                    disabled={isDisabled || isSending}
+                    disabled={isDisabled || isSending || !allFieldsAreFilled}
                 >
                     {isSending ? (
                         <>
-                            <Mail className="h-4 w-4 mr-2 animate-pulse" />
+                            <Loader2 className="animate-spin" />
                             {sendMode === 'now'
                                 ? 'Enviando...'
                                 : 'Agendando...'}
@@ -177,12 +201,12 @@ export function EmailForm({
                         <>
                             {sendMode === 'now' ? (
                                 <>
-                                    <Send className="h-4 w-4 mr-2" />
+                                    <Send />
                                     Enviar Agora
                                 </>
                             ) : (
                                 <>
-                                    <Calendar className="h-4 w-4 mr-2" />
+                                    <Calendar />
                                     Agendar Envio
                                 </>
                             )}

@@ -14,6 +14,10 @@ import { NextRequest } from 'next/server'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
 import z from 'zod'
+import {
+    EMAIL_ERROR_TYPE_ENUM,
+    PROCESSING_STATUS_ENUM,
+} from '@/backend/domain/email'
 
 export interface GetCertificateEmissionControllerResponse {
     certificateEmission: {
@@ -46,6 +50,14 @@ export interface GetCertificateEmissionControllerResponse {
                 totalBytes: number
                 rows: Record<string, any>[]
             }
+        } | null
+        email: {
+            subject: string
+            body: string
+            scheduledAt: Date | null
+            emailColumn: string | null
+            emailErrorType: EMAIL_ERROR_TYPE_ENUM | null
+            status: PROCESSING_STATUS_ENUM
         } | null
     }
 }
