@@ -41,6 +41,7 @@ export interface TriggerGenerateCertificatePDFsInput {
 
 export interface TriggerSendCertificateEmails {
     certificateEmissionId: string
+    userId: string
     emailId: string
     sender: string
     subject: string

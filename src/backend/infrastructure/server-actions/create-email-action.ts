@@ -1,3 +1,5 @@
+'use server'
+
 import { CreateEmailUseCase } from '@/backend/application/create-email-use-case'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import z from 'zod'
@@ -34,6 +36,9 @@ export async function createEmailAction(_: unknown, formData: FormData) {
         subject: formData.get('subject') as string,
         body: formData.get('body') as string,
         emailColumn: formData.get('emailColumn') as string,
+        scheduledAt: formData.get('scheduledAt')
+            ? new Date(formData.get('scheduledAt') as string)
+            : null,
     }
 
     try {
@@ -70,6 +75,7 @@ export async function createEmailAction(_: unknown, formData: FormData) {
             subject: parsedData.subject,
         })
     } catch (error: any) {
+        console.log(error)
         if (error instanceof AuthenticationError) {
             if (
                 error.type === 'missing-session' ||

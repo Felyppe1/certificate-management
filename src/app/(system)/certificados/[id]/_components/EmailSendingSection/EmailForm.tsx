@@ -2,15 +2,25 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
 import { Mail, Send, Calendar, FileCheck } from 'lucide-react'
 import { FormEvent } from 'react'
 
 interface EmailFormProps {
     subject: string
     message: string
+    emailColumn: string
+    dataSourceColumns: string[]
     totalRecords: number
     onSubjectChange: (value: string) => void
     onMessageChange: (value: string) => void
+    onEmailColumnChange: (value: string) => void
     onSubmit: () => void
     isSending: boolean
     isDisabled: boolean
@@ -24,9 +34,12 @@ interface EmailFormProps {
 export function EmailForm({
     subject,
     message,
+    emailColumn,
+    dataSourceColumns,
     totalRecords,
     onSubjectChange,
     onMessageChange,
+    onEmailColumnChange,
     onSubmit,
     isSending,
     isDisabled,
@@ -45,6 +58,31 @@ export function EmailForm({
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-3">
+                <Label htmlFor={`email-column-${sendMode}`}>
+                    Coluna com Email dos Destinatários
+                </Label>
+                <Select
+                    value={emailColumn}
+                    onValueChange={onEmailColumnChange}
+                    disabled={isDisabled}
+                >
+                    <SelectTrigger
+                        id={`email-column-${sendMode}`}
+                        className="w-full"
+                    >
+                        <SelectValue placeholder="Selecionar coluna" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {dataSourceColumns.map(column => (
+                            <SelectItem key={column} value={column}>
+                                {column}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+
             {sendMode === 'scheduled' && (
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">

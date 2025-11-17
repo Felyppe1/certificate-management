@@ -147,6 +147,7 @@ export default async function CertificatePage({
                             variablesMapped || templateVariables.length === 0
                         }
                         emailSent={emailSent}
+                        totalRecipients={dataSet?.rows.length || 0}
                     />
                 )}
             </div>

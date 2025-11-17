@@ -91,6 +91,7 @@ def main(request):
                 filename="certificado.pdf"
             )
 
+            print('Sending email to', recipient)
             with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
                 server.starttls()
                 server.login(SMTP_USER, SMTP_PASSWORD)

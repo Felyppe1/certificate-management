@@ -106,6 +106,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         const {
             id,
             name,
+            status,
             template,
             dataSource,
             variableColumnMapping,
@@ -138,6 +139,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                 where: { id },
                 data: {
                     title: name,
+                    status,
                     DataSource: {
                         ...(dataSource && {
                             upsert: {

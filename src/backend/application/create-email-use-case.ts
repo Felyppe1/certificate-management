@@ -108,6 +108,7 @@ export class CreateEmailUseCase {
             await this.externalProcessing.triggerSendCertificateEmails({
                 certificateEmissionId: data.certificateEmissionId,
                 emailId: email.getId(),
+                userId: session.userId,
                 sender: 'Gerenciador de Certificados',
                 subject: subject!,
                 body: body!,

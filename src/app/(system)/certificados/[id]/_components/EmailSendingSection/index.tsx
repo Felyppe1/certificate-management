@@ -1,6 +1,5 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import {
     Card,
     CardContent,
@@ -8,19 +7,12 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Send, Calendar, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
-import { useState } from 'react'
+import { startTransition, useActionState, useState } from 'react'
 import { AlertMessage } from '@/components/ui/alert-message'
 import { EmailForm } from './EmailForm'
+import { createEmailAction } from '@/backend/infrastructure/server-actions/create-email-action'
 
 interface EmailSendingSectionProps {
     certificateId: string
@@ -28,48 +20,47 @@ interface EmailSendingSectionProps {
     variablesMapped: boolean
     emailSent: boolean
     scheduledDate?: Date | null
+    totalRecipients: number
 }
 
 export function EmailSendingSection({
-    // certificateId,
+    certificateId,
     dataSourceColumns,
     variablesMapped,
     emailSent,
     scheduledDate,
+    totalRecipients,
 }: EmailSendingSectionProps) {
+    const [state, action, isPending] = useActionState(createEmailAction, null)
+
     const [emailColumn, setEmailColumn] = useState('')
-    const [savedEmailColumn, setSavedEmailColumn] = useState('')
     const [sendMode, setSendMode] = useState<'now' | 'scheduled'>('now')
     const [scheduledDateTime, setScheduledDateTime] = useState('')
     const [scheduledTime, setScheduledTime] = useState('')
     const [subject, setSubject] = useState('')
     const [message, setMessage] = useState('')
-    const [isSending, setIsSending] = useState(false)
-
-    // Mock data - will come from API
-    const hasInvalidEmails = savedEmailColumn === 'email' // Simula erro na coluna 'email'
-    const totalRecipients = 45
-
-    const handleSaveEmailColumn = () => {
-        setSavedEmailColumn(emailColumn)
-    }
 
     const handleSend = async () => {
-        setIsSending(true)
-        // TODO: Call API to send/schedule emails
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        setIsSending(false)
+        const formData = new FormData()
+        formData.append('certificateId', certificateId)
+        formData.append('subject', subject)
+        formData.append('body', message)
+        formData.append('emailColumn', emailColumn)
+
+        let scheduledAt = null
+        if (sendMode === 'scheduled' && scheduledDateTime && scheduledTime) {
+            scheduledAt = new Date(`${scheduledDateTime}T${scheduledTime}`)
+        }
+
+        if (scheduledAt) {
+            formData.append('scheduledAt', scheduledAt.toISOString())
+        }
+
+        startTransition(() => {
+            action(formData)
+        })
     }
 
-    const isEmailColumnSaved = !!savedEmailColumn
-    const canSend =
-        isEmailColumnSaved &&
-        !hasInvalidEmails &&
-        subject &&
-        message &&
-        variablesMapped &&
-        (sendMode === 'now' ||
-            (sendMode === 'scheduled' && scheduledDateTime && scheduledTime))
     const isScheduled = !!scheduledDate
 
     return (
@@ -99,12 +90,12 @@ export function EmailSendingSection({
             </CardHeader>
             <CardContent className="space-y-6">
                 {/* Alert: Mapping Required */}
-                {!isEmailColumnSaved && !emailSent && !isScheduled && (
+                {!variablesMapped && !emailSent && !isScheduled && (
                     <AlertMessage
                         variant="warning"
                         icon={<AlertCircle className="w-5 h-5" />}
-                        text="Coluna de email necessária"
-                        description="Selecione e salve a coluna que contém os emails dos destinatários para continuar."
+                        text="Mapeamento de variáveis necessário"
+                        description="Complete o mapeamento de variáveis para poder enviar os certificados."
                     />
                 )}
 
@@ -128,73 +119,8 @@ export function EmailSendingSection({
                     />
                 )}
 
-                {/* Email Column Selection */}
-                <div className="space-y-3">
-                    <Label htmlFor="email-column">
-                        Coluna com Email dos Destinatários
-                    </Label>
-                    <div className="flex gap-4 max-w-[30rem]">
-                        <Select
-                            value={emailColumn}
-                            onValueChange={setEmailColumn}
-                            disabled={emailSent || isScheduled}
-                        >
-                            <SelectTrigger id="email-column" className="flex-1">
-                                <SelectValue placeholder="Selecionar coluna" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {dataSourceColumns.map(column => (
-                                    <SelectItem key={column} value={column}>
-                                        {column}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Button
-                            variant="default"
-                            onClick={handleSaveEmailColumn}
-                            disabled={
-                                !emailColumn ||
-                                emailColumn === savedEmailColumn ||
-                                emailSent ||
-                                isScheduled
-                            }
-                        >
-                            Salvar
-                        </Button>
-                    </div>
-
-                    {/* Success: Column saved */}
-                    {isEmailColumnSaved && !hasInvalidEmails && (
-                        <div className="flex items-start gap-2 text-sm text-green-700 dark:text-green-400">
-                            <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                            <p>
-                                Coluna <strong>{savedEmailColumn}</strong>{' '}
-                                selecionada.
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Error: Invalid emails */}
-                    {isEmailColumnSaved && hasInvalidEmails && (
-                        <AlertMessage
-                            variant="error"
-                            icon={<AlertCircle className="w-5 h-5" />}
-                            text="Emails inválidos detectados"
-                            description={
-                                <>
-                                    A coluna <strong>{savedEmailColumn}</strong>{' '}
-                                    contém linhas com emails inválidos. Por
-                                    favor, corrija os dados ou selecione outra
-                                    coluna.
-                                </>
-                            }
-                        />
-                    )}
-                </div>
-
                 {/* Send Mode Tabs */}
-                {isEmailColumnSaved && !hasInvalidEmails && (
+                {!emailSent && !isScheduled && (
                     <>
                         <Tabs
                             value={sendMode}
@@ -223,13 +149,15 @@ export function EmailSendingSection({
                                 <EmailForm
                                     subject={subject}
                                     message={message}
+                                    emailColumn={emailColumn}
+                                    dataSourceColumns={dataSourceColumns}
                                     totalRecords={totalRecipients}
                                     onSubjectChange={setSubject}
                                     onMessageChange={setMessage}
+                                    onEmailColumnChange={setEmailColumn}
                                     onSubmit={handleSend}
-                                    isSending={isSending}
-                                    // isDisabled={!canSend || emailSent}
-                                    isDisabled={false}
+                                    isSending={isPending}
+                                    isDisabled={emailSent || isScheduled}
                                     sendMode="now"
                                 />
                             </TabsContent>
@@ -247,12 +175,15 @@ export function EmailSendingSection({
                                 <EmailForm
                                     subject={subject}
                                     message={message}
+                                    emailColumn={emailColumn}
+                                    dataSourceColumns={dataSourceColumns}
                                     totalRecords={totalRecipients}
                                     onSubjectChange={setSubject}
                                     onMessageChange={setMessage}
+                                    onEmailColumnChange={setEmailColumn}
                                     onSubmit={handleSend}
-                                    isSending={isSending}
-                                    isDisabled={false}
+                                    isSending={isPending}
+                                    isDisabled={emailSent || isScheduled}
                                     sendMode="scheduled"
                                     scheduledDateTime={scheduledDateTime}
                                     scheduledTime={scheduledTime}
