@@ -148,12 +148,12 @@ model Email {
 
     certificate_emission_id String  @unique
     email_column            String?
-    email_data_source_id    String?
+    data_source_column_id   String?
 
     CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id])
-    DataSourceColumn    DataSourceColumn?   @relation(fields: [email_column, email_data_source_id], references: [name, data_source_id], onDelete: SetNull)
+    DataSourceColumn    DataSourceColumn?   @relation(fields: [email_column, data_source_column_id], references: [name, data_source_id], onDelete: SetNull)
 
-    @@unique([email_column, email_data_source_id])
+    @@unique([email_column, data_source_column_id])
     @@map("emails")
 }
 

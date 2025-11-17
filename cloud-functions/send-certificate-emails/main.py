@@ -5,9 +5,12 @@ from email.message import EmailMessage
 from concurrent.futures import ThreadPoolExecutor
 from google.cloud import storage
 import requests
+import functions_framework
+from dotenv import load_dotenv
 from google.auth.transport.requests import Request
 from google.oauth2.id_token import fetch_id_token
 
+load_dotenv()
 
 # SMTP config (auhton Gmail ou SendGrid SMTP)
 SMTP_HOST = "smtp.gmail.com"
@@ -57,7 +60,8 @@ def update_email_status(email_id, status):
     response = requests.patch(url, json=body, headers=headers)
     response.raise_for_status()
 
-def send_certificate_emails(request):
+@functions_framework.http
+def main(request):
     data = request.get_json()
 
     # TODO: validate data

@@ -104,10 +104,6 @@ export class CreateEmailUseCase {
             // TODO: implement scheduling logic
 
             certificateEmission.setStatus(CERTIFICATE_STATUS.SCHEDULED)
-
-            await this.certificateEmissionsRepository.update(
-                certificateEmission,
-            )
         } else {
             await this.externalProcessing.triggerSendCertificateEmails({
                 certificateEmissionId: data.certificateEmissionId,
@@ -117,10 +113,15 @@ export class CreateEmailUseCase {
                 body: body!,
                 recipients,
             })
+
+            certificateEmission.setStatus(CERTIFICATE_STATUS.PUBLISHED)
         }
 
-        email.setProcessingStatus(PROCESSING_STATUS_ENUM.PENDING)
+        email.setProcessingStatus(PROCESSING_STATUS_ENUM.RUNNING)
 
+        // TODO: add transaction
         await this.emailsRepository.save(email)
+
+        await this.certificateEmissionsRepository.update(certificateEmission)
     }
 }

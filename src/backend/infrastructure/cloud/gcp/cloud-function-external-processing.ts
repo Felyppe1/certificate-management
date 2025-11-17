@@ -14,8 +14,7 @@ export class CloudFunctionExternalProcessing
     async triggerSendCertificateEmails(
         data: TriggerSendCertificateEmails,
     ): Promise<void> {
-        const sendCertificateEmailsUrl =
-            process.env.CLOUD_FUNCTIONS_BASE_URL + '/send-certificate-emails'
+        const sendCertificateEmailsUrl = process.env.CLOUD_FUNCTIONS_BASE_URL!
 
         const auth = this.googleAuthGateway.getAuthClient()
         // TODO: Should it be a method from google auth? Check if it is the same id token from getToken method
