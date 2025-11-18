@@ -22,6 +22,12 @@ interface EmailSendingSectionProps {
     scheduledDate?: Date | null
     totalRecipients: number
     certificatesGenerated: boolean
+    emailData: {
+        subject: string
+        body: string
+        emailColumn: string | null
+        scheduledAt: Date | null
+    } | null
 }
 
 export function EmailSendingSection({
@@ -32,17 +38,29 @@ export function EmailSendingSection({
     scheduledDate,
     totalRecipients,
     certificatesGenerated,
+    emailData,
 }: EmailSendingSectionProps) {
     const [state, action, isPending] = useActionState(createEmailAction, null)
 
     console.log(state)
 
-    const [emailColumn, setEmailColumn] = useState('')
-    const [sendMode, setSendMode] = useState<'now' | 'scheduled'>('now')
-    const [scheduledDateTime, setScheduledDateTime] = useState('')
-    const [scheduledTime, setScheduledTime] = useState('')
-    const [subject, setSubject] = useState('')
-    const [message, setMessage] = useState('')
+    const [emailColumn, setEmailColumn] = useState(emailData?.emailColumn || '')
+    const [sendMode, setSendMode] = useState<'now' | 'scheduled'>(
+        emailData?.scheduledAt ? 'scheduled' : 'now',
+    )
+    const initialScheduledDateTime = emailData?.scheduledAt
+        ? new Date(emailData.scheduledAt).toISOString().split('T')[0]
+        : ''
+    const initialScheduledTime = emailData?.scheduledAt
+        ? new Date(emailData.scheduledAt).toTimeString().slice(0, 5)
+        : ''
+
+    const [scheduledDateTime, setScheduledDateTime] = useState(
+        initialScheduledDateTime,
+    )
+    const [scheduledTime, setScheduledTime] = useState(initialScheduledTime)
+    const [subject, setSubject] = useState(emailData?.subject || '')
+    const [message, setMessage] = useState(emailData?.body || '')
 
     const handleSend = async () => {
         const formData = new FormData()
@@ -124,96 +142,93 @@ export function EmailSendingSection({
                 )}
 
                 {/* Send Mode Tabs */}
-                {!emailSent && !isScheduled && (
-                    <>
-                        <Tabs
-                            value={sendMode}
-                            onValueChange={value =>
-                                setSendMode(value as 'now' | 'scheduled')
-                            }
-                        >
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger
-                                    value="now"
-                                    disabled={emailSent || isScheduled}
-                                >
-                                    <Send className="h-4 w-4" />
-                                    Enviar Agora
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="scheduled"
-                                    disabled={emailSent || isScheduled}
-                                >
-                                    <Calendar className="h-4 w-4" />
-                                    Agendar Envio
-                                </TabsTrigger>
-                            </TabsList>
-
-                            <TabsContent value="now" className="space-y-4 mt-4">
-                                <EmailForm
-                                    subject={subject}
-                                    message={message}
-                                    emailColumn={emailColumn}
-                                    dataSourceColumns={dataSourceColumns}
-                                    totalRecords={totalRecipients}
-                                    onSubjectChange={setSubject}
-                                    onMessageChange={setMessage}
-                                    onEmailColumnChange={setEmailColumn}
-                                    onSubmit={handleSend}
-                                    isSending={isPending}
-                                    isDisabled={
-                                        emailSent ||
-                                        isScheduled ||
-                                        !certificatesGenerated
-                                    }
-                                    sendMode="now"
-                                    certificatesGenerated={
-                                        certificatesGenerated
-                                    }
-                                />
-                            </TabsContent>
-
-                            <TabsContent
-                                value="scheduled"
-                                className="space-y-6 mt-4"
+                {/* {!emailSent && !isScheduled && ( */}
+                <>
+                    <Tabs
+                        value={sendMode}
+                        onValueChange={value =>
+                            setSendMode(value as 'now' | 'scheduled')
+                        }
+                    >
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger
+                                value="now"
+                                disabled={emailSent || isScheduled}
                             >
-                                <AlertMessage
-                                    variant="info"
-                                    icon={<Clock className="w-5 h-5" />}
-                                    text="Os emails serão enviados automaticamente na data e hora agendadas."
-                                />
+                                <Send className="h-4 w-4" />
+                                Enviar Agora
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="scheduled"
+                                disabled={emailSent || isScheduled}
+                            >
+                                <Calendar className="h-4 w-4" />
+                                Agendar Envio
+                            </TabsTrigger>
+                        </TabsList>
 
-                                <EmailForm
-                                    subject={subject}
-                                    message={message}
-                                    emailColumn={emailColumn}
-                                    dataSourceColumns={dataSourceColumns}
-                                    totalRecords={totalRecipients}
-                                    onSubjectChange={setSubject}
-                                    onMessageChange={setMessage}
-                                    onEmailColumnChange={setEmailColumn}
-                                    onSubmit={handleSend}
-                                    isSending={isPending}
-                                    isDisabled={
-                                        emailSent ||
-                                        isScheduled ||
-                                        !certificatesGenerated
-                                    }
-                                    sendMode="scheduled"
-                                    scheduledDateTime={scheduledDateTime}
-                                    scheduledTime={scheduledTime}
-                                    onScheduledDateTimeChange={
-                                        setScheduledDateTime
-                                    }
-                                    onScheduledTimeChange={setScheduledTime}
-                                    certificatesGenerated={
-                                        certificatesGenerated
-                                    }
+                        <TabsContent value="now" className="space-y-4 mt-4">
+                            {!certificatesGenerated && (
+                                <AlertMessage
+                                    variant="warning"
+                                    icon={<AlertCircle className="w-5 h-5" />}
+                                    text="Para enviar os emails agora, é necessário gerar os certificados antes."
+                                    className="mb-7"
                                 />
-                            </TabsContent>
-                        </Tabs>
-                    </>
-                )}
+                            )}
+
+                            <EmailForm
+                                subject={subject}
+                                message={message}
+                                emailColumn={emailColumn}
+                                dataSourceColumns={dataSourceColumns}
+                                totalRecords={totalRecipients}
+                                onSubjectChange={setSubject}
+                                onMessageChange={setMessage}
+                                onEmailColumnChange={setEmailColumn}
+                                onSubmit={handleSend}
+                                isSending={isPending}
+                                isDisabled={
+                                    emailSent ||
+                                    isScheduled ||
+                                    !certificatesGenerated
+                                }
+                                sendMode="now"
+                                certificatesGenerated={certificatesGenerated}
+                            />
+                        </TabsContent>
+
+                        <TabsContent
+                            value="scheduled"
+                            className="space-y-6 mt-4"
+                        >
+                            <EmailForm
+                                subject={subject}
+                                message={message}
+                                emailColumn={emailColumn}
+                                dataSourceColumns={dataSourceColumns}
+                                totalRecords={totalRecipients}
+                                onSubjectChange={setSubject}
+                                onMessageChange={setMessage}
+                                onEmailColumnChange={setEmailColumn}
+                                onSubmit={handleSend}
+                                isSending={isPending}
+                                isDisabled={
+                                    emailSent ||
+                                    isScheduled ||
+                                    !certificatesGenerated
+                                }
+                                sendMode="scheduled"
+                                scheduledDateTime={scheduledDateTime}
+                                scheduledTime={scheduledTime}
+                                onScheduledDateTimeChange={setScheduledDateTime}
+                                onScheduledTimeChange={setScheduledTime}
+                                certificatesGenerated={certificatesGenerated}
+                            />
+                        </TabsContent>
+                    </Tabs>
+                </>
+                {/* )} */}
             </CardContent>
         </Card>
     )

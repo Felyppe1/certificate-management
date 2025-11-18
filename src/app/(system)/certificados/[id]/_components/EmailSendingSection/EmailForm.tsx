@@ -74,14 +74,6 @@ export function EmailForm({
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
-            {!certificatesGenerated && (
-                <AlertMessage
-                    variant="warning"
-                    icon={<AlertCircle className="w-5 h-5" />}
-                    text="Para enviar os emails agora, é necessário gerar os certificados antes."
-                />
-            )}
-
             <div className="space-y-3">
                 <Label htmlFor={`email-column-${sendMode}`}>
                     Coluna com Email dos Destinatários

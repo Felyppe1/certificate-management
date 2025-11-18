@@ -112,7 +112,10 @@ export class CreateEmailUseCase {
                 sender: 'Gerenciador de Certificados',
                 subject: subject!,
                 body: body!,
-                recipients,
+                recipients: recipients.map((recipient, index) => ({
+                    recipient,
+                    index,
+                })),
             })
 
             certificateEmission.setStatus(CERTIFICATE_STATUS.PUBLISHED)

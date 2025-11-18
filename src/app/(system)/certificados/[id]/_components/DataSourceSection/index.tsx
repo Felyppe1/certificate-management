@@ -39,6 +39,7 @@ interface DataSourceSectionProps {
     } | null
     googleOAuthToken: string | null
     googleOAuthTokenExpiry: Date | null
+    emailSent: boolean
 }
 
 export function DataSourceSection({
@@ -46,6 +47,7 @@ export function DataSourceSection({
     dataSource,
     googleOAuthToken,
     googleOAuthTokenExpiry,
+    emailSent,
 }: DataSourceSectionProps) {
     const [isEditing, setIsEditing] = useState(false)
     const [urlState, urlAction, urlIsLoading] = useActionState(
@@ -160,6 +162,7 @@ export function DataSourceSection({
                 dataSource={dataSource}
                 certificateId={certificateId}
                 onEdit={handleEdit}
+                isDisabled={emailSent}
             />
         )
     }

@@ -42,12 +42,14 @@ interface TemplateDisplayProps {
     }
     certificateId: string
     onEdit: () => void
+    isDisabled: boolean
 }
 
 export function TemplateDisplay({
     template,
     certificateId,
     onEdit,
+    isDisabled,
 }: TemplateDisplayProps) {
     const [, refreshAction, isRefreshing] = useActionState(
         refreshTemplateAction,
@@ -102,7 +104,9 @@ export function TemplateDisplay({
                             <Button
                                 variant="outline"
                                 onClick={handleRefresh}
-                                disabled={isRefreshing || isDeleting}
+                                disabled={
+                                    isRefreshing || isDeleting || isDisabled
+                                }
                             >
                                 <RefreshCw
                                     className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
@@ -114,7 +118,7 @@ export function TemplateDisplay({
                         <Button
                             variant="outline"
                             onClick={onEdit}
-                            disabled={isRefreshing || isDeleting}
+                            disabled={isRefreshing || isDeleting || isDisabled}
                         >
                             <Edit3 className="h-4 w-4" />
                             Editar
@@ -122,7 +126,7 @@ export function TemplateDisplay({
                         <Button
                             variant="outline"
                             onClick={handleRemoveTemplate}
-                            disabled={isDeleting || isRefreshing}
+                            disabled={isDeleting || isRefreshing || isDisabled}
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
                             <Trash2 className="h-4 w-4" />

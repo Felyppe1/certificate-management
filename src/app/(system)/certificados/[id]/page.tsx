@@ -45,6 +45,7 @@ export default async function CertificatePage({
     const dataSet =
         certificateEmissionResponse.certificateEmission.dataSource?.dataSet ??
         null
+    const email = certificateEmissionResponse.certificateEmission.email
     const variablesMapped =
         templateVariables.length === 0
             ? true
@@ -53,7 +54,7 @@ export default async function CertificatePage({
                       .variableColumnMapping,
               ).every(mapping => mapping !== null)
 
-    const emailSent = false // TODO: Get from API
+    const emailSent = (email && !email.scheduledAt) || false
 
     return (
         <>
@@ -104,6 +105,7 @@ export default async function CertificatePage({
                     template={
                         certificateEmissionResponse.certificateEmission.template
                     }
+                    emailSent={emailSent}
                 />
 
                 <DataSourceSection
@@ -116,6 +118,7 @@ export default async function CertificatePage({
                         certificateEmissionResponse.certificateEmission
                             .dataSource
                     }
+                    emailSent={emailSent}
                 />
 
                 {hasTemplate && hasDataSource && variablesMapped && (
@@ -127,6 +130,7 @@ export default async function CertificatePage({
                             certificateEmissionResponse.certificateEmission
                                 .variableColumnMapping
                         }
+                        emailSent={emailSent}
                     />
                 )}
 
@@ -137,6 +141,7 @@ export default async function CertificatePage({
                             variablesMapped || templateVariables.length === 0
                         }
                         dataSet={dataSet}
+                        emailSent={emailSent}
                     />
                 )}
 
@@ -152,6 +157,16 @@ export default async function CertificatePage({
                         certificatesGenerated={
                             dataSet?.generationStatus ===
                             GENERATION_STATUS.COMPLETED
+                        }
+                        emailData={
+                            email
+                                ? {
+                                      subject: email.subject,
+                                      body: email.body,
+                                      emailColumn: email.emailColumn,
+                                      scheduledAt: email.scheduledAt,
+                                  }
+                                : null
                         }
                     />
                 )}

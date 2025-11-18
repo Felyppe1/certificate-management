@@ -46,7 +46,7 @@ export interface TriggerSendCertificateEmails {
     sender: string
     subject: string
     body: string
-    recipients: string[]
+    recipients: { recipient: string; index: number }[]
 }
 
 export interface IExternalProcessing {

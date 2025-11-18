@@ -1,6 +1,7 @@
 'use client'
 
 import { updateCertificateEmissionAction } from '@/backend/infrastructure/server-actions/update-certificate-emission-action'
+import { AlertMessage } from '@/components/ui/alert-message'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -17,7 +18,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import { ArrowRight, Undo2, CircleAlert, Loader2 } from 'lucide-react'
+import {
+    ArrowRight,
+    Undo2,
+    CircleAlert,
+    Loader2,
+    CheckCircle2,
+} from 'lucide-react'
 import { startTransition, useActionState, useEffect, useState } from 'react'
 
 interface VariableMappingSectionProps {
@@ -25,6 +32,7 @@ interface VariableMappingSectionProps {
     templateVariables: string[]
     dataSourceColumns: string[]
     existingMappings: Record<string, string | null> | null
+    emailSent: boolean
 }
 
 export function VariableMappingSection({
@@ -32,6 +40,7 @@ export function VariableMappingSection({
     templateVariables,
     dataSourceColumns,
     existingMappings = null,
+    emailSent,
 }: VariableMappingSectionProps) {
     const [, mappingAction, mappingIsLoading] = useActionState(
         updateCertificateEmissionAction,
@@ -169,6 +178,14 @@ export function VariableMappingSection({
                     </div>
                 )}
 
+                {existingMappings && (
+                    <AlertMessage
+                        variant="success"
+                        icon={<CheckCircle2 className="size-5" />}
+                        text="Mapeamento realizado com sucesso"
+                    />
+                )}
+
                 <div className="space-y-4">
                     <div className="grid grid-cols-[1fr_auto_1fr] gap-4 px-4 pb-2 border-b">
                         <div className="text-sm font-medium text-muted-foreground">
@@ -207,6 +224,7 @@ export function VariableMappingSection({
                                         onValueChange={value => {
                                             handleMappingChange(variable, value)
                                         }}
+                                        disabled={emailSent}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Selecione uma coluna" />

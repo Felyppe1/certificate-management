@@ -36,12 +36,14 @@ interface GenerateCertificatesSectionProps {
         rows: Record<string, any>[]
         generationStatus: GENERATION_STATUS | null
     } | null
+    emailSent: boolean
 }
 
 export function GenerateCertificatesSection({
     certificateId,
     allVariablesWereMapped,
     dataSet,
+    emailSent,
 }: GenerateCertificatesSectionProps) {
     const [state, action, isGeneratePending] = useActionState(
         generateCertificatesAction,
@@ -117,10 +119,10 @@ export function GenerateCertificatesSection({
                         icon={<CheckCircle2 className="size-5" />}
                         text="Certificados gerados com sucesso"
                         description={`
-                            ${totalRecords} certificado
-                            ${totalRecords !== 1 ? 's' : ''} gerado
-                            ${totalRecords !== 1 ? 's' : ''} e pronto
-                            ${totalRecords !== 1 ? 's' : ''} para download.
+                            ${totalRecords}
+                            ${totalRecords !== 1 ? 'certificados' : 'certificado'}
+                            ${totalRecords !== 1 ? 'gerados' : 'gerado'} e
+                            ${totalRecords !== 1 ? 'prontos' : 'pronto'} para download.
                         `}
                     />
                 )}
@@ -152,7 +154,7 @@ export function GenerateCertificatesSection({
                     <Button
                         size="lg"
                         onClick={handleGenerate}
-                        disabled={/* !canGenerate || */ isPending}
+                        disabled={/* !canGenerate || */ isPending || emailSent}
                     >
                         {isPending ? (
                             <>

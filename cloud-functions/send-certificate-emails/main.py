@@ -99,8 +99,8 @@ def main(request):
 
         with ThreadPoolExecutor(max_workers=5) as executor:
             futures = [
-                executor.submit(send_email_to_recipient, idx, rec)
-                for idx, rec in enumerate(recipients)
+                executor.submit(send_email_to_recipient, recipient.get('index'), recipient.get('recipient'))
+                for recipient in recipients
             ]
 
             # Wait for all to complete
