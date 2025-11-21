@@ -13,7 +13,7 @@ export default async function Layout({ children }: SystemLayoutProps) {
         <>
             <Toaster />
 
-            <Header userName={data.user.name} />
+            <Header userName={data.user.name} userId={data.user.id} />
 
             <div className="min-h-screen bg-background pt-30 px-10 pb-20 relative z-10">
                 <div className="max-w-7xl mx-auto">{children}</div>

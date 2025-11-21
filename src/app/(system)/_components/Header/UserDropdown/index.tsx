@@ -10,12 +10,14 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { useTransition } from 'react'
+import Link from 'next/link'
 
 interface UserDropdownProps {
     name: string
+    userId: string
 }
 
-export function UserDropdown({ name }: UserDropdownProps) {
+export function UserDropdown({ name, userId }: UserDropdownProps) {
     const [isPending, startTransition] = useTransition()
 
     const handleLogout = () => {
@@ -42,10 +44,12 @@ export function UserDropdown({ name }: UserDropdownProps) {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem>
-                    <Settings className="w-4 h-4 mr-2 text-popover-foreground" />
-                    Configurações
-                </DropdownMenuItem>
+                <Link href={`/usuarios/${userId}/configuracoes`}>
+                    <DropdownMenuItem>
+                        <Settings className="w-4 h-4 mr-2 text-popover-foreground" />
+                        Configurações
+                    </DropdownMenuItem>
+                </Link>
                 <DropdownMenuItem
                     variant="destructive"
                     onClick={handleLogout}
