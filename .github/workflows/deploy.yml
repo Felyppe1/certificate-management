@@ -109,11 +109,11 @@ jobs:
           name: tfplan
           path: ./terraform/tfplan
       
-      # - name: Upload Cloud Functions Build Artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: cloud-functions-build
-      #     path: cloud-functions/builds
+      - name: Upload Cloud Functions Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloud-functions-build
+          path: cloud-functions/builds
 
   terraform-apply:
     runs-on: ubuntu-latest
@@ -210,11 +210,11 @@ jobs:
           name: tfplan
           path: ./terraform
       
-      # - name: Download Cloud Functions Build Artifact
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: cloud-functions-build
-      #     path: cloud-functions/builds
+      - name: Download Cloud Functions Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: cloud-functions-build
+          path: cloud-functions/builds
 
       - name: Terraform Apply
         working-directory: ./terraform
