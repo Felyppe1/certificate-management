@@ -124,7 +124,7 @@ resource "google_cloudfunctions2_function" "send_certificate_emails_function" {
   build_config {
     # runtime     = "python311"
     entry_point = "main"
-    runtime = "custom"
+    runtime = "python313"
 
     # O Terraform vai usar Cloud Build automaticamente para buildar o Docker
     source {
