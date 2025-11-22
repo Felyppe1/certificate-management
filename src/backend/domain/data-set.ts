@@ -70,7 +70,7 @@ export class DataSet extends AggregateRoot {
         return this.rows.length > 0
     }
 
-    getRowsFromColumn(columnName: string): any[] {
+    getRowsFromColumn(columnName: string): string[] {
         return this.rows.map(row => row[columnName])
     }
 

@@ -42,8 +42,6 @@ export function EmailSendingSection({
 }: EmailSendingSectionProps) {
     const [state, action, isPending] = useActionState(createEmailAction, null)
 
-    console.log(state)
-
     const [emailColumn, setEmailColumn] = useState(emailData?.emailColumn || '')
     const [sendMode, setSendMode] = useState<'now' | 'scheduled'>(
         emailData?.scheduledAt ? 'scheduled' : 'now',

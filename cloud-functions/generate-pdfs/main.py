@@ -338,6 +338,8 @@ def main(request):
         print('before if variable mapping')
         for index, row in enumerate(rows):
             print(row)
+            certificate_buffer = template_buffer
+
             if variable_mapping:
                 row_variable_mapping = {}
                 for template_var, column_name in variable_mapping.items():
@@ -345,11 +347,11 @@ def main(request):
                         row_variable_mapping[template_var] = row[column_name]
                 
                 if is_docx:
-                    template_buffer = replace_variables_in_docx(template_buffer, row_variable_mapping)
+                    certificate_buffer = replace_variables_in_docx(template_buffer, row_variable_mapping)
                 else:
-                    template_buffer = replace_variables_in_pptx(template_buffer, row_variable_mapping)
+                    certificate_buffer = replace_variables_in_pptx(template_buffer, row_variable_mapping)
             
-            pdf_buffer = convert_to_pdf_with_libreoffice(template_buffer, file_extension_str)
+            pdf_buffer = convert_to_pdf_with_libreoffice(certificate_buffer, file_extension_str)
             # pdf_buffer = convert_to_pdf_via_google_drive(template_buffer, file_extension_str)
 
             # Save file
@@ -364,7 +366,7 @@ def main(request):
             blob = upload_to_bucket(pdf_buffer, pdf_path)
 
             file_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.{file_extension_str}"
-            upload_to_bucket(template_buffer, file_path)
+            upload_to_bucket(certificate_buffer, file_path)
 
             total_bytes += blob.size
         # if variable_mapping:
