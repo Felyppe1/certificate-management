@@ -106,6 +106,10 @@ export default async function CertificatePage({
                         certificateEmissionResponse.certificateEmission.template
                     }
                     emailSent={emailSent}
+                    certificatesGenerated={
+                        dataSet?.generationStatus ===
+                        GENERATION_STATUS.COMPLETED
+                    }
                 />
 
                 <DataSourceSection

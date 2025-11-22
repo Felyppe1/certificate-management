@@ -16,6 +16,7 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
+import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 
 interface AddTemplateByDrivePickerUseCaseInput {
     certificateId: string
@@ -30,6 +31,10 @@ export class AddTemplateByDrivePickerUseCase {
         private googleDriveGateway: IGoogleDriveGateway,
         private fileContentExtractorFactory: IFileContentExtractorFactory,
         private externalUserAccountsRepository: IExternalUserAccountsRepository,
+        private dataSetsRepository: Pick<
+            IDataSetsRepository,
+            'getByCertificateEmissionId' | 'upsert'
+        >,
         private googleAuthGateway: Pick<
             IGoogleAuthGateway,
             'checkOrGetNewAccessToken'
@@ -119,6 +124,19 @@ export class AddTemplateByDrivePickerUseCase {
         }
 
         certificate.setTemplate(newTemplateInput)
+
+        const dataSet =
+            await this.dataSetsRepository.getByCertificateEmissionId(
+                certificate.getId(),
+            )
+
+        if (dataSet) {
+            dataSet.update({
+                generationStatus: null,
+            })
+
+            await this.dataSetsRepository.upsert(dataSet)
+        }
 
         await this.certificateEmissionsRepository.update(certificate)
 

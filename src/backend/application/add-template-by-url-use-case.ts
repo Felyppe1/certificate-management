@@ -14,6 +14,7 @@ import {
     NotFoundError,
 } from '../domain/error/not-found-error'
 import { IBucket } from './interfaces/ibucket'
+import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 
 interface AddTemplateByUrlUseCaseInput {
     certificateId: string
@@ -26,6 +27,10 @@ export class AddTemplateByUrlUseCase {
         private certificateEmissionsRepository: Pick<
             ICertificatesRepository,
             'getById' | 'update'
+        >,
+        private dataSetsRepository: Pick<
+            IDataSetsRepository,
+            'getByCertificateEmissionId' | 'upsert'
         >,
         private sessionsRepository: Pick<ISessionsRepository, 'getById'>,
         private googleDriveGateway: Pick<
@@ -100,6 +105,19 @@ export class AddTemplateByUrlUseCase {
         }
 
         certificate.setTemplate(newTemplateInput)
+
+        const dataSet =
+            await this.dataSetsRepository.getByCertificateEmissionId(
+                certificate.getId(),
+            )
+
+        if (dataSet) {
+            dataSet.update({
+                generationStatus: null,
+            })
+
+            await this.dataSetsRepository.upsert(dataSet)
+        }
 
         await this.certificateEmissionsRepository.update(certificate)
 

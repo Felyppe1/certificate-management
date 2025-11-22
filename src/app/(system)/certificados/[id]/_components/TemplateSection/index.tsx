@@ -31,6 +31,7 @@ interface TemplateSectionProps {
     googleOAuthToken: string | null
     googleOAuthTokenExpiry: Date | null
     emailSent: boolean
+    certificatesGenerated: boolean
 }
 
 export function TemplateSection({
@@ -39,6 +40,7 @@ export function TemplateSection({
     googleOAuthToken,
     googleOAuthTokenExpiry,
     emailSent,
+    certificatesGenerated,
 }: TemplateSectionProps) {
     const [isEditing, setIsEditing] = useState(false)
     const [urlState, urlAction, urlIsLoading] = useActionState(
@@ -152,6 +154,7 @@ export function TemplateSection({
                 certificateId={certificateId}
                 onEdit={handleEdit}
                 isDisabled={emailSent}
+                certificatesGenerated={certificatesGenerated}
             />
         )
     }

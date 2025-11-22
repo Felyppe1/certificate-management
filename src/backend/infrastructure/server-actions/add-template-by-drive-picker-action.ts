@@ -14,6 +14,7 @@ import { cookies } from 'next/headers'
 import z from 'zod'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
+import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 
 const addTemplateByDrivePickerActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -47,6 +48,7 @@ export async function addTemplateByDrivePickerAction(
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
+        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
@@ -61,6 +63,7 @@ export async function addTemplateByDrivePickerAction(
                 googleDriveGateway,
                 fileContentExtractorFactory,
                 externalUserAccountsRepository,
+                dataSetsRepository,
                 googleAuthGateway,
                 bucket,
             )

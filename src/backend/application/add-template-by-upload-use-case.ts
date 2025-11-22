@@ -17,6 +17,7 @@ import { IBucket } from './interfaces/ibucket'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'
 import { ISessionsRepository } from './interfaces/isessions-repository'
+import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 
 interface AddTemplateByUploadUseCaseInput {
     file: File
@@ -35,6 +36,10 @@ export class AddTemplateByUploadUseCase {
         private bucket: IBucket,
         private sessionsRepository: ISessionsRepository,
         private certificatesRepository: ICertificatesRepository,
+        private dataSetsRepository: Pick<
+            IDataSetsRepository,
+            'getByCertificateEmissionId' | 'upsert'
+        >,
         private fileContentExtractorFactory: Pick<
             IFileContentExtractorFactory,
             'create'
@@ -106,6 +111,19 @@ export class AddTemplateByUploadUseCase {
             objectName: path,
             mimeType: fileExtension,
         })
+
+        const dataSet =
+            await this.dataSetsRepository.getByCertificateEmissionId(
+                certificate.getId(),
+            )
+
+        if (dataSet) {
+            dataSet.update({
+                generationStatus: null,
+            })
+
+            await this.dataSetsRepository.upsert(dataSet)
+        }
 
         await this.certificatesRepository.update(certificate)
 

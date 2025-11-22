@@ -10,6 +10,7 @@ import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/fi
 import z from 'zod'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
+import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 
 const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
 
@@ -35,6 +36,7 @@ export async function PUT(
 
         const bucket = new GcpBucket()
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const sessionsRepository = new PrismaSessionsRepository(prisma)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
 
@@ -42,6 +44,7 @@ export async function PUT(
             bucket,
             sessionsRepository,
             certificatesRepository,
+            dataSetsRepository,
             fileContentExtractorFactory,
         )
 

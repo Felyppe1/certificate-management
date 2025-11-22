@@ -6,6 +6,7 @@ import { AuthenticationError } from '../domain/error/authentication-error'
 import { IBucket } from './interfaces/ibucket'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { ISessionsRepository } from './interfaces/isessions-repository'
+import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 
 interface DeleteTemplateUseCaseInput {
     certificateId: string
@@ -17,6 +18,10 @@ export class DeleteTemplateUseCase {
         private certificateEmissionsRepository: Pick<
             ICertificatesRepository,
             'getById' | 'update'
+        >,
+        private dataSetsRepository: Pick<
+            IDataSetsRepository,
+            'getByCertificateEmissionId' | 'upsert'
         >,
         private sessionsRepository: Pick<ISessionsRepository, 'getById'>,
         private bucket: Pick<IBucket, 'deleteObject'>,
@@ -39,6 +44,19 @@ export class DeleteTemplateUseCase {
         const storageFileUrl = certificate.getTemplateStorageFileUrl()
 
         certificate.removeTemplate(session.userId)
+
+        const dataSet =
+            await this.dataSetsRepository.getByCertificateEmissionId(
+                certificate.getId(),
+            )
+
+        if (dataSet) {
+            dataSet.update({
+                generationStatus: null,
+            })
+
+            await this.dataSetsRepository.upsert(dataSet)
+        }
 
         await this.certificateEmissionsRepository.update(certificate)
 

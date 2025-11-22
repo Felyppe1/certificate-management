@@ -13,6 +13,7 @@ import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import z from 'zod'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
+import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 
 const addTemplateByDrivePickerSchema = z.object({
     fileId: z.string().min(1, 'File ID is required'),
@@ -34,6 +35,7 @@ export async function PUT(
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
+        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
@@ -48,6 +50,7 @@ export async function PUT(
                 googleDriveGateway,
                 fileContentExtractorFactory,
                 externalUserAccountsRepository,
+                dataSetsRepository,
                 googleAuthGateway,
                 bucket,
             )

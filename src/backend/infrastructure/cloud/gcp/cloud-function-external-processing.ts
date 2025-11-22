@@ -36,16 +36,21 @@ export class CloudFunctionExternalProcessing
     }
 
     private getCloudFunctionUrl(functionName: string): string {
-        const projectId = process.env.GCP_PROJECT_ID
+        const projectNumber = process.env.GCP_PROJECT_NUMBER
         const region = process.env.GCP_REGION
         const suffix = process.env.SUFFIX
 
-        if (!projectId || !region) {
-            throw new Error('GCP_PROJECT_ID or GCP_REGION not set')
+        if (!projectNumber || !region) {
+            throw new Error('GCP_PROJECT_NUMBER or GCP_REGION not set')
         }
 
         const functionFullName = `${functionName}${suffix}`
 
-        return `https://${functionFullName}-${projectId}.${region}.run.app`
+        const url =
+            process.env.NODE_ENV === 'development'
+                ? 'http://localhost:8081'
+                : `https://${functionFullName}-${projectNumber}.${region}.run.app`
+
+        return url
     }
 }

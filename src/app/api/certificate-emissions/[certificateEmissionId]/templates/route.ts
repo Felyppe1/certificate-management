@@ -13,6 +13,7 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
+import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 
 export async function DELETE(
     request: NextRequest,
@@ -27,10 +28,12 @@ export async function DELETE(
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
+        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const bucket = new GcpBucket()
 
         const deleteTemplateUseCase = new DeleteTemplateUseCase(
             certificateEmissionsRepository,
+            dataSetsRepository,
             sessionsRepository,
             bucket,
         )
@@ -57,6 +60,7 @@ export async function PATCH(
 
         const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
@@ -65,6 +69,7 @@ export async function PATCH(
 
         const refreshTemplateUseCase = new RefreshTemplateUseCase(
             certificatesRepository,
+            dataSetsRepository,
             sessionsRepository,
             googleDriveGateway,
             googleAuthGateway,

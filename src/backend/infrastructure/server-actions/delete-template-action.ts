@@ -10,6 +10,7 @@ import { cookies } from 'next/headers'
 import z from 'zod'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
+import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 
 export async function deleteTemplateAction(_: unknown, formData: FormData) {
     const cookie = await cookies()
@@ -37,10 +38,12 @@ export async function deleteTemplateAction(_: unknown, formData: FormData) {
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
+        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const bucket = new GcpBucket()
 
         const deleteTemplateUseCase = new DeleteTemplateUseCase(
             certificateEmissionsRepository,
+            dataSetsRepository,
             sessionsRepository,
             bucket,
         )

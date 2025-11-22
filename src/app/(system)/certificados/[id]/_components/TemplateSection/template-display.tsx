@@ -10,12 +10,13 @@ import {
     CardTitle,
 } from '@/components/ui/card'
 import { RefreshCw, Edit3, Trash2, ALargeSmall } from 'lucide-react'
-import { startTransition, useActionState } from 'react'
+import { startTransition, useActionState, useState } from 'react'
 import { refreshTemplateAction } from '@/backend/infrastructure/server-actions/refresh-template-action'
 import { deleteTemplateAction } from '@/backend/infrastructure/server-actions/delete-template-action'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { SourceIcon } from '@/components/svg/SourceIcon'
+import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -43,6 +44,7 @@ interface TemplateDisplayProps {
     certificateId: string
     onEdit: () => void
     isDisabled: boolean
+    certificatesGenerated: boolean
 }
 
 export function TemplateDisplay({
@@ -50,7 +52,11 @@ export function TemplateDisplay({
     certificateId,
     onEdit,
     isDisabled,
+    certificatesGenerated,
 }: TemplateDisplayProps) {
+    const [showRefreshWarning, setShowRefreshWarning] = useState(false)
+    const [showEditWarning, setShowEditWarning] = useState(false)
+
     const [, refreshAction, isRefreshing] = useActionState(
         refreshTemplateAction,
         null,
@@ -88,55 +94,94 @@ export function TemplateDisplay({
         }
     }
 
-    return (
-        <div className="space-y-4">
-            <Card className="">
-                <CardHeader className="flex justify-between">
-                    <div>
-                        <CardTitle>Template</CardTitle>
-                        <CardDescription>
-                            Template utilizado para gerar os certificados
-                        </CardDescription>
-                    </div>
+    const handleRefreshClick = () => {
+        if (certificatesGenerated) {
+            setShowRefreshWarning(true)
+        } else {
+            handleRefresh()
+        }
+    }
 
-                    <div className="flex flex-wrap justify-end gap-2">
-                        {template.inputMethod !== 'UPLOAD' && (
+    const handleEditClick = () => {
+        if (certificatesGenerated) {
+            setShowEditWarning(true)
+        } else {
+            onEdit()
+        }
+    }
+
+    return (
+        <>
+            <div className="space-y-4">
+                <Card className="">
+                    <CardHeader className="flex justify-between">
+                        <div>
+                            <CardTitle>Template</CardTitle>
+                            <CardDescription>
+                                Template utilizado para gerar os certificados
+                            </CardDescription>
+                        </div>
+
+                        <div className="flex flex-wrap justify-end gap-2">
+                            {template.inputMethod !== 'UPLOAD' && (
+                                <RegenerateWarningPopover
+                                    open={showRefreshWarning}
+                                    onOpenChange={setShowRefreshWarning}
+                                    onConfirm={handleRefresh}
+                                    title="Atualizar template?"
+                                >
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleRefreshClick}
+                                        disabled={
+                                            isRefreshing ||
+                                            isDeleting ||
+                                            isDisabled
+                                        }
+                                    >
+                                        <RefreshCw
+                                            className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                                        />
+                                        {isRefreshing
+                                            ? 'Atualizando...'
+                                            : 'Atualizar'}
+                                    </Button>
+                                </RegenerateWarningPopover>
+                            )}
+
+                            <RegenerateWarningPopover
+                                open={showEditWarning}
+                                onOpenChange={setShowEditWarning}
+                                onConfirm={onEdit}
+                                title="Editar template?"
+                            >
+                                <Button
+                                    variant="outline"
+                                    onClick={handleEditClick}
+                                    disabled={
+                                        isRefreshing || isDeleting || isDisabled
+                                    }
+                                >
+                                    <Edit3 className="h-4 w-4" />
+                                    Editar
+                                </Button>
+                            </RegenerateWarningPopover>
                             <Button
                                 variant="outline"
-                                onClick={handleRefresh}
+                                onClick={handleRemoveTemplate}
                                 disabled={
-                                    isRefreshing || isDeleting || isDisabled
+                                    isDeleting || isRefreshing || isDisabled
                                 }
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             >
-                                <RefreshCw
-                                    className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
-                                />
-                                {isRefreshing ? 'Atualizando...' : 'Atualizar'}
+                                <Trash2 className="h-4 w-4" />
+                                {isDeleting ? 'Removendo...' : 'Remover'}
                             </Button>
-                        )}
+                        </div>
+                    </CardHeader>
 
-                        <Button
-                            variant="outline"
-                            onClick={onEdit}
-                            disabled={isRefreshing || isDeleting || isDisabled}
-                        >
-                            <Edit3 className="h-4 w-4" />
-                            Editar
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={handleRemoveTemplate}
-                            disabled={isDeleting || isRefreshing || isDisabled}
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                            {isDeleting ? 'Removendo...' : 'Remover'}
-                        </Button>
-                    </div>
-                </CardHeader>
-
-                <CardContent className="flex flex-row gap-10">
-                    {/* {template.thumbnailUrl ? (
+                    <CardContent className="flex flex-row gap-10">
+                        {/* {template.thumbnailUrl ? (
                         <img
                             src={template.thumbnailUrl || ''}
                             alt=""
@@ -148,110 +193,113 @@ export function TemplateDisplay({
                         </div>
                     )} */}
 
-                    <div className="flex flex-col w-full">
-                        <div className="flex flex-col gap-4 mt-1">
-                            <div className="flex items-start gap-3">
-                                <div className="flex-shrink-0 mt-0.5">
-                                    <ALargeSmall className="size-5 text-muted-foreground" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-muted-foreground mb-1">
-                                        Nome do arquivo
-                                    </p>
-                                    <p className="font-medium truncate">
-                                        {template.fileName}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-3">
-                                <div className="flex-shrink-0 mt-0.5">
-                                    <SourceIcon className="size-5 text-muted-foreground" />
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-muted-foreground mb-1">
-                                        Fonte
-                                    </p>
-                                    <div className="flex items-center gap-4">
-                                        <p className="font-medium">
-                                            {getInputMethodLabel(
-                                                template.inputMethod,
-                                            )}
+                        <div className="flex flex-col w-full">
+                            <div className="flex flex-col gap-4 mt-1">
+                                <div className="flex items-start gap-3">
+                                    <div className="flex-shrink-0 mt-0.5">
+                                        <ALargeSmall className="size-5 text-muted-foreground" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-muted-foreground mb-1">
+                                            Nome do arquivo
                                         </p>
-                                        {template.inputMethod === 'UPLOAD' ? (
-                                            <Button
-                                                variant="default"
-                                                onClick={handleViewFile}
-                                                size="sm"
-                                            >
-                                                <svg
-                                                    className="h-4 w-4 mr-2"
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2"
-                                                >
-                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
-                                                </svg>
-                                                Baixar
-                                            </Button>
-                                        ) : (
-                                            <Button
-                                                variant="default"
-                                                size="sm"
-                                                onClick={handleViewFile}
-                                            >
-                                                <svg
-                                                    className="h-4 w-4"
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2"
-                                                >
-                                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
-                                                </svg>
-                                                Abrir
-                                            </Button>
-                                        )}
+                                        <p className="font-medium truncate">
+                                            {template.fileName}
+                                        </p>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="flex items-start gap-3">
-                                <div className="flex-shrink-0 mt-0.5">
-                                    <span className="font-mono font-semibold text-muted-foreground">
-                                        {'{}'}
-                                    </span>
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-muted-foreground mb-1">
-                                        Variáveis do Template
-                                    </p>
-                                    <div className="mt-3">
-                                        {template.variables.length === 0 ? (
-                                            <p>Nenhuma variável encontrada</p>
-                                        ) : (
-                                            template.variables.map(
-                                                (variable, index) => (
-                                                    <Badge
-                                                        key={index}
-                                                        className="font-mono mr-2 mb-2 bg-muted text-accent-foreground"
+                                <div className="flex items-start gap-3">
+                                    <div className="flex-shrink-0 mt-0.5">
+                                        <SourceIcon className="size-5 text-muted-foreground" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-muted-foreground mb-1">
+                                            Fonte
+                                        </p>
+                                        <div className="flex items-center gap-4">
+                                            <p className="font-medium">
+                                                {getInputMethodLabel(
+                                                    template.inputMethod,
+                                                )}
+                                            </p>
+                                            {template.inputMethod ===
+                                            'UPLOAD' ? (
+                                                <Button
+                                                    variant="default"
+                                                    onClick={handleViewFile}
+                                                    size="sm"
+                                                >
+                                                    <svg
+                                                        className="h-4 w-4 mr-2"
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        strokeWidth="2"
                                                     >
-                                                        {`{{ ${variable} }}`}
-                                                    </Badge>
-                                                ),
-                                            )
-                                        )}
+                                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                                                    </svg>
+                                                    Baixar
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    variant="default"
+                                                    size="sm"
+                                                    onClick={handleViewFile}
+                                                >
+                                                    <svg
+                                                        className="h-4 w-4"
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        strokeWidth="2"
+                                                    >
+                                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
+                                                    </svg>
+                                                    Abrir
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3">
+                                    <div className="flex-shrink-0 mt-0.5">
+                                        <span className="font-mono font-semibold text-muted-foreground">
+                                            {'{}'}
+                                        </span>
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-muted-foreground mb-1">
+                                            Variáveis do Template
+                                        </p>
+                                        <div className="mt-3">
+                                            {template.variables.length === 0 ? (
+                                                <p>
+                                                    Nenhuma variável encontrada
+                                                </p>
+                                            ) : (
+                                                template.variables.map(
+                                                    (variable, index) => (
+                                                        <Badge
+                                                            key={index}
+                                                            className="font-mono mr-2 mb-2 bg-muted text-accent-foreground"
+                                                        >
+                                                            {`{{ ${variable} }}`}
+                                                        </Badge>
+                                                    ),
+                                                )
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
 
-            {/* Info box - mais discreto */}
-            {/* {template.variables.length > 0 && (
+                {/* Info box - mais discreto */}
+                {/* {template.variables.length > 0 && (
                 <div className="bg-muted/50 backdrop-blur-sm border rounded-lg p-4">
                     <div className="flex gap-3">
                         <div className="flex-shrink-0 text-blue-600 dark:text-blue-400">
@@ -280,6 +328,7 @@ export function TemplateDisplay({
                     </div>
                 </div>
             )} */}
-        </div>
+            </div>
+        </>
     )
 }

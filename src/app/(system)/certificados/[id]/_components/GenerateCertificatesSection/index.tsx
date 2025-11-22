@@ -79,7 +79,6 @@ export function GenerateCertificatesSection({
     const totalRecords = dataSet?.rows.length || 0
     const certificatesWereGenerated =
         dataSet?.generationStatus === GENERATION_STATUS.COMPLETED
-    const canGenerate = allVariablesWereMapped && !certificatesWereGenerated
 
     const isPending =
         isGeneratePending ||
@@ -117,12 +116,16 @@ export function GenerateCertificatesSection({
                     <AlertMessage
                         variant="success"
                         icon={<CheckCircle2 className="size-5" />}
-                        text="Certificados gerados com sucesso"
-                        description={`
+                        text={`
                             ${totalRecords}
                             ${totalRecords !== 1 ? 'certificados' : 'certificado'}
-                            ${totalRecords !== 1 ? 'gerados' : 'gerado'} e
-                            ${totalRecords !== 1 ? 'prontos' : 'pronto'} para download.
+                            ${totalRecords !== 1 ? 'gerados' : 'gerado'}
+                            com sucesso
+                        `}
+                        description={`
+                            Você pode visualiza-${totalRecords !== 1 ? 'los' : 'lo'}
+                            ou baixa-${totalRecords !== 1 ? 'los' : 'lo'}
+                            na seção de Fonte de Dados
                         `}
                     />
                 )}
@@ -154,17 +157,14 @@ export function GenerateCertificatesSection({
                     <Button
                         size="lg"
                         onClick={handleGenerate}
-                        disabled={/* !canGenerate || */ isPending || emailSent}
+                        disabled={
+                            certificatesWereGenerated || isPending || emailSent
+                        }
                     >
                         {isPending ? (
                             <>
                                 <Loader2 className="h-4 w-4 animate-spin" />
                                 Gerando...
-                            </>
-                        ) : certificatesWereGenerated ? (
-                            <>
-                                <FileCheck className="h-4 w-4" />
-                                Gerar Novamente
                             </>
                         ) : (
                             <>

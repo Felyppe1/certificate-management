@@ -10,6 +10,7 @@ import z from 'zod'
 import { AddTemplateByUploadUseCase } from '@/backend/application/add-template-by-upload-use-case'
 import { FileContentExtractorFactory } from '../factory/file-content-extractor-factory'
 import { revalidateTag } from 'next/cache'
+import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 
 const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
 
@@ -42,6 +43,7 @@ export async function addTemplateByUploadAction(
 
         const bucket = new GcpBucket()
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const sessionsRepository = new PrismaSessionsRepository(prisma)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
 
@@ -49,6 +51,7 @@ export async function addTemplateByUploadAction(
             bucket,
             sessionsRepository,
             certificatesRepository,
+            dataSetsRepository,
             fileContentExtractorFactory,
         )
 

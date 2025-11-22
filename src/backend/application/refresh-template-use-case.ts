@@ -19,6 +19,7 @@ import { IFileContentExtractorFactory } from './interfaces/ifile-content-extract
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { ISessionsRepository } from './interfaces/isessions-repository'
+import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 
 interface RefreshTemplateUseCaseInput {
     sessionToken: string
@@ -28,6 +29,10 @@ interface RefreshTemplateUseCaseInput {
 export class RefreshTemplateUseCase {
     constructor(
         private certificateEmissionsRepository: ICertificatesRepository,
+        private dataSetsRepository: Pick<
+            IDataSetsRepository,
+            'getByCertificateEmissionId' | 'upsert'
+        >,
         private sessionsRepository: ISessionsRepository,
         private googleDriveGateway: IGoogleDriveGateway,
         private googleAuthGateway: Pick<
@@ -148,6 +153,19 @@ export class RefreshTemplateUseCase {
         }
 
         certificate.setTemplate(newTemplateInput)
+
+        const dataSet =
+            await this.dataSetsRepository.getByCertificateEmissionId(
+                certificate.getId(),
+            )
+
+        if (dataSet) {
+            dataSet.update({
+                generationStatus: null,
+            })
+
+            await this.dataSetsRepository.upsert(dataSet)
+        }
 
         await this.certificateEmissionsRepository.update(certificate)
     }
