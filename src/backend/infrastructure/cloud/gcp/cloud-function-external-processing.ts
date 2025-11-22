@@ -14,9 +14,9 @@ export class CloudFunctionExternalProcessing
     async triggerSendCertificateEmails(
         data: TriggerSendCertificateEmails,
     ): Promise<void> {
-        const sendCertificateEmailsUrl =
-            process.env
-                .CLOUD_FUNCTIONS_BASE_URL! /* + '/send-certificate-emails' */
+        const sendCertificateEmailsUrl = this.getCloudFunctionUrl(
+            'send-certificate-emails',
+        )
 
         const auth = this.googleAuthGateway.getAuthClient()
         // TODO: Should it be a method from google auth? Check if it is the same id token from getToken method
@@ -33,5 +33,19 @@ export class CloudFunctionExternalProcessing
             },
             body: JSON.stringify(data),
         })
+    }
+
+    private getCloudFunctionUrl(functionName: string): string {
+        const projectId = process.env.GCP_PROJECT_ID
+        const region = process.env.GCP_REGION
+        const suffix = process.env.SUFFIX
+
+        if (!projectId || !region) {
+            throw new Error('GCP_PROJECT_ID or GCP_REGION not set')
+        }
+
+        const functionFullName = `${functionName}${suffix}`
+
+        return `https://${functionFullName}-${projectId}.${region}.run.app`
     }
 }

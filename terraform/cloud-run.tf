@@ -60,6 +60,16 @@ resource "google_cloud_run_v2_service" "app" {
       }
 
       env {
+        name = "GCP_PROJECT_NUMBER"
+        value = data.google_project.project.number
+      }
+
+      env {
+        name = "GCP_REGION"
+        value = var.region
+      }
+
+      env {
         name = "GENERATE_PDFS_URL"
         value = "https://${google_cloud_run_v2_service.generate_pdfs.name}-${data.google_project.project.number}.${google_cloud_run_v2_service.generate_pdfs.location}.run.app"
       }

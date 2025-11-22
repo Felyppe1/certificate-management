@@ -19,6 +19,17 @@ variable "branch" {
   type        = string
 }
 
+variable "smtp_user" {
+  description = "SMTP user for sending emails"
+  type        = string
+}
+
+variable "smtp_password" {
+  description = "SMTP password for sending emails"
+  type        = string
+  sensitive   = true
+}
+
 variable "environment_variables" {
   description = "Environment variables for the application"
   type        = map(string)
