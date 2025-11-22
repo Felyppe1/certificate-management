@@ -12,7 +12,7 @@ export class CloudRunExternalProcessing
     async triggerGenerateCertificatePDFs(
         data: TriggerGenerateCertificatePDFsInput,
     ): Promise<void> {
-        const generatePdfsUrl = process.env.GENERATE_PDFS_URL!
+        const generatePdfsUrl = this.getCloudFunctionUrl('generate-pdfs')
 
         const auth = this.googleAuthGateway.getAuthClient()
         // TODO: Should it be a method from google auth? Check if it is the same id token from getToken method
@@ -33,5 +33,19 @@ export class CloudRunExternalProcessing
         //     const text = await response.text()
         //     throw new Error(`Failed (${response.status}): ${text}`)
         // }
+    }
+
+    private getCloudFunctionUrl(functionName: string): string {
+        const projectId = process.env.GCP_PROJECT_ID
+        const region = process.env.GCP_REGION
+        const suffix = process.env.SUFFIX
+
+        if (!projectId || !region) {
+            throw new Error('GCP_PROJECT_ID or GCP_REGION not set')
+        }
+
+        const functionFullName = `${functionName}${suffix}`
+
+        return `https://${functionFullName}-${projectId}.${region}.run.app`
     }
 }

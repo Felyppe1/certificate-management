@@ -1,10 +1,5 @@
-locals {
-  app_name = "certificate-management${local.suffix}"
-  generate_pdfs_name = "generate-pdfs${local.suffix}"
-}
-
 resource "google_cloud_run_v2_service" "app" {
-  name     = local.app_name
+  name     = "certificate-management${local.suffix}"
   location = var.region
   project  = var.project_id
 
@@ -70,11 +65,6 @@ resource "google_cloud_run_v2_service" "app" {
       }
 
       env {
-        name = "GENERATE_PDFS_URL"
-        value = "https://${google_cloud_run_v2_service.generate_pdfs.name}-${data.google_project.project.number}.${google_cloud_run_v2_service.generate_pdfs.location}.run.app"
-      }
-
-      env {
         name = "CLOUD_FUNCTIONS_SA_EMAIL"
         value = google_service_account.app_service_account.email
         # value = google_cloud_run_v2_service.generate_pdfs.template[0].service_account # TODO
@@ -124,7 +114,7 @@ output "cloud_run_name" {
 
 
 resource "google_cloud_run_v2_service" "generate_pdfs" {
-  name     = local.generate_pdfs_name
+  name     = "generate-pdfs${local.suffix}"
   location = var.region
   project  = var.project_id
 
@@ -161,7 +151,7 @@ resource "google_cloud_run_v2_service" "generate_pdfs" {
 
       env {
         name = "APP_BASE_URL"
-        value = "https://${local.app_name}-${data.google_project.project.number}.${var.region}.run.app"
+        value = "https://${google_cloud_run_v2_service.app.name}-${data.google_project.project.number}.${var.region}.run.app"
       }
 
       env {
