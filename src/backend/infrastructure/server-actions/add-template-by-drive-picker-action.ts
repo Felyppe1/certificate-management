@@ -15,6 +15,9 @@ import z from 'zod'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
+import { SyncEventBus } from '../event-bus/sync-event-bus'
+import { TemplateSetDomainEvent } from '@/backend/domain/events/template-set-domain-event'
+import { ResetCertificateGenerationHandler } from '../handler/reset-certificate-generation'
 
 const addTemplateByDrivePickerActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -56,6 +59,17 @@ export async function addTemplateByDrivePickerAction(
             new PrismaExternalUserAccountsRepository(prisma)
         const bucket = new GcpBucket()
 
+        const resetCertificateGenerationHandler =
+            new ResetCertificateGenerationHandler(dataSetsRepository)
+
+        const eventBus = new SyncEventBus()
+
+        eventBus.register(
+            TemplateSetDomainEvent.name,
+            (event: { certificateId: string }) =>
+                resetCertificateGenerationHandler.handle(event),
+        )
+
         const addTemplateByDrivePickerUseCase =
             new AddTemplateByDrivePickerUseCase(
                 certificateEmissionsRepository,
@@ -66,6 +80,7 @@ export async function addTemplateByDrivePickerAction(
                 dataSetsRepository,
                 googleAuthGateway,
                 bucket,
+                eventBus,
             )
 
         await addTemplateByDrivePickerUseCase.execute({

@@ -1,17 +1,17 @@
 import { DomainEvent } from '../primitives/domain-event'
 
 export class TemplateSetDomainEvent extends DomainEvent {
-    private templateId: string
+    private certificateEmissionId: string
 
-    constructor(templateId: string) {
+    constructor(certificateEmissionId: string) {
         super('template-set-domain-event')
 
-        this.templateId = templateId
+        this.certificateEmissionId = certificateEmissionId
     }
 
     toPrimitives(): Record<string, any> {
         return {
-            templateId: this.templateId,
+            certificateEmissionId: this.certificateEmissionId,
         }
     }
 }

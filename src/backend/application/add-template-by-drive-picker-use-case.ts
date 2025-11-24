@@ -17,6 +17,7 @@ import {
     ValidationError,
 } from '../domain/error/validation-error'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
+import { IEventBus } from './interfaces/ievent-bus'
 
 interface AddTemplateByDrivePickerUseCaseInput {
     certificateId: string
@@ -40,6 +41,7 @@ export class AddTemplateByDrivePickerUseCase {
             'checkOrGetNewAccessToken'
         >,
         private bucket: Pick<IBucket, 'deleteObject'>,
+        private eventBus: IEventBus,
     ) {}
 
     async execute(input: AddTemplateByDrivePickerUseCaseInput) {
@@ -125,18 +127,27 @@ export class AddTemplateByDrivePickerUseCase {
 
         certificate.setTemplate(newTemplateInput)
 
-        const dataSet =
-            await this.dataSetsRepository.getByCertificateEmissionId(
-                certificate.getId(),
-            )
+        // certificate.
+        // this.eventBus.publish(
+        //     new TemplateSetDomainEvent(certificate.getId()),
+        // )
 
-        if (dataSet) {
-            dataSet.update({
-                generationStatus: null,
-            })
+        certificate.getDomainEvents().forEach(event => {
+            this.eventBus.publish(event)
+        })
 
-            await this.dataSetsRepository.upsert(dataSet)
-        }
+        // const dataSet =
+        //     await this.dataSetsRepository.getByCertificateEmissionId(
+        //         certificate.getId(),
+        //     )
+
+        // if (dataSet) {
+        //     dataSet.update({
+        //         generationStatus: null,
+        //     })
+
+        //     await this.dataSetsRepository.upsert(dataSet)
+        // }
 
         await this.certificateEmissionsRepository.update(certificate)
 
