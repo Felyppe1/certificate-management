@@ -15,6 +15,142 @@ import { TransactionClient } from './client/internal/prismaNamespace'
 export class PrismaCertificatesRepository implements ICertificatesRepository {
     constructor(private readonly prisma: PrismaClient) {}
 
+    async getCertificateEmissionsMetricsByUserId(userId: string) {
+        const now = new Date()
+
+        const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+        const startOfNextMonth = new Date(
+            now.getFullYear(),
+            now.getMonth() + 1,
+            1,
+        )
+
+        const startOfLastMonth = new Date(
+            now.getFullYear(),
+            now.getMonth() - 1,
+            1,
+        )
+        const endOfLastMonth = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            0,
+            23,
+            59,
+            59,
+            999,
+        )
+
+        const [
+            totalCertificatesGenerated,
+            totalEmailsSent,
+            totalCertificatesGeneratedThisMonth,
+            totalEmailsSentThisMonth,
+            totalCertificatesGeneratedLastMonth,
+            totalEmailsSentLastMonth,
+        ] = await this.prisma.$transaction([
+            // Total certificates generation of the user
+            this.prisma.certificateGenerationHistory.aggregate({
+                _sum: { quantity: true },
+                where: {
+                    CertificateEmission: {
+                        user_id: userId,
+                    },
+                },
+            }),
+
+            // Total emails sent by the user
+            this.prisma.emailGenerationHistory.aggregate({
+                _sum: { quantity: true },
+                where: {
+                    Email: {
+                        CertificateEmission: {
+                            user_id: userId,
+                        },
+                    },
+                },
+            }),
+
+            // Certificates generated this month
+            this.prisma.certificateGenerationHistory.aggregate({
+                _sum: { quantity: true },
+                where: {
+                    created_at: {
+                        gte: startOfThisMonth,
+                        lt: startOfNextMonth,
+                    },
+                    CertificateEmission: {
+                        user_id: userId,
+                    },
+                },
+            }),
+
+            // Emails sent this month
+            this.prisma.emailGenerationHistory.aggregate({
+                _sum: { quantity: true },
+                where: {
+                    created_at: {
+                        gte: startOfThisMonth,
+                        lt: startOfNextMonth,
+                    },
+                    Email: {
+                        CertificateEmission: {
+                            user_id: userId,
+                        },
+                    },
+                },
+            }),
+
+            // Certificates generated last month
+            this.prisma.certificateGenerationHistory.aggregate({
+                _sum: { quantity: true },
+                where: {
+                    created_at: {
+                        gte: startOfLastMonth,
+                        lte: endOfLastMonth,
+                    },
+                    CertificateEmission: {
+                        user_id: userId,
+                    },
+                },
+            }),
+
+            // Emails sent last month
+            this.prisma.emailGenerationHistory.aggregate({
+                _sum: { quantity: true },
+                where: {
+                    created_at: {
+                        gte: startOfLastMonth,
+                        lte: endOfLastMonth,
+                    },
+                    Email: {
+                        CertificateEmission: {
+                            user_id: userId,
+                        },
+                    },
+                },
+            }),
+        ])
+
+        return {
+            totalCertificatesGenerated:
+                totalCertificatesGenerated._sum.quantity ?? 0,
+
+            totalEmailsSent: totalEmailsSent._sum.quantity ?? 0,
+
+            totalCertificatesGeneratedThisMonth:
+                totalCertificatesGeneratedThisMonth._sum.quantity ?? 0,
+
+            totalEmailsSentThisMonth:
+                totalEmailsSentThisMonth._sum.quantity ?? 0,
+
+            totalCertificatesGeneratedLastMonth:
+                totalCertificatesGeneratedLastMonth._sum.quantity ?? 0,
+
+            totalEmailsSentLastMonth:
+                totalEmailsSentLastMonth._sum.quantity ?? 0,
+        }
+    }
+
     async save(certificate: Certificate) {
         const {
             id,

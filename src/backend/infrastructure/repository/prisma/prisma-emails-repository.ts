@@ -44,6 +44,7 @@ export class PrismaEmailsRepository implements IEmailsRepository {
             scheduledAt,
             status,
             emailErrorType,
+            quantityEmailsSent,
         } = email.serialize()
 
         await this.prisma.email.update({
@@ -57,6 +58,13 @@ export class PrismaEmailsRepository implements IEmailsRepository {
                 scheduled_at: scheduledAt,
                 status,
                 email_error_type: emailErrorType,
+                ...(status === PROCESSING_STATUS_ENUM.COMPLETED && {
+                    EmailGenerationHistory: {
+                        create: {
+                            quantity: quantityEmailsSent,
+                        },
+                    },
+                }),
             },
         })
     }

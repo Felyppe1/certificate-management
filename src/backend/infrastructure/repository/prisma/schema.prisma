@@ -57,10 +57,11 @@ model CertificateEmission {
 
     user_id String
 
-    User       User        @relation(fields: [user_id], references: [id])
-    Template   Template?
-    DataSource DataSource?
-    Email      Email?
+    User                         User                           @relation(fields: [user_id], references: [id])
+    Template                     Template?
+    DataSource                   DataSource?
+    Email                        Email?
+    CertificateGenerationHistory CertificateGenerationHistory[]
 
     @@map("certificate_emissions")
 }
@@ -148,9 +149,32 @@ model Email {
     certificate_emission_id String  @unique
     email_column            String?
 
-    CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id])
+    CertificateEmission    CertificateEmission      @relation(fields: [certificate_emission_id], references: [id])
+    EmailGenerationHistory EmailGenerationHistory[]
 
     @@map("emails")
+}
+
+model EmailGenerationHistory {
+    email_id   String
+    quantity   Int
+    created_at DateTime @default(now())
+
+    Email Email @relation(fields: [email_id], references: [id])
+
+    @@map("email_generation_histories")
+    @@id([email_id, created_at])
+}
+
+model CertificateGenerationHistory {
+    certificate_emission_id String
+    quantity                Int
+    created_at              DateTime @default(now())
+
+    CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id])
+
+    @@map("certificate_generation_histories")
+    @@id([certificate_emission_id, created_at])
 }
 
 model Outbox {

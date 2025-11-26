@@ -74,6 +74,10 @@ export class DataSet extends AggregateRoot {
         return this.rows.map(row => row[columnName])
     }
 
+    getRowsCount() {
+        return this.rows.length
+    }
+
     update(data: Partial<Omit<DataSetInput, 'id' | 'certificateEmissionId'>>) {
         // TODO: could validate that from null -> IN_PROGRESS -> COMPLETED/FAILED
         if (data.generationStatus !== undefined) {
@@ -84,6 +88,12 @@ export class DataSet extends AggregateRoot {
                 throw new ValidationError(
                     VALIDATION_ERROR_TYPE.GENERATION_ALREADY_IN_PROGRESS,
                 )
+            }
+
+            if (data.generationStatus === GENERATION_STATUS.COMPLETED) {
+                if (!this.hasRows()) {
+                    throw new Error('Cannot complete empty data set')
+                }
             }
 
             this.generationStatus = data.generationStatus

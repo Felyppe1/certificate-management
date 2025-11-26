@@ -80,22 +80,35 @@ export class PrismaDataSetsRepository implements IDataSetsRepository {
             totalBytes,
         } = dataSet.serialize()
 
-        // TODO: CONSERTAR ISSO AQUI DE UPSET PRA UPDATE
-        await this.prisma.dataSet.upsert({
-            where: { certificate_emission_id: certificateEmissionId },
-            create: {
-                id,
-                certificate_emission_id: certificateEmissionId,
-                rows,
-                generation_status: generationStatus,
-                total_bytes: totalBytes,
-            },
-            update: {
-                rows,
-                generation_status: generationStatus,
-                total_bytes: totalBytes,
-            },
-        })
+        const operations: any[] = [
+            this.prisma.dataSet.upsert({
+                where: { certificate_emission_id: certificateEmissionId },
+                create: {
+                    id,
+                    certificate_emission_id: certificateEmissionId,
+                    rows,
+                    generation_status: generationStatus,
+                    total_bytes: totalBytes,
+                },
+                update: {
+                    rows,
+                    generation_status: generationStatus,
+                    total_bytes: totalBytes,
+                },
+            }),
+        ]
+
+        if (generationStatus === GENERATION_STATUS.COMPLETED) {
+            operations.push(
+                this.prisma.certificateGenerationHistory.create({
+                    data: {
+                        quantity: rows.length,
+                        certificate_emission_id: certificateEmissionId,
+                    },
+                }),
+            )
+        }
+
         // await prisma.dataSet.update({
         //     where: { id },
         //     data: {
@@ -104,5 +117,7 @@ export class PrismaDataSetsRepository implements IDataSetsRepository {
         //         generation_status: generationStatus,
         //     },
         // })
+
+        await this.prisma.$transaction(operations)
     }
 }

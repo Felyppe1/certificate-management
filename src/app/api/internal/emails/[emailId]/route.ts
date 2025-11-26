@@ -8,6 +8,7 @@ import { PROCESSING_STATUS_ENUM } from '@/backend/domain/email'
 import { FinishCertificateEmailSendingProcessUseCase } from '@/backend/application/finish-certificate-email-sending-process-use-case'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaEmailsRepository } from '@/backend/infrastructure/repository/prisma/prisma-emails-repository'
+import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 
 const updateEmailSchema = z.object({
     status: z.enum([
@@ -32,11 +33,13 @@ export async function PATCH(
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
+        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
 
         const finishCertificateEmailSendingProcessUseCase =
             new FinishCertificateEmailSendingProcessUseCase(
                 emailsRepository,
                 certificateEmissionsRepository,
+                dataSetsRepository,
             )
 
         await finishCertificateEmailSendingProcessUseCase.execute({

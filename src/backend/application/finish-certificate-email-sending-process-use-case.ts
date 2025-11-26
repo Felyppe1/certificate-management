@@ -5,6 +5,7 @@ import {
     NotFoundError,
 } from '../domain/error/not-found-error'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
+import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 import { IEmailsRepository } from './interfaces/iemails-repository'
 
 interface FinishCertificateEmailSendingProcessUseCaseInput {
@@ -18,6 +19,10 @@ export class FinishCertificateEmailSendingProcessUseCase {
         private certificateEmissionsRepository: Pick<
             ICertificatesRepository,
             'getById' | 'update'
+        >,
+        private dataSetsRepository: Pick<
+            IDataSetsRepository,
+            'getByCertificateEmissionId'
         >,
     ) {}
 
@@ -39,7 +44,18 @@ export class FinishCertificateEmailSendingProcessUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        email.setProcessingStatus(status)
+        const dataSet =
+            await this.dataSetsRepository.getByCertificateEmissionId(
+                certificateEmission.getId(),
+            )
+
+        if (!dataSet) {
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SET)
+        }
+
+        const rowsCount = dataSet.getRowsCount()
+
+        email.setProcessingStatus(status, rowsCount)
 
         if (status === PROCESSING_STATUS_ENUM.COMPLETED) {
             certificateEmission.setStatus(CERTIFICATE_STATUS.PUBLISHED)
