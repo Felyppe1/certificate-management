@@ -4,10 +4,10 @@ import {
     EMAIL_ERROR_TYPE_ENUM,
     PROCESSING_STATUS_ENUM,
 } from '@/backend/domain/email'
-import { PrismaClient } from './client/client'
+import { PrismaExecutor } from '.'
 
 export class PrismaEmailsRepository implements IEmailsRepository {
-    constructor(private prisma: PrismaClient) {}
+    constructor(private readonly prisma: PrismaExecutor) {}
 
     async save(email: Email) {
         const {

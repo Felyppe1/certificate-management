@@ -2,10 +2,10 @@ import {
     User,
     IUsersRepository,
 } from '@/backend/application/interfaces/iusers-repository'
-import { PrismaClient } from './client/client'
+import { PrismaExecutor } from '.'
 
 export class PrismaUsersRepository implements IUsersRepository {
-    constructor(private readonly prisma: PrismaClient) {}
+    constructor(private readonly prisma: PrismaExecutor) {}
 
     async getByEmail(email: string) {
         const user = await this.prisma.user.findUnique({

@@ -2,10 +2,10 @@ import {
     Session,
     ISessionsRepository,
 } from '@/backend/application/interfaces/isessions-repository'
-import { PrismaClient } from './client/client'
+import { PrismaExecutor } from '.'
 
 export class PrismaSessionsRepository implements ISessionsRepository {
-    constructor(private readonly prisma: PrismaClient) {}
+    constructor(private readonly prisma: PrismaExecutor) {}
 
     async getById(token: string) {
         const session = await this.prisma.session.findUnique({
