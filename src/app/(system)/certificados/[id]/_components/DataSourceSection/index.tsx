@@ -146,9 +146,9 @@ export function DataSourceSection({
             <Card>
                 <CardHeader className="flex justify-between">
                     <div>
-                        <CardTitle>Selecione Nova Base de Dados</CardTitle>
+                        <CardTitle>Selecione Nova Fonte de Dados</CardTitle>
                         <CardDescription>
-                            Selecione uma base de dados para substituir a atual
+                            Selecione uma fonte de dados para substituir a atual
                         </CardDescription>
                     </div>
 
@@ -201,9 +201,9 @@ export function DataSourceSection({
     return (
         <Card>
             <CardHeader className="">
-                <CardTitle>Base de Dados</CardTitle>
+                <CardTitle>Fonte de Dados</CardTitle>
                 <CardDescription>
-                    Selecione a base de dados das pessoas que receberão o
+                    Selecione a fonte de dados das pessoas que receberão o
                     certificado
                 </CardDescription>
             </CardHeader>

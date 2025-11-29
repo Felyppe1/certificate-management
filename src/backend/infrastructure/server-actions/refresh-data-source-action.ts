@@ -14,6 +14,7 @@ import { RefreshDataSourceUseCase } from '@/backend/application/refresh-data-sou
 import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
+import { NotFoundError } from '@/backend/domain/error/not-found-error'
 
 const refreshDataSourceActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -60,6 +61,7 @@ export async function refreshDataSourceAction(_: unknown, formData: FormData) {
 
         return {
             success: true,
+            message: 'Fonte de dados atualizada com sucesso',
         }
     } catch (error) {
         console.error(error)
@@ -78,9 +80,19 @@ export async function refreshDataSourceAction(_: unknown, formData: FormData) {
             }
         }
 
+        if (error instanceof NotFoundError) {
+            if (error.type === 'drive-file-not-found') {
+                return {
+                    success: false,
+                    message:
+                        'Arquivo não encontrado. Verifique se ele ainda existe no Drive e se está público',
+                }
+            }
+        }
+
         return {
             success: false,
-            message: 'Um erro inesperado ocorreu ao atualizar o template',
+            message: 'Ocorreu um erro ao tentar atualizar a fonte de dados',
         }
     }
 }

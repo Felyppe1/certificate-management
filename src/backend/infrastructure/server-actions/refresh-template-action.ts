@@ -14,6 +14,7 @@ import { logoutAction } from './logout-action'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
+import { NotFoundError } from '@/backend/domain/error/not-found-error'
 
 const refreshTemplateActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -59,6 +60,7 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
 
         return {
             success: true,
+            message: 'Template atualizado com sucesso',
         }
     } catch (error) {
         console.error(error)
@@ -77,9 +79,19 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
             }
         }
 
+        if (error instanceof NotFoundError) {
+            if (error.type === 'drive-file-not-found') {
+                return {
+                    success: false,
+                    message:
+                        'Arquivo não encontrado. Verifique se ele ainda existe no Drive e se está público',
+                }
+            }
+        }
+
         return {
             success: false,
-            message: 'Um erro inesperado ocorreu ao atualizar o template',
+            message: 'Ocorreu um erro ao tentar atualizar o template',
         }
     }
 }

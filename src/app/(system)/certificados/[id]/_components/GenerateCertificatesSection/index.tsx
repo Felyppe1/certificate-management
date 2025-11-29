@@ -84,6 +84,9 @@ export function GenerateCertificatesSection({
         isGeneratePending ||
         dataSet?.generationStatus === GENERATION_STATUS.PENDING
 
+    const certificatesGenerationFailed =
+        dataSet?.generationStatus === GENERATION_STATUS.FAILED
+
     return (
         <Card>
             <CardHeader>
@@ -127,6 +130,15 @@ export function GenerateCertificatesSection({
                             ou baixa-${totalRecords !== 1 ? 'los' : 'lo'}
                             na seção de Fonte de Dados
                         `}
+                    />
+                )}
+
+                {certificatesGenerationFailed && (
+                    <AlertMessage
+                        variant="error"
+                        icon={<CircleAlert className="size-5" />}
+                        text="Ocorreu um erro ao gerar os certificados. Tente novamente"
+                        description="Ocorreu um erro ao gerar os certificados. Tente novamente."
                     />
                 )}
 

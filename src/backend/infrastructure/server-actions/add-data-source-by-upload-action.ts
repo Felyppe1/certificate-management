@@ -67,7 +67,7 @@ export async function addDataSourceByUploadAction(
 
         return {
             success: false,
-            message: 'Ocorreu um erro ao tentar fazer upload da base de dados',
+            message: 'Ocorreu um erro ao tentar fazer upload da fonte de dados',
         }
     }
 

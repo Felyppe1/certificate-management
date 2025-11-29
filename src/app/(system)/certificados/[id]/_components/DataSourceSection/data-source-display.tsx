@@ -27,7 +27,7 @@ import {
     Table2,
     ALargeSmall,
 } from 'lucide-react'
-import { startTransition, useActionState, useState } from 'react'
+import { startTransition, useActionState, useEffect, useState } from 'react'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
 import { deleteDataSourceAction } from '@/backend/infrastructure/server-actions/delete-data-source-action'
@@ -35,6 +35,7 @@ import { refreshDataSourceAction } from '@/backend/infrastructure/server-actions
 import { SourceIcon } from '@/components/svg/SourceIcon'
 import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
+import { toast } from 'sonner'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -93,7 +94,7 @@ export function DataSourceDisplay({
     const [showRefreshWarning, setShowRefreshWarning] = useState(false)
     const [showEditWarning, setShowEditWarning] = useState(false)
 
-    const [, refreshAction, isRefreshing] = useActionState(
+    const [refreshState, refreshAction, isRefreshing] = useActionState(
         refreshDataSourceAction,
         null,
     )
@@ -145,6 +146,16 @@ export function DataSourceDisplay({
             onEdit()
         }
     }
+
+    useEffect(() => {
+        if (!refreshState) return
+
+        if (refreshState.success) {
+            toast.success(refreshState.message)
+        } else {
+            toast.error(refreshState.message)
+        }
+    }, [refreshState])
 
     const certificatesGenerated =
         dataSource.dataSet.generationStatus === GENERATION_STATUS.COMPLETED

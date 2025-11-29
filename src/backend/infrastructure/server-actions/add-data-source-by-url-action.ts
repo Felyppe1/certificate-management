@@ -111,7 +111,7 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
 
         return {
             success: false,
-            message: 'Ocorreu um erro ao tentar adicionar base de dados',
+            message: 'Ocorreu um erro ao tentar adicionar fonte de dados',
         }
     }
 
