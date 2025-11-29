@@ -1,6 +1,5 @@
 import { fetchMe } from '@/api-calls/fetch-me'
 import { Header } from './_components/Header'
-import { Toaster } from '@/components/ui/sonner'
 
 interface SystemLayoutProps {
     children: React.ReactNode
@@ -11,8 +10,6 @@ export default async function Layout({ children }: SystemLayoutProps) {
 
     return (
         <>
-            <Toaster />
-
             <Header userName={data.user.name} userId={data.user.id} />
 
             <div className="min-h-screen bg-background pt-30 px-10 pb-20 relative z-10">

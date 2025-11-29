@@ -3,21 +3,23 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
 import Link from 'next/link'
 import { useActionState } from 'react'
 import { loginAction } from '../../../backend/infrastructure/server-actions/login-action'
-import { ArrowRight } from 'lucide-react'
+import { AlertCircle, ArrowRight } from 'lucide-react'
+import { AlertMessage } from '@/components/ui/alert-message'
 
 export function LoginForm() {
     const [state, action, isPending] = useActionState(loginAction, null)
 
     return (
         <form action={action} className="space-y-4">
-            {state?.success === false && state?.message && (
-                <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive rounded-md">
-                    {state.message}
-                </div>
+            {state?.success === false && state?.message && !state?.errors && (
+                <AlertMessage
+                    variant={'error'}
+                    text={state.message}
+                    icon={<AlertCircle className="size-5" />}
+                />
             )}
 
             <div className="space-y-2">
