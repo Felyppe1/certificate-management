@@ -38,7 +38,6 @@ export class GenerateCertificatesUseCase {
             IExternalProcessing,
             'triggerGenerateCertificatePDFs'
         >,
-        private bucket: Pick<IBucket, 'deleteObjectsWithPrefix'>,
     ) {}
 
     async execute({
@@ -87,13 +86,6 @@ export class GenerateCertificatesUseCase {
 
         dataSet.update({
             generationStatus: GENERATION_STATUS.PENDING,
-        })
-
-        // TODO: should it be here or in the cloud function?
-        await this.bucket.deleteObjectsWithPrefix({
-            bucketName: process.env.CERTIFICATES_BUCKET!,
-            // This prefix is on the cloud function that generates the PDFs
-            prefix: `users/${certificateEmission.getUserId()}/certificates/${certificateEmissionId}/certificate`,
         })
 
         const { dataSource, template, ...certificateEmissionData } =

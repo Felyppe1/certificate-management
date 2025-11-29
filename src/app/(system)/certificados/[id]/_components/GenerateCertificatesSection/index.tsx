@@ -19,14 +19,8 @@ import {
     CircleAlert,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import {
-    startTransition,
-    useActionState,
-    useEffect,
-    useRef,
-    useState,
-} from 'react'
-import z from 'zod'
+import { startTransition, useActionState, useEffect, useRef } from 'react'
+import { toast } from 'sonner'
 
 interface GenerateCertificatesSectionProps {
     certificateId: string
@@ -49,7 +43,6 @@ export function GenerateCertificatesSection({
         generateCertificatesAction,
         null,
     )
-    const [teste, setTeste] = useState('')
 
     // useDataSetPolling(dataSet?.id || null, {
     //     enabled: dataSet?.generationStatus === GENERATION_STATUS.PENDING,
@@ -62,6 +55,10 @@ export function GenerateCertificatesSection({
         dataSet?.generationStatus === GENERATION_STATUS.PENDING,
         data => {
             if (data.generationStatus) {
+                if (data.generationStatus === GENERATION_STATUS.COMPLETED) {
+                    toast.success('Certificados gerados com sucesso')
+                }
+
                 router.refresh()
             }
         },
@@ -75,6 +72,14 @@ export function GenerateCertificatesSection({
             action(formData)
         })
     }
+
+    useEffect(() => {
+        if (!state) return
+
+        if (!state.success) {
+            toast.error(state.message)
+        }
+    }, [state])
 
     const totalRecords = dataSet?.rows.length || 0
     const certificatesWereGenerated =
@@ -137,8 +142,7 @@ export function GenerateCertificatesSection({
                     <AlertMessage
                         variant="error"
                         icon={<CircleAlert className="size-5" />}
-                        text="Ocorreu um erro ao gerar os certificados. Tente novamente"
-                        description="Ocorreu um erro ao gerar os certificados. Tente novamente."
+                        text="A geração de certificados anterior falhou. Tente novamente."
                     />
                 )}
 

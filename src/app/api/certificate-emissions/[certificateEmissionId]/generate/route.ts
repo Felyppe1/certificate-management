@@ -28,14 +28,12 @@ export async function POST(
         const externalProcessing = new CloudRunExternalProcessing(
             googleAuthGateway,
         )
-        const bucket = new GcpBucket()
 
         const generateCertificatesUseCase = new GenerateCertificatesUseCase(
             sessionsRepository,
             certificateEmissionsRepository,
             dataSetsRepository,
             externalProcessing,
-            bucket,
         )
 
         await generateCertificatesUseCase.execute({

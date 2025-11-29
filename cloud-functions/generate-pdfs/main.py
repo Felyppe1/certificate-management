@@ -208,6 +208,18 @@ def get_from_bucket(file_path):
     blob = bucket.blob(file_path)
     return blob.download_as_bytes()
 
+def delete_by_prefix(prefix: str):
+    bucket = storage_client.bucket(CERTIFICATES_BUCKET)
+
+    blobs = bucket.list_blobs(prefix=prefix)
+
+    deleted_files = []
+    for blob in blobs:
+        blob.delete()
+        deleted_files.append(blob.name)
+
+    return deleted_files
+
 def save_to_local(buffer, file_path):
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, 'wb') as f:
@@ -334,6 +346,8 @@ def main(request):
             file_extension_str = 'pptx'
 
         total_bytes = 0
+
+        delete_by_prefix(f"users/{user_id}/certificates/{certificate_emission_id}/certificate")
 
         print('before if variable mapping')
         for index, row in enumerate(rows):

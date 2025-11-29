@@ -40,14 +40,12 @@ export async function generateCertificatesAction(
         const externalProcessing = new CloudRunExternalProcessing(
             googleAuthGateway,
         )
-        const bucket = new GcpBucket()
 
         const generateCertificatesUseCase = new GenerateCertificatesUseCase(
             sessionsRepository,
             certificateEmissionsRepository,
             dataSetsRepository,
             externalProcessing,
-            bucket,
         )
 
         await generateCertificatesUseCase.execute({
@@ -73,7 +71,7 @@ export async function generateCertificatesAction(
 
         return {
             success: false,
-            message: 'Não foi possível gerar certificados',
+            message: 'Ocorreu um erro ao tentar gerar os certificados',
         }
     }
 
