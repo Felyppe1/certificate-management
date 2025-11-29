@@ -11,6 +11,7 @@ import { AddTemplateByUploadUseCase } from '@/backend/application/add-template-b
 import { FileContentExtractorFactory } from '../factory/file-content-extractor-factory'
 import { revalidateTag } from 'next/cache'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
+import { logoutAction } from './logout-action'
 
 const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
 
@@ -63,10 +64,13 @@ export async function addTemplateByUploadAction(
     } catch (error: any) {
         console.error(error)
         // throw error
+        if (error instanceof AuthenticationError) {
+            await logoutAction()
+        }
 
         return {
             success: false,
-            message: 'Ocorreu um erro ao definir o template. Tente novamente.',
+            message: 'Ocorreu um erro ao tentar fazer upload do template',
         }
     }
 

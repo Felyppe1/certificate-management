@@ -18,23 +18,34 @@ const Toaster = ({ ...props }: ToasterProps) => {
             theme={theme as ToasterProps['theme']}
             className="toaster group"
             icons={{
-                success: <CircleCheckIcon className="size-4" />,
-                info: <InfoIcon className="size-4" />,
-                warning: <TriangleAlertIcon className="size-4" />,
-                error: <OctagonXIcon className="size-4" />,
-                loading: <Loader2Icon className="size-4 animate-spin" />,
+                success: (
+                    <CircleCheckIcon className="size-5 text-green-600 dark:text-green-400" />
+                ),
+                info: (
+                    <InfoIcon className="size-5 text-blue-600 dark:text-blue-400" />
+                ),
+                warning: (
+                    <TriangleAlertIcon className="size-5 text-orange-600 dark:text-orange-400" />
+                ),
+                error: (
+                    <OctagonXIcon className="size-5 text-red-600 dark:text-red-400" />
+                ),
+                loading: (
+                    <Loader2Icon className="size-5 animate-spin text-muted-foreground" />
+                ),
             }}
             toastOptions={{
                 classNames: {
-                    toast: '!bg-card !border-border !text-card-foreground',
-                    title: '!text-card-foreground',
-                    description: '!text-muted-foreground',
+                    icon: '!mr-3',
+                    toast: '!bg-card !border-border !text-card-foreground !rounded-lg !shadow-lg',
+                    title: '!text-foreground !text-base !font-medium',
+                    description: '!text-muted-foreground !text-sm',
                     success:
-                        '!bg-emerald-950/80 !border-emerald-800/50 !text-emerald-50',
-                    error: '!bg-red-950/80 !border-red-800/50 !text-red-50',
-                    info: '!bg-blue-950/80 !border-blue-800/50 !text-blue-50',
+                        '!bg-green-50 dark:!bg-green-950 !border-green-200 dark:!border-green-900 [&_[data-title]]:!text-green-900 dark:[&_[data-title]]:!text-green-100 [&_[data-description]]:!text-green-700 dark:[&_[data-description]]:!text-green-300',
+                    error: '!bg-red-50 dark:!bg-red-950 !border-red-200 dark:!border-red-900 [&_[data-title]]:!text-red-900 dark:[&_[data-title]]:!text-red-100 [&_[data-description]]:!text-red-700 dark:[&_[data-description]]:!text-red-300',
+                    info: '!bg-blue-50 dark:!bg-blue-950 !border-blue-200 dark:!border-blue-900 [&_[data-title]]:!text-blue-900 dark:[&_[data-title]]:!text-blue-100 [&_[data-description]]:!text-blue-700 dark:[&_[data-description]]:!text-blue-300',
                     warning:
-                        '!bg-amber-950/80 !border-amber-800/50 !text-amber-50',
+                        '!bg-orange-50 dark:!bg-orange-950 !border-orange-200 dark:!border-orange-900 [&_[data-title]]:!text-orange-900 dark:[&_[data-title]]:!text-orange-100 [&_[data-description]]:!text-orange-700 dark:[&_[data-description]]:!text-orange-300',
                 },
             }}
             style={

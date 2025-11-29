@@ -10,18 +10,31 @@ import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/pr
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { revalidateTag } from 'next/cache'
 import { cookies } from 'next/headers'
-import z from 'zod'
+import z, { ZodError } from 'zod'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { NotFoundError } from '@/backend/domain/error/not-found-error'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '@/backend/domain/error/validation-error'
+import { ActionResponse } from '@/types'
+
+interface AddTemplateByUrlActionInput {
+    certificateId: string
+    fileUrl: string
+}
 
 const addTemplateByUrlActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
     fileUrl: z.url('URL do arquivo inválida'),
 })
 
-export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
+export async function addTemplateByUrlAction(
+    _: unknown,
+    formData: FormData,
+): Promise<ActionResponse<AddTemplateByUrlActionInput>> {
     const cookie = await cookies()
 
     const sessionToken = cookie.get('session_token')?.value
@@ -77,6 +90,17 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
             },
         })
 
+        if (error instanceof ZodError) {
+            return {
+                success: false,
+                message: 'Por favor, corrija os erros no formulário.',
+                errors: z.flattenError(
+                    error as ZodError<AddTemplateByUrlActionInput>,
+                ).fieldErrors,
+                inputs: rawData,
+            }
+        }
+
         if (error instanceof AuthenticationError) {
             await logoutAction()
         }
@@ -85,14 +109,28 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
             if (error.type === 'drive-file-not-found') {
                 return {
                     success: false,
-                    message: 'Arquivo não encontrado',
+                    message:
+                        'Arquivo não encontrado. Verifique se a URL está correta e se o arquivo no Drive está público',
+                }
+            }
+        }
+
+        if (error instanceof ValidationError) {
+            if (
+                error.type ===
+                VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE
+            ) {
+                return {
+                    success: false,
+                    message:
+                        'Tipo de arquivo não suportado. Apenas Google Slides, Google Docs, .pptx ou .docx são permitidos',
                 }
             }
         }
 
         return {
             success: false,
-            message: 'Ocorreu um erro ao adicionar template',
+            message: 'Ocorreu um erro ao tentar adicionar template',
         }
     }
 

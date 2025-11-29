@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils'
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { GoogleDriveIcon } from '../svg/GoogleDriveIcon'
+import { toast } from 'sonner'
 
 type SelectOption = 'upload' | 'link' | 'drive'
 
@@ -36,6 +37,7 @@ interface FileSelectorProps {
     onSubmitUrl: (formData: FormData) => void
     onSubmitDrive: (fileId: string) => void
     onSubmitUpload: (file: File) => void
+    urlInputError?: string
     googleOAuthToken: string | null
     googleOAuthTokenExpiry: Date | null
     radioGroupName: string
@@ -50,6 +52,7 @@ export function FileSelector({
     isDriveLoading,
     isUploadLoading,
     isUrlLoading,
+    urlInputError,
     googleOAuthToken,
     googleOAuthTokenExpiry,
     radioGroupName,
@@ -108,7 +111,7 @@ export function FileSelector({
             file.type != DATA_SOURCE_FILE_EXTENSION.CSV &&
             file.type != DATA_SOURCE_FILE_EXTENSION.XLSX
         ) {
-            console.log('Formato de arquivo não suportado')
+            toast.error('Formato de arquivo não suportado')
             return
         }
 
@@ -128,11 +131,11 @@ export function FileSelector({
         )
 
         if (tooManyFiles) {
-            console.log('Somente um arquivo é permitido')
+            toast.error('Somente um arquivo é permitido')
         }
 
         if (fileTooLarge) {
-            console.log('O arquivo é muito grande')
+            toast.error('O arquivo é muito grande')
         }
     }, [])
 
@@ -141,6 +144,17 @@ export function FileSelector({
         onDropRejected,
         maxFiles: 1,
         maxSize: 5 * 1024 * 1024, // 5MB
+        multiple: false,
+        accept:
+            type === 'template'
+                ? {
+                      [TEMPLATE_FILE_EXTENSION.PPTX]: ['.pptx'],
+                      [TEMPLATE_FILE_EXTENSION.DOCX]: ['.docx'],
+                  }
+                : {
+                      [DATA_SOURCE_FILE_EXTENSION.CSV]: ['.csv'],
+                      [DATA_SOURCE_FILE_EXTENSION.XLSX]: ['.xlsx'],
+                  },
     })
 
     useEffect(() => {
@@ -351,14 +365,23 @@ export function FileSelector({
                                 onSubmit={handleSubmitUrl}
                                 className="flex gap-3"
                             >
-                                <Input
-                                    type="url"
-                                    name="fileUrl"
-                                    value={fileUrl}
-                                    onChange={e => setFileUrl(e.target.value)}
-                                    placeholder="https://docs.google.com/..."
-                                    className="flex-1 px-4"
-                                />
+                                <div className="w-full">
+                                    <Input
+                                        type="url"
+                                        name="fileUrl"
+                                        value={fileUrl}
+                                        onChange={e =>
+                                            setFileUrl(e.target.value)
+                                        }
+                                        placeholder="https://docs.google.com/..."
+                                        className={`${urlInputError ? 'border-destructive focus-visible:ring-destructive' : ''} flex-1 px-4`}
+                                    />
+                                    {urlInputError && (
+                                        <span className="text-sm text-destructive mt-2 block">
+                                            {urlInputError}
+                                        </span>
+                                    )}
+                                </div>
                                 <Button
                                     // onClick={handleConfirm}
                                     disabled={!fileUrl.trim() || isUrlLoading}

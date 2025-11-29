@@ -67,7 +67,7 @@ export async function addDataSourceByUploadAction(
 
         return {
             success: false,
-            message: 'Ocorreu um erro ao definir o template. Tente novamente.',
+            message: 'Ocorreu um erro ao tentar fazer upload da base de dados',
         }
     }
 
@@ -75,6 +75,6 @@ export async function addDataSourceByUploadAction(
 
     return {
         success: true,
-        message: 'Template definido com sucesso',
+        message: 'Base de dados definida com sucesso',
     }
 }

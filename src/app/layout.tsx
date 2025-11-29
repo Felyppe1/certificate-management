@@ -38,7 +38,12 @@ export default async function RootLayout({
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}
             >
-                <Toaster />
+                <Toaster
+                    expand
+                    position="top-left"
+                    offset={{ left: 'min(4vw, 4rem)', top: '3rem' }}
+                    duration={10000}
+                />
 
                 <GoogleOAuthProvider clientId={process.env.GOOGLE_CLIENT_ID!}>
                     <ThemeProvider

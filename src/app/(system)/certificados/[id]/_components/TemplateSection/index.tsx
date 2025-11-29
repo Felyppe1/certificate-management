@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { addTemplateByUploadAction } from '@/backend/infrastructure/server-actions/add-template-by-upload-action'
+import { toast } from 'sonner'
 
 interface TemplateSectionProps {
     certificateId: string
@@ -106,6 +107,36 @@ export function TemplateSection({
             setIsEditing(false)
         }
     }, [urlState, driverPickerState, uploadState])
+
+    useEffect(() => {
+        if (!urlState) return
+
+        if (urlState.success) {
+            toast.success(urlState.message)
+        } else {
+            toast.error(urlState?.message)
+        }
+    }, [urlState])
+
+    useEffect(() => {
+        if (!driverPickerState) return
+
+        if (driverPickerState.success) {
+            toast.success(driverPickerState.message)
+        } else {
+            toast.error(driverPickerState.message)
+        }
+    }, [driverPickerState])
+
+    useEffect(() => {
+        if (!uploadState) return
+
+        if (uploadState.success) {
+            toast.success(uploadState.message)
+        } else {
+            toast.error(uploadState.message)
+        }
+    }, [uploadState])
 
     const radioGroupName = 'template'
 

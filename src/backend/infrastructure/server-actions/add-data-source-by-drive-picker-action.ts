@@ -15,6 +15,10 @@ import { AddDataSourceByDrivePickerUseCase } from '@/backend/application/add-dat
 import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '@/backend/domain/error/validation-error'
 
 const addDataSourceByDrivePickerActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -91,9 +95,22 @@ export async function addDataSourceByDrivePickerAction(
             }
         }
 
+        if (error instanceof ValidationError) {
+            if (
+                error.type ===
+                VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE
+            ) {
+                return {
+                    success: false,
+                    message:
+                        'Tipo de arquivo não suportado. Apenas Google Planilhas, .csv ou .xlsx são permitidos',
+                }
+            }
+        }
+
         return {
             success: false,
-            message: 'Não foi possível adicionar a fonte de dados',
+            message: 'Ocorreu um erro ao tentar adicionar base de dados',
         }
     }
 
@@ -101,6 +118,6 @@ export async function addDataSourceByDrivePickerAction(
 
     return {
         success: true,
-        message: 'Template adicionado com sucesso',
+        message: 'Base de dados definida com sucesso',
     }
 }

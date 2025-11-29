@@ -15,6 +15,10 @@ import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-conte
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { NotFoundError } from '@/backend/domain/error/not-found-error'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '@/backend/domain/error/validation-error'
 
 const addDataSourceByUrlActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -86,19 +90,32 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
             if (error.type === 'drive-file-not-found') {
                 return {
                     success: false,
-                    message: 'Arquivo não encontrado',
+                    message:
+                        'Arquivo não encontrado. Verifique se a URL está correta e se o arquivo no Drive está público',
+                }
+            }
+        }
+
+        if (error instanceof ValidationError) {
+            if (
+                error.type ===
+                VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE
+            ) {
+                return {
+                    success: false,
+                    message:
+                        'Tipo de arquivo não suportado. Apenas Google Planilhas, .csv ou .xlsx são permitidos',
                 }
             }
         }
 
         return {
             success: false,
-            message: 'Ocorreu um erro ao adicionar template',
+            message: 'Ocorreu um erro ao tentar adicionar base de dados',
         }
     }
 
     revalidateTag('certificate')
-
     return {
         success: true,
         message: 'Template adicionado com sucesso',

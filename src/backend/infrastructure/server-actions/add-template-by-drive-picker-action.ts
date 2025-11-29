@@ -15,6 +15,10 @@ import z from 'zod'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '@/backend/domain/error/validation-error'
 
 const addTemplateByDrivePickerActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -88,6 +92,24 @@ export async function addTemplateByDrivePickerAction(
                 success: false,
                 message: 'Sua conta da Google precisa ser reconectada',
             }
+        }
+
+        if (error instanceof ValidationError) {
+            if (
+                error.type ===
+                VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE
+            ) {
+                return {
+                    success: false,
+                    message:
+                        'Tipo de arquivo não suportado. Apenas Google Slides, Google Docs, .pptx ou .docx são permitidos',
+                }
+            }
+        }
+
+        return {
+            success: false,
+            message: 'Ocorreu um erro ao tentar adicionar template',
         }
     }
 

@@ -78,9 +78,8 @@ export class AddTemplateByUploadUseCase {
         const bytes = await input.file.arrayBuffer()
         const buffer = Buffer.from(bytes)
 
-        const contentExtractor = this.fileContentExtractorFactory.create(
-            fileExtension as TEMPLATE_FILE_EXTENSION,
-        )
+        const contentExtractor =
+            this.fileContentExtractorFactory.create(fileExtension)
 
         const content = await contentExtractor.extractText(buffer)
 

@@ -9,16 +9,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import {
-    Mail,
-    Send,
-    Calendar,
-    FileCheck,
-    Loader2,
-    AlertCircle,
-} from 'lucide-react'
+import { Mail, Send, Calendar, Loader2 } from 'lucide-react'
 import { FormEvent } from 'react'
-import { AlertMessage } from '@/components/ui/alert-message'
 
 interface EmailFormProps {
     subject: string

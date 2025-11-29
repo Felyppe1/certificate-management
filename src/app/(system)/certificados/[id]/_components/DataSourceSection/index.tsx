@@ -19,6 +19,7 @@ import { addDataSourceByUploadAction } from '@/backend/infrastructure/server-act
 import { Badge } from '@/components/ui/badge'
 import { AiIcon3 } from '@/components/svg/AiIcon3'
 import { GENERATION_STATUS } from '@/backend/domain/data-set'
+import { toast } from 'sonner'
 
 interface DataSourceSectionProps {
     certificateId: string
@@ -107,6 +108,36 @@ export function DataSourceSection({
             setIsEditing(false)
         }
     }, [urlState, driverPickerState, uploadState])
+
+    useEffect(() => {
+        if (!urlState) return
+
+        if (urlState.success) {
+            toast.success(urlState.message)
+        } else {
+            toast.error(urlState?.message)
+        }
+    }, [urlState])
+
+    useEffect(() => {
+        if (!driverPickerState) return
+
+        if (driverPickerState.success) {
+            toast.success(driverPickerState.message)
+        } else {
+            toast.error(driverPickerState.message)
+        }
+    }, [driverPickerState])
+
+    useEffect(() => {
+        if (!uploadState) return
+
+        if (uploadState.success) {
+            toast.success(uploadState.message)
+        } else {
+            toast.error(uploadState.message)
+        }
+    }, [uploadState])
 
     const radioGroupName = 'data-source'
 
