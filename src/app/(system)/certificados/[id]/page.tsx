@@ -53,6 +53,7 @@ export default async function CertificatePage({
                   certificateEmissionResponse.certificateEmission
                       .variableColumnMapping,
               ).every(mapping => mapping !== null)
+    const hasRows = dataSet && dataSet.rows.length > 0
 
     const emailSent = (email && !email.scheduledAt) || false
 
@@ -138,7 +139,7 @@ export default async function CertificatePage({
                     />
                 )}
 
-                {hasTemplate && hasDataSource && variablesMapped && (
+                {hasTemplate && hasDataSource && variablesMapped && hasRows && (
                     <GenerateCertificatesSection
                         certificateId={certificateId}
                         allVariablesWereMapped={
@@ -149,7 +150,7 @@ export default async function CertificatePage({
                     />
                 )}
 
-                {hasTemplate && hasDataSource && variablesMapped && (
+                {hasTemplate && hasDataSource && variablesMapped && hasRows && (
                     <EmailSendingSection
                         certificateId={certificateId}
                         dataSourceColumns={dataSourceColumns}
