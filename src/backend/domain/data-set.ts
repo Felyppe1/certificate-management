@@ -66,6 +66,10 @@ export class DataSet extends AggregateRoot {
         this.rows = data.rows
     }
 
+    getGenerationStatus() {
+        return this.generationStatus
+    }
+
     hasRows() {
         return this.rows.length > 0
     }

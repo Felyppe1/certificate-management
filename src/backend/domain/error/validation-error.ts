@@ -11,6 +11,7 @@ export enum VALIDATION_ERROR_TYPE {
     GENERATION_ALREADY_IN_PROGRESS = 'generation-already-in-progress',
     UNEXISTENT_DATA_SOURCE_COLUMN = 'unexistent-data-source-column',
     INVALID_RECIPIENT_EMAIL = 'invalid-recipient-email',
+    CERTIFICATES_NOT_GENERATED = 'certificates-not-generated',
 }
 
 export class ValidationError extends AppError<VALIDATION_ERROR_TYPE> {

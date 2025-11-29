@@ -53,6 +53,7 @@ export default async function CertificatePage({
                   certificateEmissionResponse.certificateEmission
                       .variableColumnMapping,
               ).every(mapping => mapping !== null)
+    const hasVariables = templateVariables.length === 0 ? false : true
     const hasRows = dataSet && dataSet.rows.length > 0
 
     const emailSent = (email && !email.scheduledAt) || false
@@ -126,12 +127,12 @@ export default async function CertificatePage({
                     emailSent={emailSent}
                 />
 
-                {hasTemplate && hasDataSource && variablesMapped && (
+                {hasVariables && (
                     <VariableMappingSection
                         certificateId={certificateId}
                         templateVariables={templateVariables}
                         dataSourceColumns={dataSourceColumns}
-                        existingMappings={
+                        currentMapping={
                             certificateEmissionResponse.certificateEmission
                                 .variableColumnMapping
                         }

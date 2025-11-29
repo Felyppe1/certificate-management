@@ -31,7 +31,7 @@ interface VariableMappingSectionProps {
     certificateId: string
     templateVariables: string[]
     dataSourceColumns: string[]
-    existingMappings: Record<string, string | null> | null
+    currentMapping: Record<string, string | null>
     emailSent: boolean
 }
 
@@ -39,7 +39,7 @@ export function VariableMappingSection({
     certificateId,
     templateVariables,
     dataSourceColumns,
-    existingMappings = null,
+    currentMapping,
     emailSent,
 }: VariableMappingSectionProps) {
     const [, mappingAction, mappingIsLoading] = useActionState(
@@ -50,30 +50,34 @@ export function VariableMappingSection({
     const [mappings, setMappings] = useState<Record<
         string,
         string | null
-    > | null>(existingMappings)
+    > | null>(currentMapping)
     const [mappingsSaved, setMappingsSaved] = useState(false)
 
     useEffect(() => {
-        setMappings(existingMappings)
+        setMappings(currentMapping)
         setMappingsSaved(false)
-    }, [existingMappings])
+    }, [currentMapping])
 
     // Check if there were changes in relation to the initial mapping
     const hasMappingChanges = () => {
-        if (!mappings || !existingMappings) return false
+        if (!mappings || !currentMapping) return false
 
         const currentKeys = Object.keys(mappings).sort()
-        const existingKeys = Object.keys(existingMappings).sort()
+        const existingKeys = Object.keys(currentMapping).sort()
 
         if (currentKeys.length !== existingKeys.length) return true
 
-        return currentKeys.some(key => mappings[key] !== existingMappings[key])
+        return currentKeys.some(key => mappings[key] !== currentMapping[key])
     }
+
+    const allVariablesMapped = Object.values(currentMapping).every(
+        mapping => mapping !== null,
+    )
 
     const hasChanges = hasMappingChanges()
 
     // const allInitiallyMapped = templateVariables.every(
-    //     variable => existingMappings?.[variable],
+    //     variable => currentMapping?.[variable],
     // )
 
     const hasInsufficientColumns =
@@ -124,7 +128,7 @@ export function VariableMappingSection({
     }
 
     const handleUndoChanges = () => {
-        setMappings(existingMappings)
+        setMappings(currentMapping)
         setMappingsSaved(false)
     }
 
@@ -149,36 +153,23 @@ export function VariableMappingSection({
             <CardContent className="space-y-4">
                 {/* Aviso sobre colunas insuficientes */}
                 {hasInsufficientColumns && (
-                    <div className="bg-muted/50 border rounded-lg p-4">
-                        <div className="flex gap-3">
-                            <div className="flex-shrink-0 text-orange-600 dark:text-orange-400">
-                                <CircleAlert className="size-4.5" />
-                            </div>
-                            <div className="text-sm">
-                                <p className="font-medium mb-1">
-                                    Colunas insuficientes
-                                </p>
-                                <p className="text-muted-foreground">
-                                    A fonte de dados possui apenas{' '}
-                                    {dataSourceColumns.length}{' '}
-                                    {dataSourceColumns.length === 1
-                                        ? 'coluna'
-                                        : 'colunas'}
-                                    , mas o template requer{' '}
-                                    {templateVariables.length} variáveis. Todas
-                                    as variáveis precisam ser mapeadas para
-                                    gerar certificados.
-                                </p>
-                                {/* <p className="text-muted-foreground">
-                                    Todas as variáveis precisam ser mapeadas
-                                    para gerar certificados.
-                                </p> */}
-                            </div>
-                        </div>
-                    </div>
+                    <AlertMessage
+                        variant="warning"
+                        icon={<CircleAlert className="size-5" />}
+                        text="Colunas insuficientes"
+                        description={`
+                        A fonte de dados possui 
+                        ${dataSourceColumns.length} 
+                        ${
+                            dataSourceColumns.length === 1
+                                ? 'coluna'
+                                : 'colunas'
+                        }, mas o template requer 
+                        ${templateVariables.length} variáveis. Todas as variáveis precisam ser mapeadas para gerar certificados.`}
+                    />
                 )}
 
-                {existingMappings && (
+                {allVariablesMapped && (
                     <AlertMessage
                         variant="success"
                         icon={<CheckCircle2 className="size-5" />}

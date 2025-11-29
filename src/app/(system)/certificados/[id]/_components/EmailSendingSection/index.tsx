@@ -112,7 +112,7 @@ export function EmailSendingSection({
                 {/* Alert: Mapping Required */}
                 {!variablesMapped && !emailSent && !isScheduled && (
                     <AlertMessage
-                        variant="warning"
+                        variant="muted"
                         icon={<AlertCircle className="w-5 h-5" />}
                         text="Mapeamento de variáveis necessário"
                         description="Complete o mapeamento de variáveis para poder enviar os certificados."

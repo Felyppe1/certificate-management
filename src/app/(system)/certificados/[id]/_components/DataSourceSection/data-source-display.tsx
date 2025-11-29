@@ -36,6 +36,7 @@ import { SourceIcon } from '@/components/svg/SourceIcon'
 import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
 import { toast } from 'sonner'
+import { downloadCertificateUrlAction } from '@/backend/infrastructure/server-actions/download-certificate-url-action'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -104,6 +105,9 @@ export function DataSourceDisplay({
         null,
     )
 
+    const [viewCertificateState, viewCertificateAction, isViewingCertificate] =
+        useActionState(downloadCertificateUrlAction, null)
+
     const handleRefresh = () => {
         const formData = new FormData()
         formData.append('certificateId', certificateId)
@@ -147,6 +151,16 @@ export function DataSourceDisplay({
         }
     }
 
+    const handleDownloadCertificate = (index: number) => {
+        const formData = new FormData()
+        formData.append('certificateEmissionId', certificateId)
+        formData.append('certificateIndex', index.toString())
+
+        startTransition(() => {
+            viewCertificateAction(formData)
+        })
+    }
+
     useEffect(() => {
         if (!refreshState) return
 
@@ -156,6 +170,18 @@ export function DataSourceDisplay({
             toast.error(refreshState.message)
         }
     }, [refreshState])
+
+    useEffect(() => {
+        if (!viewCertificateState) return
+
+        if (viewCertificateState.success) {
+            const signedUrl = viewCertificateState.data!
+
+            window.open(signedUrl, '_blank', 'noopener,noreferrer')
+        } else {
+            toast.error(viewCertificateState.message)
+        }
+    }, [viewCertificateState])
 
     const certificatesGenerated =
         dataSource.dataSet.generationStatus === GENERATION_STATUS.COMPLETED
@@ -375,7 +401,7 @@ export function DataSourceDisplay({
                                                                 <TableRow>
                                                                     {certificatesGenerated && (
                                                                         <TableHead className="">
-                                                                            Ações
+                                                                            Ação
                                                                         </TableHead>
                                                                     )}
                                                                     {dataSource.columns.map(
@@ -414,14 +440,12 @@ export function DataSourceDisplay({
                                                                                 <TableCell>
                                                                                     <div className="flex gap-1">
                                                                                         <Button
-                                                                                            variant="ghost"
-                                                                                            size="sm"
-                                                                                            className="h-8 w-8 p-0"
-                                                                                            title="Visualizar certificado"
-                                                                                        >
-                                                                                            <Eye className="h-4 w-4" />
-                                                                                        </Button>
-                                                                                        <Button
+                                                                                            onClick={() => {
+                                                                                                handleDownloadCertificate(
+                                                                                                    index +
+                                                                                                        1,
+                                                                                                )
+                                                                                            }}
                                                                                             variant="ghost"
                                                                                             size="sm"
                                                                                             className="h-8 w-8 p-0"
