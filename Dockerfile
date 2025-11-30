@@ -41,6 +41,8 @@ ENV HOSTNAME=0.0.0.0
 # Cria um usuário não root
 RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
 
+COPY --from=deps /app/node_modules ./node_modules
+
 # Copia apenas o que é necessário para rodar
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
@@ -56,6 +58,9 @@ RUN chown -R nextjs:nodejs /app
 USER nextjs
 
 EXPOSE 8080
+
+ENV NODE_OPTIONS="--loader ts-node/esm"
+
 # O arquivo gerado pelo Next standalone é server.js (no root da standalone)
 # Executa migrations antes de iniciar o servidor
 CMD ["npm", "start"]
