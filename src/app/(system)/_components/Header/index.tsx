@@ -1,5 +1,5 @@
 import { Menu } from 'lucide-react'
-import { ThemeToggle } from './ThemeToggle'
+// import { ThemeToggle } from './ThemeToggle'
 import { UserDropdown } from './UserDropdown'
 import Link from 'next/link'
 
@@ -38,7 +38,7 @@ export function Header({ userName, userId }: HeaderProps) {
                 </div> */}
 
                 <div className="flex items-center gap-4">
-                    <ThemeToggle />
+                    {/* <ThemeToggle /> */}
                     <UserDropdown name={userName} userId={userId} />
 
                     <button className="md:hidden text-slate-300">
