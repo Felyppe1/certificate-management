@@ -48,6 +48,7 @@ COPY --from=builder /app/.next/static ./.next/static
 
 # Copia Prisma (schema, migrations e client gerado)
 COPY --from=builder /app/src/backend/infrastructure/repository/prisma ./src/backend/infrastructure/repository/prisma
+COPY --from=builder /app/prisma.config.ts ./
 
 # Ajuste opcional: muda dono dos arquivos (não obrigatório, mas melhora segurança)
 RUN chown -R nextjs:nodejs /app
