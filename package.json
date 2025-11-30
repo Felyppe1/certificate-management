@@ -13,7 +13,7 @@
     "dev": "next dev --turbopack",
     "test": "vitest run --config vitest.config.integration.ts --no-file-parallelism",
     "build": "npm run prisma:generate && next build",
-    "start": "npm run prisma:deploy && node .next/standalone/server.js",
+    "start": "node server.js",
     "lint": "next lint",
     "prepare": "husky"
   },
