@@ -379,8 +379,8 @@ def main(request):
             pdf_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.pdf"
             blob = upload_to_bucket(pdf_buffer, pdf_path)
 
-            file_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.{file_extension_str}"
-            upload_to_bucket(certificate_buffer, file_path)
+            # file_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.{file_extension_str}"
+            # upload_to_bucket(certificate_buffer, file_path)
 
             total_bytes += blob.size
         # if variable_mapping:

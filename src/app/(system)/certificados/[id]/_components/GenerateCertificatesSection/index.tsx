@@ -130,11 +130,27 @@ export function GenerateCertificatesSection({
                             ${totalRecords !== 1 ? 'gerados' : 'gerado'}
                             com sucesso
                         `}
-                        description={`
-                            Você pode visualiza-${totalRecords !== 1 ? 'los' : 'lo'}
-                            ou baixa-${totalRecords !== 1 ? 'los' : 'lo'}
-                            na seção de Fonte de Dados
-                        `}
+                        description={
+                            <p>
+                                Você pode visualiza-
+                                {totalRecords !== 1 ? 'los' : 'lo'}
+                                ou baixa-{totalRecords !== 1 ? 'los' : 'lo'}
+                                na seção de{' '}
+                                <span
+                                    className="cursor-pointer underline"
+                                    onClick={() => {
+                                        const el = document.getElementById(
+                                            'data-source-section',
+                                        )
+                                        el?.scrollIntoView({
+                                            behavior: 'smooth',
+                                        })
+                                    }}
+                                >
+                                    Fonte de Dados
+                                </span>
+                            </p>
+                        }
                     />
                 )}
 

@@ -143,7 +143,7 @@ export function DataSourceSection({
 
     if (dataSource && isEditing) {
         return (
-            <Card>
+            <Card id="data-source-section">
                 <CardHeader className="flex justify-between">
                     <div>
                         <CardTitle>Selecione Nova Fonte de Dados</CardTitle>
@@ -199,7 +199,7 @@ export function DataSourceSection({
     }
 
     return (
-        <Card>
+        <Card id="data-source-section">
             <CardHeader className="">
                 <CardTitle>Fonte de Dados</CardTitle>
                 <CardDescription>

@@ -61,4 +61,12 @@ export class GcpBucket implements IBucket {
 
         await Promise.all(files.map(file => file.delete()))
     }
+
+    async getObjectsWithPrefix(input: DeleteObjectsWithPrefixInput) {
+        const bucket = this.storage.bucket(input.bucketName)
+
+        const [files] = await bucket.getFiles({ prefix: input.prefix })
+
+        return files
+    }
 }
