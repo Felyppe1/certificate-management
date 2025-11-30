@@ -1,6 +1,7 @@
 import { execSync } from 'child_process'
 import { afterAll, beforeAll, beforeEach } from 'vitest'
 import { PrismaClient } from '@/backend/infrastructure/repository/prisma/client/client'
+import { PrismaPg } from '@prisma/adapter-pg'
 
 export let prisma: PrismaClient
 
@@ -23,13 +24,10 @@ beforeAll(async () => {
         { stdio: 'ignore' },
     )
 
-    prisma = new PrismaClient({
-        datasources: {
-            db: {
-                url: testDbUrl,
-            },
-        },
-    })
+    const connectionString = `${process.env.DB_URL}`
+
+    const adapter = new PrismaPg({ connectionString })
+    prisma = new PrismaClient({ adapter })
 }, 60000)
 
 beforeEach(async () => {
