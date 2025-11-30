@@ -298,6 +298,14 @@ jobs:
           gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
           docker push $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA
 
+      - name: Run Database Migrations
+        run: |
+            docker run --rm \
+            -e DB_URL="${{ secrets.DB_URL }}" \
+            $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA \
+            npm run prisma:deploy
+        continue-on-error: false 
+        
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy $CLOUD_RUN_NAME \
