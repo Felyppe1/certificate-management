@@ -43,6 +43,9 @@ RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
 
 COPY --from=deps /app/node_modules ./node_modules
 
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/package-lock.json ./
+
 # Copia apenas o que é necessário para rodar
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
