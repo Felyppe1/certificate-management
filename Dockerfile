@@ -1,6 +1,11 @@
 # Etapa 1: Dependências
-FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat openssl
+FROM node:20-slim AS deps
+
+# RUN apk add --no-cache libc6-compat openssl
+RUN apt-get update \
+  && apt-get install -y openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY package*.json ./
@@ -11,7 +16,7 @@ COPY package*.json ./
 RUN npm ci
 
 # Etapa 2: Build
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -25,8 +30,12 @@ ENV NODE_ENV=production
 RUN DB_URL=$DB_URL npm run build
 
 # Etapa 3: Runner
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 WORKDIR /app
+
+RUN apt-get update \
+  && apt-get install -y openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 # ARG DB_URL
 # ARG DB_DIRECT_URL
@@ -39,7 +48,8 @@ ENV PORT=8080
 ENV HOSTNAME=0.0.0.0
 
 # Cria um usuário não root
-RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
+# RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
+RUN groupadd -r nodejs && useradd -r -g nodejs nextjs
 
 COPY --from=deps /app/node_modules ./node_modules
 
