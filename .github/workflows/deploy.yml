@@ -301,7 +301,7 @@ jobs:
       - name: Run Database Migrations
         run: |
             docker run --rm \
-            -e DB_URL="${{ secrets.DB_URL }}" \
+            -e DB_URL="${{ secrets.DB_DIRECT_URL }}" \
             $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA \
             npm run prisma:deploy
         continue-on-error: false 

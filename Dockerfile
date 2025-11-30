@@ -33,10 +33,6 @@ RUN DB_URL=$DB_URL npm run build
 FROM node:20-slim AS runner
 WORKDIR /app
 
-RUN apt-get update \
-  && apt-get install -y openssl ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
-
 # ARG DB_URL
 # ARG DB_DIRECT_URL
 
@@ -71,8 +67,6 @@ RUN chown -R nextjs:nodejs /app
 USER nextjs
 
 EXPOSE 8080
-
-ENV NODE_OPTIONS="--loader ts-node/esm"
 
 # O arquivo gerado pelo Next standalone é server.js (no root da standalone)
 # Executa migrations antes de iniciar o servidor
