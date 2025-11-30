@@ -290,6 +290,7 @@ jobs:
       - name: Build Docker image
         run: |
           docker build \
+            --build-arg DB_URL="${{ secrets.DB_URL }}" \
             -t $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA .
 
       - name: Push image

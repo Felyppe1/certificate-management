@@ -16,9 +16,13 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+ARG DB_URL
+
 # Garante que o build use variáveis adequadas de produção
-ENV NODE_ENV=production
-RUN npm run build
+ENV NODE_ENV=production 
+
+# Usei o DB_URL aqui para não precisar fazer ENV DB_URL=$DB_URL, que deixaria a variável disponível na imagem final
+RUN DB_URL=$DB_URL npm run build
 
 # Etapa 3: Runner
 FROM node:20-alpine AS runner
