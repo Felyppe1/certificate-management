@@ -291,6 +291,7 @@ jobs:
         run: |
           docker build \
             --build-arg DB_URL="${{ secrets.DB_URL }}" \
+            --build-arg NEXT_PUBLIC_BASE_URL=$CLOUD_RUN_URL \
             -t $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA .
 
       - name: Push image
@@ -314,11 +315,11 @@ jobs:
             --platform managed \
             --allow-unauthenticated
 
-      - name: Inject NEXT_PUBLIC_BASE_URL via gcloud
-        run: |
-          gcloud run services update $CLOUD_RUN_NAME \
-            --region $REGION \
-            --update-env-vars=NEXT_PUBLIC_BASE_URL=$CLOUD_RUN_URL
+    #   - name: Inject NEXT_PUBLIC_BASE_URL via gcloud
+    #     run: |
+    #       gcloud run services update $CLOUD_RUN_NAME \
+    #         --region $REGION \
+    #         --update-env-vars=NEXT_PUBLIC_BASE_URL=$CLOUD_RUN_URL
 
   deploy-generate-pdfs:
     runs-on: ubuntu-latest
