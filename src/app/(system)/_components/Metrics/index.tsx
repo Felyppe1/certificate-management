@@ -44,11 +44,11 @@ export async function Metrics() {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            <Card className="">
-                <div className="relative">
-                    <div className="flex items-start justify-between mb-6">
+            <Card>
+                <div>
+                    <div className="flex items-start justify-between mb-4">
                         <div>
-                            <p className="mb-2 text-lg">
+                            <p className="mb-1 text-lg">
                                 Total de Certificados Gerados
                             </p>
                             <h2 className="text-5xl font-bold text-foreground">
@@ -59,7 +59,29 @@ export async function Metrics() {
                         </div>
                     </div>
 
-                    <div className="flex items-center flex-wrap gap-1">
+                    <div className="flex flex-wrap divide-x divide-muted-foreground/25 gap-12 mb-3">
+                        <div className="flex flex-col shrink-0 pr-12">
+                            <p className="text-muted-foreground">Mês Atual</p>
+                            <p className="text-3xl font-bold">
+                                {
+                                    certificateEmissionsMetrics.totalCertificatesGeneratedThisMonth
+                                }
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col shrink-0">
+                            <p className="text-muted-foreground">
+                                Mês Anterior
+                            </p>
+                            <p className="text-3xl font-bold">
+                                {
+                                    certificateEmissionsMetrics.totalCertificatesGeneratedLastMonth
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center flex-wrap gap-x-1">
                         {getVariationIcon(certificatesVariation)}
                         <span
                             className={`${getVariationColor(certificatesVariation)} font-medium ml-1`}
@@ -75,12 +97,12 @@ export async function Metrics() {
             </Card>
 
             {/* Card 2 - E-mails Enviados */}
-            <Card className="">
-                <div className="">
-                    <div className="flex items-start justify-between mb-6">
+            <Card>
+                <div>
+                    <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
-                            <div className="flex items-center gap-4 mb-2">
-                                <p className="text-lg">
+                            <div className="flex items-center gap-4">
+                                <p className="mb-1 text-lg">
                                     Total de E-mails Enviados
                                 </p>
                                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
@@ -97,7 +119,29 @@ export async function Metrics() {
                         </div>
                     </div>
 
-                    <div className="flex items-center flex-wrap gap-1 mb-3">
+                    <div className="flex flex-wrap divide-x divide-muted-foreground/25 gap-12 mb-3">
+                        <div className="flex flex-col shrink-0 pr-12">
+                            <p className="text-muted-foreground">Mês Atual</p>
+                            <p className="text-3xl font-bold">
+                                {
+                                    certificateEmissionsMetrics.totalEmailsSentThisMonth
+                                }
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col shrink-0">
+                            <p className="text-muted-foreground">
+                                Mês Anterior
+                            </p>
+                            <p className="text-3xl font-bold">
+                                {
+                                    certificateEmissionsMetrics.totalEmailsSentLastMonth
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center flex-wrap gap-1">
                         {getVariationIcon(emailsVariation)}
                         <span
                             className={`${getVariationColor(emailsVariation)} font-medium ml-1`}
