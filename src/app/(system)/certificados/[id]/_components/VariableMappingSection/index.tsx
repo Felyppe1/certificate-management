@@ -26,6 +26,7 @@ import {
     CheckCircle2,
 } from 'lucide-react'
 import { startTransition, useActionState, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 interface VariableMappingSectionProps {
     certificateId: string
@@ -42,7 +43,7 @@ export function VariableMappingSection({
     currentMapping,
     emailSent,
 }: VariableMappingSectionProps) {
-    const [, mappingAction, mappingIsLoading] = useActionState(
+    const [mappingState, mappingAction, mappingIsLoading] = useActionState(
         updateCertificateEmissionAction,
         null,
     )
@@ -131,6 +132,16 @@ export function VariableMappingSection({
         setMappings(currentMapping)
         setMappingsSaved(false)
     }
+
+    useEffect(() => {
+        if (!mappingState) return
+
+        if (mappingState.success) {
+            toast.success('Mapeamento salvo com sucesso')
+        } else {
+            toast.error('Ocorreu um erro ao tentar salvar o mapeamento')
+        }
+    }, [mappingState])
 
     if (templateVariables.length === 0) {
         return null

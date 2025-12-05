@@ -9,10 +9,11 @@ import {
 } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Send, Calendar, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
-import { startTransition, useActionState, useState } from 'react'
+import { startTransition, useActionState, useEffect, useState } from 'react'
 import { AlertMessage } from '@/components/ui/alert-message'
 import { EmailForm } from './EmailForm'
 import { createEmailAction } from '@/backend/infrastructure/server-actions/create-email-action'
+import { toast } from 'sonner'
 
 interface EmailSendingSectionProps {
     certificateId: string
@@ -80,6 +81,20 @@ export function EmailSendingSection({
             action(formData)
         })
     }
+
+    useEffect(() => {
+        if (!state) return
+
+        if (state.success) {
+            toast.success(
+                totalRecipients < 2
+                    ? 'Email enviado com sucesso'
+                    : 'Emails enviados com sucesso',
+            )
+        } else {
+            toast.error(state.message)
+        }
+    }, [state])
 
     const isScheduled = !!scheduledDate
 

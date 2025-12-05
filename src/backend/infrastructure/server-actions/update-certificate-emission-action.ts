@@ -65,6 +65,11 @@ export async function updateCertificateEmissionAction(
         })
 
         revalidateTag('certificate')
+
+        return {
+            success: true,
+            message: 'Certificado atualizado com sucesso',
+        }
     } catch (error) {
         console.log(error)
 
