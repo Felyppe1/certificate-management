@@ -8,6 +8,7 @@ import { VariableMappingSection } from './_components/VariableMappingSection'
 import { EmailSendingSection } from './_components/EmailSendingSection'
 import { GenerateCertificatesSection } from './_components/GenerateCertificatesSection'
 import { GENERATION_STATUS } from '@/backend/domain/data-set'
+import { TipsButton } from './_components/TipsButton'
 
 const statusMapping = {
     DRAFT: 'Rascunho',
@@ -61,7 +62,10 @@ export default async function CertificatePage({
     return (
         <>
             {/* // <div className="container mx-auto pb-8 px-4 max-w-4xl"> */}
-            <GoBackButton />
+            <div className="flex justify-between">
+                <GoBackButton />
+                <TipsButton />
+            </div>
             <div className="flex flex-col gap-8 mt-8 mb-12">
                 <div>
                     <div className="flex items-center gap-4 mb-4">
