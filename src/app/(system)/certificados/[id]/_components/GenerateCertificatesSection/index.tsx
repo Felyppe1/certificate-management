@@ -127,9 +127,8 @@ export function GenerateCertificatesSection({
                         description={
                             <p>
                                 Você pode visualiza-
-                                {totalRecords !== 1 ? 'los' : 'lo'}
-                                ou baixa-{totalRecords !== 1 ? 'los' : 'lo'}
-                                na seção de{' '}
+                                {totalRecords !== 1 ? 'los' : 'lo'} ou baixa-
+                                {totalRecords !== 1 ? 'los' : 'lo'} na seção de{' '}
                                 <span
                                     className="cursor-pointer underline"
                                     onClick={() => {
