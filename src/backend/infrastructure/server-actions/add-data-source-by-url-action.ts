@@ -118,7 +118,7 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
     revalidateTag('certificate')
     return {
         success: true,
-        message: 'Template adicionado com sucesso',
+        message: 'Fonte de dados adicionada com sucesso',
     }
     // redirect('/templates/' + newTemplateId)
 }

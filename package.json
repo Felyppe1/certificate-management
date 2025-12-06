@@ -10,7 +10,7 @@
     "prisma:studio": "npx prisma studio --config ./prisma.config.ts",
     "prisma:reset": "npx prisma migrate reset --config ./prisma.config.ts",
     "prisma:push": "npx prisma db push --config ./prisma.config.ts",
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack --hostname 0.0.0.0",
     "test": "vitest run --config vitest.config.integration.ts --no-file-parallelism",
     "build": "npm run prisma:generate && next build",
     "start": "node server.js",

@@ -118,6 +118,6 @@ export async function addDataSourceByDrivePickerAction(
 
     return {
         success: true,
-        message: 'Base de dados definida com sucesso',
+        message: 'Fonte de dados definida com sucesso',
     }
 }

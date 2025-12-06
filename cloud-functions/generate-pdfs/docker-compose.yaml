@@ -1,0 +1,19 @@
+services:
+  libreoffice-converter:
+    build: .
+    image: libreoffice-converter
+    container_name: libreoffice-converter
+    ports:
+      - "8080:8080"
+    volumes:
+      - /home/felyppe/pessoal/certificate-management/terraform-sa.json:/app/service-account.json
+    env_file:
+      - .env
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /app/service-account.json
+      SOFFICE_PATH: /usr/bin/soffice
+      APP_BASE_URL: http://host.docker.internal:3000
+      TOKEN_AUDIENCE: http://localhost:3000
+      PYTHONUNBUFFERED: "1" # For real-time logging
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Creates an /etc/host mapping host.docker.internal to the host IP (host-gateway resolves to that)

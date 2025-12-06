@@ -24,18 +24,7 @@ Dessa forma, a plataforma atende à necessidade de reduzir esforços manuais ou 
 
 ### Passo a passo:
 
-1. **Clone o repositório**:
-    ```bash
-    git clone https://github.com/Felyppe1/certificate-management.git
-    cd certificate-management
-    ```
-
-2. **Instale as dependências**:
-    ```bash
-    npm install
-    ```
-
-3. **Configure as variáveis de ambiente**:
+1. **Configure as variáveis de ambiente**:
 
     Copie o arquivo `.env.example` para um arquivo `.env` na raiz do projeto
 
@@ -45,23 +34,35 @@ Dessa forma, a plataforma atende à necessidade de reduzir esforços manuais ou 
 
     Preencha as variáveis necessárias
 
-4. **Criar containers**:
+2. **Criar containers**:
     
-    Com o Docker rodando, crie e rode os containers necessários (PostgreSQL e Redis):
+    Com o Docker rodando, crie e rode os containers necessários:
 
     ```bash
     docker compose up -d
     ```
 
-5. **Instalar dependências do projeto**:
-
+3. **Instale as dependências**:
     ```bash
     npm install
     ```
 
-6. **Execute as migrações do banco**:
+4. **Crie o client do Prisma ORM e execute as migrações do banco**:
     ```bash
-    npm run prisma:migrate:dev
+    npm run prisma:generate
+    npm run prisma:dev
+    ```
+
+5. **Exporte as credenciais da Service Account da Google**:
+
+    Para pegar a service account na GCP:
+    1. Vá em Contas de serviço.
+    2. Crie ou selecione uma conta de serviço.
+    3. Vá na aba Chaves → Adicionar chave → Criar nova chave (JSON).
+    4. Baixe o arquivo e use ele no comando:
+
+    ```bash
+    export GOOGLE_APPLICATION_CREDENTIALS=caminho-da-sua-service-account
     ```
 
 6. **Inicie o servidor**:
@@ -80,7 +81,12 @@ Dessa forma, a plataforma atende à necessidade de reduzir esforços manuais ou 
     docker compose start
     ```
 
-2. **Inicie o servidor de desenvolvimento**:
+2. **Exporte as credenciais da Service Account da Google**:
+    ```bash
+    export GOOGLE_APPLICATION_CREDENTIALS=caminho-da-sua-service-account
+    ```
+
+3. **Inicie o servidor de desenvolvimento**:
     ```bash
     npm run dev
     ```
@@ -90,41 +96,80 @@ Dessa forma, a plataforma atende à necessidade de reduzir esforços manuais ou 
 
 ## Como rodar as cloud functions localmente
 
+Todas as Cloud Functions estão dentro da pasta `cloud-functions/`.
+
 ### Pré‑requisitos
 - Python 3.14+
 
-Todas as Cloud Functions estão dentro da pasta `cloud-functions/`.  
-Para rodar uma função específica:
+### Passo a passo de Cloud Function COM Dockerfile:
 
-1. **Exporte as credenciais da Service Account da Google**:
-
-    ```bash
-    export GOOGLE_APPLICATION_CREDENTIALS=caminho-da-sua-service-account
-    ```
-
-2. **Entre na pasta da função desejada**:
+1. **Entre na pasta da função desejada**:
 
     ```bash
     cd cloud-functions/nome-da-funcao
     ```
 
-3. **Crie um ambiente virtual Python**:
+2. **Configure as variáveis de ambiente**:
+
+    Copie o arquivo `.env.example` para um arquivo `.env`
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    Preencha as variáveis necessárias
+
+3. **Rode o container**:
+
+    Se for a primeira vez:
+    ```bash
+    docker compose up
+    ```
+    Senão:
+    ```bash
+    docker compose start
+    ```
+
+### Passo a passo de Cloud Function SEM Dockerfile
+
+1. **Entre na pasta da função desejada**:
+
+    ```bash
+    cd cloud-functions/nome-da-funcao
+    ```
+
+2. **Configure as variáveis de ambiente**:
+
+    Copie o arquivo `.env.example` para um arquivo `.env`
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    Preencha as variáveis necessárias
+
+3. **Exporte as credenciais da Service Account da Google**:
+
+    ```bash
+    export GOOGLE_APPLICATION_CREDENTIALS=caminho-da-sua-service-account
+    ```
+
+4. **Crie um ambiente virtual Python**:
     ```bash
     python -m venv .venv
     source .venv/bin/activate
     ```
 
-4. **Instale as dependências**:
+5. **Instale as dependências**:
     ```bash
     pip install -r requirements.txt
     ```
 
-5. **Rode a função localmente**:
+6. **Rode a função localmente**:
     ```bash
     functions-framework --target=main --port=8080 --debug
     ```
-
-A função ficará acessível em: `http://localhost:8080`.
+    A função ficará acessível em: `http://localhost:8080`.
 
 > Dica: você pode abrir várias abas/terminais para rodar múltiplas funções ao mesmo tempo, cada uma em uma porta diferente.
 
