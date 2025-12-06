@@ -11,13 +11,8 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
-import {
-    Download,
-    FileCheck,
-    Loader2,
-    CheckCircle2,
-    CircleAlert,
-} from 'lucide-react'
+import { useSSE } from '@/custom-hooks/use-sse'
+import { FileCheck, Loader2, CheckCircle2, CircleAlert } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { startTransition, useActionState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
@@ -50,10 +45,8 @@ export function GenerateCertificatesSection({
 
     const router = useRouter()
 
-    useDataSetSSE(
-        dataSet?.id || null,
-        dataSet?.generationStatus === GENERATION_STATUS.PENDING,
-        data => {
+    useSSE(`/api/data-sets/${dataSet?.id}/events`, {
+        onEvent: data => {
             if (data.generationStatus) {
                 if (data.generationStatus === GENERATION_STATUS.COMPLETED) {
                     toast.success('Certificados gerados com sucesso')
@@ -62,7 +55,8 @@ export function GenerateCertificatesSection({
                 router.refresh()
             }
         },
-    )
+        enabled: dataSet?.generationStatus === GENERATION_STATUS.PENDING,
+    })
 
     const handleGenerate = async () => {
         const formData = new FormData()
@@ -283,11 +277,13 @@ export function useDataSetPolling(
 export function useDataSetSSE(
     dataSetId: string | null,
     enabled: boolean,
-    onEvent?: (data: any) => void,
+    onEvent: (data: any) => void,
 ) {
     useEffect(() => {
+        console.log('Iniciando SSE hook')
         if (!dataSetId || !enabled) return
 
+        console.log('Conectando ao SSE')
         const eventSource = new EventSource(
             `/api/data-sets/${dataSetId}/events`,
         )
@@ -295,7 +291,7 @@ export function useDataSetSSE(
         eventSource.onmessage = event => {
             const data = JSON.parse(event.data)
             console.log('Evento SSE:', data)
-            onEvent?.(data)
+            onEvent(data)
         }
 
         eventSource.onerror = err => {
