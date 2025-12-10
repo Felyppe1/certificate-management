@@ -78,11 +78,63 @@ def main(request):
             path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.pdf"
             pdf_bytes = get_from_bucket(path)
 
+            logo_path = os.path.join(os.path.dirname(__file__), "assets", "logo.png")
+
+            with open(logo_path, 'rb') as f:
+                logo_bytes = f.read()
+
+            html_content = f"""
+            <html>
+                <body style="font-family: sans-serif; color: #333;">
+                    <p style="white-space: pre-line;">{body}</p>
+                    <br>
+                    
+                    <div style="background-color: #26272B; padding: .75rem 1rem; max-width: 39rem; border-radius: .75rem; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: .75rem;">
+                        <div style="background-color: #18191E; padding: 1rem 1rem; border-radius: .75rem; border: 2px solid #4A4A52; text-align: center;">
+                            <div style="font-size: 1rem; font-weight: 600; color: white;">
+                                <img src="cid:logo_certifica" alt="Certifica" style="width: 1.5rem; height: 1.5rem; vertical-align: middle;">
+                                <span style="vertical-align: middle;">
+                                    Certifica
+                                </span>
+                            </div>
+                            <p style="color: #a1a1aa; text-align: center; margin: .5rem;">
+                                Este email foi enviado pela<br>plataforma de gerenciamento de certificados.
+                            </p>
+                            <p style="margin: 0; color: #71717a; text-align: center;">
+                                <a href="https://certificate-management-924358881315.us-central1.run.app/" target="_blank"
+                                    style="color: #2563eb; text-decoration: underline;">Certifica</a>
+                                <span style="margin: 0 8px; color: #52525b;">|</span>
+                                <span>© 2025</span>
+                            </p>
+                        </div>
+                    </div>
+                </body>
+            </html>
+            """
+
+            # 3. Cria a mensagem
             msg = EmailMessage()
             msg["Subject"] = subject
             msg["From"] = sender
             msg["To"] = recipient
+
             msg.set_content(body)
+            msg.add_alternative(html_content, subtype="html")
+
+            # # A. Define o conteúdo em TEXTO PURO (fallback para emails antigos)
+            # msg.set_content(body) 
+
+            # # B. Adiciona a versão HTML como alternativa
+            # msg.add_alternative(html_content, subtype='html')
+
+            # C. O Pulo do Gato: Anexar a imagem "dentro" da parte HTML
+            # msg.get_payload()[1] pega a parte HTML que acabamos de criar acima
+            msg.get_payload()[1].add_related(
+                logo_bytes,
+                maintype='image',
+                subtype='png',
+                cid='<logo_certifica>'
+            )
 
             msg.add_attachment(
                 pdf_bytes,
