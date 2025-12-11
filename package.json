@@ -71,7 +71,8 @@
     "vitest": "^3.2.4",
     "xlsx": "^0.18.5",
     "xmldom": "^0.6.0",
-    "zod": "^4.1.0"
+    "zod": "^4.1.0",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

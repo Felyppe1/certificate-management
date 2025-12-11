@@ -1,5 +1,15 @@
 import { cookies } from 'next/headers'
 
+export interface CertificateEmissionsResponse {
+    certificateEmissions: Array<{
+        id: string
+        name: string
+        userId: string
+        status: string
+        createdAt: Date
+    }>
+}
+
 export async function fetchCertificateEmissions() {
     const sessionToken = (await cookies()).get('session_token')?.value
 
@@ -15,5 +25,5 @@ export async function fetchCertificateEmissions() {
         },
     )
 
-    return await response.json()
+    return (await response.json()) as CertificateEmissionsResponse
 }

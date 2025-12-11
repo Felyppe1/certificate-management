@@ -2,13 +2,8 @@ import { Suspense } from 'react'
 import { List } from './components/List'
 import { CreationForm } from './components/CreationForm'
 import { Card, CardTitle } from '@/components/ui/card'
-import {
-    InputGroup,
-    InputGroupAddon,
-    InputGroupInput,
-} from '@/components/ui/input-group'
-import { Search } from 'lucide-react'
 import { ListLoading } from './components/ListLoading'
+import SearchBox from './components/SearchBox'
 
 export function CertificateEmissionsList() {
     return (
@@ -23,12 +18,7 @@ export function CertificateEmissionsList() {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <InputGroup className="max-w-[20rem] w-full">
-                            <InputGroupAddon>
-                                <Search className="size-5 text-muted-foreground" />
-                            </InputGroupAddon>
-                            <InputGroupInput placeholder="Pesquisar emissão" />
-                        </InputGroup>
+                        <SearchBox />
 
                         <CreationForm />
                     </div>
