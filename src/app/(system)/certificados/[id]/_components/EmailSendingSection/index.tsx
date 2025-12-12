@@ -14,6 +14,7 @@ import { AlertMessage } from '@/components/ui/alert-message'
 import { EmailForm } from './EmailForm'
 import { createEmailAction } from '@/backend/infrastructure/server-actions/create-email-action'
 import { toast } from 'sonner'
+import { Badge } from '@/components/ui/badge'
 
 interface EmailSendingSectionProps {
     certificateId: string
@@ -173,10 +174,14 @@ export function EmailSendingSection({
                             </TabsTrigger>
                             <TabsTrigger
                                 value="scheduled"
-                                disabled={emailSent || isScheduled}
+                                // disabled={emailSent || isScheduled}
+                                disabled
                             >
                                 <Calendar className="h-4 w-4" />
                                 Agendar Envio
+                                <Badge variant="purple" size="sm">
+                                    Em Breve
+                                </Badge>
                             </TabsTrigger>
                         </TabsList>
 
