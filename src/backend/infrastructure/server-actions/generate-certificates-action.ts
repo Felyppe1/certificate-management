@@ -2,7 +2,7 @@
 
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import z from 'zod'
 import { logoutAction } from './logout-action'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
@@ -75,7 +75,7 @@ export async function generateCertificatesAction(
         }
     }
 
-    revalidateTag('certificate')
+    updateTag('certificate')
 
     return {
         success: true,

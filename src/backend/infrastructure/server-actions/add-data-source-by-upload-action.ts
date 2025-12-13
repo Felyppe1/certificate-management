@@ -6,7 +6,7 @@ import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '../repository/prisma/prisma-sessions-repository'
 import z from 'zod'
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { AddDataSourceByUploadUseCase } from '@/backend/application/add-data-source-by-upload-use-case'
 import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
@@ -71,7 +71,7 @@ export async function addDataSourceByUploadAction(
         }
     }
 
-    revalidateTag('certificate')
+    updateTag('certificate')
 
     return {
         success: true,

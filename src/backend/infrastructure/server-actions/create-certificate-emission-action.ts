@@ -5,7 +5,7 @@ import { AuthenticationError } from '@/backend/domain/error/authentication-error
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import z from 'zod'
@@ -55,7 +55,7 @@ export async function createCertificateEmissionAction(
             sessionToken,
         })
 
-        revalidateTag('certificate-emissions')
+        updateTag('certificate-emissions')
     } catch (error) {
         console.log(error)
 

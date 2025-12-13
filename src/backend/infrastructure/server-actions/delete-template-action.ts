@@ -5,7 +5,7 @@ import { PrismaCertificatesRepository } from '@/backend/infrastructure/repositor
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { DeleteTemplateUseCase } from '@/backend/application/delete-template-use-case'
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
 import { logoutAction } from './logout-action'
@@ -53,7 +53,7 @@ export async function deleteTemplateAction(_: unknown, formData: FormData) {
             sessionToken,
         })
 
-        revalidateTag('certificate')
+        updateTag('certificate')
 
         return { success: true }
     } catch (error) {

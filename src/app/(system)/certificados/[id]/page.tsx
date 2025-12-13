@@ -131,7 +131,7 @@ export default async function CertificatePage({
                     emailSent={emailSent}
                 />
 
-                {hasVariables && (
+                {hasTemplate && hasDataSource && hasVariables && (
                     <VariableMappingSection
                         certificateId={certificateId}
                         templateVariables={templateVariables}

@@ -5,7 +5,7 @@ import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/fi
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
 import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
@@ -56,7 +56,7 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
             certificateId: parsedData.certificateId,
         })
 
-        revalidateTag('certificate')
+        updateTag('certificate')
 
         return {
             success: true,

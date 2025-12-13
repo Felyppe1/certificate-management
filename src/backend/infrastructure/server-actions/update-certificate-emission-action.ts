@@ -4,7 +4,7 @@ import { AuthenticationError } from '@/backend/domain/error/authentication-error
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
 import { logoutAction } from './logout-action'
@@ -22,7 +22,7 @@ const updateCertificateEmissionActionSchema = z.object({
         .nullable()
         .optional(),
 })
-
+;('')
 export async function updateCertificateEmissionAction(
     _: unknown,
     formData: FormData,
@@ -64,7 +64,7 @@ export async function updateCertificateEmissionAction(
             sessionToken,
         })
 
-        revalidateTag('certificate')
+        updateTag('certificate')
 
         return {
             success: true,

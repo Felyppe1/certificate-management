@@ -8,7 +8,7 @@ import { prisma } from '../repository/prisma'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-google-access-token'
 import { logoutAction } from './logout-action'
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 
 export async function refreshGoogleAccessTokenAction() {
     const cookie = await cookies()
@@ -56,7 +56,7 @@ export async function refreshGoogleAccessTokenAction() {
         }
     }
 
-    revalidateTag('me')
+    updateTag('me')
 
     return { success: true }
 }

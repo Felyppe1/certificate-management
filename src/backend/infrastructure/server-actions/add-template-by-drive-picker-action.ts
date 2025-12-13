@@ -9,7 +9,7 @@ import { PrismaCertificatesRepository } from '@/backend/infrastructure/repositor
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
 import { logoutAction } from './logout-action'
@@ -113,7 +113,7 @@ export async function addTemplateByDrivePickerAction(
         }
     }
 
-    revalidateTag('certificate')
+    updateTag('certificate')
 
     return {
         success: true,

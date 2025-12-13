@@ -9,7 +9,7 @@ import { prisma } from '../repository/prisma'
 import z from 'zod'
 import { AddTemplateByUploadUseCase } from '@/backend/application/add-template-by-upload-use-case'
 import { FileContentExtractorFactory } from '../factory/file-content-extractor-factory'
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { logoutAction } from './logout-action'
 
@@ -74,7 +74,7 @@ export async function addTemplateByUploadAction(
         }
     }
 
-    revalidateTag('certificate')
+    updateTag('certificate')
 
     return {
         success: true,

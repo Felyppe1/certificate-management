@@ -11,7 +11,7 @@ import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-
 import { CloudFunctionExternalProcessing } from '../cloud/gcp/cloud-function-external-processing'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { logoutAction } from './logout-action'
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import {
     VALIDATION_ERROR_TYPE,
@@ -88,7 +88,7 @@ export async function createEmailAction(_: unknown, formData: FormData) {
                 await logoutAction()
             }
 
-            revalidateTag('certificate')
+            updateTag('certificate')
 
             return {
                 success: false,
@@ -113,7 +113,7 @@ export async function createEmailAction(_: unknown, formData: FormData) {
         }
     }
 
-    revalidateTag('certificate')
+    updateTag('certificate')
 
     return {
         success: true,

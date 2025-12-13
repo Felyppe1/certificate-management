@@ -6,7 +6,7 @@ import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-driv
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { cookies } from 'next/headers'
 import z from 'zod'
 import { logoutAction } from './logout-action'
@@ -114,7 +114,7 @@ export async function addDataSourceByDrivePickerAction(
         }
     }
 
-    revalidateTag('certificate')
+    updateTag('certificate')
 
     return {
         success: true,
