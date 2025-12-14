@@ -103,6 +103,7 @@ export default async function CertificatePage({
                 </div>
 
                 <TemplateSection
+                    userEmail={meResponse.user.email}
                     googleOAuthToken={googleAccount?.accessToken || null}
                     googleOAuthTokenExpiry={
                         googleAccount?.accessTokenExpiryDateTime || null
@@ -119,6 +120,7 @@ export default async function CertificatePage({
                 />
 
                 <DataSourceSection
+                    userEmail={meResponse.user.email}
                     googleOAuthToken={googleAccount?.accessToken || null}
                     googleOAuthTokenExpiry={
                         googleAccount?.accessTokenExpiryDateTime || null

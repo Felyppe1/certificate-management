@@ -13,6 +13,7 @@ export interface CheckOrRefreshAccessTokenOuput {
 
 export interface GetTokenInput {
     code: string
+    reAuthenticate?: boolean
 }
 
 export interface GetTokenOutput {

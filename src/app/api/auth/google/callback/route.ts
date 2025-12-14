@@ -32,7 +32,10 @@ export async function GET(request: Request) {
     )
 
     try {
-        const sessionToken = await loginGoogleUseCase.execute({ code })
+        const sessionToken = await loginGoogleUseCase.execute({
+            code,
+            reAuthenticate: false,
+        })
 
         const cookie = await cookies()
 

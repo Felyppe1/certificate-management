@@ -83,7 +83,7 @@ export class RefreshTemplateUseCase {
             )
 
         if (
-            certificate.getDataSourceInputMethod() === INPUT_METHOD.GOOGLE_DRIVE
+            certificate.getTemplateInputMethod() === INPUT_METHOD.GOOGLE_DRIVE
         ) {
             if (!externalAccount) {
                 throw new AuthenticationError('external-account-not-found')
@@ -112,7 +112,7 @@ export class RefreshTemplateUseCase {
         const { name, fileExtension, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
-                ...(certificate.getDataSourceInputMethod() ===
+                ...(certificate.getTemplateInputMethod() ===
                     INPUT_METHOD.GOOGLE_DRIVE && {
                     userAccessToken: externalAccount?.accessToken,
                     userRefreshToken:
@@ -129,7 +129,7 @@ export class RefreshTemplateUseCase {
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
             fileExtension: fileExtension,
-            ...(certificate.getDataSourceInputMethod() ===
+            ...(certificate.getTemplateInputMethod() ===
                 INPUT_METHOD.GOOGLE_DRIVE && {
                 accessToken: externalAccount?.accessToken,
             }),
@@ -146,7 +146,7 @@ export class RefreshTemplateUseCase {
             driveFileId,
             storageFileUrl: null,
             fileExtension: fileExtension,
-            inputMethod: INPUT_METHOD.URL,
+            inputMethod: INPUT_METHOD.GOOGLE_DRIVE,
             fileName: name,
             variables: uniqueVariables,
             thumbnailUrl,

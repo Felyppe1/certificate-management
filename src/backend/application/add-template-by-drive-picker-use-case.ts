@@ -43,7 +43,6 @@ export class AddTemplateByDrivePickerUseCase {
     ) {}
 
     async execute(input: AddTemplateByDrivePickerUseCaseInput) {
-        console.log('Executing Picker')
         const session = await this.sessionsRepository.getById(
             input.sessionToken,
         )
@@ -116,7 +115,7 @@ export class AddTemplateByDrivePickerUseCase {
         const newTemplateInput = {
             driveFileId: input.fileId,
             storageFileUrl: null,
-            inputMethod: INPUT_METHOD.URL,
+            inputMethod: INPUT_METHOD.GOOGLE_DRIVE,
             fileName: name,
             variables: uniqueVariables,
             fileExtension,

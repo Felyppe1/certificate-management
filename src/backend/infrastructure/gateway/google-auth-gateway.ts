@@ -46,7 +46,6 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
         accessTokenExpiryDateTime,
     }: CheckOrRefreshAccessTokenInput) {
         if (accessTokenExpiryDateTime! > new Date()) return null
-
         this.oauth2Client.setCredentials({
             access_token: accessToken,
             refresh_token: refreshToken,
@@ -80,8 +79,11 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
     }
 
     // TODO: check if id_token is the same as the one from authclient
-    async getToken({ code }: GetTokenInput) {
-        const { tokens } = await this.oauth2Client.getToken(code)
+    async getToken({ code, reAuthenticate }: GetTokenInput) {
+        const { tokens } = await this.oauth2Client.getToken({
+            code: code,
+            ...(reAuthenticate ? { redirect_uri: 'postmessage' } : {}),
+        })
 
         return {
             accessToken: tokens.access_token!,

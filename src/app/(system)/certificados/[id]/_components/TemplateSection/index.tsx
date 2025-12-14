@@ -29,6 +29,7 @@ interface TemplateSectionProps {
         variables: string[]
         thumbnailUrl: string | null
     } | null
+    userEmail: string
     googleOAuthToken: string | null
     googleOAuthTokenExpiry: Date | null
     emailSent: boolean
@@ -38,8 +39,8 @@ interface TemplateSectionProps {
 export function TemplateSection({
     certificateId,
     template,
+    userEmail,
     googleOAuthToken,
-    googleOAuthTokenExpiry,
     emailSent,
     certificatesGenerated,
 }: TemplateSectionProps) {
@@ -162,8 +163,8 @@ export function TemplateSection({
                 </CardHeader>
                 <CardContent className="">
                     <FileSelector
+                        userEmail={userEmail}
                         googleOAuthToken={googleOAuthToken}
-                        googleOAuthTokenExpiry={googleOAuthTokenExpiry}
                         onSubmitUrl={handleSubmitUrl}
                         onSubmitDrive={handleSubmitDrive}
                         onSubmitUpload={handleSubmitUpload}
@@ -200,8 +201,8 @@ export function TemplateSection({
             </CardHeader>
             <CardContent className="">
                 <FileSelector
+                    userEmail={userEmail}
                     googleOAuthToken={googleOAuthToken}
-                    googleOAuthTokenExpiry={googleOAuthTokenExpiry}
                     onSubmitUrl={handleSubmitUrl}
                     onSubmitDrive={handleSubmitDrive}
                     onSubmitUpload={handleSubmitUpload}

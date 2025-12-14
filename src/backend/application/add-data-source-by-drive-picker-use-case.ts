@@ -112,7 +112,7 @@ export class AddDataSourceByDrivePickerUseCase {
         const newDataSourceInput = {
             driveFileId: input.fileId,
             storageFileUrl: null,
-            inputMethod: INPUT_METHOD.URL,
+            inputMethod: INPUT_METHOD.GOOGLE_DRIVE,
             fileName: name,
             fileExtension: fileExtension as DATA_SOURCE_FILE_EXTENSION,
             columns,

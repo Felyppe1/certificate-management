@@ -25,6 +25,8 @@ import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { GoogleDriveIcon } from '../svg/GoogleDriveIcon'
 import { toast } from 'sonner'
+import { useGoogleLogin } from '@react-oauth/google'
+import { loginGoogleServerAction } from '@/backend/infrastructure/server-actions/login-google-server-action'
 
 type SelectOption = 'upload' | 'link' | 'drive'
 
@@ -38,8 +40,8 @@ interface FileSelectorProps {
     onSubmitDrive: (fileId: string) => void
     onSubmitUpload: (file: File) => void
     urlInputError?: string
+    userEmail: string
     googleOAuthToken: string | null
-    googleOAuthTokenExpiry: Date | null
     radioGroupName: string
     type: FileSelectorType
     // urlAction: (_: unknown, formData: FormData) => Promise<any> // TODO: improve this type
@@ -53,8 +55,8 @@ export function FileSelector({
     isUploadLoading,
     isUrlLoading,
     urlInputError,
+    userEmail,
     googleOAuthToken,
-    googleOAuthTokenExpiry,
     radioGroupName,
     type,
 }: FileSelectorProps) {
@@ -64,7 +66,7 @@ export function FileSelector({
     const [fileUrl, setFileUrl] = useState('')
 
     const [isRefreshTokenLoading, startRefreshTokenTransition] = useTransition()
-
+    const [pickerIsReady, setPickerIsReady] = useState(false)
     const pickerRef = useRef<any>(null)
 
     const handleOptionSelect = async (value: SelectOption) => {
@@ -86,18 +88,21 @@ export function FileSelector({
         const fileId = event.detail.docs[0].id
 
         onSubmitDrive(fileId)
+        setPickerIsReady(false)
     }
 
     const handlePickerClosed = (event: PickerCanceledEvent) => {
         console.log('Picker closed:', event)
 
         setSelectedOption(null)
+        setPickerIsReady(false)
     }
 
     const handlePickerError = (event: PickerErrorEvent) => {
         console.error('Picker error:', event)
 
         setSelectedOption(null)
+        setPickerIsReady(false)
     }
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -157,44 +162,92 @@ export function FileSelector({
                   },
     })
 
+    const login = useGoogleLogin({
+        flow: 'auth-code',
+        scope: [
+            'openid',
+            'email',
+            'profile',
+            'https://www.googleapis.com/auth/drive.file',
+            'https://www.googleapis.com/auth/drive.readonly',
+        ].join(' '),
+        hint: userEmail,
+        onSuccess: async codeResponse => {
+            console.log(codeResponse)
+
+            const formData = new FormData()
+            formData.append('code', codeResponse.code)
+
+            await loginGoogleServerAction(null, formData)
+        },
+        onError: error => {
+            setSelectedOption(null)
+
+            console.error('Login Failed:', error)
+        },
+        onNonOAuthError: err => {
+            setSelectedOption(null)
+        },
+    })
+
     useEffect(() => {
-        if (selectedOption !== 'drive') return
+        setPickerIsReady(false)
+
+        if (selectedOption !== 'drive' || !googleOAuthToken) return
+
+        const manageAuthFlow = async () => {
+            // Just to verify if the token is valid
+            const verifyToken = async (token: string) => {
+                try {
+                    const response = await fetch(
+                        'https://www.googleapis.com/drive/v3/about?fields=user',
+                        {
+                            method: 'GET',
+                            headers: { Authorization: `Bearer ${token}` },
+                        },
+                    )
+                    return response.ok
+                } catch (error) {
+                    return false
+                }
+            }
+
+            const isValid = await verifyToken(googleOAuthToken)
+
+            if (isValid) {
+                setPickerIsReady(true)
+                return
+            }
+
+            try {
+                const response = await refreshGoogleAccessTokenAction()
+
+                if (!response.success) {
+                    throw new Error('Failed to refresh access token')
+                }
+
+                // if refresh is successful, it will invalidate the fetch and this effect will rerun
+            } catch (error) {
+                toast.error('Sessão expirada. Por favor, faça login novamente.')
+                login()
+            }
+        }
+
+        manageAuthFlow()
+    }, [selectedOption, googleOAuthToken, login])
+
+    useEffect(() => {
+        if (!pickerIsReady || !pickerRef.current) return
 
         const pickerRefCurrent = pickerRef.current
 
-        if (!pickerRefCurrent) return
+        import('@googleworkspace/drive-picker-element')
 
-        const initPicker = async () => {
-            if (!googleOAuthToken) {
-                alert(
-                    'Google OAuth token is missing. Please authenticate first.',
-                )
-                return
-            }
+        // const handlePicked = (e: any) => handlePickerPicked(e) // Wrapper para garantir tipagem se necessário
 
-            // TODO: melhorar essa lógica? se passou no if de cima, é pq tem o expiry tbm
-            if (new Date(googleOAuthTokenExpiry!) < new Date()) {
-                startRefreshTokenTransition(() => {
-                    refreshGoogleAccessTokenAction()
-                })
-
-                return
-            }
-
-            import('@googleworkspace/drive-picker-element')
-
-            pickerRefCurrent.addEventListener(
-                'picker:picked',
-                handlePickerPicked,
-            )
-            pickerRefCurrent.addEventListener(
-                'picker:canceled',
-                handlePickerClosed,
-            )
-            pickerRefCurrent.addEventListener('picker:error', handlePickerError)
-        }
-
-        initPicker()
+        pickerRefCurrent.addEventListener('picker:picked', handlePickerPicked)
+        pickerRefCurrent.addEventListener('picker:canceled', handlePickerClosed)
+        pickerRefCurrent.addEventListener('picker:error', handlePickerError)
 
         return () => {
             pickerRefCurrent.removeEventListener(
@@ -211,7 +264,7 @@ export function FileSelector({
             )
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedOption, googleOAuthToken])
+    }, [pickerIsReady])
 
     const allAreLoading =
         isDriveLoading ||
@@ -322,30 +375,32 @@ export function FileSelector({
                 </div>
             </RadioGroup>
 
-            {selectedOption === 'drive' && googleOAuthToken && (
-                <drive-picker
-                    ref={pickerRef}
-                    client-id={process.env.GOOGLE_CLIENT_ID}
-                    app-id={process.env.GCP_PROJECT_ID}
-                    oauth-token={googleOAuthToken!}
-                >
-                    <drive-picker-docs-view
-                        mime-types={(type === 'template'
-                            ? [
-                                  TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS,
-                                  TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES,
-                                  TEMPLATE_FILE_EXTENSION.DOCX,
-                                  TEMPLATE_FILE_EXTENSION.PPTX,
-                              ]
-                            : [
-                                  DATA_SOURCE_FILE_EXTENSION.CSV,
-                                  DATA_SOURCE_FILE_EXTENSION.XLSX,
-                                  DATA_SOURCE_FILE_EXTENSION.GOOGLE_SHEETS,
-                              ]
-                        ).join(',')}
-                    ></drive-picker-docs-view>
-                </drive-picker>
-            )}
+            {selectedOption === 'drive' &&
+                googleOAuthToken &&
+                pickerIsReady && (
+                    <drive-picker
+                        ref={pickerRef}
+                        client-id={process.env.GOOGLE_CLIENT_ID}
+                        app-id={process.env.GCP_PROJECT_ID}
+                        oauth-token={googleOAuthToken!}
+                    >
+                        <drive-picker-docs-view
+                            mime-types={(type === 'template'
+                                ? [
+                                      TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS,
+                                      TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES,
+                                      TEMPLATE_FILE_EXTENSION.DOCX,
+                                      TEMPLATE_FILE_EXTENSION.PPTX,
+                                  ]
+                                : [
+                                      DATA_SOURCE_FILE_EXTENSION.CSV,
+                                      DATA_SOURCE_FILE_EXTENSION.XLSX,
+                                      DATA_SOURCE_FILE_EXTENSION.GOOGLE_SHEETS,
+                                  ]
+                            ).join(',')}
+                        ></drive-picker-docs-view>
+                    </drive-picker>
+                )}
 
             <div className="mt-6">
                 {/* Link Input Form */}

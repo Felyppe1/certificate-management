@@ -10,6 +10,7 @@ import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 
 interface LoginGoogleUseCaseInput {
     code: string
+    reAuthenticate: boolean
 }
 
 export class LoginGoogleUseCase {
@@ -26,8 +27,11 @@ export class LoginGoogleUseCase {
         >,
     ) {}
 
-    async execute({ code }: LoginGoogleUseCaseInput) {
-        const tokenData = await this.googleAuthGateway.getToken({ code })
+    async execute({ code, reAuthenticate }: LoginGoogleUseCaseInput) {
+        const tokenData = await this.googleAuthGateway.getToken({
+            code,
+            reAuthenticate,
+        })
 
         const hasAllScopes = [
             'https://www.googleapis.com/auth/drive.file',

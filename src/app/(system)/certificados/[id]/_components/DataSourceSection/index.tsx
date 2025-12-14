@@ -38,6 +38,7 @@ interface DataSourceSectionProps {
             generationStatus: GENERATION_STATUS | null
         }
     } | null
+    userEmail: string
     googleOAuthToken: string | null
     googleOAuthTokenExpiry: Date | null
     emailSent: boolean
@@ -46,8 +47,8 @@ interface DataSourceSectionProps {
 export function DataSourceSection({
     certificateId,
     dataSource,
+    userEmail,
     googleOAuthToken,
-    googleOAuthTokenExpiry,
     emailSent,
 }: DataSourceSectionProps) {
     const [isEditing, setIsEditing] = useState(false)
@@ -171,8 +172,8 @@ export function DataSourceSection({
                         IA habilitada para imagens
                     </Badge>
                     <FileSelector
+                        userEmail={userEmail}
                         googleOAuthToken={googleOAuthToken}
-                        googleOAuthTokenExpiry={googleOAuthTokenExpiry}
                         onSubmitUrl={handleSubmitUrl}
                         onSubmitDrive={handleSubmitDrive}
                         onSubmitUpload={handleSubmitUpload}
@@ -217,8 +218,8 @@ export function DataSourceSection({
                     IA habilitada para imagens
                 </Badge>
                 <FileSelector
+                    userEmail={userEmail}
                     googleOAuthToken={googleOAuthToken}
-                    googleOAuthTokenExpiry={googleOAuthTokenExpiry}
                     onSubmitUrl={handleSubmitUrl}
                     onSubmitDrive={handleSubmitDrive}
                     onSubmitUpload={handleSubmitUpload}
