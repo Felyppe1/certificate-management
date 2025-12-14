@@ -25,7 +25,7 @@ model Session {
     token   String @id
     user_id String
 
-    User User @relation(fields: [user_id], references: [id])
+    User User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
     @@map("sessions")
 }
@@ -40,7 +40,7 @@ model ExternalUserAccount {
     access_token_expiry_datetime  DateTime?
     refresh_token_expiry_datetime DateTime?
 
-    User User @relation(fields: [user_id], references: [id])
+    User User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
     @@id([user_id, provider])
     @@unique([provider, provider_user_id])
@@ -55,7 +55,7 @@ model CertificateEmission {
 
     user_id String
 
-    User                         User                           @relation(fields: [user_id], references: [id])
+    User                         User                           @relation(fields: [user_id], references: [id], onDelete: Cascade)
     Template                     Template?
     DataSource                   DataSource?
     Email                        Email?
@@ -75,7 +75,7 @@ model Template {
     file_extension   String
 
     TemplateVariable    TemplateVariable[]
-    CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id])
+    CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id], onDelete: Cascade)
 
     @@map("templates")
 }
@@ -88,7 +88,7 @@ model TemplateVariable {
     data_source_name String?
 
     Template         Template          @relation(fields: [template_id], references: [certificate_emission_id], onDelete: Cascade)
-    DataSourceColumn DataSourceColumn? @relation(fields: [data_source_id, data_source_name], references: [data_source_id, name])
+    DataSourceColumn DataSourceColumn? @relation(fields: [data_source_id, data_source_name], references: [data_source_id, name], onDelete: SetNull)
 
     @@id([name, template_id])
     @@unique([data_source_id, data_source_name])
@@ -106,7 +106,7 @@ model DataSource {
     file_extension   String
 
     DataSourceColumn    DataSourceColumn[]
-    CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id])
+    CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id], onDelete: Cascade)
     DataSet             DataSet?
 
     @@map("data_sources")
@@ -147,7 +147,7 @@ model Email {
     certificate_emission_id String  @unique
     email_column            String?
 
-    CertificateEmission    CertificateEmission      @relation(fields: [certificate_emission_id], references: [id])
+    CertificateEmission    CertificateEmission      @relation(fields: [certificate_emission_id], references: [id], onDelete: Cascade)
     EmailGenerationHistory EmailGenerationHistory[]
 
     @@map("emails")
@@ -158,7 +158,7 @@ model EmailGenerationHistory {
     quantity   Int
     created_at DateTime @default(now())
 
-    Email Email @relation(fields: [email_id], references: [id])
+    Email Email @relation(fields: [email_id], references: [id], onDelete: Cascade)
 
     @@map("email_generation_histories")
     @@id([email_id, created_at])
@@ -169,7 +169,7 @@ model CertificateGenerationHistory {
     quantity                Int
     created_at              DateTime @default(now())
 
-    CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id])
+    CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id], onDelete: Cascade)
 
     @@map("certificate_generation_histories")
     @@id([certificate_emission_id, created_at])

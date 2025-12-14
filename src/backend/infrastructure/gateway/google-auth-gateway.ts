@@ -108,4 +108,12 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
             providerUserId: payload!.sub!,
         }
     }
+
+    async revokeRefreshToken(refreshToken: string): Promise<void> {
+        try {
+            await this.oauth2Client.revokeToken(refreshToken)
+        } catch (error: any) {
+            console.error('Error revoking token:', error.message)
+        }
+    }
 }

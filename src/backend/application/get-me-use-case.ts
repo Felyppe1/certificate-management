@@ -1,7 +1,3 @@
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
 import { AuthenticationError } from '../domain/error/authentication-error'
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
 import { ISessionsRepository } from './interfaces/isessions-repository'
@@ -30,7 +26,7 @@ export class GetMeUseCase {
         const user = await this.usersRepository.getById(session.userId)
 
         if (!user) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.USER)
+            throw new AuthenticationError('user-not-found')
         }
 
         const externalAccounts =

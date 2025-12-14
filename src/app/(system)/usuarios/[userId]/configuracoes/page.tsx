@@ -1,14 +1,14 @@
-'use client'
+'use server'
 
-import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { ArrowLeft, KeyRound, Mail, Trash2, Plus } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import { GoogleButton } from '@/components/GoogleButton'
+import { fetchMe } from '@/api-calls/fetch-me'
+import { DeleteAccount } from './_components/DeleteAccount'
 
-export default function UserConfigurationsPage() {
+export default async function UserConfigurationsPage() {
+    const data = await fetchMe()
+
     return (
         <>
             <div className="mb-8">
@@ -22,14 +22,14 @@ export default function UserConfigurationsPage() {
                 <h1 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
                     Configurações da Conta
                 </h1>
-                <p className="text-foreground/90 text-lg font-light">
+                {/* <p className="text-foreground/90 text-lg font-light">
                     Gerencie sua senha e contas conectadas
-                </p>
+                </p> */}
             </div>
 
             <div className="max-w-3xl space-y-6">
                 {/* Change Password Card */}
-                <Card>
+                {/* <Card>
                     <div className="flex items-start gap-4 mb-6">
                         <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
                             <KeyRound className="w-6 h-6 text-primary" />
@@ -80,10 +80,10 @@ export default function UserConfigurationsPage() {
                             <Button>Atualizar Senha</Button>
                         </div>
                     </div>
-                </Card>
+                </Card> */}
 
                 {/* Add Password Card (for Google-only users) */}
-                <Card>
+                {/* <Card>
                     <div className="flex items-start gap-4 mb-6">
                         <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center">
                             <Plus className="w-6 h-6 text-emerald-500" />
@@ -124,117 +124,13 @@ export default function UserConfigurationsPage() {
                             <Button>Criar Senha</Button>
                         </div>
                     </div>
-                </Card>
+                </Card> */}
 
                 {/* Google Accounts Card */}
-                <Card>
-                    <div className="flex items-start gap-4 mb-6">
-                        <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
-                            <Mail className="w-6 h-6 text-blue-500" />
-                        </div>
-                        <div className="flex-1">
-                            <h2 className="text-xl font-semibold mb-1">
-                                Contas do Google
-                            </h2>
-                            <p className="text-muted-foreground font-light">
-                                Gerencie as contas do Google conectadas à sua
-                                conta
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        {/* Connected Google Accounts List */}
-                        <div className="space-y-3">
-                            {/* Example connected account */}
-                            <div className="flex items-center justify-between p-4 bg-muted/40 dark:bg-muted/20 rounded-2xl border">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                                        LF
-                                    </div>
-                                    <div>
-                                        <p className="font-medium">
-                                            luiz.felyppe@gmail.com
-                                        </p>
-                                        <p className="text-sm text-muted-foreground">
-                                            Conectado
-                                        </p>
-                                    </div>
-                                </div>
-                                <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    className="gap-2"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                    Remover
-                                </Button>
-                            </div>
-
-                            {/* Example connected account 2 */}
-                            <div className="flex items-center justify-between p-4 bg-muted/40 dark:bg-muted/20 rounded-2xl border">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-semibold">
-                                        JD
-                                    </div>
-                                    <div>
-                                        <p className="font-medium">
-                                            john.doe@example.com
-                                        </p>
-                                        <p className="text-sm text-muted-foreground">
-                                            Conectado
-                                        </p>
-                                    </div>
-                                </div>
-                                <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    className="gap-2"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                    Remover
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* Add Google Account Button */}
-                        <div className="pt-2">
-                            <GoogleButton text="Adicionar Conta do Google" />
-                        </div>
-                    </div>
-                </Card>
+                {/* <Account /> */}
 
                 {/* Danger Zone Card */}
-                <Card className="border-destructive/50">
-                    <div className="flex items-start gap-4 mb-6">
-                        <div className="w-12 h-12 bg-destructive/10 rounded-xl flex items-center justify-center">
-                            <Trash2 className="w-6 h-6 text-destructive" />
-                        </div>
-                        <div className="flex-1">
-                            <h2 className="text-xl font-semibold mb-1 text-destructive">
-                                Zona de Perigo
-                            </h2>
-                            <p className="text-muted-foreground font-light">
-                                Ações irreversíveis que afetam sua conta
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div className="p-4 bg-destructive/5 dark:bg-destructive/10 rounded-2xl border border-destructive/20">
-                            <h3 className="font-semibold mb-2">
-                                Excluir Conta
-                            </h3>
-                            <p className="text-sm text-muted-foreground mb-4">
-                                Uma vez excluída, não há como voltar atrás. Por
-                                favor, tenha certeza.
-                            </p>
-                            <Button variant="destructive" size="sm">
-                                Excluir Minha Conta
-                            </Button>
-                        </div>
-                    </div>
-                </Card>
+                <DeleteAccount userEmail={data.user.email} />
             </div>
         </>
     )

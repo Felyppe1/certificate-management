@@ -2,6 +2,7 @@ import { AuthenticationError } from '@/backend/domain/error/authentication-error
 import { ConflictError } from '@/backend/domain/error/conflict-error'
 import { NotFoundError } from '@/backend/domain/error/not-found-error'
 import { ValidationError } from '@/backend/domain/error/validation-error'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import z from 'zod'
 
@@ -25,11 +26,14 @@ export async function handleError(error: any) {
         )
     }
     if (error instanceof AuthenticationError) {
+        ;(await cookies()).delete('session_token')
+
         return NextResponse.json(
             { type: error.type, title: error.title },
             { status: 401 },
         )
     }
+    // TODO: missing authorization error
     if (error instanceof NotFoundError) {
         return NextResponse.json(
             { type: error.type, title: error.title, detail: error.detail },

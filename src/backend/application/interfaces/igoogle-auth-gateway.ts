@@ -52,4 +52,5 @@ export interface IGoogleAuthGateway {
     ): any
     getAuthClient(options?: GetAuthClientInput): any
     getOAuth2Client(): any
+    revokeRefreshToken(refreshToken: string): Promise<void>
 }
