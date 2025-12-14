@@ -23,7 +23,6 @@
   "dependencies": {
     "@google-cloud/storage": "^7.17.2",
     "@googleworkspace/drive-picker-element": "^0.6.2",
-    "@next/third-parties": "^15.5.3",
     "@opentelemetry/api-logs": "0.57.2",
     "@opentelemetry/exporter-logs-otlp-http": "0.57.2",
     "@opentelemetry/resources": "1.30.1",
