@@ -6,6 +6,7 @@ import { cookies } from 'next/headers'
 import { LoginGoogleUseCase } from '@/backend/application/login-google-use-case'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
+import { AppError } from '@/backend/domain/error/app-error'
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
@@ -49,8 +50,16 @@ export async function GET(request: Request) {
         return NextResponse.redirect(process.env.NEXT_PUBLIC_BASE_URL + '/')
     } catch (error) {
         console.error(error)
-        return NextResponse.redirect(
+        const redirectUrl = new URL(
             process.env.NEXT_PUBLIC_BASE_URL + '/entrar',
         )
+
+        if (error instanceof AppError) {
+            redirectUrl.searchParams.set('error', error.type)
+        } else {
+            redirectUrl.searchParams.set('error', 'unknown-error')
+        }
+
+        return NextResponse.redirect(redirectUrl)
     }
 }

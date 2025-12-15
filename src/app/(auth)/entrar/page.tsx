@@ -2,10 +2,20 @@ import Link from 'next/link'
 import { GoogleButton } from '@/components/GoogleButton'
 import { ShieldCheck, Zap } from 'lucide-react'
 import { Card } from '@/components/ui/card'
+import { Toast } from './Toast'
 
-export default async function Entrar() {
+export default async function Entrar({
+    searchParams,
+}: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+    const params = await searchParams
+    const error = params.error as string | undefined
+
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4">
+            {error && <Toast error={error} />}
+
             <div className="w-full max-w-md space-y-8">
                 <div className="text-center space-y-2">
                     <h1 className="text-4xl font-bold">Bem-vindo</h1>
