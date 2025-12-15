@@ -24,12 +24,12 @@ export function ListRenderer({ certificateEmissions }: ListRendererProps) {
     if (filteredEmissions.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-16 px-6">
-                <h3 className="text-xl font-semibold text-foreground mb-2">
+                <h3 className="text-lg sm:text-xl font-semibold text-foreground text-center mb-2">
                     {inputValue
                         ? 'Nenhuma emissão encontrada'
                         : 'Nenhuma emissão de certificado criada'}
                 </h3>
-                <p className="text-muted-foreground text-center max-w-md">
+                <p className="text-muted-foreground text-center max-w-md text-sm sm:text-base">
                     {inputValue
                         ? 'Tente buscar por outro nome'
                         : 'Comece criando sua primeira emissão de certificado clicando no botão acima'}
@@ -44,7 +44,7 @@ export function ListRenderer({ certificateEmissions }: ListRendererProps) {
                 <li key={certificate.id}>
                     <Link
                         href={`/certificados/${certificate.id}`}
-                        className="group block px-6 py-5 hover:bg-muted transition-all duration-100 cursor-pointer outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md"
+                        className="group block px-4 sm:px-6 py-5 hover:bg-muted transition-all duration-100 cursor-pointer outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md"
                     >
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4 flex-1">

@@ -5,7 +5,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-    "h-fit inline-flex items-center justify-center whitespace-nowrap rounded-xl font-semibold rounded-full transition-all disabled:pointer-events-none disabled:opacity-50 cursor-pointer [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+    'h-fit inline-flex items-center justify-center whitespace-nowrap rounded-xl font-semibold rounded-full transition-all disabled:pointer-events-none disabled:opacity-50 cursor-pointer [&_svg]:pointer-events-none shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
     {
         variants: {
             variant: {
@@ -21,9 +21,13 @@ const buttonVariants = cva(
                 link: 'text-primary underline-offset-4 hover:underline',
             },
             size: {
-                default: 'px-5 py-1.5 has-[>svg]:px-4 gap-2',
-                sm: 'text-sm py-1 px-4 has-[>svg]:px-3.5 gap-2',
-                lg: "text-lg py-2 px-6 gap-2 has-[>svg]:px-5 [&_svg:not([class*='size-'])]:size-5",
+                default: `sm:text-base sm:px-5 sm:py-1.5 sm:gap-2 sm:has-[>svg]:px-4 sm:[&_svg:not([class*='size-'])]:size-5
+                        text-sm py-1 px-4 gap-1.5 has-[>svg]:px-3.5 [&_svg:not([class*='size-'])]:size-4.5
+                `,
+                sm: 'text-sm py-1 px-4 gap-1.5 has-[>svg]:px-3.5',
+                lg: `sm:text-lg sm:py-2 sm:px-6 sm:gap-2 sm:has-[>svg]:px-5 sm:[&_svg:not([class*='size-'])]:size-6
+                    text-base py-1.5 px-5 gap-1.5 has-[>svg]:px-4 [&_svg:not([class*='size-'])]:size-5
+                `,
                 icon: 'size-9',
                 'icon-sm': 'size-8',
                 'icon-lg': 'size-10',

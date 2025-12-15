@@ -21,11 +21,11 @@ export function CreationForm() {
         <Popover>
             <PopoverTrigger asChild>
                 <Button size="lg">
-                    <Plus className="size-6" />
+                    <Plus />
                     Criar
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-90" side="left">
+            <PopoverContent className="w-80 md:w-90" side="left">
                 <form action={action} className="space-y-5">
                     <div className="space-y-4">
                         <label
@@ -47,11 +47,12 @@ export function CreationForm() {
                     <Button
                         type="submit"
                         className="w-full"
+                        size="default"
                         disabled={isLoading}
                     >
                         {isLoading ? (
                             <>
-                                <Loader2 className="size-5 animate-spin" />
+                                <Loader2 className="animate-spin" />
                                 Criando...
                             </>
                         ) : (

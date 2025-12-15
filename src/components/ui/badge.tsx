@@ -23,9 +23,13 @@ const badgeVariants = cva(
                 green: 'border-transparent bg-green-600/20 text-green-400 [a&]:hover:bg-green-600/30',
             },
             size: {
-                default: 'px-2 py-1 text-sm rounded-md [&>svg]:size-3.5',
+                default: `sm:px-2 sm:py-1 sm:text-sm sm:rounded-md sm:[&>svg]:size-3.5
+                        px-2 py-1 text-xs rounded-xs [&>svg]:size-3
+                `,
                 sm: 'px-2 py-1 text-xs rounded-lg [&>svg]:size-3',
-                md: 'px-3 py-1.5 text-base gap-2 rounded-lg [&>svg]:size-4',
+                md: `sm:px-3 sm:py-1.5 sm:text-base sm:gap-2 sm:rounded-lg sm:[&>svg]:size-4
+                    px-2 py-1 text-sm rounded-md [&>svg]:size-3.5
+                `,
                 lg: 'px-4 py-2 text-base rounded-xl [&>svg]:size-5',
             },
         },

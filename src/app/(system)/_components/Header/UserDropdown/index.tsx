@@ -34,7 +34,7 @@ export function UserDropdown({ name, userId }: UserDropdownProps) {
             <DropdownMenuTrigger asChild>
                 <Button
                     variant="ghost"
-                    className="hidden md:flex items-center gap-2"
+                    className="flex items-center gap-2"
                     disabled={isPending}
                 >
                     <span className="text-card-foreground">

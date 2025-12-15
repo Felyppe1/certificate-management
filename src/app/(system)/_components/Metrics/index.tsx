@@ -1,6 +1,7 @@
 import { fetchCertificateEmissionsMetricsByUser } from '@/api-calls/fetch-certificate-emissions-metrics-by-user'
 import { Card } from '@/components/ui/card'
 import { Clock, Minus, TrendingDown, TrendingUp } from 'lucide-react'
+import { MonthMetric } from './MonthMetric'
 
 function calcularVariacaoPercentual(
     mesAtual: number,
@@ -43,53 +44,55 @@ export async function Metrics() {
     )
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-6 mb-3 sm:mb-6 md:mb-10">
             <Card>
                 <div>
-                    <div className="flex items-start justify-between mb-4">
-                        <div>
-                            <p className="mb-1 text-lg">
+                    <div className="flex items-start justify-between sm:mb-4">
+                        <div className="w-full">
+                            <p className="mb-1 mr-14 text-base sm:text-lg">
                                 Total de Certificados Gerados
                             </p>
-                            <h2 className="text-5xl font-bold text-foreground">
-                                {
-                                    certificateEmissionsMetrics.totalCertificatesGenerated
-                                }
-                            </h2>
+
+                            <div className="flex justify-between">
+                                <h2 className="text-4xl sm:text-5xl font-bold text-foreground">
+                                    {
+                                        certificateEmissionsMetrics.totalCertificatesGenerated
+                                    }
+                                </h2>
+                                <div className="block sm:hidden">
+                                    <MonthMetric
+                                        thisMonth={
+                                            certificateEmissionsMetrics.totalCertificatesGeneratedThisMonth
+                                        }
+                                        lastMonth={
+                                            certificateEmissionsMetrics.totalCertificatesGeneratedLastMonth
+                                        }
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap divide-x divide-muted-foreground/25 gap-12 mb-3">
-                        <div className="flex flex-col shrink-0 pr-12">
-                            <p className="text-muted-foreground">Mês Atual</p>
-                            <p className="text-3xl font-bold">
-                                {
-                                    certificateEmissionsMetrics.totalCertificatesGeneratedThisMonth
-                                }
-                            </p>
-                        </div>
-
-                        <div className="flex flex-col shrink-0">
-                            <p className="text-muted-foreground">
-                                Mês Anterior
-                            </p>
-                            <p className="text-3xl font-bold">
-                                {
-                                    certificateEmissionsMetrics.totalCertificatesGeneratedLastMonth
-                                }
-                            </p>
-                        </div>
+                    <div className="hidden sm:block">
+                        <MonthMetric
+                            thisMonth={
+                                certificateEmissionsMetrics.totalCertificatesGeneratedThisMonth
+                            }
+                            lastMonth={
+                                certificateEmissionsMetrics.totalCertificatesGeneratedLastMonth
+                            }
+                        />
                     </div>
 
                     <div className="flex items-center flex-wrap gap-x-1">
                         {getVariationIcon(certificatesVariation)}
                         <span
-                            className={`${getVariationColor(certificatesVariation)} font-medium ml-1`}
+                            className={`${getVariationColor(certificatesVariation)} font-medium ml-1 text-sm sm:text-base`}
                         >
                             {certificatesVariation > 0 ? '+' : ''}
                             {certificatesVariation.toFixed(1)}%
                         </span>
-                        <span className="ml-2 font-light">
+                        <span className="ml-2 font-light text-sm sm:text-base">
                             em relação ao mês anterior
                         </span>
                     </div>
@@ -99,30 +102,57 @@ export async function Metrics() {
             {/* Card 2 - E-mails Enviados */}
             <Card>
                 <div>
-                    <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start justify-between sm:mb-4">
                         <div className="flex-1">
-                            <div className="flex items-center gap-4">
-                                <p className="mb-1 text-lg">
+                            <div className="flex items-center gap-x-4 gap-y-0 flex-wrap">
+                                <p className="mb-1 text-lg min-w-fit">
                                     Total de E-mails Enviados
                                 </p>
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
-                                    <Clock className="w-3.5 h-3.5" />
-                                    <span>
+                                <div className="flex items-center gap-1.5 text-[.625rem] sm:text-xs text-muted-foreground/70">
+                                    <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 min-w-fit" />
+                                    <span className="min-w-[9rem]">
                                         Esta métrica pode ter um delay para
                                         atualizar
                                     </span>
                                 </div>
                             </div>
-                            <h2 className="text-5xl font-bold text-foreground">
-                                {certificateEmissionsMetrics.totalEmailsSent}
-                            </h2>
+
+                            <div className="flex justify-between">
+                                <h2 className="text-4xl sm:text-5xl font-bold text-foreground">
+                                    {
+                                        certificateEmissionsMetrics.totalEmailsSent
+                                    }
+                                </h2>
+                                <div className="block sm:hidden">
+                                    <MonthMetric
+                                        thisMonth={
+                                            certificateEmissionsMetrics.totalEmailsSentThisMonth
+                                        }
+                                        lastMonth={
+                                            certificateEmissionsMetrics.totalEmailsSentLastMonth
+                                        }
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap divide-x divide-muted-foreground/25 gap-12 mb-3">
-                        <div className="flex flex-col shrink-0 pr-12">
-                            <p className="text-muted-foreground">Mês Atual</p>
-                            <p className="text-3xl font-bold">
+                    <div className="hidden sm:block">
+                        <MonthMetric
+                            thisMonth={
+                                certificateEmissionsMetrics.totalEmailsSentThisMonth
+                            }
+                            lastMonth={
+                                certificateEmissionsMetrics.totalEmailsSentLastMonth
+                            }
+                        />
+                    </div>
+                    {/* <div className="flex flex-wrap divide-x divide-muted-foreground/25 gap-6 md:gap-12 mb-3">
+                        <div className="flex flex-col shrink-0 pr-6 md:pr-12">
+                            <p className="text-muted-foreground text-sm sm:text-base">
+                                Mês Atual
+                            </p>
+                            <p className="text-2xl sm:text-3xl font-bold">
                                 {
                                     certificateEmissionsMetrics.totalEmailsSentThisMonth
                                 }
@@ -130,26 +160,26 @@ export async function Metrics() {
                         </div>
 
                         <div className="flex flex-col shrink-0">
-                            <p className="text-muted-foreground">
+                            <p className="text-muted-foreground text-sm sm:text-base">
                                 Mês Anterior
                             </p>
-                            <p className="text-3xl font-bold">
+                            <p className="text-2xl sm:text-3xl font-bold">
                                 {
                                     certificateEmissionsMetrics.totalEmailsSentLastMonth
                                 }
                             </p>
                         </div>
-                    </div>
+                    </div> */}
 
-                    <div className="flex items-center flex-wrap gap-1">
+                    <div className="flex items-center flex-wrap gap-x-1">
                         {getVariationIcon(emailsVariation)}
                         <span
-                            className={`${getVariationColor(emailsVariation)} font-medium ml-1`}
+                            className={`${getVariationColor(emailsVariation)} font-medium ml-1 text-sm sm:text-base`}
                         >
                             {emailsVariation > 0 ? '+' : ''}
                             {emailsVariation.toFixed(1)}%
                         </span>
-                        <span className="ml-2 font-light">
+                        <span className="ml-2 font-light text-sm sm:text-base">
                             em relação ao mês anterior
                         </span>
                     </div>

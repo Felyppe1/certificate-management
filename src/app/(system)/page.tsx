@@ -6,11 +6,11 @@ import { MetricsSkeleton } from './_components/Metrics/MetricsSkeleton'
 export default function Home() {
     return (
         <>
-            <div className="mb-12">
-                <h1 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
+            <div className="mb-6 sm:mb-8 md:mb-10">
+                <h1 className="text-3xl sm:text-4xl font-bold mb-2 sm:mb-4 text-foreground">
                     Dashboard
                 </h1>
-                <p className="text-foreground/90 text-lg font-light">
+                <p className="text-foreground/90 text-sm sm:text-lg font-light">
                     Gerencie seus certificados e acompanhe estatísticas
                 </p>
             </div>
