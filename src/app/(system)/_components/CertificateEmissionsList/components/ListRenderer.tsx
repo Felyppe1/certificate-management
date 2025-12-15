@@ -44,7 +44,7 @@ export function ListRenderer({ certificateEmissions }: ListRendererProps) {
                 <li key={certificate.id}>
                     <Link
                         href={`/certificados/${certificate.id}`}
-                        className="group block px-4 sm:px-6 py-5 hover:bg-muted transition-all duration-100 cursor-pointer outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md"
+                        className="group block px-2 sm:px-6 py-5 hover:bg-muted transition-all duration-100 cursor-pointer outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md"
                     >
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4 flex-1">
@@ -56,7 +56,7 @@ export function ListRenderer({ certificateEmissions }: ListRendererProps) {
                                 /> */}
 
                                 <div className="flex-1">
-                                    <h3 className="text-foreground font-medium text-lg mb-1">
+                                    <h3 className="text-foreground font-medium text-base sm:text-lg mb-1">
                                         {certificate.name}
                                     </h3>
                                     {/* <p className="text-muted-foreground text-sm">
@@ -69,7 +69,7 @@ export function ListRenderer({ certificateEmissions }: ListRendererProps) {
                                             <>Não há base de dados</>
                                         )}
                                     </p> */}
-                                    <p className="text-muted-foreground text-sm">
+                                    <p className="text-muted-foreground text-xs sm:text-sm">
                                         Criada em{' '}
                                         {new Date(
                                             certificate.createdAt,
@@ -83,7 +83,7 @@ export function ListRenderer({ certificateEmissions }: ListRendererProps) {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 sm:gap-4">
                                 <Badge
                                     variant={
                                         certificate.status === 'EMITTED'
@@ -101,7 +101,7 @@ export function ListRenderer({ certificateEmissions }: ListRendererProps) {
                                     }
                                 </Badge>
 
-                                <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all duration-150" />
+                                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all duration-150" />
                             </div>
                         </div>
                     </Link>

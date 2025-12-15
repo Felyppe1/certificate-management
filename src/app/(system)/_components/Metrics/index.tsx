@@ -44,7 +44,7 @@ export async function Metrics() {
     )
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-6 mb-3 sm:mb-6 md:mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-3 md:gap-6 mb-4 sm:mb-6 md:mb-10">
             <Card>
                 <div>
                     <div className="flex items-start justify-between sm:mb-4">
