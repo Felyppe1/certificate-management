@@ -66,10 +66,10 @@ export default async function CertificatePage({
                 <GoBackButton />
                 <TipsButton />
             </div>
-            <div className="flex flex-col gap-8 mt-8 mb-12">
+            <div className="flex flex-col gap-4 sm:gap-6 md:gap-8 mt-4 xs:mt-6 md:mt-8 mb-12">
                 <div>
                     <div className="flex items-center gap-4 mb-4">
-                        <h1 className="text-3xl md:text-4xl font-bold">
+                        <h1 className="text-3xl sm:text-4xl font-bold">
                             {
                                 certificateEmissionResponse.certificateEmission
                                     .name
@@ -97,7 +97,7 @@ export default async function CertificatePage({
                             }
                         </Badge>
                     </div>
-                    <p className="text-foreground/90 text-lg font-light">
+                    <p className="text-foreground/90 text-base sm:text-lg font-light">
                         Configure o template e os dados para gerar certificados
                     </p>
                 </div>

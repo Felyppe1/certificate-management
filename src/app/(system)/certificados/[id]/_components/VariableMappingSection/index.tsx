@@ -183,7 +183,7 @@ export function VariableMappingSection({
                 {allVariablesMapped && (
                     <AlertMessage
                         variant="success"
-                        icon={<CheckCircle2 className="size-5" />}
+                        icon={<CheckCircle2 className="size-4 sm:size-5" />}
                         text="Mapeamento realizado com sucesso"
                     />
                 )}
@@ -262,7 +262,7 @@ export function VariableMappingSection({
                     })}
                 </div>
 
-                <div className="flex gap-4 pt-8 border-t">
+                <div className="flex flex-wrap gap-4 pt-8 border-t">
                     <Button
                         onClick={handleSave}
                         disabled={mappingIsLoading || !hasChanges}
@@ -270,7 +270,7 @@ export function VariableMappingSection({
                     >
                         {mappingIsLoading ? (
                             <>
-                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <Loader2 className="animate-spin" />
                                 Salvando...
                             </>
                         ) : mappingsSaved ? (

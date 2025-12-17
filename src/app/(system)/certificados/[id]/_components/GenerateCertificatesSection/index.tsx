@@ -155,19 +155,19 @@ export function GenerateCertificatesSection({
                     />
                 )}
 
-                <div className="flex gap-4 items-center justify-between p-6 border rounded-lg bg-muted/30">
+                <div className="flex gap-4 items-center justify-between flex-wrap p-6 border rounded-lg bg-muted/30">
                     <div className="flex items-center gap-4">
                         <div className="p-3 rounded-full bg-primary/10">
-                            <FileCheck className="h-6 w-6 text-primary" />
+                            <FileCheck className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                         </div>
                         <div>
-                            <p className="font-medium text-lg">
+                            <p className="font-medium text-base sm:text-lg">
                                 {totalRecords}{' '}
                                 {totalRecords === 1
                                     ? 'certificado'
                                     : 'certificados'}
                             </p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-xs sm:text-sm text-muted-foreground">
                                 {certificatesWereGenerated
                                     ? totalRecords === 1
                                         ? 'Gerado e disponível'

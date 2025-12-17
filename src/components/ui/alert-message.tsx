@@ -2,7 +2,7 @@ import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
-const alertMessageVariants = cva('rounded-lg p-4 border', {
+const alertMessageVariants = cva('rounded-lg p-3 sm:p-4 border', {
     variants: {
         variant: {
             success:
@@ -20,7 +20,7 @@ const alertMessageVariants = cva('rounded-lg p-4 border', {
     },
 })
 
-const alertMessageIconVariants = cva('w-5 h-5 flex-shrink-0', {
+const alertMessageIconVariants = cva('w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0', {
     variants: {
         variant: {
             success: 'text-green-600 dark:text-green-400',
@@ -93,7 +93,7 @@ function AlertMessage({
                 <div className={cn(alertMessageIconVariants({ variant }))}>
                     {icon}
                 </div>
-                <div className="text-sm">
+                <div className="text-xs sm:text-sm">
                     <p className={cn(alertMessageTitleVariants({ variant }))}>
                         {text}
                     </p>

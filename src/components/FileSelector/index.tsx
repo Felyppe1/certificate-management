@@ -279,28 +279,30 @@ export function FileSelector({
                 value={selectedOption || ''}
                 onValueChange={handleOptionSelect}
             >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 xs:grid-cols-3 gap-2 sm:gap-4">
                     {/* Upload Local */}
                     <label
                         htmlFor={`option-upload-${radioGroupName}`}
                         className="group relative"
                     >
-                        <Card className="relative h-full justify-center cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none group-has-[:disabled]:cursor-default hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center">
+                        <Card className="relative h-full cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none group-has-[:disabled]:cursor-default hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 max-xs:px-[10%] max-xs:py-3 p-4 max-md:py-6 text-center gap-[10%] xs:gap-0 md:!gap-0 content-center flex-row xs:flex-col justify-evenly xs:justify-center">
                             <RadioGroupItem
                                 id={`option-upload-${radioGroupName}`}
                                 disabled={allAreLoading}
                                 value="upload"
                                 className="sr-only"
                             />
-                            <div className="flex justify-center items-center gap-3 mb-4">
-                                <Upload className="w-12 h-12 transition-colors group-has-[[data-state=checked]]:text-primary text-muted-foreground" />
+                            <div className="flex justify-center items-center gap-3 mb-2 xs:mb-4">
+                                <Upload className="w-9 h-9 xs:w-10 xs:h-10 md:w-12 md:h-12 transition-colors group-has-[[data-state=checked]]:text-primary text-muted-foreground" />
                             </div>
-                            <h3 className="text-lg font-semibold mb-2">
-                                Upload Local
-                            </h3>
-                            <p className="text-muted-foreground">
-                                Envie um arquivo do seu computador
-                            </p>
+                            <div className="w-fit xs:w-auto">
+                                <h3 className="text-sm sm:text-base md:text-lg font-semibold mb-2">
+                                    Upload Local
+                                </h3>
+                                <p className="text-muted-foreground max-sm:text-xs max-md:text-sm">
+                                    Envie um arquivo do seu computador
+                                </p>
+                            </div>
                         </Card>
                         {isUploadLoading && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -316,22 +318,24 @@ export function FileSelector({
                         htmlFor={`option-drive-${radioGroupName}`}
                         className="group relative"
                     >
-                        <Card className="h-full justify-center cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none hover:group-has-[:disabled]:none hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center">
+                        <Card className="h-full cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none hover:group-has-[:disabled]:none hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 max-xs:px-[10%] max-xs:py-3 p-4 max-md:py-6 text-center gap-[10%] xs:gap-0 md:!gap-0 content-center flex-row xs:flex-col justify-evenly xs:justify-center">
                             <RadioGroupItem
                                 id={`option-drive-${radioGroupName}`}
                                 disabled={allAreLoading}
                                 value="drive"
                                 className="sr-only"
                             />
-                            <div className="flex justify-center items-center gap-3 mb-4">
-                                <GoogleDriveIcon className="w-12 h-12 transition-colors group-has-[[data-state=checked]]:text-primary text-muted-foreground" />
+                            <div className="flex justify-center items-center gap-3 mb-2 xs:mb-4">
+                                <GoogleDriveIcon className="w-9 h-9 xs:w-10 xs:h-10 md:w-12 md:h-12 transition-colors group-has-[[data-state=checked]]:text-primary text-muted-foreground" />
                             </div>
-                            <h3 className="text-lg font-semibold mb-2">
-                                Google Drive
-                            </h3>
-                            <p className="text-muted-foreground">
-                                Selecione um arquivo do seu Google Drive
-                            </p>
+                            <div className="w-fit xs:w-auto">
+                                <h3 className="text-sm sm:text-base md:text-lg font-semibold mb-2">
+                                    Google Drive
+                                </h3>
+                                <p className="text-muted-foreground max-sm:text-xs max-md:text-sm">
+                                    Selecione um arquivo do seu Google Drive
+                                </p>
+                            </div>
                         </Card>
                         {(isDriveLoading || isRefreshTokenLoading) && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -347,22 +351,24 @@ export function FileSelector({
                         htmlFor={`option-link-${radioGroupName}`}
                         className="group relative"
                     >
-                        <Card className="h-full justify-center cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 p-6 text-center gap-0 content-center">
+                        <Card className="h-full cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 max-xs:px-[10%] max-xs:py-3 p-4 max-md:py-6 text-center gap-[10%] xs:gap-0 md:!gap-0 content-center flex-row xs:flex-col justify-evenly xs:justify-center">
                             <RadioGroupItem
                                 id={`option-link-${radioGroupName}`}
                                 disabled={allAreLoading}
                                 value="link"
                                 className="sr-only"
                             />
-                            <div className="flex justify-center items-center gap-3 mb-4">
-                                <Link className="w-12 h-12 transition-colors group-has-[[data-state=checked]]:text-primary text-muted-foreground" />
+                            <div className="flex justify-center items-center gap-3 mb-2 xs:mb-4">
+                                <Link className="w-9 h-9 xs:w-10 xs:h-10 md:w-12 md:h-12 transition-colors group-has-[[data-state=checked]]:text-primary text-muted-foreground" />
                             </div>
-                            <h3 className="text-lg font-semibold mb-2">
-                                Link de compartilhamento
-                            </h3>
-                            <p className="text-muted-foreground">
-                                Cole o link de um arquivo do Drive
-                            </p>
+                            <div className="w-fit xs:w-auto">
+                                <h3 className="text-sm sm:text-base md:text-lg font-semibold mb-2 xs:max-sm:break-all">
+                                    Link de compartilhamento
+                                </h3>
+                                <p className="text-muted-foreground max-sm:text-xs max-md:text-sm">
+                                    Cole o link de um arquivo do Drive
+                                </p>
+                            </div>
                         </Card>
                         {isUrlLoading && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -405,7 +411,7 @@ export function FileSelector({
             <div className="mt-6">
                 {/* Link Input Form */}
                 {selectedOption === 'link' && (
-                    <Card>
+                    <Card className="max-sm:px-3 max-sm:py-4">
                         <CardHeader>
                             <CardTitle>Link do arquivo</CardTitle>
                             <CardDescription>
@@ -468,16 +474,16 @@ export function FileSelector({
                                 })}
                             />
                             {isDragActive ? (
-                                <h4 className="text-lg font-semibold">
+                                <h4 className="text-base sm:text-lg text-center font-semibold">
                                     Solte o arquivo aqui...
                                 </h4>
                             ) : (
                                 <>
-                                    <h4 className="text-lg font-semibold">
+                                    <h4 className="text-base sm:text-lg text-center font-semibold max-xs:max-w-[17rem]">
                                         Clique para enviar ou arraste o arquivo
                                         aqui
                                     </h4>
-                                    <p className="text-muted-foreground">
+                                    <p className="text-sm sm:text-base text-center text-muted-foreground">
                                         Formatos suportados:{' '}
                                         {type === 'template'
                                             ? '.docx, .pptx'
