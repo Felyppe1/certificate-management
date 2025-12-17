@@ -15,7 +15,7 @@ export default function SearchBox() {
     return (
         <InputGroup className="max-w-[20rem] w-full">
             <InputGroupAddon>
-                <Search className="size-5 text-muted-foreground" />
+                <Search className="text-muted-foreground" />
             </InputGroupAddon>
 
             <InputGroupInput

@@ -3,67 +3,51 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 export function MetricsSkeleton() {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            <Card>
-                <div>
-                    <div className="flex items-start justify-between mb-4">
-                        <div>
-                            <Skeleton className="h-6 w-64 mb-2" />
-                            <Skeleton className="h-12 w-24" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-3 md:gap-6 mb-4 sm:mb-6 md:mb-10">
+            {[1, 2].map(i => (
+                <Card
+                    key={i}
+                    className="flex flex-col justify-between p-6 h-full gap-0 md:gap-0"
+                >
+                    <div>
+                        {/* Cabeçalho: Título e talvez um subtítulo curto */}
+                        <div className="space-y-2 mb-3">
+                            <Skeleton className="h-5 w-[60%]" />
+                            {i === 2 && (
+                                <Skeleton className="h-3 w-[40%]" />
+                            )}{' '}
+                            {/* Variação sutil para o 2º card */}
                         </div>
-                    </div>
 
-                    <div className="flex flex-wrap divide-x divide-muted-foreground/25 gap-12 mb-3">
-                        <div className="flex flex-col shrink-0 pr-12">
-                            <Skeleton className="h-5 w-20 mb-1" />
-                            <Skeleton className="h-9 w-12" />
-                        </div>
+                        {/* O Número Grande (Hero) */}
+                        <Skeleton className="h-10 w-18 sm:h-12 sm:w-24 rounded-lg mb-5" />
 
-                        <div className="flex flex-col shrink-0">
-                            <Skeleton className="h-5 w-24 mb-1" />
-                            <Skeleton className="h-9 w-12" />
-                        </div>
-                    </div>
-
-                    <div className="flex items-center flex-wrap gap-x-1">
-                        <Skeleton className="h-5 w-5 rounded-full" />
-                        <Skeleton className="h-5 w-16 ml-1" />
-                        <Skeleton className="h-5 w-40 ml-2" />
-                    </div>
-                </div>
-            </Card>
-
-            <Card>
-                <div>
-                    <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                            <div className="flex items-center gap-4">
-                                <Skeleton className="h-6 w-48 mb-1" />
-                                <Skeleton className="h-4 w-56" />
+                        {/* Seção de Comparativo (Mês Atual / Anterior) */}
+                        <div className="hidden sm:flex items-center gap-8 mb-4">
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-16" /> {/* Label */}
+                                <Skeleton className="h-6 w-10" /> {/* Valor */}
                             </div>
-                            <Skeleton className="h-12 w-24 mt-1" />
+
+                            {/* Divisor visual vertical simulado */}
+                            <div className="h-8 w-px bg-border/50" />
+
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-16" /> {/* Label */}
+                                <Skeleton className="h-6 w-10" /> {/* Valor */}
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap divide-x divide-muted-foreground/25 gap-12 mb-3">
-                        <div className="flex flex-col shrink-0 pr-12">
-                            <Skeleton className="h-5 w-20 mb-1" />
-                            <Skeleton className="h-9 w-12" />
-                        </div>
-
-                        <div className="flex flex-col shrink-0">
-                            <Skeleton className="h-5 w-24 mb-1" />
-                            <Skeleton className="h-9 w-12" />
-                        </div>
+                    {/* Rodapé: A porcentagem e texto de comparação */}
+                    <div className="flex items-center gap-2 mt-1">
+                        <Skeleton className="h-4 w-4 rounded-full" />{' '}
+                        {/* Ícone da % */}
+                        <Skeleton className="h-4 w-[80%]" />{' '}
+                        {/* Texto explicativo */}
                     </div>
-
-                    <div className="flex items-center flex-wrap gap-1">
-                        <Skeleton className="h-5 w-5 rounded-full" />
-                        <Skeleton className="h-5 w-16 ml-1" />
-                        <Skeleton className="h-5 w-40 ml-2" />
-                    </div>
-                </div>
-            </Card>
+                </Card>
+            ))}
         </div>
     )
 }

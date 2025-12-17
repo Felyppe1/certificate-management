@@ -166,7 +166,7 @@ export function VariableMappingSection({
                 {hasInsufficientColumns && (
                     <AlertMessage
                         variant="warning"
-                        icon={<CircleAlert className="size-5" />}
+                        icon={<CircleAlert className="" />}
                         text="Colunas insuficientes"
                         description={`
                         A fonte de dados possui 
@@ -188,7 +188,7 @@ export function VariableMappingSection({
                     />
                 )}
 
-                <div className="space-y-4">
+                <div className="space-y-4 pb-2 overflow-x-auto">
                     <div className="grid grid-cols-[1fr_auto_1fr] gap-4 px-4 pb-2 border-b">
                         <div className="text-sm font-medium text-muted-foreground">
                             Variável do Template
@@ -217,10 +217,10 @@ export function VariableMappingSection({
                                 </div>
 
                                 <div className="flex items-center justify-center">
-                                    <ArrowRight className="text-muted-foreground" />
+                                    <ArrowRight className="text-muted-foreground size-5 sm:size-auto" />
                                 </div>
 
-                                <div>
+                                <div className="min-w-0">
                                     <Select
                                         value={mappings![variable] || ''}
                                         onValueChange={value => {

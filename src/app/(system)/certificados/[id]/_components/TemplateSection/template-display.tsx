@@ -122,7 +122,7 @@ export function TemplateDisplay({
                             </CardDescription>
                         </div>
 
-                        <div className="flex flex-wrap justify-end gap-2 min-w-[15rem]">
+                        <div className="flex flex-wrap justify-start sm:justify-end gap-2 min-w-[15rem]">
                             {template.inputMethod !== 'UPLOAD' && (
                                 <RegenerateWarningPopover
                                     open={showRefreshWarning}
@@ -140,7 +140,7 @@ export function TemplateDisplay({
                                         }
                                     >
                                         <RefreshCw
-                                            className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                                            className={`scale-80 ${isRefreshing ? 'animate-spin' : ''}`}
                                         />
                                         {isRefreshing
                                             ? 'Atualizando...'
@@ -162,7 +162,7 @@ export function TemplateDisplay({
                                         isRefreshing || isDeleting || isDisabled
                                     }
                                 >
-                                    <Edit3 className="h-4 w-4" />
+                                    <Edit3 className="scale-80" />
                                     Editar
                                 </Button>
                             </RegenerateWarningPopover>
@@ -174,7 +174,7 @@ export function TemplateDisplay({
                                 }
                                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="scale-80" />
                                 {isDeleting ? 'Removendo...' : 'Remover'}
                             </Button>
                         </div>
@@ -193,11 +193,11 @@ export function TemplateDisplay({
                         </div>
                     )} */}
 
-                        <div className="flex flex-col w-full">
+                        <div className="flex flex-col w-full text-sm sm:text-base">
                             <div className="flex flex-col gap-4 mt-1">
                                 <div className="flex items-start gap-3">
                                     <div className="flex-shrink-0 mt-0.5">
-                                        <ALargeSmall className="size-5 text-muted-foreground" />
+                                        <ALargeSmall className="size-4 sm:size-4 sm: text-muted-foreground" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-muted-foreground mb-1">
@@ -211,7 +211,7 @@ export function TemplateDisplay({
 
                                 <div className="flex items-start gap-3">
                                     <div className="flex-shrink-0 mt-0.5">
-                                        <SourceIcon className="size-5 text-muted-foreground" />
+                                        <SourceIcon className="size-4 sm:size-5 text-muted-foreground" />
                                     </div>
                                     <div className="flex-1">
                                         <p className="text-muted-foreground mb-1">
@@ -231,7 +231,7 @@ export function TemplateDisplay({
                                                     size="sm"
                                                 >
                                                     <svg
-                                                        className="h-4 w-4 mr-2"
+                                                        className=" mr-2"
                                                         viewBox="0 0 24 24"
                                                         fill="none"
                                                         stroke="currentColor"
@@ -248,7 +248,7 @@ export function TemplateDisplay({
                                                     onClick={handleViewFile}
                                                 >
                                                     <svg
-                                                        className="h-4 w-4"
+                                                        className=""
                                                         viewBox="0 0 24 24"
                                                         fill="none"
                                                         stroke="currentColor"

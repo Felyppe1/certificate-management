@@ -26,11 +26,15 @@ const badgeVariants = cva(
                 default: `sm:px-2 sm:py-1 sm:text-sm sm:rounded-md sm:[&>svg]:size-3.5
                         px-2 py-1 text-xs rounded-sm [&>svg]:size-3
                 `,
-                sm: 'px-2 py-1 text-xs rounded-lg [&>svg]:size-3',
+                sm: `sm:px-2 sm:py-1 sm:text-xs sm:rounded-lg sm:[&>svg]:size-3
+                    px-1.5 py-0.5 text-[.625rem] rounded-md [&>svg]:size-2.5
+                `,
                 md: `sm:px-3 sm:py-1.5 sm:text-base sm:gap-2 sm:rounded-lg sm:[&>svg]:size-4
                     px-2 py-1 text-sm rounded-md [&>svg]:size-3.5
                 `,
-                lg: 'px-4 py-2 text-base rounded-xl [&>svg]:size-5',
+                lg: `sm:px-4 sm:py-2 sm:text-base sm:rounded-xl sm:[&>svg]:size-5
+                    px-3 py-1.5 text-base gap-2 rounded-lg [&>svg]:size-4
+                `,
             },
         },
         defaultVariants: {

@@ -8,7 +8,7 @@ import SearchBox from './components/SearchBox'
 export function CertificateEmissionsList() {
     return (
         <Card className="gap-0">
-            <div className="pb-8 border-b">
+            <div className="pb-6 sm:pb-8 border-b">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <CardTitle>Minhas Emissões de Certificados</CardTitle>
@@ -17,7 +17,7 @@ export function CertificateEmissionsList() {
                         </CardDescription> */}
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-[3%] xs:gap-4">
                         <SearchBox />
 
                         <CreationForm />
