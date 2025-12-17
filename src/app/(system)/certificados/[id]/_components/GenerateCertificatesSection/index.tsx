@@ -155,7 +155,7 @@ export function GenerateCertificatesSection({
                     />
                 )}
 
-                <div className="flex gap-4 items-center justify-between flex-wrap p-6 border rounded-lg bg-muted/30">
+                <div className="flex gap-4 items-center justify-between flex-wrap p-6 py-4 sm:py-6 border rounded-lg bg-muted/30">
                     <div className="flex items-center gap-4">
                         <div className="p-3 rounded-full bg-primary/10">
                             <FileCheck className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />

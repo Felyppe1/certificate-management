@@ -114,15 +114,15 @@ export function TemplateDisplay({
         <>
             <div className="space-y-4">
                 <Card className="">
-                    <CardHeader className="flex justify-between">
-                        <div>
+                    <CardHeader className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-0">
+                        <div className="w-full">
                             <CardTitle>Template</CardTitle>
                             <CardDescription>
                                 Template utilizado para gerar os certificados
                             </CardDescription>
                         </div>
 
-                        <div className="flex flex-wrap justify-end gap-2">
+                        <div className="flex flex-wrap justify-end gap-2 min-w-[15rem]">
                             {template.inputMethod !== 'UPLOAD' && (
                                 <RegenerateWarningPopover
                                     open={showRefreshWarning}

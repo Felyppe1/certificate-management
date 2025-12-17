@@ -105,10 +105,10 @@ export async function Metrics() {
                     <div className="flex items-start justify-between sm:mb-4">
                         <div className="flex-1">
                             <div className="flex items-center gap-x-4 gap-y-0 flex-wrap">
-                                <p className="mb-1 text-lg min-w-fit">
+                                <p className="mb-0 sm:mb-1 text-lg min-w-fit">
                                     Total de E-mails Enviados
                                 </p>
-                                <div className="flex items-center gap-1.5 text-[.625rem] sm:text-xs text-muted-foreground/70">
+                                <div className="flex items-center gap-1.5 text-[.625rem] sm:text-xs text-muted-foreground/70 mb-1 sm:mb-0">
                                     <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 min-w-fit" />
                                     <span className="min-w-[9rem]">
                                         Esta métrica pode ter um delay para

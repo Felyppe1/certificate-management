@@ -166,7 +166,7 @@ export function EmailSendingSection({
                             setSendMode(value as 'now' | 'scheduled')
                         }
                     >
-                        <TabsList className="grid w-full grid-cols-2 overflow-scroll">
+                        <TabsList className="w-full grid grid-cols-[minmax(220px,_1fr)_minmax(220px,_1fr)] justify-start overflow-x-auto">
                             <TabsTrigger
                                 value="now"
                                 disabled={emailSent || isScheduled}

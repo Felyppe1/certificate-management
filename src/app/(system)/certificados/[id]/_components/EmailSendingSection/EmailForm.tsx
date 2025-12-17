@@ -146,7 +146,7 @@ export function EmailForm({
                 />
             </div>
 
-            <div className="flex gap-4 items-center justify-between flex-wrap p-6 border rounded-lg dark:bg-input/30 mt-10">
+            <div className="flex gap-4 items-center justify-between flex-wrap p-6 py-4 sm:py-6 border rounded-lg dark:bg-input/30 mt-10">
                 <div className="flex items-center gap-4">
                     <div className="p-3 rounded-full bg-primary/10">
                         <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
