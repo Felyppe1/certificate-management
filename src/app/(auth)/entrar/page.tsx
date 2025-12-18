@@ -18,7 +18,17 @@ export default async function Entrar({
 
             <div className="w-full max-w-md space-y-8">
                 <div className="text-center space-y-2">
-                    <h1 className="text-4xl font-bold">Bem-vindo</h1>
+                    <div className="flex items-center justify-center mb-4">
+                        <img
+                            src="/logo.png"
+                            alt="Certifica"
+                            className="w-10 sm:w-12"
+                        />
+                        <span className="text-3xl sm:text-4xl font-medium ml-2 sm:ml-3">
+                            Certifica
+                        </span>
+                    </div>
+                    {/* <h1 className="text-4xl font-bold">Bem-vindo</h1> */}
                     <p className="text-muted-foreground">
                         Gerencie e gere certificados de forma rápida.
                     </p>
