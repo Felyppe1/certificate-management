@@ -131,14 +131,14 @@ export default async function Entrar({
             <div className="mt-8 text-center text-sm text-muted-foreground">
                 Ao entrar, você concorda com nossos{' '}
                 <Link
-                    href="/termos-de-uso"
+                    href="/termos-de-servico"
                     className="text-primary hover:underline"
                 >
-                    Termos de Uso
+                    Termos de Serviço
                 </Link>{' '}
                 e{' '}
                 <Link
-                    href="/politica-de-privacidade"
+                    href="/politicas-de-privacidade"
                     className="text-primary hover:underline"
                 >
                     Política de Privacidade

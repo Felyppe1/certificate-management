@@ -131,6 +131,27 @@ export default async function UserConfigurationsPage() {
 
                 {/* Danger Zone Card */}
                 <DeleteAccount userEmail={data.user.email} />
+
+                {/* Legal Links */}
+                <div className="text-center text-sm text-muted-foreground">
+                    Ao utilizar o Certifica, você concorda com nossos{' '}
+                    <Link
+                        href="/termos-de-servico"
+                        target="_blank __noopener noreferrer"
+                        className="text-primary hover:underline"
+                    >
+                        Termos de Serviço
+                    </Link>{' '}
+                    e{' '}
+                    <Link
+                        href="/politicas-de-privacidade"
+                        target="_blank __noopener noreferrer"
+                        className="text-primary hover:underline"
+                    >
+                        Política de Privacidade
+                    </Link>
+                    .
+                </div>
             </div>
         </>
     )
