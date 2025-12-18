@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
     Popover,
@@ -9,6 +9,8 @@ import {
 } from '@/components/ui/popover'
 import { HiOutlineLightBulb } from 'react-icons/hi'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+
+const TIPS_STORAGE_KEY = 'certificate-tips-dismissed'
 
 const tips = [
     {
@@ -32,6 +34,18 @@ export function TipsButton() {
     const [currentTip, setCurrentTip] = useState(0)
     const [open, setOpen] = useState(false)
 
+    useEffect(() => {
+        const dismissed = localStorage.getItem(TIPS_STORAGE_KEY)
+        if (!dismissed) {
+            setOpen(true)
+        }
+    }, [])
+
+    const handleDismiss = () => {
+        localStorage.setItem(TIPS_STORAGE_KEY, 'true')
+        setOpen(false)
+    }
+
     const goToPrevious = () => {
         setCurrentTip(prev => (prev > 0 ? prev - 1 : tips.length - 1))
     }
@@ -48,17 +62,17 @@ export function TipsButton() {
                 </Button>
             </PopoverTrigger>
             <PopoverContent
-                className="w-80 bg-blue-800 text-zinc-100 p-5"
+                className="w-[13rem] sm:w-80 bg-blue-800 text-zinc-100 p-4 sm:p-5"
                 side="left"
                 align="start"
             >
                 <div className="space-y-2">
-                    <h4 className="font-semibold text-lg">
+                    <h4 className="font-semibold text-base sm:text-lg">
                         Dica {currentTip + 1}/{tips.length}:{' '}
                         {tips[currentTip].title}
                     </h4>
                     <div
-                        className="text-zinc-200 text-sm leading-relaxed"
+                        className="text-zinc-200 text-xs sm:text-sm leading-relaxed"
                         dangerouslySetInnerHTML={{
                             __html: tips[currentTip].description,
                         }}
@@ -67,16 +81,16 @@ export function TipsButton() {
                         <div className="flex gap-1">
                             <Button
                                 variant="outline"
-                                size="icon"
-                                className="h-8 w-8"
+                                size="icon-sm"
+                                // className="h-8 w-8"
                                 onClick={goToPrevious}
                             >
                                 <ChevronLeft className="h-4 w-4" />
                             </Button>
                             <Button
                                 variant="outline"
-                                size="icon"
-                                className="h-8 w-8"
+                                size="icon-sm"
+                                // className="h-8 w-8"
                                 onClick={goToNext}
                             >
                                 <ChevronRight className="h-4 w-4" />
@@ -85,7 +99,7 @@ export function TipsButton() {
                         <Button
                             variant="default"
                             size="sm"
-                            onClick={() => setOpen(false)}
+                            onClick={handleDismiss}
                             className="bg-zinc-100 hover:bg-zinc-300 text-blue-800"
                         >
                             Entendi
