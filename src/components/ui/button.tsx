@@ -30,7 +30,7 @@ const buttonVariants = cva(
                 lg: `sm:text-lg sm:py-2 sm:px-6 sm:gap-2 sm:has-[>svg]:px-5 sm:[&_svg:not([class*='size-'])]:size-5
                     text-base py-1.5 px-5 gap-1.5 has-[>svg]:px-4 [&_svg:not([class*='size-'])]:size-4
                 `,
-                icon: 'size-9',
+                icon: 'size-8 sm:size-9',
                 'icon-sm': 'size-7 sm:size-8',
                 'icon-lg': 'size-10',
             },

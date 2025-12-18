@@ -33,16 +33,21 @@ const tips = [
 export function TipsButton() {
     const [currentTip, setCurrentTip] = useState(0)
     const [open, setOpen] = useState(false)
+    const [dontShowAgain, setDontShowAgain] = useState(false)
 
     useEffect(() => {
         const dismissed = localStorage.getItem(TIPS_STORAGE_KEY)
         if (!dismissed) {
             setOpen(true)
+        } else {
+            setDontShowAgain(true)
         }
     }, [])
 
     const handleDismiss = () => {
-        localStorage.setItem(TIPS_STORAGE_KEY, 'true')
+        if (dontShowAgain) {
+            localStorage.setItem(TIPS_STORAGE_KEY, 'true')
+        }
         setOpen(false)
     }
 
@@ -58,7 +63,7 @@ export function TipsButton() {
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button variant="outline" size="icon">
-                    <HiOutlineLightBulb size="10rem" className="size-5" />
+                    <HiOutlineLightBulb className="size-4 sm:size-5" />
                 </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -77,7 +82,7 @@ export function TipsButton() {
                             __html: tips[currentTip].description,
                         }}
                     />
-                    <div className="flex items-center justify-between pt-2">
+                    <div className="flex justify-between pt-2">
                         <div className="flex gap-1">
                             <Button
                                 variant="outline"
@@ -96,14 +101,34 @@ export function TipsButton() {
                                 <ChevronRight className="h-4 w-4" />
                             </Button>
                         </div>
-                        <Button
-                            variant="default"
-                            size="sm"
-                            onClick={handleDismiss}
-                            className="bg-zinc-100 hover:bg-zinc-300 text-blue-800"
-                        >
-                            Entendi
-                        </Button>
+                        <div className="flex flex-col items-end">
+                            <Button
+                                variant="default"
+                                size="sm"
+                                onClick={handleDismiss}
+                                className="bg-zinc-100 hover:bg-zinc-300 text-blue-800"
+                            >
+                                Entendi
+                            </Button>
+                            <div className="flex items-center gap-1 sm:gap-2 mt-1">
+                                <label
+                                    htmlFor="dont-show-again"
+                                    className="text-[.6rem] sm:text-xs text-zinc-200 cursor-pointer select-none"
+                                >
+                                    Não mostrar de novo
+                                </label>
+
+                                <input
+                                    type="checkbox"
+                                    id="dont-show-again"
+                                    checked={dontShowAgain}
+                                    onChange={e =>
+                                        setDontShowAgain(e.target.checked)
+                                    }
+                                    className="h-3 w-3 rounded border-zinc-300 cursor-pointer"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </PopoverContent>
