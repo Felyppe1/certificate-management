@@ -9,6 +9,8 @@ import {
 } from '../domain/error/not-found-error'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { ISessionsRepository } from './interfaces/isessions-repository'
+import { IDataSetsRepository } from './interfaces/idata-sets-repository'
+import { GENERATION_STATUS } from '../domain/data-set'
 
 interface UpdateCertificateEmissionUseCaseInput {
     sessionToken: string
@@ -24,6 +26,10 @@ export class UpdateCertificateEmissionUseCase {
             'getById' | 'update'
         >,
         private sessionsRepository: Pick<ISessionsRepository, 'getById'>,
+        private dataSetsRepository: Pick<
+            IDataSetsRepository,
+            'getByCertificateEmissionId' | 'upsert'
+        >,
     ) {}
 
     async execute(data: UpdateCertificateEmissionUseCaseInput) {
@@ -45,12 +51,40 @@ export class UpdateCertificateEmissionUseCase {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
+        const currentVariableColumnMapping =
+            certificate.serialize().variableColumnMapping
+
         certificate.update({
             ...(data.name !== undefined ? { name: data.name } : {}),
             ...(data.variableColumnMapping !== undefined
                 ? { variableColumnMapping: data.variableColumnMapping }
                 : {}),
         })
+
+        console.log(
+            JSON.stringify(currentVariableColumnMapping),
+            JSON.stringify(data.variableColumnMapping),
+        )
+        // If variableColumnMapping changed, set dataSet generationStatus to PENDING
+        if (
+            data.variableColumnMapping !== undefined &&
+            JSON.stringify(currentVariableColumnMapping) !==
+                JSON.stringify(data.variableColumnMapping)
+        ) {
+            console.log('fskdl')
+            const dataSet =
+                await this.dataSetsRepository.getByCertificateEmissionId(
+                    certificate.getId(),
+                )
+
+            if (dataSet) {
+                dataSet.update({
+                    generationStatus: null,
+                })
+
+                await this.dataSetsRepository.upsert(dataSet)
+            }
+        }
 
         await this.certificateEmissionsRepository.update(certificate)
     }

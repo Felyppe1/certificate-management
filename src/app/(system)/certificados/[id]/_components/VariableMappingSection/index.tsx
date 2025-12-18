@@ -35,6 +35,7 @@ import {
 } from 'lucide-react'
 import { startTransition, useActionState, useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
 
 interface VariableMappingSectionProps {
     certificateId: string
@@ -42,6 +43,7 @@ interface VariableMappingSectionProps {
     dataSourceColumns: string[]
     currentMapping: Record<string, string | null>
     emailSent: boolean
+    certificatesGenerated: boolean
 }
 
 export function VariableMappingSection({
@@ -50,11 +52,13 @@ export function VariableMappingSection({
     dataSourceColumns,
     currentMapping,
     emailSent,
+    certificatesGenerated,
 }: VariableMappingSectionProps) {
     const [mappingState, mappingAction, mappingIsLoading] = useActionState(
         updateCertificateEmissionAction,
         null,
     )
+    const [showMappingWarning, setShowMappingWarning] = useState(false)
 
     const [mappings, setMappings] = useState<Record<
         string,
@@ -121,6 +125,14 @@ export function VariableMappingSection({
         return dataSourceColumns.filter(
             column => !mappedColumns.includes(column),
         )
+    }
+
+    const handleSaveClick = () => {
+        if (certificatesGenerated) {
+            setShowMappingWarning(true)
+        } else {
+            handleSave()
+        }
     }
 
     const handleSave = async () => {
@@ -290,22 +302,29 @@ export function VariableMappingSection({
                 </Table>
 
                 <div className="flex flex-wrap gap-4 pt-8 border-t">
-                    <Button
-                        onClick={handleSave}
-                        disabled={mappingIsLoading || !hasChanges}
-                        variant={mappingsSaved ? 'outline' : 'default'}
+                    <RegenerateWarningPopover
+                        open={showMappingWarning}
+                        onOpenChange={setShowMappingWarning}
+                        onConfirm={handleSave}
+                        title="Alterar mapeamento de variáveis?"
                     >
-                        {mappingIsLoading ? (
-                            <>
-                                <Loader2 className="animate-spin" />
-                                Salvando...
-                            </>
-                        ) : mappingsSaved ? (
-                            'Mapeamento Salvo'
-                        ) : (
-                            'Salvar Mapeamento'
-                        )}
-                    </Button>
+                        <Button
+                            onClick={handleSaveClick}
+                            disabled={mappingIsLoading || !hasChanges}
+                            variant={mappingsSaved ? 'outline' : 'default'}
+                        >
+                            {mappingIsLoading ? (
+                                <>
+                                    <Loader2 className="animate-spin" />
+                                    Salvando...
+                                </>
+                            ) : mappingsSaved ? (
+                                'Mapeamento Salvo'
+                            ) : (
+                                'Salvar Mapeamento'
+                            )}
+                        </Button>
+                    </RegenerateWarningPopover>
 
                     {hasChanges && (
                         <Button

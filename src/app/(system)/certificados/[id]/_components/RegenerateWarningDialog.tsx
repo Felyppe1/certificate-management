@@ -51,7 +51,7 @@ export function RegenerateWarningPopover({
                             <div className="flex-shrink-0 text-orange-600 dark:text-orange-400 mt-0.5">
                                 <AlertTriangle className="size-4 sm:size-5" />
                             </div>
-                            <h4 className="font-semibold leading-none text-sm sm:text-base">
+                            <h4 className="font-semibold text-sm sm:text-base">
                                 {title}
                             </h4>
                         </div>

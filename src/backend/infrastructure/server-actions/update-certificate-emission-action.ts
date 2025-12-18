@@ -9,6 +9,7 @@ import { cookies } from 'next/headers'
 import z from 'zod'
 import { logoutAction } from './logout-action'
 import { UpdateCertificateEmissionUseCase } from '@/backend/application/update-certificate-emission-use-case'
+import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 
 const updateCertificateEmissionActionSchema = z.object({
     name: z
@@ -50,11 +51,13 @@ export async function updateCertificateEmissionAction(
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const sessionsRepository = new PrismaSessionsRepository(prisma)
+        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
 
         const updateCertificateEmissionUseCase =
             new UpdateCertificateEmissionUseCase(
                 certificatesRepository,
                 sessionsRepository,
+                dataSetsRepository,
             )
 
         await updateCertificateEmissionUseCase.execute({

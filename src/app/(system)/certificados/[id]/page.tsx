@@ -143,6 +143,10 @@ export default async function CertificatePage({
                                 .variableColumnMapping
                         }
                         emailSent={emailSent}
+                        certificatesGenerated={
+                            dataSet?.generationStatus ===
+                            GENERATION_STATUS.COMPLETED
+                        }
                     />
                 )}
 
