@@ -138,7 +138,7 @@
         box-shadow: var(--shadow-l);
     }
 
-    /* @keyframes float {
+    @keyframes float {
     0% {
       transform: translate(0, 0) scale(1) rotate(0deg);
     }
@@ -183,5 +183,5 @@
 
   .animate-float-delayed {
     animation: float-delayed 22s ease-in-out infinite;
-  } */
+  }
 }
