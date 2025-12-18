@@ -37,14 +37,19 @@ for var_name, var_value in {
     if not var_value:
         raise ValueError(f"Environment variable '{var_name}' is not set.")
 
+DOCX_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+GOOGLE_DOCS_MIME_TYPE = 'application/vnd.google-apps.document'
+PPTX_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+GOOGLE_SLIDES_MIME_TYPE = 'application/vnd.google-apps.presentation'
+
 storage_client = storage.Client()
 
-def download_from_google_drive_api(drive_file_id: str, is_docx: bool, access_token: Optional[str] = None) -> BytesIO:
-    if is_docx:
-        url = f"https://docs.google.com/document/d/{drive_file_id}/export?format=docx"
+def download_from_google_drive_api(drive_file_id: str, file_mime_type: str, access_token: Optional[str] = None) -> BytesIO:
+    if file_mime_type in [GOOGLE_DOCS_MIME_TYPE, GOOGLE_SLIDES_MIME_TYPE]:
+        url = f"https://www.googleapis.com/drive/v3/files/{drive_file_id}/export?mimeType={file_mime_type}"
     else:
-        url = f"https://docs.google.com/presentation/d/{drive_file_id}/export?format=pptx"
-
+        url = f"https://www.googleapis.com/drive/v3/files/{drive_file_id}?alt=media"
+    
     headers = {
         'Authorization': f'Bearer {access_token}',
         'Accept': 'application/json'
@@ -317,19 +322,9 @@ def main(request):
         template_buffer = None
         is_docx = None
 
-        mime_types_for_docx = [
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.google-apps.document'
-        ]
-
-        mime_types_for_pptx = [
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            'application/vnd.google-apps.presentation'
-        ]
-
-        if file_mime_type in mime_types_for_docx:
+        if file_mime_type in [DOCX_MIME_TYPE, GOOGLE_DOCS_MIME_TYPE]:
             is_docx = True
-        elif file_mime_type in mime_types_for_pptx:
+        elif file_mime_type in [PPTX_MIME_TYPE, GOOGLE_SLIDES_MIME_TYPE]:
             is_docx = False
         else:
             return {'error': f'Unsupported template file extension: {file_mime_type}'}, 422
