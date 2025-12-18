@@ -41,19 +41,22 @@ export function RegenerateWarningPopover({
             >
                 {children}
             </PopoverTrigger>
-            <PopoverContent className="w-80 px-5 py-4" align="end">
+            <PopoverContent
+                className="w-[16rem] sm:w-80 px-4 sm:px-5 py-4"
+                align="end"
+            >
                 <div className="space-y-5">
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-3">
                             <div className="flex-shrink-0 text-orange-600 dark:text-orange-400 mt-0.5">
-                                <AlertTriangle className="h-5 w-5" />
+                                <AlertTriangle className="size-4 sm:size-5" />
                             </div>
-                            <h4 className="font-semibold leading-none">
+                            <h4 className="font-semibold leading-none text-sm sm:text-base">
                                 {title}
                             </h4>
                         </div>
                         <div className="flex-1 space-y-1">
-                            <p className="text-sm">
+                            <p className="text-xs sm:text-sm">
                                 Você precisará gerar os certificados novamente
                                 após esta ação.
                             </p>
