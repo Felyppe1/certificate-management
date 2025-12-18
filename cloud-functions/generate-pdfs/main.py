@@ -45,8 +45,13 @@ GOOGLE_SLIDES_MIME_TYPE = 'application/vnd.google-apps.presentation'
 storage_client = storage.Client()
 
 def download_from_google_drive_api(drive_file_id: str, file_mime_type: str, access_token: Optional[str] = None) -> BytesIO:
+    mime_type_mapping = {
+        GOOGLE_DOCS_MIME_TYPE: DOCX_MIME_TYPE,
+        GOOGLE_SLIDES_MIME_TYPE: PPTX_MIME_TYPE,
+    }
+
     if file_mime_type in [GOOGLE_DOCS_MIME_TYPE, GOOGLE_SLIDES_MIME_TYPE]:
-        url = f"https://www.googleapis.com/drive/v3/files/{drive_file_id}/export?mimeType={file_mime_type}"
+        url = f"https://www.googleapis.com/drive/v3/files/{drive_file_id}/export?mimeType={mime_type_mapping[file_mime_type]}"
     else:
         url = f"https://www.googleapis.com/drive/v3/files/{drive_file_id}?alt=media"
     
@@ -317,7 +322,6 @@ def main(request):
     
     variable_mapping = certificate_emission.get('variableColumnMapping', {})
 
-    print('before try')
     try:
         template_buffer = None
         is_docx = None
@@ -329,7 +333,7 @@ def main(request):
         else:
             return {'error': f'Unsupported template file extension: {file_mime_type}'}, 422
 
-        print('input_method', input_method)
+        print('Input method: ', input_method)
         if input_method == 'UPLOAD':
             storage_file_url = template.get('storageFileUrl')
             if not storage_file_url:
@@ -343,7 +347,7 @@ def main(request):
             if not drive_file_id:
                 return {'error': 'Template driveFileId not found'}, 400
 
-            template_buffer = download_from_google_drive_api(drive_file_id, is_docx)
+            template_buffer = download_from_google_drive_api(drive_file_id, file_mime_type)
 
         elif input_method == 'GOOGLE_DRIVE':
             drive_file_id = template.get('driveFileId')
@@ -354,20 +358,18 @@ def main(request):
             if not google_access_token:
                 return {'error': 'Google access token is missing'}, 400
 
-            template_buffer = download_from_google_drive_api(drive_file_id, is_docx, google_access_token)
-
+            template_buffer = download_from_google_drive_api(drive_file_id, file_mime_type, access_token=google_access_token)
         if is_docx:
             file_extension_str = 'docx'
         else:
             file_extension_str = 'pptx'
 
         total_bytes = 0
-        print('template buffer', template_buffer)
         delete_by_prefix(f"users/{user_id}/certificates/{certificate_emission_id}/certificate")
 
-        print('before if variable mapping')
+        print('Generating certificates...')
         for index, row in enumerate(rows):
-            print(row)
+            print(f'Row {index}: ', row)
             certificate_buffer = BytesIO(template_buffer.getvalue())
 
             if variable_mapping:
@@ -401,7 +403,6 @@ def main(request):
 
             total_bytes += blob.size
         
-        print('before update')
         update_data_set_status(data_set_id, 'COMPLETED', total_bytes)
         
         return "", 204
@@ -411,7 +412,7 @@ def main(request):
         update_error = None
 
         try:
-            print('before error update')
+            print('Sending error status update...')
             update_data_set_status(data_set_id, 'FAILED')
         except Exception as inner_e:
             update_error = str(inner_e)
