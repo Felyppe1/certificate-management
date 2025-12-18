@@ -1,3 +1,4 @@
+from typing import Optional
 import functions_framework
 from dotenv import load_dotenv
 import os
@@ -38,9 +39,24 @@ for var_name, var_value in {
 
 storage_client = storage.Client()
 
-def download_file_from_url(url):
-    response = requests.get(url, allow_redirects=True)
-    response.raise_for_status()
+def download_from_google_drive_api(drive_file_id: str, is_docx: bool, access_token: Optional[str] = None) -> BytesIO:
+    if is_docx:
+        url = f"https://docs.google.com/document/d/{drive_file_id}/export?format=docx"
+    else:
+        url = f"https://docs.google.com/presentation/d/{drive_file_id}/export?format=pptx"
+
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Accept': 'application/json'
+    } if access_token else {}
+    
+    response = requests.get(url, headers=headers)
+    
+    if response.status_code != 200:
+        print(f"Erro {response.status_code}:")
+        print(response.text)
+        response.raise_for_status()
+        
     return BytesIO(response.content)
 
 def replace_variables_in_docx(template_buffer, variable_mapping):
@@ -318,19 +334,8 @@ def main(request):
         else:
             return {'error': f'Unsupported template file extension: {file_mime_type}'}, 422
 
-        if input_method == 'URL':
-            drive_file_id = template.get('driveFileId')
-            if not drive_file_id:
-                return {'error': 'Template driveFileId not found'}, 400
-
-            if is_docx:
-                template_url = f"https://docs.google.com/document/d/{drive_file_id}/export?format=docx"
-            else:
-                template_url = f"https://docs.google.com/presentation/d/{drive_file_id}/export?format=pptx"
-            
-            template_buffer = download_file_from_url(template_url)
-
-        elif input_method == 'UPLOAD':
+        print('input_method', input_method)
+        if input_method == 'UPLOAD':
             storage_file_url = template.get('storageFileUrl')
             if not storage_file_url:
                 return {'error': 'Template storageFileUrl not found'}, 400
@@ -338,7 +343,23 @@ def main(request):
             template_bytes = get_from_bucket(storage_file_url)
             template_buffer = BytesIO(template_bytes)
 
-        # TODO: get the template from other input method options
+        elif input_method == 'URL':
+            drive_file_id = template.get('driveFileId')
+            if not drive_file_id:
+                return {'error': 'Template driveFileId not found'}, 400
+
+            template_buffer = download_from_google_drive_api(drive_file_id, is_docx)
+
+        elif input_method == 'GOOGLE_DRIVE':
+            drive_file_id = template.get('driveFileId')
+            if not drive_file_id:
+                return {'error': 'Template driveFileId not found'}, 400
+            
+            google_access_token = certificate_emission.get('googleAccessToken')
+            if not google_access_token:
+                return {'error': 'Google access token is missing'}, 400
+
+            template_buffer = download_from_google_drive_api(drive_file_id, is_docx, google_access_token)
 
         if is_docx:
             file_extension_str = 'docx'
@@ -346,13 +367,13 @@ def main(request):
             file_extension_str = 'pptx'
 
         total_bytes = 0
-
+        print('template buffer', template_buffer)
         delete_by_prefix(f"users/{user_id}/certificates/{certificate_emission_id}/certificate")
 
         print('before if variable mapping')
         for index, row in enumerate(rows):
             print(row)
-            certificate_buffer = template_buffer
+            certificate_buffer = BytesIO(template_buffer.getvalue())
 
             if variable_mapping:
                 row_variable_mapping = {}
@@ -361,11 +382,12 @@ def main(request):
                         row_variable_mapping[template_var] = row[column_name]
                 
                 if is_docx:
-                    certificate_buffer = replace_variables_in_docx(template_buffer, row_variable_mapping)
+                    certificate_buffer = replace_variables_in_docx(certificate_buffer, row_variable_mapping)
                 else:
-                    certificate_buffer = replace_variables_in_pptx(template_buffer, row_variable_mapping)
+                    certificate_buffer = replace_variables_in_pptx(certificate_buffer, row_variable_mapping)
             
             pdf_buffer = convert_to_pdf_with_libreoffice(certificate_buffer, file_extension_str)
+
             # pdf_buffer = convert_to_pdf_via_google_drive(template_buffer, file_extension_str)
 
             # Save file
@@ -383,39 +405,6 @@ def main(request):
             # upload_to_bucket(certificate_buffer, file_path)
 
             total_bytes += blob.size
-        # if variable_mapping:
-        #     for index, row in enumerate(rows):
-        #         print(row)
-        #         row_variable_mapping = {}
-        #         for template_var, column_name in variable_mapping.items():
-        #             if column_name and column_name in row:
-        #                 row_variable_mapping[template_var] = row[column_name]
-                
-        #         if is_docx:
-        #             filled_buffer = replace_variables_in_docx(template_buffer, row_variable_mapping)
-        #             file_extension_str = 'docx'
-        #         else:
-        #             filled_buffer = replace_variables_in_pptx(template_buffer, row_variable_mapping)
-        #             file_extension_str = 'pptx'
-            
-        #         pdf_buffer = convert_to_pdf_with_libreoffice(filled_buffer, file_extension_str)
-        #         # pdf_buffer = convert_to_pdf_via_google_drive(filled_buffer, file_extension_str)
-
-        #         # Save file
-        #         # file_path = f"output/certificate-{index + 1}.pdf"
-        #         # save_to_local(pdf_buffer, file_path)
-
-        #         # file_path = f"output/certificate-{index + 1}.{file_extension_str}"
-        #         # save_to_local(filled_buffer, file_path)
-
-        #         # Uploading to bucket
-        #         file_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.{file_extension_str}"
-        #         upload_to_bucket(filled_buffer, file_path)
-
-        #         pdf_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.pdf"
-        #         blob = upload_to_bucket(pdf_buffer, pdf_path)
-
-        #         total_bytes += blob.size
         
         print('before update')
         update_data_set_status(data_set_id, 'COMPLETED', total_bytes)

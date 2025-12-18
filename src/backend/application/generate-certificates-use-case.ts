@@ -16,7 +16,7 @@ import {
     ValidationError,
 } from '../domain/error/validation-error'
 import { IExternalProcessing } from './interfaces/iexternal-processing'
-import { IBucket } from './interfaces/ibucket'
+import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
 
 interface GenerateCertificatesUseCaseInput {
     certificateEmissionId: string
@@ -26,6 +26,10 @@ interface GenerateCertificatesUseCaseInput {
 export class GenerateCertificatesUseCase {
     constructor(
         private sessionsRepository: Pick<ISessionsRepository, 'getById'>,
+        private externalUserAccountsRepository: Pick<
+            IExternalUserAccountsRepository,
+            'getById'
+        >,
         private certificateEmissionsRepository: Pick<
             ICertificatesRepository,
             'getById'
@@ -84,6 +88,12 @@ export class GenerateCertificatesUseCase {
             throw new ValidationError(VALIDATION_ERROR_TYPE.NO_DATA_SET_ROWS)
         }
 
+        const externalUserAccount =
+            await this.externalUserAccountsRepository.getById(
+                session.userId,
+                'GOOGLE',
+            )
+
         dataSet.update({
             generationStatus: GENERATION_STATUS.PENDING,
         })
@@ -94,6 +104,7 @@ export class GenerateCertificatesUseCase {
         const body = {
             certificateEmission: {
                 ...certificateEmissionData,
+                googleAccessToken: externalUserAccount?.accessToken,
                 template: template!,
                 dataSource: {
                     ...dataSource!,

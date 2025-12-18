@@ -7,6 +7,7 @@ services:
       - "8080:8080"
     volumes:
       - /home/felyppe/pessoal/certificate-management/terraform-sa.json:/app/service-account.json
+      - ./output:/app/output
     env_file:
       - .env
     environment:
