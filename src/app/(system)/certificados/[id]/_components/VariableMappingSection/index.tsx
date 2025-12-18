@@ -166,7 +166,7 @@ export function VariableMappingSection({
                 {hasInsufficientColumns && (
                     <AlertMessage
                         variant="warning"
-                        icon={<CircleAlert className="" />}
+                        icon={<CircleAlert />}
                         text="Colunas insuficientes"
                         description={`
                         A fonte de dados possui 

@@ -20,21 +20,24 @@ const alertMessageVariants = cva('rounded-lg p-3 sm:p-4 border', {
     },
 })
 
-const alertMessageIconVariants = cva('w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0', {
-    variants: {
-        variant: {
-            success: 'text-green-600 dark:text-green-400',
-            error: 'text-red-600 dark:text-red-400',
-            warning: 'text-orange-600 dark:text-orange-400',
-            info: 'text-blue-600 dark:text-blue-400',
-            purple: 'text-purple-600 dark:text-purple-400',
-            muted: 'text-muted-foreground',
+const alertMessageIconVariants = cva(
+    `[&_svg:not([class*='size-'])]:size-4 sm:[&_svg:not([class*='size-'])]:size-5 flex-shrink-0`,
+    {
+        variants: {
+            variant: {
+                success: 'text-green-600 dark:text-green-400',
+                error: 'text-red-600 dark:text-red-400',
+                warning: 'text-orange-600 dark:text-orange-400',
+                info: 'text-blue-600 dark:text-blue-400',
+                purple: 'text-purple-600 dark:text-purple-400',
+                muted: 'text-muted-foreground',
+            },
+        },
+        defaultVariants: {
+            variant: 'muted',
         },
     },
-    defaultVariants: {
-        variant: 'muted',
-    },
-})
+)
 
 const alertMessageTitleVariants = cva('font-medium', {
     variants: {

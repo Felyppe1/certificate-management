@@ -117,7 +117,7 @@ export function GenerateCertificatesSection({
                 {certificatesWereGenerated && (
                     <AlertMessage
                         variant="success"
-                        icon={<CheckCircle2 className="size-5" />}
+                        icon={<CheckCircle2 />}
                         text={`
                             ${totalRecords}
                             ${totalRecords !== 1 ? 'certificados' : 'certificado'}
@@ -150,7 +150,7 @@ export function GenerateCertificatesSection({
                 {certificatesGenerationFailed && (
                     <AlertMessage
                         variant="error"
-                        icon={<CircleAlert className="size-5" />}
+                        icon={<CircleAlert />}
                         text="A geração de certificados anterior falhou. Tente novamente."
                     />
                 )}

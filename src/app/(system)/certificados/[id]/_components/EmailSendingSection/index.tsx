@@ -129,7 +129,7 @@ export function EmailSendingSection({
                 {!variablesMapped && !emailSent && !isScheduled && (
                     <AlertMessage
                         variant="muted"
-                        icon={<AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />}
+                        icon={<AlertCircle />}
                         text="Mapeamento de variáveis necessário"
                         description="Complete o mapeamento de variáveis para poder enviar os certificados."
                     />
@@ -139,7 +139,7 @@ export function EmailSendingSection({
                 {isScheduled && !emailSent && (
                     <AlertMessage
                         variant="purple"
-                        icon={<Clock className="w-4 h-4 sm:w-5 sm:h-5" />}
+                        icon={<Clock />}
                         text="Envio agendado"
                         description={`Os emails serão enviados em ${scheduledDate?.toLocaleString('pt-BR')}`}
                     />
@@ -149,9 +149,7 @@ export function EmailSendingSection({
                 {emailSent && (
                     <AlertMessage
                         variant="success"
-                        icon={
-                            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                        }
+                        icon={<CheckCircle2 />}
                         text="Emails enviados com sucesso"
                         description="Todos os certificados foram enviados para os destinatários."
                     />
@@ -171,7 +169,7 @@ export function EmailSendingSection({
                                 value="now"
                                 disabled={emailSent || isScheduled}
                             >
-                                <Send className="" />
+                                <Send />
                                 Enviar Agora
                             </TabsTrigger>
                             <TabsTrigger
@@ -179,7 +177,7 @@ export function EmailSendingSection({
                                 // disabled={emailSent || isScheduled}
                                 disabled
                             >
-                                <Calendar className="" />
+                                <Calendar />
                                 Agendar Envio
                                 <Badge variant="purple" size="sm">
                                     Em Breve
@@ -191,9 +189,7 @@ export function EmailSendingSection({
                             {!certificatesGenerated && (
                                 <AlertMessage
                                     variant="warning"
-                                    icon={
-                                        <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                                    }
+                                    icon={<AlertCircle />}
                                     text="Para enviar os emails agora, é necessário gerar os certificados antes."
                                     className="mb-7"
                                 />
