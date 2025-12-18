@@ -19,6 +19,14 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table'
+import {
     ArrowRight,
     Undo2,
     CircleAlert,
@@ -188,79 +196,98 @@ export function VariableMappingSection({
                     />
                 )}
 
-                <div className="space-y-4 pb-2 overflow-x-auto">
-                    <div className="grid grid-cols-[1fr_auto_1fr] gap-4 px-4 pb-2 border-b">
-                        <div className="text-sm font-medium text-muted-foreground">
-                            Variável do Template
-                        </div>
-                        <div className="w-8"></div>
-                        <div className="text-sm font-medium text-muted-foreground">
-                            Coluna da Fonte de Dados
-                        </div>
-                    </div>
+                <Table>
+                    <TableHeader>
+                        <TableRow className="border-b hover:bg-transparent">
+                            <TableHead className="text-muted-foreground">
+                                Variável do Template
+                            </TableHead>
+                            <TableHead className="w-8"></TableHead>
+                            <TableHead className="text-muted-foreground">
+                                Coluna da Fonte de Dados
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {templateVariables.map(variable => {
+                            const availableColumns =
+                                getAvailableColumns(variable)
 
-                    {templateVariables.map(variable => {
-                        const availableColumns = getAvailableColumns(variable)
-
-                        return (
-                            <div
-                                key={variable}
-                                className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center px-4  rounded-lg"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <Badge
-                                        variant="outline"
-                                        className="font-mono"
-                                    >
-                                        {`{{ ${variable} }}`}
-                                    </Badge>
-                                </div>
-
-                                <div className="flex items-center justify-center">
-                                    <ArrowRight className="text-muted-foreground size-5 sm:size-auto" />
-                                </div>
-
-                                <div className="min-w-0">
-                                    <Select
-                                        value={mappings![variable] || ''}
-                                        onValueChange={value => {
-                                            handleMappingChange(variable, value)
-                                        }}
-                                        disabled={emailSent}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Selecione uma coluna" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {mappings![variable] && (
-                                                <SelectItem
-                                                    value="__clear__"
-                                                    className="text-muted-foreground italic"
-                                                >
-                                                    Desselecionar
-                                                </SelectItem>
-                                            )}
-                                            {availableColumns.length === 0 ? (
-                                                <p className="text-sm px-3 py-1">
-                                                    Nenhuma coluna disponível
-                                                </p>
-                                            ) : (
-                                                availableColumns.map(column => (
-                                                    <SelectItem
-                                                        key={column}
-                                                        value={column}
-                                                    >
-                                                        {column}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                        )
-                    })}
-                </div>
+                            return (
+                                <TableRow
+                                    key={variable}
+                                    className="hover:bg-transparent border-none"
+                                >
+                                    <TableCell>
+                                        <div className="flex items-center gap-2">
+                                            <Badge
+                                                variant="outline"
+                                                className="font-mono"
+                                            >
+                                                {`{{ ${variable} }}`}
+                                            </Badge>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center justify-center">
+                                            <ArrowRight className="text-muted-foreground size-5 sm:size-auto" />
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="min-w-0">
+                                            <Select
+                                                value={
+                                                    mappings![variable] || ''
+                                                }
+                                                onValueChange={value => {
+                                                    handleMappingChange(
+                                                        variable,
+                                                        value,
+                                                    )
+                                                }}
+                                                disabled={emailSent}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Selecione uma coluna" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {mappings![variable] && (
+                                                        <SelectItem
+                                                            value="__clear__"
+                                                            className="text-muted-foreground italic"
+                                                        >
+                                                            Desselecionar
+                                                        </SelectItem>
+                                                    )}
+                                                    {availableColumns.length ===
+                                                    0 ? (
+                                                        <p className="text-sm px-3 py-1">
+                                                            Nenhuma coluna
+                                                            disponível
+                                                        </p>
+                                                    ) : (
+                                                        availableColumns.map(
+                                                            column => (
+                                                                <SelectItem
+                                                                    key={column}
+                                                                    value={
+                                                                        column
+                                                                    }
+                                                                >
+                                                                    {column}
+                                                                </SelectItem>
+                                                            ),
+                                                        )
+                                                    )}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        })}
+                    </TableBody>
+                </Table>
 
                 <div className="flex flex-wrap gap-4 pt-8 border-t">
                     <Button
