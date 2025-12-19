@@ -49,6 +49,7 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GA_ID: ${{ secrets.GA_ID }}
           SUFFIX: ${{ github.ref_name == 'main' && '' || format('-{0}', github.ref_name) }}
+          NEXT_PUBLIC_BASE_URL: ${{ variables.NEXT_PUBLIC_BASE_URL }}
         run: |
           echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "TF_VAR_region=${{ env.REGION }}" >> $GITHUB_ENV
@@ -70,7 +71,8 @@ jobs:
             GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
             GOOGLE_API_KEY: env.GOOGLE_API_KEY,
             GA_ID: env.GA_ID,
-            SUFFIX: env.SUFFIX
+            SUFFIX: env.SUFFIX,
+            NEXT_PUBLIC_BASE_URL: env.NEXT_PUBLIC_BASE_URL
           }')
 
           echo "TF_VAR_environment_variables=$TF_ENV_VARS" >> $GITHUB_ENV
@@ -164,6 +166,7 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GA_ID: ${{ secrets.GA_ID }}
           SUFFIX: ${{ github.ref_name == 'main' && '' || format('-{0}', github.ref_name) }}
+          NEXT_PUBLIC_BASE_URL: ${{ variables.NEXT_PUBLIC_BASE_URL }}
         run: |
           echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "TF_VAR_region=${{ env.REGION }}" >> $GITHUB_ENV
@@ -185,7 +188,8 @@ jobs:
             GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
             GOOGLE_API_KEY: env.GOOGLE_API_KEY,
             GA_ID: env.GA_ID,
-            SUFFIX: env.SUFFIX
+            SUFFIX: env.SUFFIX,
+            NEXT_PUBLIC_BASE_URL: env.NEXT_PUBLIC_BASE_URL
           }')
 
           echo "TF_VAR_environment_variables=$TF_ENV_VARS" >> $GITHUB_ENV
@@ -235,11 +239,11 @@ jobs:
           name: artifact-registry-path
           path: ./terraform/artifact_registry_path.txt
 
-      - name: Get Cloud Run URL from Terraform
-        id: get_url
-        working-directory: ./terraform
-        run: |
-          echo "cloud_run_url=$(terraform output -raw cloud_run_url)" >> $GITHUB_OUTPUT
+      # - name: Get Cloud Run URL from Terraform
+      #   id: get_url
+      #   working-directory: ./terraform
+      #   run: |
+      #     echo "cloud_run_url=$(terraform output -raw cloud_run_url)" >> $GITHUB_OUTPUT
 
       - name: Get Service Name from Terraform
         id: get_service_name
@@ -260,7 +264,7 @@ jobs:
 
     env:
       REGION: us-central1
-      CLOUD_RUN_URL: ${{ needs.terraform-apply.outputs.cloud_run_url }}
+      # CLOUD_RUN_URL: ${{ needs.terraform-apply.outputs.cloud_run_url }}
       CLOUD_RUN_NAME: ${{ needs.terraform-apply.outputs.cloud_run_name }}
 
     steps:
@@ -288,10 +292,10 @@ jobs:
         run: echo "ARTIFACT_REGISTRY_PATH=$(cat artifact_registry_path.txt)" >> $GITHUB_ENV
 
       - name: Build Docker image
+        # --build-arg NEXT_PUBLIC_BASE_URL=$CLOUD_RUN_URL \
         run: |
           docker build \
             --build-arg DB_URL="${{ secrets.DB_URL }}" \
-            --build-arg NEXT_PUBLIC_BASE_URL=$CLOUD_RUN_URL \
             -t $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA .
 
       - name: Push image
