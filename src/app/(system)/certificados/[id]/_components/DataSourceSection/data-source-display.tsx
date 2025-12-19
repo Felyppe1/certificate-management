@@ -100,7 +100,7 @@ export function DataSourceDisplay({
         null,
     )
 
-    const [, deleteAction, isDeleting] = useActionState(
+    const [deleteState, deleteAction, isDeleting] = useActionState(
         deleteDataSourceAction,
         null,
     )
@@ -177,6 +177,16 @@ export function DataSourceDisplay({
     }, [refreshState])
 
     useEffect(() => {
+        if (!deleteState) return
+
+        if (deleteState.success) {
+            toast.success(deleteState.message)
+        } else {
+            toast.error(deleteState.message)
+        }
+    }, [deleteState])
+
+    useEffect(() => {
         if (!viewCertificateState) return
 
         if (viewCertificateState.success) {
@@ -196,7 +206,7 @@ export function DataSourceDisplay({
         <>
             <Card className="" id="data-source-section">
                 <CardHeader className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-0">
-                    <div className="w-full">
+                    <div>
                         <CardTitle>Fonte de Dados</CardTitle>
                         <CardDescription>
                             Fonte de dados utilizada para gerar os certificados

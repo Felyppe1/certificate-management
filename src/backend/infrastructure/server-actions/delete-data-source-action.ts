@@ -62,5 +62,5 @@ export async function deleteDataSourceAction(_: unknown, formData: FormData) {
 
     updateTag('certificate')
 
-    return { success: true }
+    return { success: true, message: 'Fonte de dados deletada com sucesso' }
 }

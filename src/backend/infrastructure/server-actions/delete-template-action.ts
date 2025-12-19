@@ -55,7 +55,7 @@ export async function deleteTemplateAction(_: unknown, formData: FormData) {
 
         updateTag('certificate')
 
-        return { success: true }
+        return { success: true, message: 'Template deletado com sucesso' }
     } catch (error) {
         console.error('Error deleting template:', error)
 

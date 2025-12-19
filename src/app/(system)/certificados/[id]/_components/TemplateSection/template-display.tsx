@@ -10,13 +10,14 @@ import {
     CardTitle,
 } from '@/components/ui/card'
 import { RefreshCw, Edit3, Trash2, ALargeSmall } from 'lucide-react'
-import { startTransition, useActionState, useState } from 'react'
+import { startTransition, useActionState, useEffect, useState } from 'react'
 import { refreshTemplateAction } from '@/backend/infrastructure/server-actions/refresh-template-action'
 import { deleteTemplateAction } from '@/backend/infrastructure/server-actions/delete-template-action'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { SourceIcon } from '@/components/svg/SourceIcon'
 import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
+import { toast } from 'sonner'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -57,12 +58,12 @@ export function TemplateDisplay({
     const [showRefreshWarning, setShowRefreshWarning] = useState(false)
     const [showEditWarning, setShowEditWarning] = useState(false)
 
-    const [, refreshAction, isRefreshing] = useActionState(
+    const [refreshState, refreshAction, isRefreshing] = useActionState(
         refreshTemplateAction,
         null,
     )
 
-    const [, deleteAction, isDeleting] = useActionState(
+    const [deleteState, deleteAction, isDeleting] = useActionState(
         deleteTemplateAction,
         null,
     )
@@ -110,12 +111,32 @@ export function TemplateDisplay({
         }
     }
 
+    useEffect(() => {
+        if (!refreshState) return
+
+        if (refreshState.success) {
+            toast.success(refreshState.message)
+        } else {
+            toast.error(refreshState.message)
+        }
+    }, [refreshState])
+
+    useEffect(() => {
+        if (!deleteState) return
+
+        if (deleteState.success) {
+            toast.success(deleteState.message)
+        } else {
+            toast.error(deleteState.message)
+        }
+    }, [deleteState])
+
     return (
         <>
             <div className="space-y-4">
                 <Card className="">
                     <CardHeader className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-0">
-                        <div className="w-full">
+                        <div>
                             <CardTitle>Template</CardTitle>
                             <CardDescription>
                                 Template utilizado para gerar os certificados

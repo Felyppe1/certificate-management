@@ -19,27 +19,27 @@ const Toaster = ({ ...props }: ToasterProps) => {
             className="toaster group"
             icons={{
                 success: (
-                    <CircleCheckIcon className="size-5 text-green-600 dark:text-green-400" />
+                    <CircleCheckIcon className="size-4 sm:size-5 text-green-600 dark:text-green-400" />
                 ),
                 info: (
-                    <InfoIcon className="size-5 text-blue-600 dark:text-blue-400" />
+                    <InfoIcon className="size-4 sm:size-5 text-blue-600 dark:text-blue-400" />
                 ),
                 warning: (
-                    <TriangleAlertIcon className="size-5 text-orange-600 dark:text-orange-400" />
+                    <TriangleAlertIcon className="size-4 sm:size-5 text-orange-600 dark:text-orange-400" />
                 ),
                 error: (
-                    <OctagonXIcon className="size-5 text-red-600 dark:text-red-400" />
+                    <OctagonXIcon className="size-4 sm:size-5 text-red-600 dark:text-red-400" />
                 ),
                 loading: (
-                    <Loader2Icon className="size-5 animate-spin text-muted-foreground" />
+                    <Loader2Icon className="size-4 sm:size-5 animate-spin text-muted-foreground" />
                 ),
             }}
             toastOptions={{
                 classNames: {
-                    icon: '!mr-3',
+                    icon: '!mr-1 sm:!mr-3',
                     toast: '!bg-card !border-border !text-card-foreground !rounded-lg !shadow-lg',
-                    title: '!text-foreground !text-base !font-medium',
-                    description: '!text-muted-foreground !text-sm',
+                    title: '!text-foreground !text-sm sm:!text-base !font-medium',
+                    description: '!text-muted-foreground !text-xs sm:!text-sm',
                     success:
                         '!bg-green-50 dark:!bg-green-950 !border-green-200 dark:!border-green-900 [&_[data-title]]:!text-green-900 dark:[&_[data-title]]:!text-green-100 [&_[data-description]]:!text-green-700 dark:[&_[data-description]]:!text-green-300',
                     error: '!bg-red-50 dark:!bg-red-950 !border-red-200 dark:!border-red-900 [&_[data-title]]:!text-red-900 dark:[&_[data-title]]:!text-red-100 [&_[data-description]]:!text-red-700 dark:[&_[data-description]]:!text-red-300',
