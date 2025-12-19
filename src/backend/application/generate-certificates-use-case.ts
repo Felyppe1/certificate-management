@@ -94,14 +94,13 @@ export class GenerateCertificatesUseCase {
                 'GOOGLE',
             )
 
-        // dataSet.update({
-        //     generationStatus: GENERATION_STATUS.PENDING,
-        // })
+        dataSet.update({
+            generationStatus: GENERATION_STATUS.PENDING,
+        })
 
         const { dataSource, template, ...certificateEmissionData } =
             certificateEmission.serialize()
 
-        console.log('externalaccount', externalUserAccount?.accessToken)
         const body = {
             certificateEmission: {
                 ...certificateEmissionData,
