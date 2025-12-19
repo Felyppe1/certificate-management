@@ -13,6 +13,7 @@ import { RefreshCw, Edit3, Trash2, ALargeSmall } from 'lucide-react'
 import { startTransition, useActionState, useEffect, useState } from 'react'
 import { refreshTemplateAction } from '@/backend/infrastructure/server-actions/refresh-template-action'
 import { deleteTemplateAction } from '@/backend/infrastructure/server-actions/delete-template-action'
+import { downloadTemplateAction } from '@/backend/infrastructure/server-actions/download-template-action'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { SourceIcon } from '@/components/svg/SourceIcon'
@@ -68,6 +69,12 @@ export function TemplateDisplay({
         null,
     )
 
+    const [
+        downloadTemplateState,
+        downloadTemplateActionHandler,
+        isDownloadingTemplate,
+    ] = useActionState(downloadTemplateAction, null)
+
     const handleRefresh = () => {
         const formData = new FormData()
         formData.append('certificateId', certificateId)
@@ -86,9 +93,18 @@ export function TemplateDisplay({
         })
     }
 
+    const handleDownloadTemplate = () => {
+        const formData = new FormData()
+        formData.append('certificateEmissionId', certificateId)
+
+        startTransition(() => {
+            downloadTemplateActionHandler(formData)
+        })
+    }
+
     const handleViewFile = () => {
-        if (template.inputMethod === 'UPLOAD' && template.storageFileUrl) {
-            window.open(template.storageFileUrl, '_blank')
+        if (template.inputMethod === 'UPLOAD') {
+            handleDownloadTemplate()
         } else if (template.driveFileId) {
             const driveUrl = `https://drive.google.com/file/d/${template.driveFileId}/view`
             window.open(driveUrl, '_blank')
@@ -130,6 +146,18 @@ export function TemplateDisplay({
             toast.error(deleteState.message)
         }
     }, [deleteState])
+
+    useEffect(() => {
+        if (!downloadTemplateState) return
+
+        if (downloadTemplateState.success) {
+            const signedUrl = downloadTemplateState.data!
+
+            window.open(signedUrl, '_blank', 'noopener,noreferrer')
+        } else {
+            toast.error(downloadTemplateState.message)
+        }
+    }, [downloadTemplateState])
 
     return (
         <>
@@ -250,9 +278,11 @@ export function TemplateDisplay({
                                                     variant="default"
                                                     onClick={handleViewFile}
                                                     size="sm"
+                                                    disabled={
+                                                        isDownloadingTemplate
+                                                    }
                                                 >
                                                     <svg
-                                                        className=" mr-2"
                                                         viewBox="0 0 24 24"
                                                         fill="none"
                                                         stroke="currentColor"
@@ -260,7 +290,9 @@ export function TemplateDisplay({
                                                     >
                                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
                                                     </svg>
-                                                    Baixar
+                                                    {isDownloadingTemplate
+                                                        ? 'Baixando...'
+                                                        : 'Baixar'}
                                                 </Button>
                                             ) : (
                                                 <Button

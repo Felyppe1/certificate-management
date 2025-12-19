@@ -22,7 +22,6 @@ import {
     Edit3,
     Trash2,
     Download,
-    Eye,
     Columns2,
     Table2,
     ALargeSmall,
@@ -37,6 +36,7 @@ import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
 import { toast } from 'sonner'
 import { downloadCertificateUrlAction } from '@/backend/infrastructure/server-actions/download-certificate-url-action'
+import { downloadDataSourceAction } from '@/backend/infrastructure/server-actions/download-data-source-action'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -108,6 +108,12 @@ export function DataSourceDisplay({
     const [viewCertificateState, viewCertificateAction, isViewingCertificate] =
         useActionState(downloadCertificateUrlAction, null)
 
+    const [
+        downloadDataSourceState,
+        downloadDataSourceActionHandler,
+        isDownloadingDataSource,
+    ] = useActionState(downloadDataSourceAction, null)
+
     const handleRefresh = () => {
         const formData = new FormData()
         formData.append('certificateId', certificateId)
@@ -126,9 +132,18 @@ export function DataSourceDisplay({
         })
     }
 
+    const handleDownloadDataSource = () => {
+        const formData = new FormData()
+        formData.append('certificateEmissionId', certificateId)
+
+        startTransition(() => {
+            downloadDataSourceActionHandler(formData)
+        })
+    }
+
     const handleViewFile = () => {
-        if (dataSource.inputMethod === 'UPLOAD' && dataSource.storageFileUrl) {
-            window.open(dataSource.storageFileUrl, '_blank')
+        if (dataSource.inputMethod === 'UPLOAD') {
+            handleDownloadDataSource()
         } else if (dataSource.driveFileId) {
             const driveUrl = `https://drive.google.com/file/d/${dataSource.driveFileId}/view`
             window.open(driveUrl, '_blank')
@@ -197,6 +212,18 @@ export function DataSourceDisplay({
             toast.error(viewCertificateState.message)
         }
     }, [viewCertificateState])
+
+    useEffect(() => {
+        if (!downloadDataSourceState) return
+
+        if (downloadDataSourceState.success) {
+            const signedUrl = downloadDataSourceState.data!
+
+            window.open(signedUrl, '_blank', 'noopener,noreferrer')
+        } else {
+            toast.error(downloadDataSourceState.message)
+        }
+    }, [downloadDataSourceState])
 
     const certificatesGenerated =
         dataSource.dataSet.generationStatus === GENERATION_STATUS.COMPLETED
@@ -316,6 +343,9 @@ export function DataSourceDisplay({
                                                 variant="default"
                                                 onClick={handleViewFile}
                                                 size="sm"
+                                                disabled={
+                                                    isDownloadingDataSource
+                                                }
                                             >
                                                 <svg
                                                     className=" mr-2"
@@ -326,7 +356,9 @@ export function DataSourceDisplay({
                                                 >
                                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
                                                 </svg>
-                                                Baixar
+                                                {isDownloadingDataSource
+                                                    ? 'Baixando...'
+                                                    : 'Baixar'}
                                             </Button>
                                         ) : (
                                             <Button
