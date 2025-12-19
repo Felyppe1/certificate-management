@@ -25,7 +25,13 @@ export function CreationForm() {
                     Criar
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 md:w-90" side="left">
+            <PopoverContent
+                className="w-[16rem] xs:w-80 md:w-90"
+                avoidCollisions
+                side="bottom"
+                align="end"
+                collisionPadding={16}
+            >
                 <form action={action} className="space-y-5">
                     <div className="space-y-4">
                         <label
@@ -40,7 +46,7 @@ export function CreationForm() {
                             name="name"
                             placeholder="Ex: Seminário sobre Cybersecurity"
                             required
-                            className="w-full mt-3 py-5 dark:bg-bg"
+                            className="w-full mt-3 py-4 sm:py-5 dark:bg-bg"
                             disabled={isLoading}
                         />
                     </div>
