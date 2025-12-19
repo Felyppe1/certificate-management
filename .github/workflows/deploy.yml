@@ -49,7 +49,7 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GA_ID: ${{ secrets.GA_ID }}
           SUFFIX: ${{ github.ref_name == 'main' && '' || format('-{0}', github.ref_name) }}
-          NEXT_PUBLIC_BASE_URL: ${{ variables.NEXT_PUBLIC_BASE_URL }}
+          NEXT_PUBLIC_BASE_URL: ${{ vars.NEXT_PUBLIC_BASE_URL }}
         run: |
           echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "TF_VAR_region=${{ env.REGION }}" >> $GITHUB_ENV
@@ -166,7 +166,7 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GA_ID: ${{ secrets.GA_ID }}
           SUFFIX: ${{ github.ref_name == 'main' && '' || format('-{0}', github.ref_name) }}
-          NEXT_PUBLIC_BASE_URL: ${{ variables.NEXT_PUBLIC_BASE_URL }}
+          NEXT_PUBLIC_BASE_URL: ${{ vars.NEXT_PUBLIC_BASE_URL }}
         run: |
           echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "TF_VAR_region=${{ env.REGION }}" >> $GITHUB_ENV
