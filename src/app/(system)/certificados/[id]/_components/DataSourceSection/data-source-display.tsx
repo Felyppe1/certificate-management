@@ -162,7 +162,7 @@ export function DataSourceDisplay({
     }
 
     const handleDownloadAllCertificates = () => {
-        const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/certificate-emissions/${certificateId}/zip`
+        const url = `/api/certificate-emissions/${certificateId}/zip`
         window.open(url, '_blank', 'noopener,noreferrer')
     }
 
