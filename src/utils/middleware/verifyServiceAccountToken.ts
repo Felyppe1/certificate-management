@@ -15,7 +15,7 @@ export async function verifyServiceAccountToken(req: NextRequest) {
     try {
         const ticket = await oAuth2Client.verifyIdToken({
             idToken: token,
-            audience: process.env.NEXT_PUBLIC_BASE_URL,
+            audience: process.env.CLOUD_RUN_APP_URL,
         })
         const payload = ticket.getPayload()
 

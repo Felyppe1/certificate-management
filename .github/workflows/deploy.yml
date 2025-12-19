@@ -124,7 +124,7 @@ jobs:
 
     outputs:
       artifact_path: ${{ steps.get_artifact_path.outputs.artifact_path }}
-      cloud_run_url: ${{ steps.get_url.outputs.cloud_run_url }}
+      cloud_run_app_url: ${{ steps.get_url.outputs.cloud_run_app_url }}
       cloud_run_name: ${{ steps.get_service_name.outputs.cloud_run_name }}
       generate_pdfs_cloud_run_name: ${{ steps.get_generate_pdfs_service_name.outputs.generate_pdfs_cloud_run_name }}
 
@@ -239,11 +239,11 @@ jobs:
           name: artifact-registry-path
           path: ./terraform/artifact_registry_path.txt
 
-      # - name: Get Cloud Run URL from Terraform
-      #   id: get_url
-      #   working-directory: ./terraform
-      #   run: |
-      #     echo "cloud_run_url=$(terraform output -raw cloud_run_url)" >> $GITHUB_OUTPUT
+      - name: Get Cloud Run App URL from Terraform
+        id: get_url
+        working-directory: ./terraform
+        run: |
+          echo "cloud_run_app_url=$(terraform output -raw cloud_run_app_url)" >> $GITHUB_OUTPUT
 
       - name: Get Service Name from Terraform
         id: get_service_name
@@ -264,7 +264,7 @@ jobs:
 
     env:
       REGION: us-central1
-      # CLOUD_RUN_URL: ${{ needs.terraform-apply.outputs.cloud_run_url }}
+      CLOUD_RUN_APP_URL: ${{ needs.terraform-apply.outputs.cloud_run_app_url }}
       CLOUD_RUN_NAME: ${{ needs.terraform-apply.outputs.cloud_run_name }}
 
     steps:
@@ -292,10 +292,10 @@ jobs:
         run: echo "ARTIFACT_REGISTRY_PATH=$(cat artifact_registry_path.txt)" >> $GITHUB_ENV
 
       - name: Build Docker image
-        # --build-arg NEXT_PUBLIC_BASE_URL=$CLOUD_RUN_URL \
         run: |
           docker build \
             --build-arg DB_URL="${{ secrets.DB_URL }}" \
+            --build-arg CLOUD_RUN_APP_URL=$CLOUD_RUN_APP_URL \
             -t $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA .
 
       - name: Push image

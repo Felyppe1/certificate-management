@@ -22,11 +22,11 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ARG DB_URL
-# ARG NEXT_PUBLIC_BASE_URL
+ARG CLOUD_RUN_APP_URL
 
 # Garante que o build use variáveis adequadas de produção
 ENV NODE_ENV=production 
-# ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
+ENV CLOUD_RUN_APP_URL=$CLOUD_RUN_APP_URL
 
 # Usei o DB_URL aqui para não precisar fazer ENV DB_URL=$DB_URL, que deixaria a variável disponível na imagem final
 RUN DB_URL=$DB_URL npm run build
