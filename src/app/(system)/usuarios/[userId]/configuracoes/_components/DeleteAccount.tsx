@@ -3,8 +3,19 @@
 import { deleteGoogleAccountAction } from '@/backend/infrastructure/server-actions/delete-google-account-action'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Loader2, Trash2 } from 'lucide-react'
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 
 interface DeleteAccountProps {
     userEmail: string
@@ -12,12 +23,18 @@ interface DeleteAccountProps {
 
 export function DeleteAccount({}: DeleteAccountProps) {
     const [isPending, startTransition] = useTransition()
+    const [isOpen, setIsOpen] = useState(false)
+    const [confirmText, setConfirmText] = useState('')
 
     const handleDeleteAccount = () => {
         startTransition(() => {
             deleteGoogleAccountAction()
         })
+        setIsOpen(false)
+        setConfirmText('')
     }
+
+    const isConfirmValid = confirmText === 'CONFIRMAR'
     // const login = useGoogleLogin({
     //     flow: 'auth-code',
     //     scope: [
@@ -63,14 +80,68 @@ export function DeleteAccount({}: DeleteAccountProps) {
                         Todos os seus dados serão apagados. Por favor, tenha
                         certeza.
                     </p>
-                    <Button
-                        variant="destructive"
-                        disabled={isPending}
-                        onClick={handleDeleteAccount}
+                    <Dialog
+                        open={isOpen}
+                        onOpenChange={open => {
+                            setIsOpen(open)
+                            if (!open) {
+                                setConfirmText('')
+                            }
+                        }}
                     >
-                        {isPending && <Loader2 className="animate-spin" />}
-                        Excluir Minha Conta
-                    </Button>
+                        <DialogTrigger asChild>
+                            <Button variant="destructive" disabled={isPending}>
+                                {isPending && (
+                                    <Loader2 className="animate-spin" />
+                                )}
+                                Excluir Minha Conta
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="gap-3 sm:gap-6">
+                            <DialogHeader>
+                                <DialogTitle>Tem certeza?</DialogTitle>
+                                <DialogDescription>
+                                    Esta ação não pode ser desfeita. Isso
+                                    excluirá sua conta e todos os seus dados.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="py-4">
+                                <Label htmlFor="confirm-text" className="mb-2">
+                                    Por favor, digite CONFIRMAR para prosseguir:
+                                </Label>
+                                <Input
+                                    id="confirm-text"
+                                    value={confirmText}
+                                    onChange={e =>
+                                        setConfirmText(e.target.value)
+                                    }
+                                    placeholder="Digite aqui"
+                                    className="mt-2"
+                                />
+                            </div>
+                            <DialogFooter className="flex-row justify-end gap-2 flex-wrap-reverse">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setIsOpen(false)
+                                        setConfirmText('')
+                                    }}
+                                >
+                                    Cancelar
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    disabled={!isConfirmValid || isPending}
+                                    onClick={handleDeleteAccount}
+                                >
+                                    {isPending && (
+                                        <Loader2 className="animate-spin" />
+                                    )}
+                                    Excluir Permanentemente
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </div>
             {/* <div className="flex items-center justify-between p-4 bg-muted/40 dark:bg-muted/20 rounded-2xl border">
