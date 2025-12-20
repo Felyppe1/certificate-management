@@ -272,32 +272,3 @@ export function useDataSetPolling(
         }
     }, [dataSetId, enabled, onComplete, router])
 }
-
-export function useDataSetSSE(
-    dataSetId: string | null,
-    enabled: boolean,
-    onEvent: (data: any) => void,
-) {
-    useEffect(() => {
-        console.log('Iniciando SSE hook')
-        if (!dataSetId || !enabled) return
-
-        console.log('Conectando ao SSE')
-        const eventSource = new EventSource(
-            `/api/data-sets/${dataSetId}/events`,
-        )
-
-        eventSource.onmessage = event => {
-            const data = JSON.parse(event.data)
-            console.log('Evento SSE:', data)
-            onEvent(data)
-        }
-
-        eventSource.onerror = err => {
-            console.error('Erro SSE:', err)
-            eventSource.close()
-        }
-
-        return () => eventSource.close()
-    }, [dataSetId, enabled, onEvent])
-}
