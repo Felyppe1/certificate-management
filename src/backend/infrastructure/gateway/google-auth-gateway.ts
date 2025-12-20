@@ -45,7 +45,7 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
         refreshToken,
         accessTokenExpiryDateTime,
     }: CheckOrRefreshAccessTokenInput) {
-        if (accessTokenExpiryDateTime! > new Date()) return null
+        // if (accessTokenExpiryDateTime! > new Date()) return null
         this.oauth2Client.setCredentials({
             access_token: accessToken,
             refresh_token: refreshToken,
@@ -66,7 +66,7 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
             // externalAccount.refreshTokenExpiryDateTime = refreshTokenExpiryDate
 
             // await externalUserAccountsRepository.update(externalAccount)
-
+            console.log('credentials', credentials)
             return {
                 newAccessToken: credentials.access_token!,
                 newAccessTokenExpiryDateTime: accessTokenExpiryDate,
@@ -84,6 +84,8 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
             code: code,
             ...(reAuthenticate ? { redirect_uri: 'postmessage' } : {}),
         })
+
+        console.log('tokens', tokens)
 
         return {
             accessToken: tokens.access_token!,

@@ -76,7 +76,7 @@ export class LoginGoogleUseCase {
                 accessToken: tokenData.accessToken,
                 refreshToken: tokenData.refreshToken,
                 accessTokenExpiryDateTime: tokenData.accessTokenExpiryDateTime,
-                refreshTokenExpiryDateTime: null,
+                refreshTokenExpiryDateTime: null, // Not necessary because Google refresh tokens don't expire in Published mode
             }
 
             await this.externalUserAccountsRepository.save(newExternalAccount)
