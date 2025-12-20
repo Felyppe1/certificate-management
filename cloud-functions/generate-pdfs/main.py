@@ -274,6 +274,7 @@ def update_data_set_status(data_set_id, status, total_bytes=None):
 
 @functions_framework.http
 def main(request):
+    print('Generate PDFs function invoked')
     data = request.json
     
     if not data:

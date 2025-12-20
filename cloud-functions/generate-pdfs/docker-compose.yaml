@@ -1,17 +1,19 @@
 services:
   libreoffice-converter:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     image: libreoffice-converter
     container_name: libreoffice-converter
     ports:
       - "8080:8080"
     volumes:
-      - /home/felyppe/pessoal/certificate-management/terraform-sa.json:/app/service-account.json
-      - ./output:/app/output
+      - .:/app
+      - /home/felyppe/pessoal/certificate-management/terraform-sa.json:/tmp/service-account.json:ro # :ro for read-only mount
     env_file:
       - .env
     environment:
-      GOOGLE_APPLICATION_CREDENTIALS: /app/service-account.json
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/service-account.json
       SOFFICE_PATH: /usr/bin/soffice
       APP_BASE_URL: http://host.docker.internal:3000
       TOKEN_AUDIENCE: http://localhost:3000

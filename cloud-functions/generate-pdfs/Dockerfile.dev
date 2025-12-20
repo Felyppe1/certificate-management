@@ -18,8 +18,6 @@ COPY fonts/ /usr/share/fonts/truetype/custom/
 # Update the font cache of the system to recognize the new files
 RUN fc-cache -f -v
 
-COPY main.py .
-
 EXPOSE 8080
 
 CMD ["functions-framework", "--target=main", "--signature-type=http", "--port=8080"]
