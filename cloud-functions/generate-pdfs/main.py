@@ -477,7 +477,7 @@ def convert_to_pdf_with_libreoffice(input_bytes: BytesIO, input_ext: str) -> Byt
 def upload_to_bucket(file_buffer, file_path):
     bucket = storage_client.bucket(CERTIFICATES_BUCKET)
     blob = bucket.blob(file_path)
-    blob.upload_from_file(file_buffer, rewind=True)
+    blob.upload_from_file(file_buffer, rewind=True, content_type="application/pdf")
     return blob
 
 def get_from_bucket(file_path):

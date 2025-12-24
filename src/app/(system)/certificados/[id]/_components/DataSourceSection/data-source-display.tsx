@@ -25,6 +25,7 @@ import {
     Columns2,
     Table2,
     ALargeSmall,
+    Eye,
 } from 'lucide-react'
 import { startTransition, useActionState, useEffect, useState } from 'react'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
@@ -35,7 +36,7 @@ import { SourceIcon } from '@/components/svg/SourceIcon'
 import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
 import { toast } from 'sonner'
-import { downloadCertificateUrlAction } from '@/backend/infrastructure/server-actions/download-certificate-url-action'
+import { viewCertificateAction } from '@/backend/infrastructure/server-actions/view-certificate-action'
 import { downloadDataSourceAction } from '@/backend/infrastructure/server-actions/download-data-source-action'
 
 function getInputMethodLabel(method: string) {
@@ -105,8 +106,10 @@ export function DataSourceDisplay({
         null,
     )
 
-    const [viewCertificateState, viewCertificateAction, isViewingCertificate] =
-        useActionState(downloadCertificateUrlAction, null)
+    const [viewCertificateState, viewCertificateActionHandler] = useActionState(
+        viewCertificateAction,
+        null,
+    )
 
     const [
         downloadDataSourceState,
@@ -166,13 +169,13 @@ export function DataSourceDisplay({
         }
     }
 
-    const handleDownloadCertificate = (index: number) => {
+    const handleViewCertificate = (index: number) => {
         const formData = new FormData()
         formData.append('certificateEmissionId', certificateId)
         formData.append('certificateIndex', index.toString())
 
         startTransition(() => {
-            viewCertificateAction(formData)
+            viewCertificateActionHandler(formData)
         })
     }
 
@@ -479,7 +482,7 @@ export function DataSourceDisplay({
                                                                                 <div className="flex gap-1">
                                                                                     <Button
                                                                                         onClick={() => {
-                                                                                            handleDownloadCertificate(
+                                                                                            handleViewCertificate(
                                                                                                 index +
                                                                                                     1,
                                                                                             )
@@ -487,9 +490,9 @@ export function DataSourceDisplay({
                                                                                         variant="ghost"
                                                                                         size="sm"
                                                                                         className="h-8 w-8 p-0"
-                                                                                        title="Baixar certificado"
+                                                                                        title="Visualizar certificado"
                                                                                     >
-                                                                                        <Download className="" />
+                                                                                        <Eye />
                                                                                     </Button>
                                                                                 </div>
                                                                             </TableCell>
