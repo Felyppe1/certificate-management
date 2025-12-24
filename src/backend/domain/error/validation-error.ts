@@ -12,6 +12,7 @@ export enum VALIDATION_ERROR_TYPE {
     UNEXISTENT_DATA_SOURCE_COLUMN = 'unexistent-data-source-column',
     INVALID_RECIPIENT_EMAIL = 'invalid-recipient-email',
     CERTIFICATES_NOT_GENERATED = 'certificates-not-generated',
+    TEMPLATE_VARIABLES_PARSING_ERROR = 'template-variables-parsing-error',
 }
 
 export class ValidationError extends AppError<VALIDATION_ERROR_TYPE> {

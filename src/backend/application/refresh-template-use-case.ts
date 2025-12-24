@@ -20,6 +20,7 @@ import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
+import { Liquid } from 'liquidjs'
 
 interface RefreshTemplateUseCaseInput {
     sessionToken: string
@@ -140,7 +141,23 @@ export class RefreshTemplateUseCase {
 
         const content = await contentExtractor.extractText(buffer)
 
-        const uniqueVariables = Template.extractVariablesFromContent(content)
+        const cleanedContent = content
+            .replaceAll('“', '"')
+            .replaceAll('”', '"')
+            .replaceAll('’', "'")
+            .replaceAll('‘', "'")
+
+        const engine = new Liquid()
+
+        let uniqueVariables: string[]
+
+        try {
+            uniqueVariables = engine.variablesSync(cleanedContent)
+        } catch {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.TEMPLATE_VARIABLES_PARSING_ERROR,
+            )
+        }
 
         const newTemplateInput = {
             driveFileId,

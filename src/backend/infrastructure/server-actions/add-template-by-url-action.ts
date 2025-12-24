@@ -125,6 +125,15 @@ export async function addTemplateByUrlAction(
                     message:
                         'Tipo de arquivo não suportado. Apenas Google Slides, Google Docs, .pptx ou .docx são permitidos',
                 }
+            } else if (
+                error.type ===
+                VALIDATION_ERROR_TYPE.TEMPLATE_VARIABLES_PARSING_ERROR
+            ) {
+                return {
+                    success: false,
+                    message:
+                        'Foi encontrado um erro de sintaxe do Liquid no template.',
+                }
             }
         }
 

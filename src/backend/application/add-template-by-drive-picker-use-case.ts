@@ -17,6 +17,7 @@ import {
     ValidationError,
 } from '../domain/error/validation-error'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
+import { Liquid } from 'liquidjs'
 
 interface AddTemplateByDrivePickerUseCaseInput {
     certificateId: string
@@ -108,7 +109,23 @@ export class AddTemplateByDrivePickerUseCase {
 
         const content = await contentExtractor.extractText(buffer)
 
-        const uniqueVariables = Template.extractVariablesFromContent(content)
+        const cleanedContent = content
+            .replaceAll('“', '"')
+            .replaceAll('”', '"')
+            .replaceAll('’', "'")
+            .replaceAll('‘', "'")
+
+        const engine = new Liquid()
+
+        let uniqueVariables: string[]
+
+        try {
+            uniqueVariables = engine.variablesSync(cleanedContent)
+        } catch {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.TEMPLATE_VARIABLES_PARSING_ERROR,
+            )
+        }
 
         const templateStorageFileUrl = certificate.getTemplateStorageFileUrl()
 

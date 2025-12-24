@@ -5,14 +5,14 @@ import os
 import requests
 from io import BytesIO
 from docx import Document
+from docx.text.paragraph import Paragraph
 from pptx import Presentation
 from google.cloud import storage
 import re
-import traceback
 import google.auth.transport.requests
 import google.oauth2.id_token
-import io
 import zipfile
+from liquid import Template
 
 import tempfile
 import subprocess
@@ -43,6 +43,257 @@ PPTX_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.presentationml.p
 GOOGLE_SLIDES_MIME_TYPE = 'application/vnd.google-apps.presentation'
 
 storage_client = storage.Client()
+
+BLOCK_START_TAGS = {
+    'if', 'unless', 'case', 'for', 'tablerow', 'capture', 'form', 'paginate'
+}
+BLOCK_END_TAGS = {
+    'endif', 'endunless', 'endcase', 'endfor', 'endtablerow', 'endcapture', 'endform', 'endpaginate'
+}
+
+# Regex to find opening tags: {% if, {%- if, {% endfor, etc.
+TAG_REGEX = re.compile(r'{%-?\s*(\w+)')
+
+################################ Functions to process DOCX with Liquid ################################
+def paragraph_universal_iterator(doc):
+    """Returns all body, table, and textbox paragraphs."""
+    for p in doc.paragraphs:
+        yield p
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for p in cell.paragraphs:
+                    yield p
+    
+    ns_map = doc.element.nsmap
+    txbx_contents = doc.element.body.findall('.//w:txbxContent', ns_map)
+    for txbx in txbx_contents:
+        xml_paragraphs = txbx.findall('.//w:p', ns_map)
+        for xml_p in xml_paragraphs:
+            yield Paragraph(xml_p, doc)
+
+def consolidate_broken_runs(paragraph):
+    """Merges runs within the SAME paragraph to fix Word breaks."""
+    text = paragraph.text
+    if not ('{{' in text or '{%' in text):
+        return
+
+    runs = paragraph.runs
+    if not runs: return
+
+    i = 0
+    while i < len(runs):
+        text_run = runs[i].text
+        has_open = '{%' in text_run or '{{' in text_run
+        
+        if has_open:
+            closure = '%}' if '{%' in text_run else '}}'
+            j = i + 1
+            while closure not in runs[i].text and j < len(runs):
+                next_run = runs[j]
+                runs[i].text += next_run.text
+                next_run.text = ""
+                j += 1
+        i += 1
+
+def calculate_delta_blocks(text):
+    """
+    Returns the variation of opened/closed blocks in this text.
+    +1 for each 'if', 'for'...
+    -1 for each 'endif', 'endfor'...
+    """
+    delta = 0
+    # Finds all tags {% tag ... %}
+    matches = TAG_REGEX.findall(text)
+    
+    for tag_name in matches:
+        if tag_name in BLOCK_START_TAGS:
+            delta += 1
+        elif tag_name in BLOCK_END_TAGS:
+            delta -= 1
+    return delta
+
+def process_buffer(paragraph_list, text_list, context):
+    """
+    Takes N paragraphs, joins the text, runs Liquid, and returns the result
+    in the FIRST paragraph, deleting the others.
+    """
+    # Joins with line breaks to simulate the original document
+    complete_text = "\n".join(text_list)
+    
+    # If there is no liquid syntax, ignore
+    if not ("{{" in complete_text or "{%" in complete_text):
+        return
+
+    sanitized_text = (complete_text
+                      .replace('“', '"').replace('”', '"')
+                      .replace('‘', "'").replace('’', "'"))
+    if "append" in sanitized_text:
+        print(f"DEBUG LIQUID: {sanitized_text}")
+        
+    try:
+        template = Template(sanitized_text)
+        new_complete_text = template.render(**context)
+        # If the text did not change, do nothing (preserves original formatting)
+        if new_complete_text == complete_text:
+            return
+
+        # MULTI-LINE REPLACEMENT STRATEGY:
+        # 1. Put EVERYTHING in the first paragraph of the buffer
+        main_paragraph = paragraph_list[0]
+        
+        # Clear runs of the main paragraph
+        for run in main_paragraph.runs:
+            run.text = ""
+        # Add the new text (may contain line breaks resulting from liquid)
+        # Note: python-docx handles '\n' inside a run by creating soft breaks, 
+        # but visually it works for the purpose.
+        if main_paragraph.runs:
+            main_paragraph.runs[0].text = new_complete_text
+        else:
+            main_paragraph.add_run(new_complete_text)
+
+        # 2. Clear the subsequent paragraphs that were part of the block
+        # Ex: The paragraph that had the "{% else %}" and the "{% endif %}"
+        for p_lixo in paragraph_list[1:]:
+            for run in p_lixo.runs:
+                run.text = ""
+            # Optional: If you want to remove the paragraph entirely (may break layout if it's a table)
+            # p_lixo._element.getparent().remove(p_lixo._element) 
+            # Recommended to just clear the text to keep the table/doc structure safe.
+
+    except Exception as e:
+        print(f"Error Liquid block started in '{text_list[0][:20]}...': {e}")
+
+def replace_variables_in_docx_liquid(in_buffer, context_data):
+    in_buffer.seek(0)
+    doc = Document(in_buffer)
+    
+    # 1. Pre-processing: Consolidate runs (intra-line)
+    # This ensures that '{% if' is not split across different runs in the same line
+    all_paragraphs = list(paragraph_universal_iterator(doc))
+    for p in all_paragraphs:
+        consolidate_broken_runs(p)
+
+    # 2. Processing with Buffer (Inter-line)
+    buffer_paragraphs = [] # List of Paragraph objects
+    accumulated_text = []   # List of strings (paragraph texts)
+    block_level = 0        # 0 = no block open, >0 = inside block
+
+    # We iterate over the list we already created to be able to skip indices if necessary
+    # but here we will use a continuous flow logic
+    
+    idx = 0
+    while idx < len(all_paragraphs):
+        p = all_paragraphs[idx]
+        paragraph_text = p.text
+        
+        # Calculate if this paragraph opens or closes blocks
+        delta = calculate_delta_blocks(paragraph_text)
+        
+        # DECISION LOGIC
+        # If we have open blocks OR if this paragraph opens new blocks that do not close here
+        if block_level > 0 or (delta > 0):
+            # We are inside a multi-line logic or starting one
+            buffer_paragraphs.append(p)
+            accumulated_text.append(paragraph_text)
+            block_level += delta # Update level
+            
+            # If we return to zero, it means the block closed in this paragraph.
+            # Time to process the entire buffer!
+            if block_level == 0:
+                process_buffer(buffer_paragraphs, accumulated_text, context_data)
+                # Clear buffer
+                buffer_paragraphs = []
+                accumulated_text = []
+                
+        else:
+            # We are not in a multi-line block. 
+            # But there may be simple variables {{name}} or if/endif on the same line.
+            # We process individually.
+            process_buffer([p], [paragraph_text], context_data)
+        
+        idx += 1
+
+    # If something remains in the buffer (e.g., syntax error, if without endif at the end of the doc)
+    if buffer_paragraphs:
+        print("WARNING: Liquid block not closed at the end of the document.")
+        process_buffer(buffer_paragraphs, accumulated_text, context_data)
+
+    # 3. Save
+    out_buffer = BytesIO()
+    doc.save(out_buffer)
+    out_buffer.seek(0)
+    return out_buffer
+
+
+
+def inspecionar_runs_docx(buffer):
+    buffer.seek(0)
+    doc = Document(buffer)
+    
+    print("--- INICIANDO INSPEÇÃO PROFUNDA ---\n")
+
+    # 1. Verificar o Corpo Principal (o que você já fez)
+    print("📍 [ÁREA 1] CORPO DO DOCUMENTO (Main Body)")
+    tem_conteudo = False
+    for p in doc.paragraphs:
+        if p.text.strip():
+            tem_conteudo = True
+            print(f"   Parágrafo: '{p.text}'")
+    if not tem_conteudo:
+        print("   (Vazio)")
+
+    # 2. Verificar Tabelas (Muito comum em certificados para layout)
+    print("\n📍 [ÁREA 2] TABELAS")
+    total_tabelas = len(doc.tables)
+    print(f"   Encontradas {total_tabelas} tabelas.")
+    
+    celulas_processadas = set()
+
+    for i, table in enumerate(doc.tables):
+        print(f"📍 Tabela {i}")
+        for row in table.rows:
+            for cell in row.cells:
+                # Se já vimos esta célula (mesmo objeto), pula
+                if cell in celulas_processadas:
+                    continue
+                
+                # Marca como processada
+                celulas_processadas.add(cell)
+                
+                # Agora lemos os parágrafos dentro dessa célula única
+                texto_celula = cell.text.strip()
+                if texto_celula:
+                    print(f"   [Célula Única]: {texto_celula}") # Printando só o começo
+                    
+                    # Verificando a estrutura interna (runs) para o seu Liquid
+                    for p in cell.paragraphs:
+                        if "{%" in p.text or "{{" in p.text:
+                            print(f"      👉 Lógica encontrada: '{p.text}'")
+
+    # 3. Verificar Caixas de Texto / Shapes (O pesadelo do python-docx)
+    # python-docx não tem uma API fácil para isso, precisamos ir no XML
+    print("\n📍 [ÁREA 3] CAIXAS DE TEXTO / SHAPES")
+    
+    # Vamos iterar sobre o XML procurando tags de conteúdo de textbox (w:txbxContent)
+    # Isso é apenas para leitura; editar isso via python-docx é complexo.
+    ns = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
+    
+    # Procura todos os elementos de texto dentro do corpo
+    # Nota: Isso é uma busca 'bruta' no XML para te mostrar onde está o texto
+    text_boxes = doc.element.body.findall('.//w:txbxContent', ns)
+    
+    if text_boxes:
+        print(f"   Encontradas {len(text_boxes)} caixas de texto.")
+        for i, tb in enumerate(text_boxes):
+            # Tenta extrair o texto de dentro do XML da caixa
+            texts = tb.findall('.//w:t', ns)
+            conteudo = "".join([t.text for t in texts if t.text])
+            if conteudo.strip():
+                print(f"      Caixa {i}: '{conteudo}'")
+    else:
+        print("   Nenhuma caixa de texto detectada via XML padrão.")
 
 def download_from_google_drive_api(drive_file_id: str, file_mime_type: str, access_token: Optional[str] = None) -> BytesIO:
     mime_type_mapping = {
@@ -368,9 +619,11 @@ def main(request):
         total_bytes = 0
         delete_by_prefix(f"users/{user_id}/certificates/{certificate_emission_id}/certificate")
 
+        inspecionar_runs_docx(template_buffer)
         print('Generating certificates...')
         for index, row in enumerate(rows):
             print(f'Row {index}: ', row)
+            row['Idade'] = int(row['Idade'])
             certificate_buffer = BytesIO(template_buffer.getvalue())
 
             if variable_mapping:
@@ -378,9 +631,10 @@ def main(request):
                 for template_var, column_name in variable_mapping.items():
                     if column_name and column_name in row:
                         row_variable_mapping[template_var] = row[column_name]
-                
+                print('Row variable mapping: ', row_variable_mapping)
                 if is_docx:
-                    certificate_buffer = replace_variables_in_docx(certificate_buffer, row_variable_mapping)
+                    # certificate_buffer = replace_variables_in_docx(certificate_buffer, row_variable_mapping)
+                    certificate_buffer = replace_variables_in_docx_liquid(certificate_buffer, row_variable_mapping)
                 else:
                     certificate_buffer = replace_variables_in_pptx(certificate_buffer, row_variable_mapping)
             

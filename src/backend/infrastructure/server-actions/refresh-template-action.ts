@@ -15,6 +15,10 @@ import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { NotFoundError } from '@/backend/domain/error/not-found-error'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '@/backend/domain/error/validation-error'
 
 const refreshTemplateActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -85,6 +89,19 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
                     success: false,
                     message:
                         'Arquivo não encontrado. Verifique se ele ainda existe no Drive e se está público',
+                }
+            }
+        }
+
+        if (error instanceof ValidationError) {
+            if (
+                error.type ===
+                VALIDATION_ERROR_TYPE.TEMPLATE_VARIABLES_PARSING_ERROR
+            ) {
+                return {
+                    success: false,
+                    message:
+                        'Foi encontrado um erro de sintaxe do Liquid no template.',
                 }
             }
         }

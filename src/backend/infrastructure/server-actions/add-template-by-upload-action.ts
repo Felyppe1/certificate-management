@@ -12,6 +12,10 @@ import { FileContentExtractorFactory } from '../factory/file-content-extractor-f
 import { updateTag } from 'next/cache'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { logoutAction } from './logout-action'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '@/backend/domain/error/validation-error'
 
 const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
 
@@ -66,6 +70,19 @@ export async function addTemplateByUploadAction(
         // throw error
         if (error instanceof AuthenticationError) {
             await logoutAction()
+        }
+
+        if (error instanceof ValidationError) {
+            if (
+                error.type ===
+                VALIDATION_ERROR_TYPE.TEMPLATE_VARIABLES_PARSING_ERROR
+            ) {
+                return {
+                    success: false,
+                    message:
+                        'Foi encontrado um erro de sintaxe do Liquid no template.',
+                }
+            }
         }
 
         return {

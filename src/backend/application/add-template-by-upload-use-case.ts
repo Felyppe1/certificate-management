@@ -18,6 +18,7 @@ import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
+import { Liquid } from 'liquidjs'
 
 interface AddTemplateByUploadUseCaseInput {
     file: File
@@ -83,7 +84,23 @@ export class AddTemplateByUploadUseCase {
 
         const content = await contentExtractor.extractText(buffer)
 
-        const uniqueVariables = Template.extractVariablesFromContent(content)
+        const cleanedContent = content
+            .replaceAll('“', '"')
+            .replaceAll('”', '"')
+            .replaceAll('’', "'")
+            .replaceAll('‘', "'")
+
+        const engine = new Liquid()
+
+        let uniqueVariables: string[]
+
+        try {
+            uniqueVariables = engine.variablesSync(cleanedContent)
+        } catch {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.TEMPLATE_VARIABLES_PARSING_ERROR,
+            )
+        }
 
         const previousTemplateStorageFileUrl =
             certificate.getTemplateStorageFileUrl()
