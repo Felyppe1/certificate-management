@@ -36,7 +36,7 @@ export interface GetUserInfoOutput {
 
 export interface GetOAuth2ClientWithCredentials {
     accessToken: string
-    refreshToken: string
+    refreshToken?: string
 }
 
 export type GetAuthClientInput = Auth.GoogleAuthOptions<Auth.AuthClient>

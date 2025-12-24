@@ -20,13 +20,12 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
     constructor(private readonly googleAuthGateway: IGoogleAuthGateway) {}
 
     async getFileMetadata(input: GetFileMetadataInput) {
-        const oauth2Client =
-            input.userAccessToken && input.userRefreshToken
-                ? this.googleAuthGateway.getOAuth2ClientWithCredentials({
-                      accessToken: input.userAccessToken,
-                      refreshToken: input.userRefreshToken,
-                  })
-                : null
+        const oauth2Client = input.userAccessToken
+            ? this.googleAuthGateway.getOAuth2ClientWithCredentials({
+                  accessToken: input.userAccessToken,
+                  refreshToken: input.userRefreshToken,
+              })
+            : null
 
         const authClient = this.googleAuthGateway.getAuthClient({
             scopes: ['https://www.googleapis.com/auth/drive.readonly'],
