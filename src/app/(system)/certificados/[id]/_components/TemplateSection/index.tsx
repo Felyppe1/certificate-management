@@ -144,7 +144,7 @@ export function TemplateSection({
     if (template && isEditing) {
         return (
             <Card>
-                <CardHeader className="flex justify-between">
+                <CardHeader className="flex flex-col xs:flex-row justify-between gap-4">
                     <div>
                         <CardTitle>Selecionar Novo Template</CardTitle>
                         <CardDescription>
@@ -156,7 +156,7 @@ export function TemplateSection({
                         variant="outline"
                         onClick={handleCancelEdit}
                         disabled={urlIsLoading || drivePickerIsLoading}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 self-end xs:self-auto"
                     >
                         Cancelar
                     </Button>

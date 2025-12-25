@@ -68,7 +68,7 @@ export default async function CertificatePage({
             </div>
             <div className="flex flex-col gap-4 sm:gap-6 md:gap-8 mt-4 xs:mt-6 md:mt-8 mb-12">
                 <div>
-                    <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center gap-4 mb-4 flex-wrap">
                         <h1 className="text-3xl sm:text-4xl font-bold">
                             {
                                 certificateEmissionResponse.certificateEmission

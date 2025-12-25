@@ -555,7 +555,7 @@ export function DataSourceDisplay({
                                                         </div>
                                                     )}
 
-                                                <div className="flex gap-8 items-center">
+                                                <div className="flex gap-x-4 gap-y-2 items-center flex-wrap">
                                                     {certificatesGenerated && (
                                                         <>
                                                             <Button
