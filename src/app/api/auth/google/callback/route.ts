@@ -7,6 +7,7 @@ import { LoginGoogleUseCase } from '@/backend/application/login-google-use-case'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { AppError } from '@/backend/domain/error/app-error'
+import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
@@ -24,12 +25,14 @@ export async function GET(request: Request) {
         new PrismaExternalUserAccountsRepository(prisma)
     const sessionsRepository = new PrismaSessionsRepository(prisma)
     const googleAuthGateway = new GoogleAuthGateway()
+    const transactionManager = new PrismaTransactionManager(prisma)
 
     const loginGoogleUseCase = new LoginGoogleUseCase(
         usersRepository,
         externalUserAccountsRepository,
         sessionsRepository,
         googleAuthGateway,
+        transactionManager,
     )
 
     try {

@@ -16,6 +16,7 @@ import { INPUT_METHOD } from '../domain/certificate'
 import { DataSource } from '../domain/data-source'
 import { DataSet } from '../domain/data-set'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
+import { ITransactionManager } from './interfaces/itransaction-manager'
 
 interface AddDataSourceByUrlUseCaseInput {
     certificateId: string
@@ -37,6 +38,7 @@ export class AddDataSourceByUrlUseCase {
         >,
         private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
         private bucket: Pick<IBucket, 'deleteObject'>,
+        private transactionManager: ITransactionManager,
     ) {}
 
     async execute(input: AddDataSourceByUrlUseCaseInput) {
@@ -100,15 +102,16 @@ export class AddDataSourceByUrlUseCase {
 
         certificate.setDataSource(newDataSourceInput)
 
-        await this.certificateEmissionsRepository.update(certificate)
-
         const newDataSet = DataSet.create({
             certificateEmissionId: certificate.getId(),
             rows,
         })
 
-        // TODO: needs to be in a transaction
-        await this.dataSetsRepository.upsert(newDataSet)
+        await this.transactionManager.run(async () => {
+            await this.certificateEmissionsRepository.update(certificate)
+
+            await this.dataSetsRepository.upsert(newDataSet)
+        })
 
         if (dataSourceStorageFileUrl) {
             await this.bucket.deleteObject({

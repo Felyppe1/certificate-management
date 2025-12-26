@@ -11,6 +11,7 @@ import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-
 import z from 'zod'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { logoutAction } from './logout-action'
+import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 
 const loginGoogleServerActionSchema = z.string().min(1, 'Código é obrigatório')
 
@@ -25,12 +26,14 @@ export async function loginGoogleServerAction(_: unknown, formData: FormData) {
             new PrismaExternalUserAccountsRepository(prisma)
         const sessionsRepository = new PrismaSessionsRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const loginGoogleUseCase = new LoginGoogleUseCase(
             usersRepository,
             externalUserAccountsRepository,
             sessionsRepository,
             googleAuthGateway,
+            transactionManager,
         )
 
         console.log('login google server action')

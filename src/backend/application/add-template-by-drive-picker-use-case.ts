@@ -18,6 +18,7 @@ import {
 } from '../domain/error/validation-error'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 import { Liquid } from 'liquidjs'
+import { ITransactionManager } from './interfaces/itransaction-manager'
 
 interface AddTemplateByDrivePickerUseCaseInput {
     certificateId: string
@@ -41,6 +42,7 @@ export class AddTemplateByDrivePickerUseCase {
             'checkOrGetNewAccessToken'
         >,
         private bucket: Pick<IBucket, 'deleteObject'>,
+        private transactionManager: ITransactionManager,
     ) {}
 
     async execute(input: AddTemplateByDrivePickerUseCaseInput) {
@@ -146,15 +148,17 @@ export class AddTemplateByDrivePickerUseCase {
                 certificate.getId(),
             )
 
-        if (dataSet) {
-            dataSet.update({
-                generationStatus: null,
-            })
+        await this.transactionManager.run(async () => {
+            if (dataSet) {
+                dataSet.update({
+                    generationStatus: null,
+                })
 
-            await this.dataSetsRepository.upsert(dataSet)
-        }
+                await this.dataSetsRepository.upsert(dataSet)
+            }
 
-        await this.certificateEmissionsRepository.update(certificate)
+            await this.certificateEmissionsRepository.update(certificate)
+        })
 
         if (templateStorageFileUrl) {
             await this.bucket.deleteObject({

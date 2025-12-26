@@ -11,6 +11,7 @@ import { AddDataSourceByUploadUseCase } from '@/backend/application/add-data-sou
 import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
+import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 
 const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
 
@@ -47,6 +48,7 @@ export async function addDataSourceByUploadAction(
         const sessionsRepository = new PrismaSessionsRepository(prisma)
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const addDataSourceByUploadUseCase = new AddDataSourceByUploadUseCase(
             bucket,
@@ -54,6 +56,7 @@ export async function addDataSourceByUploadAction(
             certificatesRepository,
             dataSetsRepository,
             spreadsheetContentExtractorFactory,
+            transactionManager,
         )
 
         await addDataSourceByUploadUseCase.execute({

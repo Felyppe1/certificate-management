@@ -13,6 +13,7 @@ import z from 'zod'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
+import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 
 const addTemplateByUrlSchema = z.object({
     fileUrl: z.url('File URL is invalid'),
@@ -39,6 +40,7 @@ export async function PUT(
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const bucket = new GcpBucket()
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificateEmissionsRepository,
@@ -47,6 +49,7 @@ export async function PUT(
             googleDriveGateway,
             fileContentExtractorFactory,
             bucket,
+            transactionManager,
         )
 
         await addTemplateByUrlUseCase.execute({

@@ -14,6 +14,7 @@ import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { SpreadsheetContentExtractorFactory } from '@/backend/infrastructure/factory/spreadsheet-content-extractor-factory'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
+import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 
 export async function DELETE(
     request: NextRequest,
@@ -65,6 +66,7 @@ export async function PATCH(
             new SpreadsheetContentExtractorFactory()
         const externalUserAccountsRepository =
             new PrismaExternalUserAccountsRepository(prisma)
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const refreshDataSourceUseCase = new RefreshDataSourceUseCase(
             certificatesRepository,
@@ -74,6 +76,7 @@ export async function PATCH(
             googleAuthGateway,
             spreadsheetContentExtractorFactory,
             externalUserAccountsRepository,
+            transactionManager,
         )
 
         await refreshDataSourceUseCase.execute({

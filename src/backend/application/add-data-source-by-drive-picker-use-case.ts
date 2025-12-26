@@ -18,6 +18,7 @@ import {
 } from '../domain/error/validation-error'
 import { DataSet } from '../domain/data-set'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
+import { ITransactionManager } from './interfaces/itransaction-manager'
 
 interface AddDataSourceByDrivePickerUseCaseInput {
     certificateId: string
@@ -38,6 +39,7 @@ export class AddDataSourceByDrivePickerUseCase {
             'checkOrGetNewAccessToken'
         >,
         private bucket: Pick<IBucket, 'deleteObject'>,
+        private transactionManager: ITransactionManager,
     ) {}
 
     async execute(input: AddDataSourceByDrivePickerUseCaseInput) {
@@ -121,14 +123,16 @@ export class AddDataSourceByDrivePickerUseCase {
 
         certificate.setDataSource(newDataSourceInput)
 
-        await this.certificateEmissionsRepository.update(certificate)
-
         const newDataSet = DataSet.create({
             certificateEmissionId: certificate.getId()!,
             rows,
         })
 
-        await this.dataSetsRepository.upsert(newDataSet)
+        await this.transactionManager.run(async () => {
+            await this.certificateEmissionsRepository.update(certificate)
+
+            await this.dataSetsRepository.upsert(newDataSet)
+        })
 
         if (dataSourceStorageFileUrl) {
             await this.bucket.deleteObject({

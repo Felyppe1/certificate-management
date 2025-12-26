@@ -19,6 +19,7 @@ import {
     EMAIL_ERROR_TYPE_ENUM,
     PROCESSING_STATUS_ENUM,
 } from '@/backend/domain/email'
+import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 
 export interface GetCertificateEmissionControllerResponse {
     certificateEmission: {
@@ -138,12 +139,14 @@ export async function PUT(
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const sessionsRepository = new PrismaSessionsRepository(prisma)
         const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const updateCertificateEmissionUseCase =
             new UpdateCertificateEmissionUseCase(
                 certificatesRepository,
                 sessionsRepository,
                 dataSetsRepository,
+                transactionManager,
             )
 
         await updateCertificateEmissionUseCase.execute({

@@ -21,6 +21,7 @@ import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
+import { ITransactionManager } from './interfaces/itransaction-manager'
 
 interface RefreshDataSourceUseCaseInput {
     sessionToken: string
@@ -39,6 +40,7 @@ export class RefreshDataSourceUseCase {
         >,
         private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
         private externalUserAccountsRepository: IExternalUserAccountsRepository,
+        private transactionManager: ITransactionManager,
     ) {}
 
     async execute(input: RefreshDataSourceUseCaseInput) {
@@ -150,14 +152,15 @@ export class RefreshDataSourceUseCase {
 
         certificate.setDataSource(newDataSourceInput)
 
-        await this.certificateEmissionsRepository.update(certificate)
-
         const newDataSet = DataSet.create({
             certificateEmissionId: certificate.getId(),
             rows,
         })
 
-        // TODO: needs to be in a transaction
-        await this.dataSetsRepository.upsert(newDataSet)
+        await this.transactionManager.run(async () => {
+            await this.certificateEmissionsRepository.update(certificate)
+
+            await this.dataSetsRepository.upsert(newDataSet)
+        })
     }
 }

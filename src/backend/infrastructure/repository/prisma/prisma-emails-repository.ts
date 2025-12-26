@@ -5,9 +5,14 @@ import {
     PROCESSING_STATUS_ENUM,
 } from '@/backend/domain/email'
 import { PrismaExecutor } from '.'
+import { transactionStorage } from './prisma-transaction-manager'
 
 export class PrismaEmailsRepository implements IEmailsRepository {
-    constructor(private readonly prisma: PrismaExecutor) {}
+    constructor(private readonly defaultPrisma: PrismaExecutor) {}
+
+    private get prisma() {
+        return transactionStorage.getStore() || this.defaultPrisma
+    }
 
     async save(email: Email) {
         const {

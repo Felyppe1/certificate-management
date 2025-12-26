@@ -19,6 +19,7 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '@/backend/domain/error/validation-error'
+import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 
 const refreshTemplateActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -44,6 +45,7 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const externalUserAccountsRepository =
             new PrismaExternalUserAccountsRepository(prisma)
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const refreshTemplateUseCase = new RefreshTemplateUseCase(
             certificatesRepository,
@@ -53,6 +55,7 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
             googleAuthGateway,
             fileContentExtractorFactory,
             externalUserAccountsRepository,
+            transactionManager,
         )
 
         await refreshTemplateUseCase.execute({

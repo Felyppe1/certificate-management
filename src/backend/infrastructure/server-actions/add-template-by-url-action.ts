@@ -20,6 +20,7 @@ import {
     ValidationError,
 } from '@/backend/domain/error/validation-error'
 import { ActionResponse } from '@/types'
+import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 
 interface AddTemplateByUrlActionInput {
     certificateId: string
@@ -62,6 +63,7 @@ export async function addTemplateByUrlAction(
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const bucket = new GcpBucket()
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificateEmissionsRepository,
@@ -70,6 +72,7 @@ export async function addTemplateByUrlAction(
             googleDriveGateway,
             fileContentExtractorFactory,
             bucket,
+            transactionManager,
         )
 
         await addTemplateByUrlUseCase.execute({

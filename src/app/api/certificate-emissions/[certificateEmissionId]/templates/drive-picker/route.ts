@@ -14,6 +14,7 @@ import z from 'zod'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
+import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 
 const addTemplateByDrivePickerSchema = z.object({
     fileId: z.string().min(1, 'File ID is required'),
@@ -42,6 +43,7 @@ export async function PUT(
         const externalUserAccountsRepository =
             new PrismaExternalUserAccountsRepository(prisma)
         const bucket = new GcpBucket()
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const addTemplateByDrivePickerUseCase =
             new AddTemplateByDrivePickerUseCase(
@@ -53,6 +55,7 @@ export async function PUT(
                 dataSetsRepository,
                 googleAuthGateway,
                 bucket,
+                transactionManager,
             )
 
         await addTemplateByDrivePickerUseCase.execute({

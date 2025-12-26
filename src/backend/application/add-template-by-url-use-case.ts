@@ -16,6 +16,7 @@ import {
 import { IBucket } from './interfaces/ibucket'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 import { Liquid } from 'liquidjs'
+import { ITransactionManager } from './interfaces/itransaction-manager'
 
 interface AddTemplateByUrlUseCaseInput {
     certificateId: string
@@ -43,6 +44,7 @@ export class AddTemplateByUrlUseCase {
             'create'
         >,
         private bucket: Pick<IBucket, 'deleteObject'>,
+        private transactionManager: ITransactionManager,
     ) {}
 
     async execute(input: AddTemplateByUrlUseCaseInput) {
@@ -128,15 +130,17 @@ export class AddTemplateByUrlUseCase {
                 certificate.getId(),
             )
 
-        if (dataSet) {
-            dataSet.update({
-                generationStatus: null,
-            })
+        await this.transactionManager.run(async () => {
+            if (dataSet) {
+                dataSet.update({
+                    generationStatus: null,
+                })
 
-            await this.dataSetsRepository.upsert(dataSet)
-        }
+                await this.dataSetsRepository.upsert(dataSet)
+            }
 
-        await this.certificateEmissionsRepository.update(certificate)
+            await this.certificateEmissionsRepository.update(certificate)
+        })
 
         if (templateStorageFileUrl) {
             await this.bucket.deleteObject({

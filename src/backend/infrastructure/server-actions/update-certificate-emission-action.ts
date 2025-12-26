@@ -10,6 +10,7 @@ import z from 'zod'
 import { logoutAction } from './logout-action'
 import { UpdateCertificateEmissionUseCase } from '@/backend/application/update-certificate-emission-use-case'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
+import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 
 const updateCertificateEmissionActionSchema = z.object({
     name: z
@@ -52,12 +53,14 @@ export async function updateCertificateEmissionAction(
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const sessionsRepository = new PrismaSessionsRepository(prisma)
         const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const updateCertificateEmissionUseCase =
             new UpdateCertificateEmissionUseCase(
                 certificatesRepository,
                 sessionsRepository,
                 dataSetsRepository,
+                transactionManager,
             )
 
         await updateCertificateEmissionUseCase.execute({

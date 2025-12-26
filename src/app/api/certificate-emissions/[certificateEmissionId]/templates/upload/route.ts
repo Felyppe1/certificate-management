@@ -11,6 +11,7 @@ import z from 'zod'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
+import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 
 const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
 
@@ -39,6 +40,7 @@ export async function PUT(
         const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const sessionsRepository = new PrismaSessionsRepository(prisma)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const addTemplateByUploadUseCase = new AddTemplateByUploadUseCase(
             bucket,
@@ -46,6 +48,7 @@ export async function PUT(
             certificatesRepository,
             dataSetsRepository,
             fileContentExtractorFactory,
+            transactionManager,
         )
 
         await addTemplateByUploadUseCase.execute({

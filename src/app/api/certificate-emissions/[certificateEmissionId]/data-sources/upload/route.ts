@@ -11,6 +11,7 @@ import { SpreadsheetContentExtractorFactory } from '@/backend/infrastructure/fac
 import z from 'zod'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
+import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 
 const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
 
@@ -40,6 +41,7 @@ export async function PUT(
         const sessionsRepository = new PrismaSessionsRepository(prisma)
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const addDataSourceByUploadUseCase = new AddDataSourceByUploadUseCase(
             bucket,
@@ -47,6 +49,7 @@ export async function PUT(
             certificatesRepository,
             dataSetsRepository,
             spreadsheetContentExtractorFactory,
+            transactionManager,
         )
 
         await addDataSourceByUploadUseCase.execute({

@@ -19,6 +19,7 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '@/backend/domain/error/validation-error'
+import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 
 const addDataSourceByDrivePickerActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -60,6 +61,7 @@ export async function addDataSourceByDrivePickerAction(
         const externalUserAccountsRepository =
             new PrismaExternalUserAccountsRepository(prisma)
         const bucket = new GcpBucket()
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const addDataSourceByDrivePickerUseCase =
             new AddDataSourceByDrivePickerUseCase(
@@ -71,6 +73,7 @@ export async function addDataSourceByDrivePickerAction(
                 externalUserAccountsRepository,
                 googleAuthGateway,
                 bucket,
+                transactionManager,
             )
 
         await addDataSourceByDrivePickerUseCase.execute({

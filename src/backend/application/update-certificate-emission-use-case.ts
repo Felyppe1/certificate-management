@@ -11,6 +11,7 @@ import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 import { GENERATION_STATUS } from '../domain/data-set'
+import { ITransactionManager } from './interfaces/itransaction-manager'
 
 interface UpdateCertificateEmissionUseCaseInput {
     sessionToken: string
@@ -30,6 +31,7 @@ export class UpdateCertificateEmissionUseCase {
             IDataSetsRepository,
             'getByCertificateEmissionId' | 'upsert'
         >,
+        private transactionManager: ITransactionManager,
     ) {}
 
     async execute(data: UpdateCertificateEmissionUseCaseInput) {
@@ -71,21 +73,24 @@ export class UpdateCertificateEmissionUseCase {
             JSON.stringify(currentVariableColumnMapping) !==
                 JSON.stringify(data.variableColumnMapping)
         ) {
-            console.log('fskdl')
             const dataSet =
                 await this.dataSetsRepository.getByCertificateEmissionId(
                     certificate.getId(),
                 )
 
-            if (dataSet) {
-                dataSet.update({
-                    generationStatus: null,
-                })
+            await this.transactionManager.run(async () => {
+                if (dataSet) {
+                    dataSet.update({
+                        generationStatus: null,
+                    })
 
-                await this.dataSetsRepository.upsert(dataSet)
-            }
+                    await this.dataSetsRepository.upsert(dataSet)
+                }
+
+                await this.certificateEmissionsRepository.update(certificate)
+            })
+        } else {
+            await this.certificateEmissionsRepository.update(certificate)
         }
-
-        await this.certificateEmissionsRepository.update(certificate)
     }
 }

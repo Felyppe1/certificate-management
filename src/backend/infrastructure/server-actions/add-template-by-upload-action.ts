@@ -16,6 +16,7 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '@/backend/domain/error/validation-error'
+import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 
 const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
 
@@ -51,6 +52,7 @@ export async function addTemplateByUploadAction(
         const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const sessionsRepository = new PrismaSessionsRepository(prisma)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const addTemplateByUploadUseCase = new AddTemplateByUploadUseCase(
             bucket,
@@ -58,6 +60,7 @@ export async function addTemplateByUploadAction(
             certificatesRepository,
             dataSetsRepository,
             fileContentExtractorFactory,
+            transactionManager,
         )
 
         await addTemplateByUploadUseCase.execute({

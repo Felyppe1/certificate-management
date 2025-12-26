@@ -4,11 +4,16 @@ import {
     Provider,
 } from '@/backend/application/interfaces/iexternal-user-accounts-repository'
 import { PrismaExecutor } from '.'
+import { transactionStorage } from './prisma-transaction-manager'
 
 export class PrismaExternalUserAccountsRepository
     implements IExternalUserAccountsRepository
 {
-    constructor(private readonly prisma: PrismaExecutor) {}
+    constructor(private readonly defaultPrisma: PrismaExecutor) {}
+
+    private get prisma() {
+        return transactionStorage.getStore() || this.defaultPrisma
+    }
 
     async getById(userId: string, provider: Provider) {
         const account = await this.prisma.externalUserAccount.findUnique({

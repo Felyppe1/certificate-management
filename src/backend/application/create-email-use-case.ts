@@ -14,6 +14,7 @@ import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 import { IEmailsRepository } from './interfaces/iemails-repository'
 import { IExternalProcessing } from './interfaces/iexternal-processing'
 import { ISessionsRepository } from './interfaces/isessions-repository'
+import { ITransactionManager } from './interfaces/itransaction-manager'
 
 export interface CreateEmailUseCaseInput {
     sessionToken: string
@@ -40,6 +41,7 @@ export class CreateEmailUseCase {
             IExternalProcessing,
             'triggerSendCertificateEmails'
         >,
+        private transactionManager: ITransactionManager,
     ) {}
 
     async execute(data: CreateEmailUseCaseInput) {
@@ -120,9 +122,12 @@ export class CreateEmailUseCase {
 
         email.setProcessingStatus(PROCESSING_STATUS_ENUM.RUNNING)
 
-        // TODO: add transaction
-        await this.emailsRepository.save(email)
+        await this.transactionManager.run(async () => {
+            await this.emailsRepository.save(email)
 
-        await this.certificateEmissionsRepository.update(certificateEmission)
+            await this.certificateEmissionsRepository.update(
+                certificateEmission,
+            )
+        })
     }
 }

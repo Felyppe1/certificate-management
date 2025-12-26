@@ -15,6 +15,7 @@ import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-conte
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NotFoundError } from '@/backend/domain/error/not-found-error'
+import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 
 const refreshDataSourceActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -41,6 +42,7 @@ export async function refreshDataSourceAction(_: unknown, formData: FormData) {
             new SpreadsheetContentExtractorFactory()
         const externalUserAccountsRepository =
             new PrismaExternalUserAccountsRepository(prisma)
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const refreshDataSourceUseCase = new RefreshDataSourceUseCase(
             certificatesRepository,
@@ -50,6 +52,7 @@ export async function refreshDataSourceAction(_: unknown, formData: FormData) {
             googleAuthGateway,
             spreadsheetContentExtractorFactory,
             externalUserAccountsRepository,
+            transactionManager,
         )
 
         await refreshDataSourceUseCase.execute({

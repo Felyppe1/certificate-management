@@ -2,9 +2,14 @@ import { IDataSetsRepository } from '@/backend/application/interfaces/idata-sets
 import { DataSet, GENERATION_STATUS } from '@/backend/domain/data-set'
 import { Prisma } from './client/client'
 import { isPrismaClient, PrismaExecutor } from '.'
+import { transactionStorage } from './prisma-transaction-manager'
 
 export class PrismaDataSetsRepository implements IDataSetsRepository {
-    constructor(private readonly prisma: PrismaExecutor) {}
+    constructor(private readonly defaultPrisma: PrismaExecutor) {}
+
+    private get prisma() {
+        return transactionStorage.getStore() || this.defaultPrisma
+    }
 
     async save(dataSet: DataSet): Promise<void> {
         const {

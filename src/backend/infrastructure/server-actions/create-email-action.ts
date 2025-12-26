@@ -17,6 +17,7 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '@/backend/domain/error/validation-error'
+import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 
 const createEmailActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -61,6 +62,7 @@ export async function createEmailAction(_: unknown, formData: FormData) {
         const externalProcessing = new CloudFunctionExternalProcessing(
             googleAuthGateway,
         )
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const createEmailUseCase = new CreateEmailUseCase(
             sessionsRepository,
@@ -68,6 +70,7 @@ export async function createEmailAction(_: unknown, formData: FormData) {
             dataSetsRepository,
             emailsRepository,
             externalProcessing,
+            transactionManager,
         )
 
         await createEmailUseCase.execute({

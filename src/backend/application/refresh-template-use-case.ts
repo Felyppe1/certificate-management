@@ -21,6 +21,7 @@ import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 import { Liquid } from 'liquidjs'
+import { ITransactionManager } from './interfaces/itransaction-manager'
 
 interface RefreshTemplateUseCaseInput {
     sessionToken: string
@@ -42,6 +43,7 @@ export class RefreshTemplateUseCase {
         >,
         private fileContentExtractorFactory: IFileContentExtractorFactory,
         private externalUserAccountsRepository: IExternalUserAccountsRepository,
+        private transactionManager: ITransactionManager,
     ) {}
 
     async execute(input: RefreshTemplateUseCaseInput) {
@@ -176,14 +178,16 @@ export class RefreshTemplateUseCase {
                 certificate.getId(),
             )
 
-        if (dataSet) {
-            dataSet.update({
-                generationStatus: null,
-            })
+        await this.transactionManager.run(async () => {
+            if (dataSet) {
+                dataSet.update({
+                    generationStatus: null,
+                })
 
-            await this.dataSetsRepository.upsert(dataSet)
-        }
+                await this.dataSetsRepository.upsert(dataSet)
+            }
 
-        await this.certificateEmissionsRepository.update(certificate)
+            await this.certificateEmissionsRepository.update(certificate)
+        })
     }
 }

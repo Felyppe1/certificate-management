@@ -12,9 +12,15 @@ import {
 } from '@/backend/domain/data-source'
 import { TransactionClient } from './client/internal/prismaNamespace'
 import { isPrismaClient, PrismaExecutor } from '.'
+import { transactionStorage } from './prisma-transaction-manager'
 
 export class PrismaCertificatesRepository implements ICertificatesRepository {
-    constructor(private readonly prisma: PrismaExecutor) {}
+    constructor(private readonly defaultPrisma: PrismaExecutor) {}
+
+    private get prisma() {
+        const store = transactionStorage.getStore()
+        return store || this.defaultPrisma
+    }
 
     async getCertificateEmissionsMetricsByUserId(userId: string) {
         const now = new Date()

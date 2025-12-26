@@ -7,6 +7,7 @@ import {
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 import { IEmailsRepository } from './interfaces/iemails-repository'
+import { ITransactionManager } from './interfaces/itransaction-manager'
 
 interface FinishCertificateEmailSendingProcessUseCaseInput {
     emailId: string
@@ -24,6 +25,7 @@ export class FinishCertificateEmailSendingProcessUseCase {
             IDataSetsRepository,
             'getByCertificateEmissionId'
         >,
+        private transactionManager: ITransactionManager,
     ) {}
 
     async execute(input: FinishCertificateEmailSendingProcessUseCaseInput) {
@@ -59,14 +61,19 @@ export class FinishCertificateEmailSendingProcessUseCase {
 
         if (status === PROCESSING_STATUS_ENUM.COMPLETED) {
             certificateEmission.setStatus(CERTIFICATE_STATUS.PUBLISHED)
-
-            await this.certificateEmissionsRepository.update(
-                certificateEmission,
-            )
         } else {
             email.setEmailErrorType(EMAIL_ERROR_TYPE_ENUM.INTERNAL_ERROR)
+            certificateEmission.setStatus(CERTIFICATE_STATUS.DRAFT)
         }
 
-        await this.emailsRepository.update(email)
+        await this.transactionManager.run(async () => {
+            if (status === PROCESSING_STATUS_ENUM.COMPLETED) {
+                await this.certificateEmissionsRepository.update(
+                    certificateEmission,
+                )
+            }
+
+            await this.emailsRepository.update(email)
+        })
     }
 }

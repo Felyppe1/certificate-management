@@ -13,6 +13,7 @@ import { SpreadsheetContentExtractorFactory } from '@/backend/infrastructure/fac
 import z from 'zod'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
+import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 
 const addDataSourceByUrlSchema = z.object({
     fileUrl: z.url('Invalid file URL'),
@@ -40,6 +41,7 @@ export async function PUT(
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
         const bucket = new GcpBucket()
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const addDataSourceByUrlUseCase = new AddDataSourceByUrlUseCase(
             certificateEmissionsRepository,
@@ -48,6 +50,7 @@ export async function PUT(
             googleDriveGateway,
             spreadsheetContentExtractorFactory,
             bucket,
+            transactionManager,
         )
 
         await addDataSourceByUrlUseCase.execute({

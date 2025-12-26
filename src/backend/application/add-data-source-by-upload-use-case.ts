@@ -19,6 +19,7 @@ import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
+import { ITransactionManager } from './interfaces/itransaction-manager'
 
 interface AddDataSourceByUploadUseCaseInput {
     file: File
@@ -38,6 +39,7 @@ export class AddDataSourceByUploadUseCase {
         private certificatesRepository: ICertificatesRepository,
         private dataSetsRepository: Pick<IDataSetsRepository, 'upsert'>,
         private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
+        private transactionManager: ITransactionManager,
     ) {}
 
     async execute(input: AddDataSourceByUploadUseCaseInput) {
@@ -103,14 +105,16 @@ export class AddDataSourceByUploadUseCase {
             mimeType: fileExtension,
         })
 
-        await this.certificatesRepository.update(certificate)
-
         const newDataSet = DataSet.create({
             certificateEmissionId: certificate.getId(),
             rows,
         })
 
-        await this.dataSetsRepository.upsert(newDataSet)
+        await this.transactionManager.run(async () => {
+            await this.certificatesRepository.update(certificate)
+
+            await this.dataSetsRepository.upsert(newDataSet)
+        })
 
         // TODO: it should be done using outbox pattern
         if (previousDataSourceStorageFileUrl) {

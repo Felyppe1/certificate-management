@@ -3,9 +3,14 @@ import {
     IUsersRepository,
 } from '@/backend/application/interfaces/iusers-repository'
 import { PrismaExecutor } from '.'
+import { transactionStorage } from './prisma-transaction-manager'
 
 export class PrismaUsersRepository implements IUsersRepository {
-    constructor(private readonly prisma: PrismaExecutor) {}
+    constructor(private readonly defaultPrisma: PrismaExecutor) {}
+
+    private get prisma() {
+        return transactionStorage.getStore() || this.defaultPrisma
+    }
 
     async getByEmail(email: string) {
         const user = await this.prisma.user.findUnique({

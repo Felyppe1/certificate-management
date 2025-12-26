@@ -19,6 +19,7 @@ import { IFileContentExtractorFactory } from './interfaces/ifile-content-extract
 import { ISessionsRepository } from './interfaces/isessions-repository'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 import { Liquid } from 'liquidjs'
+import { ITransactionManager } from './interfaces/itransaction-manager'
 
 interface AddTemplateByUploadUseCaseInput {
     file: File
@@ -45,6 +46,7 @@ export class AddTemplateByUploadUseCase {
             IFileContentExtractorFactory,
             'create'
         >,
+        private transactionManager: ITransactionManager,
     ) {}
 
     async execute(input: AddTemplateByUploadUseCaseInput) {
@@ -133,15 +135,17 @@ export class AddTemplateByUploadUseCase {
                 certificate.getId(),
             )
 
-        if (dataSet) {
-            dataSet.update({
-                generationStatus: null,
-            })
+        await this.transactionManager.run(async () => {
+            if (dataSet) {
+                dataSet.update({
+                    generationStatus: null,
+                })
 
-            await this.dataSetsRepository.upsert(dataSet)
-        }
+                await this.dataSetsRepository.upsert(dataSet)
+            }
 
-        await this.certificatesRepository.update(certificate)
+            await this.certificatesRepository.update(certificate)
+        })
 
         if (previousTemplateStorageFileUrl) {
             await this.bucket.deleteObject({

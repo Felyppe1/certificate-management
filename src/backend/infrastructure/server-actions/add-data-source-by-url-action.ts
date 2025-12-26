@@ -19,6 +19,7 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '@/backend/domain/error/validation-error'
+import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 
 const addDataSourceByUrlActionSchema = z.object({
     certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
@@ -54,6 +55,7 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
         const bucket = new GcpBucket()
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const addDataSourceByUrlUseCase = new AddDataSourceByUrlUseCase(
             certificateEmissionsRepository,
@@ -62,6 +64,7 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
             googleDriveGateway,
             spreadsheetContentExtractorFactory,
             bucket,
+            transactionManager,
         )
 
         await addDataSourceByUrlUseCase.execute({

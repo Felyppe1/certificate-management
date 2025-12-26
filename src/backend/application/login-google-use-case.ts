@@ -7,6 +7,7 @@ import { User, IUsersRepository } from './interfaces/iusers-repository'
 import crypto from 'crypto'
 import { AuthenticationError } from '../domain/error/authentication-error'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
+import { ITransactionManager } from './interfaces/itransaction-manager'
 
 interface LoginGoogleUseCaseInput {
     code: string
@@ -25,6 +26,7 @@ export class LoginGoogleUseCase {
             IGoogleAuthGateway,
             'getToken' | 'getUserInfo'
         >,
+        private transactionManager: ITransactionManager,
     ) {}
 
     async execute({ code, reAuthenticate }: LoginGoogleUseCaseInput) {
@@ -59,8 +61,6 @@ export class LoginGoogleUseCase {
                 name: userInfo.name,
                 passwordHash: null,
             }
-
-            await this.usersRepository.save(newUser)
         }
 
         const user = userExists ?? newUser!
@@ -68,34 +68,45 @@ export class LoginGoogleUseCase {
         const externalAccount =
             await this.externalUserAccountsRepository.getById(user.id, 'GOOGLE')
 
-        if (!externalAccount) {
-            const newExternalAccount: ExternalUserAccount = {
-                userId: user.id,
-                provider: 'GOOGLE',
-                providerUserId: userInfo.providerUserId,
-                accessToken: tokenData.accessToken,
-                refreshToken: tokenData.refreshToken,
-                accessTokenExpiryDateTime: tokenData.accessTokenExpiryDateTime,
-                refreshTokenExpiryDateTime: null, // Not necessary because Google refresh tokens don't expire in Published mode
-            }
-
-            await this.externalUserAccountsRepository.save(newExternalAccount)
-        } else {
-            externalAccount.accessToken = tokenData.accessToken
-            externalAccount.refreshToken =
-                tokenData.refreshToken ?? externalAccount.refreshToken
-            externalAccount.accessTokenExpiryDateTime =
-                tokenData.accessTokenExpiryDateTime
-            externalAccount.refreshTokenExpiryDateTime = null
-
-            await this.externalUserAccountsRepository.update(externalAccount)
-        }
-
         const sessionToken = crypto.randomBytes(32).toString('hex')
 
-        await this.sessionsRepository.save({
-            userId: user.id,
-            token: sessionToken,
+        await this.transactionManager.run(async () => {
+            if (!userExists) {
+                await this.usersRepository.save(newUser!)
+            }
+
+            if (!externalAccount) {
+                const newExternalAccount: ExternalUserAccount = {
+                    userId: user.id,
+                    provider: 'GOOGLE',
+                    providerUserId: userInfo.providerUserId,
+                    accessToken: tokenData.accessToken,
+                    refreshToken: tokenData.refreshToken,
+                    accessTokenExpiryDateTime:
+                        tokenData.accessTokenExpiryDateTime,
+                    refreshTokenExpiryDateTime: null, // Not necessary because Google refresh tokens don't expire in Published mode
+                }
+
+                await this.externalUserAccountsRepository.save(
+                    newExternalAccount,
+                )
+            } else {
+                externalAccount.accessToken = tokenData.accessToken
+                externalAccount.refreshToken =
+                    tokenData.refreshToken ?? externalAccount.refreshToken
+                externalAccount.accessTokenExpiryDateTime =
+                    tokenData.accessTokenExpiryDateTime
+                externalAccount.refreshTokenExpiryDateTime = null
+
+                await this.externalUserAccountsRepository.update(
+                    externalAccount,
+                )
+            }
+
+            await this.sessionsRepository.save({
+                userId: user.id,
+                token: sessionToken,
+            })
         })
 
         return sessionToken
