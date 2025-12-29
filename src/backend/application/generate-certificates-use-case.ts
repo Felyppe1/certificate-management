@@ -17,6 +17,7 @@ import {
 } from '../domain/error/validation-error'
 import { IExternalProcessing } from './interfaces/iexternal-processing'
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
+import { IPubSub } from './interfaces/ipubsub'
 
 interface GenerateCertificatesUseCaseInput {
     certificateEmissionId: string
@@ -42,6 +43,7 @@ export class GenerateCertificatesUseCase {
             IExternalProcessing,
             'triggerGenerateCertificatePDFs'
         >,
+        private pubSub: Pick<IPubSub, 'publish'>,
     ) {}
 
     async execute({
@@ -94,17 +96,13 @@ export class GenerateCertificatesUseCase {
                 'GOOGLE',
             )
 
-        dataSet.update({
-            generationStatus: GENERATION_STATUS.PENDING,
-        })
-
         const { dataSource, template, ...certificateEmissionData } =
             certificateEmission.serialize()
 
         const body = {
             certificateEmission: {
                 ...certificateEmissionData,
-                googleAccessToken: externalUserAccount?.accessToken,
+                googleAccessToken: externalUserAccount?.accessToken || null,
                 template: template!,
                 dataSource: {
                     ...dataSource!,
@@ -113,19 +111,12 @@ export class GenerateCertificatesUseCase {
             },
         }
 
-        try {
-            // In case the external processing fails, instantly mark the data set as failed
-            await this.externalProcessing.triggerGenerateCertificatePDFs(body)
+        await this.externalProcessing.triggerGenerateCertificatePDFs(body)
 
-            await this.dataSetsRepository.upsert(dataSet)
-        } catch (error: any) {
-            dataSet.update({
-                generationStatus: GENERATION_STATUS.FAILED,
-            })
+        dataSet.update({
+            generationStatus: GENERATION_STATUS.PENDING,
+        })
 
-            await this.dataSetsRepository.upsert(dataSet)
-
-            throw error
-        }
+        await this.dataSetsRepository.upsert(dataSet)
     }
 }

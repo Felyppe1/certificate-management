@@ -21,6 +21,7 @@
     "src/**/*.{ts,tsx}": "prettier --write --ignore-unknown"
   },
   "dependencies": {
+    "@google-cloud/pubsub": "^5.2.0",
     "@google-cloud/storage": "^7.17.2",
     "@googleworkspace/drive-picker-element": "^0.6.2",
     "@opentelemetry/api-logs": "0.57.2",

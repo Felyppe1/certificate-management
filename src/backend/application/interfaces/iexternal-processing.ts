@@ -12,6 +12,7 @@ export interface TriggerGenerateCertificatePDFsInput {
         status: CERTIFICATE_STATUS
         createdAt: Date
         variableColumnMapping: Record<string, string | null> | null
+        googleAccessToken: string | null
         template: {
             driveFileId: string | null
             storageFileUrl: string | null

@@ -82,6 +82,16 @@ export class DataSet extends AggregateRoot {
         return this.rows.length
     }
 
+    markAsRunning() {
+        if (this.generationStatus === GENERATION_STATUS.PENDING) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.GENERATION_ALREADY_IN_PROGRESS,
+            )
+        }
+
+        this.generationStatus = GENERATION_STATUS.PENDING
+    }
+
     update(data: Partial<Omit<DataSetInput, 'id' | 'certificateEmissionId'>>) {
         // TODO: could validate that from null -> IN_PROGRESS -> COMPLETED/FAILED
         if (data.generationStatus !== undefined) {

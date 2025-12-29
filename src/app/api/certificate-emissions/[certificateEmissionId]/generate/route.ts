@@ -9,6 +9,7 @@ import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/pr
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { CloudRunExternalProcessing } from '@/backend/infrastructure/gateway/cloud-run-external-processing'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
+import { GcpPubSub } from '@/backend/infrastructure/cloud/gcp/gcp-pubsub'
 
 export async function POST(
     request: NextRequest,
@@ -30,6 +31,7 @@ export async function POST(
         const externalProcessing = new CloudRunExternalProcessing(
             googleAuthGateway,
         )
+        const pubSub = new GcpPubSub()
 
         const generateCertificatesUseCase = new GenerateCertificatesUseCase(
             sessionsRepository,
@@ -37,6 +39,7 @@ export async function POST(
             certificateEmissionsRepository,
             dataSetsRepository,
             externalProcessing,
+            pubSub,
         )
 
         await generateCertificatesUseCase.execute({

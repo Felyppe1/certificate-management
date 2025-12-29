@@ -20,6 +20,13 @@ services:
     networks:
         - certificate-management
 
+  pubsub-emulator:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    ports:
+      - "8085:8085"
+    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 --project=${GCP_PROJECT_ID}
+    # I can use the url http://localhost:8085/v1/projects/SEU_PROJECT_ID/topics to check if the topics are created
+
   grafana:
     container_name: certificate-management-grafana
     image: grafana/grafana

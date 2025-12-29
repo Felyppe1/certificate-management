@@ -19,6 +19,7 @@ resource "google_project_iam_member" "sa_roles_runner" {
     "roles/storage.objectAdmin",
     "roles/iam.serviceAccountOpenIdTokenCreator",
     "roles/iam.serviceAccountTokenCreator",
+    "roles/pubsub.publisher",
   ])
 
   role    = each.value
@@ -30,3 +31,21 @@ output "service_account_email" {
   value       = google_service_account.app_service_account.email
   description = "Email of the application's service account"
 }
+
+
+
+
+
+
+
+
+# resource "google_project_iam_member" "pubsub_dead_letter_permissions" {
+#   for_each = toset([
+#     "roles/pubsub.publisher",  # To publish to the DLQ
+#     "roles/pubsub.subscriber", # To manage the original subscription
+#   ])
+
+#   project = var.project_id
+#   role    = each.key
+#   member  = "serviceAccount:${local.pubsub_service_account}"
+# }

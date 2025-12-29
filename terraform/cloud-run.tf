@@ -130,10 +130,13 @@ resource "google_cloud_run_v2_service" "generate_pdfs" {
   template {
     service_account = google_service_account.app_service_account.email
 
-    # scaling {
-    #   min_instance_count = 0
-    #   max_instance_count = 1
-    # }
+    max_instance_request_concurrency = 5
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 10
+    }
+
+    timeout = "3600s"
 
     containers {
       image = "us-docker.pkg.dev/cloudrun/container/hello"
@@ -142,12 +145,13 @@ resource "google_cloud_run_v2_service" "generate_pdfs" {
         container_port = 8080
       }
 
-      # resources {
-      #   limits = {
-      #     cpu    = "2"
-      #     memory = "1Gi"
-      #   }
-      # }
+      resources {
+        limits = {
+          cpu    = "2"
+          memory = "2Gi"
+        }
+        # cpu_idle = false
+      }
 
       env {
         name = "APP_BASE_URL"
@@ -164,8 +168,6 @@ resource "google_cloud_run_v2_service" "generate_pdfs" {
         value = "/usr/bin/soffice"
       }
     }
-
-    timeout = "600s"
   }
 
   lifecycle {
