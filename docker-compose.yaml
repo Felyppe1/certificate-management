@@ -26,7 +26,26 @@ services:
       - "8085:8085"
     command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 --project=${GCP_PROJECT_ID}
     # I can use the url http://localhost:8085/v1/projects/SEU_PROJECT_ID/topics to check if the topics are created
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
 
+  pubsub-setup:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    container_name: pubsub-setup
+    volumes:
+      - ./setup-pubsub.sh:/app/setup-pubsub.sh
+    environment:
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - PUBSUB_EMULATOR_HOST=pubsub-emulator:8085
+    # O entrypoint substitui o comando padrão e roda o seu script
+    entrypoint: ["/bin/bash", "/app/setup-pubsub.sh"]
+    depends_on:
+      pubsub-emulator:
+        condition: service_healthy
+        
   grafana:
     container_name: certificate-management-grafana
     image: grafana/grafana

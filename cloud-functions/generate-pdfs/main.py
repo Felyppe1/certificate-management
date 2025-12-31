@@ -592,67 +592,59 @@ class TriggerGenerateCertificatePDFsInput(BaseModel):
 def main(request):
     print('Generate PDFs function invoked via Pub/Sub Push')
     
-    raw_data = request.get_json(silent=True)
-    if raw_data is None:
-        return {"error": "JSON is required"}, 400
+    # raw_data = request.get_json(silent=True)
+    # if raw_data is None:
+    #     return {"error": "JSON is required"}, 400
 
-    try:
-        input_data = TriggerGenerateCertificatePDFsInput(**raw_data)
-        
-    except ValidationError as e:
-        def format_pydantic_errors(errors):
-            formatted_errors = []
-
-            for error in errors:
-                field = ".".join([str(x) for x in error['loc']])
-                message = error['msg']
-                formatted_errors.append({
-                    "field": field,
-                    "message": message
-                })
-
-            return formatted_errors
-
-        friendly_errors = format_pydantic_errors(e.errors())
-        print("Validation errors:", friendly_errors)
-        return {"error": "Invalid fields", "details": friendly_errors}, 400
-
-    # envelop = request.get_json()
-
-    # try:
-    #     pubsub_message = envelop.get('message', {})
-    #     data_str = base64.b64decode(pubsub_message.get('data', '')).decode('utf-8')
-    #     raw_data = json.loads(data_str)
-    # except Exception:
-    #     return "Invalid Pub/Sub format", 200
-    
     # try:
     #     input_data = TriggerGenerateCertificatePDFsInput(**raw_data)
         
-    #     emission = input_data.certificateEmission
-    #     data_set_id = emission.dataSource.dataSet.id
-        
     # except ValidationError as e:
-    #     print(f"Validation Error: {e.json()}", flush=True)
-    #     # Se houver erro de contrato, não adianta retentar. 
-    #     # Marcamos como FAILED e damos 200 para o Pub/Sub desistir.
-    #     return {"error": "Invalid fields", "details": e.errors()}, 200
-    
+    #     def format_pydantic_errors(errors):
+    #         formatted_errors = []
 
+    #         for error in errors:
+    #             field = ".".join([str(x) for x in error['loc']])
+    #             message = error['msg']
+    #             formatted_errors.append({
+    #                 "field": field,
+    #                 "message": message
+    #             })
 
+    #         return formatted_errors
 
-    certificate_emission = input_data.certificateEmission
-    template = certificate_emission.template
-    data_set = certificate_emission.dataSource.dataSet
-    certificate_emission_id = certificate_emission.id
-    variable_mapping = certificate_emission.variableColumnMapping or {}
-    data_set_id = data_set.id
-    rows = data_set.rows or []
-    user_id = certificate_emission.userId
-    input_method = template.inputMethod.value
-    file_mime_type = template.fileExtension.value
+    #     friendly_errors = format_pydantic_errors(e.errors())
+    #     print("Validation errors:", friendly_errors)
+    #     return {"error": "Invalid fields", "details": friendly_errors}, 400
+
+    envelop = request.get_json()
+    data_set_id = None
 
     try:
+        pubsub_message = envelop.get('message', {})
+        data_str = base64.b64decode(pubsub_message.get('data', '')).decode('utf-8')
+        raw_data = json.loads(data_str)
+
+        data_set_id = raw_data.get('certificateEmission', {}).get('dataSource', {}).get('dataSet', {}).get('id')
+    except Exception as e:
+        print(f"Error to decode message: {e}")
+
+        return "Invalid Pub/Sub format", 200
+    
+    try:
+        input_data = TriggerGenerateCertificatePDFsInput(**raw_data)
+        
+        certificate_emission = input_data.certificateEmission
+        template = certificate_emission.template
+        data_set = certificate_emission.dataSource.dataSet
+        certificate_emission_id = certificate_emission.id
+        variable_mapping = certificate_emission.variableColumnMapping or {}
+        data_set_id = data_set.id
+        rows = data_set.rows or []
+        user_id = certificate_emission.userId
+        input_method = template.inputMethod.value
+        file_mime_type = template.fileExtension.value
+
         template_buffer = None
         is_docx = None
 
@@ -663,13 +655,15 @@ def main(request):
             is_docx = False
             file_extension_str = 'pptx'
         else:
-            return {'error': f'Unsupported template file extension: {file_mime_type}'}, 422
+            raise Exception(f'Unsupported template file extension: {file_mime_type}')
+            # return {'error': f'Unsupported template file extension: {file_mime_type}'}, 422
 
         print('Input method: ', input_method)
         if input_method == 'UPLOAD':
             storage_file_url = template.storageFileUrl
             if not storage_file_url:
-                return {'error': 'Template storageFileUrl not found'}, 400
+                raise Exception('Template storageFileUrl not found')
+                # return {'error': 'Template storageFileUrl not found'}, 400
             
             template_bytes = get_from_bucket(storage_file_url)
             template_buffer = BytesIO(template_bytes)
@@ -677,18 +671,21 @@ def main(request):
         elif input_method == 'URL':
             drive_file_id = template.driveFileId
             if not drive_file_id:
-                return {'error': 'Template driveFileId not found'}, 400
+                raise Exception('Template driveFileId not found')
+                # return {'error': 'Template driveFileId not found'}, 400
 
             template_buffer = download_from_google_drive_api(drive_file_id, file_mime_type)
 
         elif input_method == 'GOOGLE_DRIVE':
             drive_file_id = template.driveFileId
             if not drive_file_id:
-                return {'error': 'Template driveFileId not found'}, 400
+                raise Exception('Template driveFileId not found')
+                # return {'error': 'Template driveFileId not found'}, 400
             
             google_access_token = certificate_emission.googleAccessToken
             if not google_access_token:
-                return {'error': 'Google access token is missing'}, 400
+                raise Exception('Google access token is missing')
+                # return {'error': 'Google access token is missing'}, 400
 
             template_buffer = download_from_google_drive_api(drive_file_id, file_mime_type, access_token=google_access_token)
 
@@ -738,6 +735,29 @@ def main(request):
         
         return "", 204
         
+    except ValidationError as e:
+        def format_pydantic_errors(errors):
+            formatted_errors = []
+
+            for error in errors:
+                field = ".".join([str(x) for x in error['loc']])
+                message = error['msg']
+                formatted_errors.append({
+                    "field": field,
+                    "message": message
+                })
+
+            return formatted_errors
+
+        friendly_errors = format_pydantic_errors(e.errors())
+
+        print("Validation errors:", friendly_errors)
+        
+        if data_set_id:
+            update_data_set_status(data_set_id, 'FAILED')
+            
+        return {"error": friendly_errors}, 200
+    
     except Exception as e:
         original_error = str(e)
         update_error = None
@@ -754,4 +774,4 @@ def main(request):
         return {
             'title': 'Failed to generate certificates',
             'details': details
-        }, 500
+        }, 200

@@ -111,7 +111,8 @@ export class GenerateCertificatesUseCase {
             },
         }
 
-        await this.externalProcessing.triggerGenerateCertificatePDFs(body)
+        await this.pubSub.publish('certificates-generation-started', body)
+        // await this.externalProcessing.triggerGenerateCertificatePDFs(body)
 
         dataSet.update({
             generationStatus: GENERATION_STATUS.PENDING,
