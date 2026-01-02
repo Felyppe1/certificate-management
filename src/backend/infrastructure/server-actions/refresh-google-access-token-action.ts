@@ -9,30 +9,23 @@ import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-google-access-token'
 import { logoutAction } from './logout-action'
 import { updateTag } from 'next/cache'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
 export async function refreshGoogleAccessTokenAction() {
-    const cookie = await cookies()
-
-    const sessionToken = cookie.get('session_token')?.value
-
     try {
-        if (!sessionToken) {
-            throw new AuthenticationError('missing-session')
-        }
+        const { userId } = await validateSessionToken()
 
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const externalUserAccountsRepository =
             new PrismaExternalUserAccountsRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
 
         const refreshGoogleAccessTokenUseCase =
             new RefreshGoogleAccessTokenUseCase(
-                sessionsRepository,
                 externalUserAccountsRepository,
                 googleAuthGateway,
             )
 
-        await refreshGoogleAccessTokenUseCase.execute({ sessionToken })
+        await refreshGoogleAccessTokenUseCase.execute({ userId })
     } catch (error) {
         if (error instanceof AuthenticationError) {
             if (
