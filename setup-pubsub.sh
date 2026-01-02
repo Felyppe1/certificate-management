@@ -20,7 +20,7 @@ curl -s -X PUT "http://$PUBSUB_EMULATOR_HOST/v1/projects/$GCP_PROJECT_ID/subscri
       "pushConfig": {
         "pushEndpoint": "http://host.docker.internal:8080"
       },
-      "ackDeadlineSeconds": 60,
+      "ackDeadlineSeconds": 600,
       "retryPolicy": {
         "minimumBackoff": "10s",
         "maximumBackoff": "600s"
