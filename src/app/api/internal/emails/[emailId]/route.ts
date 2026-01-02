@@ -2,7 +2,6 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest } from 'next/server'
 import { handleError } from '@/utils/handle-error'
 import z from 'zod'
-import { verifyServiceAccountToken } from '@/utils/middleware/verifyServiceAccountToken'
 import { sseBroker } from '@/backend/infrastructure/sse'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/email'
 import { FinishCertificateEmailSendingProcessUseCase } from '@/backend/application/finish-certificate-email-sending-process-use-case'
@@ -10,6 +9,7 @@ import { PrismaCertificatesRepository } from '@/backend/infrastructure/repositor
 import { PrismaEmailsRepository } from '@/backend/infrastructure/repository/prisma/prisma-emails-repository'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
+import { validateServiceAccountToken } from '@/utils/middleware/validateServiceAccountToken'
 
 const updateEmailSchema = z.object({
     status: z.enum([
@@ -25,7 +25,7 @@ export async function PATCH(
     const emailId = (await params).emailId
 
     try {
-        await verifyServiceAccountToken(request)
+        await validateServiceAccountToken(request)
 
         const body = await request.json()
         const parsed = updateEmailSchema.parse(body)

@@ -1,31 +1,20 @@
 import { AuthenticationError } from '../domain/error/authentication-error'
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
-import { ISessionsRepository } from './interfaces/isessions-repository'
 
 interface RefreshGoogleAccessTokenUseCaseInput {
-    sessionToken: string
+    userId: string
 }
 
 export class RefreshGoogleAccessTokenUseCase {
     constructor(
-        private sessionsRepository: ISessionsRepository,
         private externalUserAccountsRepository: IExternalUserAccountsRepository,
         private googleAuthGateway: IGoogleAuthGateway,
     ) {}
 
-    async execute({ sessionToken }: RefreshGoogleAccessTokenUseCaseInput) {
-        const session = await this.sessionsRepository.getById(sessionToken)
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
+    async execute({ userId }: RefreshGoogleAccessTokenUseCaseInput) {
         const externalAccount =
-            await this.externalUserAccountsRepository.getById(
-                session.userId,
-                'GOOGLE',
-            )
+            await this.externalUserAccountsRepository.getById(userId, 'GOOGLE')
 
         if (!externalAccount) {
             throw new AuthenticationError('external-account-not-found')

@@ -4,11 +4,20 @@ import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/r
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { handleError } from '@/utils/handle-error'
 import { NextRequest, NextResponse } from 'next/server'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateServiceAccountToken } from '@/utils/middleware/validateServiceAccountToken'
+import z from 'zod'
+
+const bodySchema = z.object({
+    userId: z.string().min(1),
+})
 
 export async function POST(request: NextRequest) {
     try {
-        const { userId } = await validateSessionToken(request)
+        await validateServiceAccountToken(request)
+
+        const body = await request.json()
+
+        const { userId } = bodySchema.parse(body)
 
         const externalUserAccountsRepository =
             new PrismaExternalUserAccountsRepository(prisma)

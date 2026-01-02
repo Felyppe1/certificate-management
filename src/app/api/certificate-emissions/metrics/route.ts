@@ -5,12 +5,12 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { handleError } from '@/utils/handle-error'
-import { getSessionToken } from '@/utils/middleware/getSessionToken'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
     try {
-        const sessionToken = await getSessionToken(request)
+        const { token } = await validateSessionToken(request)
 
         const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
         const certificateEmissionsMetrics =
             await getAllCertificatesUseCase.execute({
-                sessionToken,
+                sessionToken: token,
             })
 
         return NextResponse.json({ certificateEmissionsMetrics })

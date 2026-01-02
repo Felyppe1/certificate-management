@@ -1,47 +1,45 @@
-import { UpdateDataSetUseCase } from '@/backend/application/update-data-set-use-case'
 import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest } from 'next/server'
 import { handleError } from '@/utils/handle-error'
 import z from 'zod'
-import { verifyServiceAccountToken } from '@/utils/middleware/verifyServiceAccountToken'
 import { sseBroker } from '@/backend/infrastructure/sse'
+import { validateServiceAccountToken } from '@/utils/middleware/validateServiceAccountToken'
+import { FinishCertificatesGenerationSetUseCase } from '@/backend/application/finish-certificates-generation-use-case'
 
 const updateDataSetSchema = z.object({
-    generationStatus: z.enum(GENERATION_STATUS).optional(),
+    generationStatus: z.enum([
+        GENERATION_STATUS.COMPLETED,
+        GENERATION_STATUS.FAILED,
+    ]),
     totalBytes: z.number().optional(),
 })
 
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: Promise<{ dataSetId: string }> },
+    { params }: { params: Promise<{ certificateEmissionId: string }> },
 ) {
-    const dataSetId = (await params).dataSetId
+    const certificateEmissionId = (await params).certificateEmissionId
 
     try {
-        await verifyServiceAccountToken(request)
+        await validateServiceAccountToken(request)
 
         const body = await request.json()
         const parsed = updateDataSetSchema.parse(body)
 
         const dataSetsRepository = new PrismaDataSetsRepository(prisma)
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
 
-        const updateDataSetUseCase = new UpdateDataSetUseCase(
-            dataSetsRepository,
-            sessionsRepository,
-        )
+        const finishCertificatesGenerationSetUseCase =
+            new FinishCertificatesGenerationSetUseCase(dataSetsRepository)
 
-        await updateDataSetUseCase.execute({
-            dataSetId,
+        await finishCertificatesGenerationSetUseCase.execute({
+            certificateEmissionId,
             generationStatus: parsed.generationStatus,
             totalBytes: parsed.totalBytes,
-            sessionToken: null,
         })
 
-        sseBroker.sendEvent(dataSetId, {
+        sseBroker.sendEvent(certificateEmissionId, {
             generationStatus: parsed.generationStatus,
         })
 

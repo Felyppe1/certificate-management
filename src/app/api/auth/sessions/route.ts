@@ -7,15 +7,15 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
 export async function GET(request: NextRequest) {
     try {
-        const sessionToken = await getSessionToken(request)
+        const { token } = await validateSessionToken(request)
 
         const session = await new PrismaSessionsRepository(prisma).getById(
-            sessionToken,
+            token,
         )
 
         if (!session) {

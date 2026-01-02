@@ -234,74 +234,106 @@ def replace_variables_in_docx_liquid(in_buffer, context_data):
 
 
 
-def inspecionar_runs_docx(buffer):
-    buffer.seek(0)
-    doc = Document(buffer)
-    
-    print("--- INICIANDO INSPEÇÃO PROFUNDA ---\n")
+################################ Functions to use bucket ################################
+def upload_to_bucket(file_buffer, file_path):
+    bucket = storage_client.bucket(CERTIFICATES_BUCKET)
+    blob = bucket.blob(file_path)
+    blob.upload_from_file(file_buffer, rewind=True, content_type="application/pdf")
+    return blob
 
-    # 1. Verificar o Corpo Principal (o que você já fez)
-    print("📍 [ÁREA 1] CORPO DO DOCUMENTO (Main Body)")
-    tem_conteudo = False
-    for p in doc.paragraphs:
-        if p.text.strip():
-            tem_conteudo = True
-            print(f"   Parágrafo: '{p.text}'")
-    if not tem_conteudo:
-        print("   (Vazio)")
+def get_from_bucket(file_path):
+    bucket = storage_client.bucket(CERTIFICATES_BUCKET)
+    blob = bucket.blob(file_path)
+    return blob.download_as_bytes()
 
-    # 2. Verificar Tabelas (Muito comum em certificados para layout)
-    print("\n📍 [ÁREA 2] TABELAS")
-    total_tabelas = len(doc.tables)
-    print(f"   Encontradas {total_tabelas} tabelas.")
-    
-    celulas_processadas = set()
+def delete_by_prefix(prefix: str):
+    bucket = storage_client.bucket(CERTIFICATES_BUCKET)
 
-    for i, table in enumerate(doc.tables):
-        print(f"📍 Tabela {i}")
-        for row in table.rows:
-            for cell in row.cells:
-                # Se já vimos esta célula (mesmo objeto), pula
-                if cell in celulas_processadas:
-                    continue
-                
-                # Marca como processada
-                celulas_processadas.add(cell)
-                
-                # Agora lemos os parágrafos dentro dessa célula única
-                texto_celula = cell.text.strip()
-                if texto_celula:
-                    print(f"   [Célula Única]: {texto_celula}") # Printando só o começo
-                    
-                    # Verificando a estrutura interna (runs) para o seu Liquid
-                    for p in cell.paragraphs:
-                        if "{%" in p.text or "{{" in p.text:
-                            print(f"      👉 Lógica encontrada: '{p.text}'")
+    blobs = bucket.list_blobs(prefix=prefix)
 
-    # 3. Verificar Caixas de Texto / Shapes (O pesadelo do python-docx)
-    # python-docx não tem uma API fácil para isso, precisamos ir no XML
-    print("\n📍 [ÁREA 3] CAIXAS DE TEXTO / SHAPES")
-    
-    # Vamos iterar sobre o XML procurando tags de conteúdo de textbox (w:txbxContent)
-    # Isso é apenas para leitura; editar isso via python-docx é complexo.
-    ns = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
-    
-    # Procura todos os elementos de texto dentro do corpo
-    # Nota: Isso é uma busca 'bruta' no XML para te mostrar onde está o texto
-    text_boxes = doc.element.body.findall('.//w:txbxContent', ns)
-    
-    if text_boxes:
-        print(f"   Encontradas {len(text_boxes)} caixas de texto.")
-        for i, tb in enumerate(text_boxes):
-            # Tenta extrair o texto de dentro do XML da caixa
-            texts = tb.findall('.//w:t', ns)
-            conteudo = "".join([t.text for t in texts if t.text])
-            if conteudo.strip():
-                print(f"      Caixa {i}: '{conteudo}'")
-    else:
-        print("   Nenhuma caixa de texto detectada via XML padrão.")
+    deleted_files = []
+    for blob in blobs:
+        blob.delete()
+        deleted_files.append(blob.name)
 
-def download_from_google_drive_api(drive_file_id: str, file_mime_type: str, access_token: Optional[str] = None) -> BytesIO:
+    return deleted_files
+
+
+
+################################ Functions to call backend endpoints ################################
+def finish_certificates_generation(certificate_emission_id, status, total_bytes=None):
+    print('Inside update')
+    url = f"{APP_BASE_URL}/api/internal/certificate-emissions/{certificate_emission_id}/generations"
+    auth_req = google.auth.transport.requests.Request()
+
+    id_token = google.oauth2.id_token.fetch_id_token(auth_req, AUDIENCE)
+
+    headers = {
+        "Authorization": f"Bearer {id_token}",
+        "Content-Type": "application/json",
+    }
+    
+    body = {k: v for k, v in {
+        "generationStatus": status,
+        "totalBytes": total_bytes,
+    }.items() if v is not None}
+
+    print('before sending patch')
+    response = requests.patch(url, json=body, headers=headers)
+    response.raise_for_status()
+
+def refresh_google_token(user_id):
+    print('Refreshing google token')
+
+    url = f"{APP_BASE_URL}/api/internal/auth/google/access-token"
+    auth_req = google.auth.transport.requests.Request()
+
+    id_token = google.oauth2.id_token.fetch_id_token(auth_req, AUDIENCE)
+
+    headers = {
+        "Authorization": f"Bearer {id_token}",
+        "Content-Type": "application/json",
+    }
+    
+    body = {
+        "userId": user_id
+    }
+
+    response = requests.post(url, json=body, headers=headers)
+    if response.status_code != 200:
+        raise Exception("Falha crítica ao renovar o token: " + response.text)
+
+    return response.json()["accessToken"]
+
+
+
+
+
+
+
+# def refresh_google_token(refresh_token: str) -> str:
+#     url = "https://oauth2.googleapis.com/token"
+#     data = {
+#         "client_id": GOOGLE_CLIENT_ID,
+#         "client_secret": GOOGLE_CLIENT_SECRET,
+#         "refresh_token": refresh_token,
+#         "grant_type": "refresh_token",
+#     }
+    
+#     response = requests.post(url, data=data)
+#     if response.status_code != 200:
+#         raise Exception("Falha crítica ao renovar o token: " + response.text)
+#     print(response.json())
+#     return response.json()["access_token"]
+
+def download_from_google_drive_api(
+    drive_file_id: str, 
+    file_mime_type: str, 
+    access_token: str,
+    user_id: str,
+) -> BytesIO:
+    print('Downloading from Google Drive API', drive_file_id)
+    
     mime_type_mapping = {
         GOOGLE_DOCS_MIME_TYPE: DOCX_MIME_TYPE,
         GOOGLE_SLIDES_MIME_TYPE: PPTX_MIME_TYPE,
@@ -311,19 +343,31 @@ def download_from_google_drive_api(drive_file_id: str, file_mime_type: str, acce
         url = f"https://www.googleapis.com/drive/v3/files/{drive_file_id}/export?mimeType={mime_type_mapping[file_mime_type]}"
     else:
         url = f"https://www.googleapis.com/drive/v3/files/{drive_file_id}?alt=media"
-    
-    headers = {
-        'Authorization': f'Bearer {access_token}',
-        'Accept': 'application/json'
-    } if access_token else {}
-    
-    response = requests.get(url, headers=headers)
-    
+
+    def make_request(token):
+        headers = {'Authorization': f'Bearer {token}', 'Accept': 'application/json'}
+        return requests.get(url, headers=headers)
+
+    # Primeira tentativa
+    response = make_request(access_token)
+
+    # Se der 401, tentamos renovar o token UMA vez
+    if response.status_code == 401:
+        try:
+            new_access_token = refresh_google_token(user_id)
+            # Tenta novamente com o novo token
+            response = make_request(new_access_token)
+            
+            # Opcional: Aqui você deve salvar o new_token no seu banco/cache 
+            # para não ter que dar refresh em toda chamada subsequente.
+        except Exception as e:
+            print(f"Erro ao tentar o refresh: {e}")
+            # Se o refresh falhar, o status_code continuará 401 e cairá no raise_for_status abaixo
+
     if response.status_code != 200:
-        print(f"Erro {response.status_code}:")
-        print(response.text)
+        print(f"Erro {response.status_code}: {response.text}")
         response.raise_for_status()
-        
+
     return BytesIO(response.content)
 
 def replace_variables_in_docx(template_buffer, variable_mapping):
@@ -435,99 +479,77 @@ def convert_to_pdf_with_libreoffice(input_bytes: BytesIO, input_ext: str) -> Byt
     pdf_bytes.seek(0)
     return pdf_bytes
 
-# def get_drive_service():
-#     creds, _ = default(scopes=["https://www.googleapis.com/auth/drive"])
-
-#     return build("drive", "v3", credentials=creds)
-
-# def convert_to_pdf_via_google_drive(file_bytes: bytes, file_extension: str) -> bytes:
-#     FOLDER_ID = '189e7d3DtkzqfS4qrnOM_3wIG-PZMo39B'
-
-#     ext = file_extension.lower().lstrip(".")
-
-#     if ext == "docx":
-#         mime_type_upload = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-#         mime_type_convert = "application/vnd.google-apps.document"
-#     elif ext == "pptx":
-#         mime_type_upload = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-#         mime_type_convert = "application/vnd.google-apps.presentation"
-#     else:
-#         raise ValueError(f"Extensão {ext} não suportada para conversão")
-
-#     service = get_drive_service()
-
-#     filename = f"input.{ext}"
-
-#     media = MediaIoBaseUpload(file_bytes, mimetype=mime_type_upload)
-
-#     file_metadata = {"name": filename, "mimeType": mime_type_upload, "parents": [FOLDER_ID]}
-#     uploaded = service.files().create(
-#         body=file_metadata, media_body=media, fields="id"
-#     ).execute()
-#     file_id = uploaded.get("id")
-
-#     request = service.files().export_media(fileId=file_id, mimeType="application/pdf")
-#     pdf_bytes = io.BytesIO()
-#     downloader = MediaIoBaseDownload(pdf_bytes, request)
-
-#     done = False
-#     while not done:
-#         status, done = downloader.next_chunk()
-
-#     pdf_bytes.seek(0)
-
-#     service.files().delete(fileId=file_id).execute()
-
-#     return pdf_bytes.read()
-
-def upload_to_bucket(file_buffer, file_path):
-    bucket = storage_client.bucket(CERTIFICATES_BUCKET)
-    blob = bucket.blob(file_path)
-    blob.upload_from_file(file_buffer, rewind=True, content_type="application/pdf")
-    return blob
-
-def get_from_bucket(file_path):
-    bucket = storage_client.bucket(CERTIFICATES_BUCKET)
-    blob = bucket.blob(file_path)
-    return blob.download_as_bytes()
-
-def delete_by_prefix(prefix: str):
-    bucket = storage_client.bucket(CERTIFICATES_BUCKET)
-
-    blobs = bucket.list_blobs(prefix=prefix)
-
-    deleted_files = []
-    for blob in blobs:
-        blob.delete()
-        deleted_files.append(blob.name)
-
-    return deleted_files
-
 def save_to_local(buffer, file_path):
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, 'wb') as f:
         f.write(buffer.getvalue())
 
-def update_data_set_status(data_set_id, status, total_bytes=None):
-    print('Inside update')
-    url = f"{APP_BASE_URL}/api/internal/data-sets/{data_set_id}"
-    auth_req = google.auth.transport.requests.Request()
-
-    id_token = google.oauth2.id_token.fetch_id_token(auth_req, AUDIENCE)
-
-    headers = {
-        "Authorization": f"Bearer {id_token}",
-        "Content-Type": "application/json",
-    }
+def inspecionar_runs_docx(buffer):
+    buffer.seek(0)
+    doc = Document(buffer)
     
-    body = {k: v for k, v in {
-        "generationStatus": status,
-        "totalBytes": total_bytes,
-    }.items() if v is not None}
+    print("--- INICIANDO INSPEÇÃO PROFUNDA ---\n")
 
-    print('before sending patch')
-    response = requests.patch(url, json=body, headers=headers)
-    response.raise_for_status()
+    # 1. Verificar o Corpo Principal (o que você já fez)
+    print("📍 [ÁREA 1] CORPO DO DOCUMENTO (Main Body)")
+    tem_conteudo = False
+    for p in doc.paragraphs:
+        if p.text.strip():
+            tem_conteudo = True
+            print(f"   Parágrafo: '{p.text}'")
+    if not tem_conteudo:
+        print("   (Vazio)")
+
+    # 2. Verificar Tabelas (Muito comum em certificados para layout)
+    print("\n📍 [ÁREA 2] TABELAS")
+    total_tabelas = len(doc.tables)
+    print(f"   Encontradas {total_tabelas} tabelas.")
+    
+    celulas_processadas = set()
+
+    for i, table in enumerate(doc.tables):
+        print(f"📍 Tabela {i}")
+        for row in table.rows:
+            for cell in row.cells:
+                # Se já vimos esta célula (mesmo objeto), pula
+                if cell in celulas_processadas:
+                    continue
+                
+                # Marca como processada
+                celulas_processadas.add(cell)
+                
+                # Agora lemos os parágrafos dentro dessa célula única
+                texto_celula = cell.text.strip()
+                if texto_celula:
+                    print(f"   [Célula Única]: {texto_celula}") # Printando só o começo
+                    
+                    # Verificando a estrutura interna (runs) para o seu Liquid
+                    for p in cell.paragraphs:
+                        if "{%" in p.text or "{{" in p.text:
+                            print(f"      👉 Lógica encontrada: '{p.text}'")
+
+    # 3. Verificar Caixas de Texto / Shapes (O pesadelo do python-docx)
+    # python-docx não tem uma API fácil para isso, precisamos ir no XML
+    print("\n📍 [ÁREA 3] CAIXAS DE TEXTO / SHAPES")
+    
+    # Vamos iterar sobre o XML procurando tags de conteúdo de textbox (w:txbxContent)
+    # Isso é apenas para leitura; editar isso via python-docx é complexo.
+    ns = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
+    
+    # Procura todos os elementos de texto dentro do corpo
+    # Nota: Isso é uma busca 'bruta' no XML para te mostrar onde está o texto
+    text_boxes = doc.element.body.findall('.//w:txbxContent', ns)
+    
+    if text_boxes:
+        print(f"   Encontradas {len(text_boxes)} caixas de texto.")
+        for i, tb in enumerate(text_boxes):
+            # Tenta extrair o texto de dentro do XML da caixa
+            texts = tb.findall('.//w:t', ns)
+            conteudo = "".join([t.text for t in texts if t.text])
+            if conteudo.strip():
+                print(f"      Caixa {i}: '{conteudo}'")
+    else:
+        print("   Nenhuma caixa de texto detectada via XML padrão.")
 
 
 
@@ -618,14 +640,14 @@ def main(request):
     #     return {"error": "Invalid fields", "details": friendly_errors}, 400
 
     envelop = request.get_json()
-    data_set_id = None
+    certificate_emission_id = None
 
     try:
         pubsub_message = envelop.get('message', {})
         data_str = base64.b64decode(pubsub_message.get('data', '')).decode('utf-8')
         raw_data = json.loads(data_str)
 
-        data_set_id = raw_data.get('certificateEmission', {}).get('dataSource', {}).get('dataSet', {}).get('id')
+        certificate_emission_id = raw_data.get('certificateEmission', {}).get('id')
     except Exception as e:
         print(f"Error to decode message: {e}")
 
@@ -639,7 +661,6 @@ def main(request):
         data_set = certificate_emission.dataSource.dataSet
         certificate_emission_id = certificate_emission.id
         variable_mapping = certificate_emission.variableColumnMapping or {}
-        data_set_id = data_set.id
         rows = data_set.rows or []
         user_id = certificate_emission.userId
         input_method = template.inputMethod.value
@@ -656,38 +677,24 @@ def main(request):
             file_extension_str = 'pptx'
         else:
             raise Exception(f'Unsupported template file extension: {file_mime_type}')
-            # return {'error': f'Unsupported template file extension: {file_mime_type}'}, 422
 
         print('Input method: ', input_method)
         if input_method == 'UPLOAD':
             storage_file_url = template.storageFileUrl
-            if not storage_file_url:
-                raise Exception('Template storageFileUrl not found')
-                # return {'error': 'Template storageFileUrl not found'}, 400
             
             template_bytes = get_from_bucket(storage_file_url)
             template_buffer = BytesIO(template_bytes)
 
         elif input_method == 'URL':
             drive_file_id = template.driveFileId
-            if not drive_file_id:
-                raise Exception('Template driveFileId not found')
-                # return {'error': 'Template driveFileId not found'}, 400
 
             template_buffer = download_from_google_drive_api(drive_file_id, file_mime_type)
 
         elif input_method == 'GOOGLE_DRIVE':
-            drive_file_id = template.driveFileId
-            if not drive_file_id:
-                raise Exception('Template driveFileId not found')
-                # return {'error': 'Template driveFileId not found'}, 400
-            
+            drive_file_id = template.driveFileId            
             google_access_token = certificate_emission.googleAccessToken
-            if not google_access_token:
-                raise Exception('Google access token is missing')
-                # return {'error': 'Google access token is missing'}, 400
-
-            template_buffer = download_from_google_drive_api(drive_file_id, file_mime_type, access_token=google_access_token)
+            print('google_access_token', google_access_token)
+            template_buffer = download_from_google_drive_api(drive_file_id, file_mime_type, access_token=google_access_token, user_id=user_id)
 
         total_bytes = 0
         delete_by_prefix(f"users/{user_id}/certificates/{certificate_emission_id}/certificate")
@@ -699,6 +706,7 @@ def main(request):
             row['Idade'] = int(row['Idade'])
             certificate_buffer = BytesIO(template_buffer.getvalue())
 
+            print('variable_mapping: ', variable_mapping)
             if variable_mapping:
                 row_variable_mapping = {}
                 for template_var, column_name in variable_mapping.items():
@@ -706,32 +714,18 @@ def main(request):
                         row_variable_mapping[template_var] = row[column_name]
                 print('Row variable mapping: ', row_variable_mapping)
                 if is_docx:
-                    # certificate_buffer = replace_variables_in_docx(certificate_buffer, row_variable_mapping)
                     certificate_buffer = replace_variables_in_docx_liquid(certificate_buffer, row_variable_mapping)
                 else:
                     certificate_buffer = replace_variables_in_pptx(certificate_buffer, row_variable_mapping)
             
             pdf_buffer = convert_to_pdf_with_libreoffice(certificate_buffer, file_extension_str)
 
-            # pdf_buffer = convert_to_pdf_via_google_drive(template_buffer, file_extension_str)
-
-            # Save file
-            # file_path = f"output/certificate-{index + 1}.pdf"
-            # save_to_local(pdf_buffer, file_path)
-
-            # file_path = f"output/certificate-{index + 1}.{file_extension_str}"
-            # save_to_local(filled_buffer, file_path)
-
-            # Uploading to bucket
             pdf_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.pdf"
             blob = upload_to_bucket(pdf_buffer, pdf_path)
 
-            # file_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.{file_extension_str}"
-            # upload_to_bucket(certificate_buffer, file_path)
-
             total_bytes += blob.size
         
-        update_data_set_status(data_set_id, 'COMPLETED', total_bytes)
+        finish_certificates_generation(certificate_emission_id, 'COMPLETED', total_bytes)
         
         return "", 204
         
@@ -753,8 +747,8 @@ def main(request):
 
         print("Validation errors:", friendly_errors)
         
-        if data_set_id:
-            update_data_set_status(data_set_id, 'FAILED')
+        if certificate_emission_id:
+            finish_certificates_generation(certificate_emission_id, 'FAILED')
             
         return {"error": friendly_errors}, 200
     
@@ -764,7 +758,7 @@ def main(request):
 
         try:
             print('Sending error status update...')
-            update_data_set_status(data_set_id, 'FAILED')
+            finish_certificates_generation(certificate_emission_id, 'FAILED')
         except Exception as inner_e:
             update_error = str(inner_e)
 

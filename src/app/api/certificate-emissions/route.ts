@@ -4,13 +4,13 @@ import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/pr
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest, NextResponse } from 'next/server'
-import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
 import z from 'zod'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
 export async function GET(request: NextRequest) {
     try {
-        const sessionToken = await getSessionToken(request)
+        const { token } = await validateSessionToken(request)
 
         const sessionsRepository = new PrismaSessionsRepository(prisma)
 
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
         )
 
         const certificateEmissions = await getAllCertificatesUseCase.execute({
-            sessionToken,
+            sessionToken: token,
             // userId,
         })
 
@@ -38,7 +38,7 @@ const createCertificateEmissionSchema = z.object({
 
 export async function POST(request: NextRequest) {
     try {
-        const sessionToken = await getSessionToken(request)
+        const { token } = await validateSessionToken(request)
 
         const body = await request.json()
         const parsed = createCertificateEmissionSchema.parse(body)
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         const certificateEmissionId =
             await createCertificateEmissionUseCase.execute({
                 name: parsed.name,
-                sessionToken,
+                sessionToken: token,
             })
 
         return Response.json({ id: certificateEmissionId }, { status: 201 })

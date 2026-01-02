@@ -45,7 +45,7 @@ export function GenerateCertificatesSection({
 
     const router = useRouter()
 
-    useSSE(`/api/data-sets/${dataSet?.id}/events`, {
+    useSSE(`/api/certificate-emissions/${certificateId}/events`, {
         onEvent: data => {
             if (data.generationStatus) {
                 if (data.generationStatus === GENERATION_STATUS.COMPLETED) {

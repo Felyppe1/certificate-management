@@ -3,15 +3,15 @@ import { NextRequest } from 'next/server'
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: Promise<{ dataSetId: string }> },
+    { params }: { params: Promise<{ certificateEmissionId: string }> },
 ) {
-    const dataSetId = (await params).dataSetId
+    const certificateEmissionId = (await params).certificateEmissionId
 
     let clientId: string | null = null
 
     const stream = new ReadableStream({
         start(controller) {
-            clientId = sseBroker.addClient(dataSetId, controller)
+            clientId = sseBroker.addClient(certificateEmissionId, controller)
 
             // Initial message to confirm connection
             controller.enqueue(
@@ -26,9 +26,9 @@ export async function GET(
             // }, 10000)
         },
         cancel() {
-            console.log('Cliente SSE desconectado', clientId)
+            console.log('SSE Client disconnected:', clientId)
             if (clientId) {
-                sseBroker.removeClient(dataSetId, clientId)
+                sseBroker.removeClient(certificateEmissionId, clientId)
             }
         },
     })

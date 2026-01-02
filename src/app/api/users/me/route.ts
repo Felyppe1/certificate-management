@@ -5,8 +5,8 @@ import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/pr
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest, NextResponse } from 'next/server'
-import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
 export interface GetMeControllerResponse {
     user: {
@@ -28,7 +28,7 @@ export async function GET(
     NextResponse<GetMeControllerResponse | { type: string; title: string }>
 > {
     try {
-        const sessionToken = await getSessionToken(request)
+        const { token } = await validateSessionToken(request)
 
         const sessionsRepository = new PrismaSessionsRepository(prisma)
         const usersRepository = new PrismaUsersRepository(prisma)
@@ -41,7 +41,7 @@ export async function GET(
             externalUserAccountsRepository,
         )
 
-        const user = await getMeUseCase.execute({ sessionToken })
+        const user = await getMeUseCase.execute({ sessionToken: token })
 
         return NextResponse.json({ user })
     } catch (error: any) {

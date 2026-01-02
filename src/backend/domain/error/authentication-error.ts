@@ -10,6 +10,8 @@ export type AuthenticationErrorType =
     | 'incorrect-credentials'
     | 'invalid-service-account'
     | 'invalid-service-token'
+    | 'missing-token'
+    | 'invalid-token'
 
 export class AuthenticationError extends AppError<AuthenticationErrorType> {
     constructor(type: AuthenticationErrorType, detail?: string) {
