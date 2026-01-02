@@ -3,7 +3,6 @@
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { LoginGoogleUseCase } from '@/backend/application/login-google-use-case'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
@@ -36,8 +35,6 @@ export async function loginGoogleServerAction(_: unknown, formData: FormData) {
             transactionManager,
         )
 
-        console.log('login google server action')
-
         const sessionToken = await loginGoogleUseCase.execute({
             code: parsedCode,
             reAuthenticate: true,
@@ -53,7 +50,7 @@ export async function loginGoogleServerAction(_: unknown, formData: FormData) {
         })
 
         // return NextResponse.redirect(process.env.NEXT_PUBLIC_BASE_URL + '/')
-    } catch (error) {
+    } catch (error: any) {
         console.error(error)
         if (error instanceof AuthenticationError) {
             if (
@@ -62,11 +59,11 @@ export async function loginGoogleServerAction(_: unknown, formData: FormData) {
             ) {
                 await logoutAction()
             }
+        }
 
-            return {
-                success: false,
-                message: 'Sua conta da Google precisa ser reconectada',
-            }
+        return {
+            success: false,
+            errorType: error.type,
         }
     }
 }

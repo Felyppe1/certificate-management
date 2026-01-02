@@ -17,6 +17,7 @@ import { INPUT_METHOD } from '@/backend/domain/certificate'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { addTemplateByUploadAction } from '@/backend/infrastructure/server-actions/add-template-by-upload-action'
 import { toast } from 'sonner'
+import { useGoogleRelogin } from '@/components/useGoogleRelogin'
 
 interface TemplateSectionProps {
     certificateId: string
@@ -51,16 +52,10 @@ export function TemplateSection({
     )
     const [driverPickerState, drivePickerAction, drivePickerIsLoading] =
         useActionState(addTemplateByDrivePickerAction, null)
-    // const [signedUrlState, signedUrlAction, signedUrlIsLoading] =
-    //     useActionState(createWriteBucketSignedUrlAction, null)
     const [uploadState, uploadAction, uploadIsLoading] = useActionState(
         addTemplateByUploadAction,
         null,
     )
-    // const [uploadState, uploadAction, uploadIsLoading] = useActionState(
-    //     create
-    //     null,
-    // )
 
     const handleSubmitUrl = async (formData: FormData) => {
         formData.append('certificateId', certificateId)
@@ -99,6 +94,8 @@ export function TemplateSection({
         setIsEditing(false)
     }
 
+    const { login, isLoading: loginIsLoading } = useGoogleRelogin({ userEmail })
+
     useEffect(() => {
         if (
             urlState?.success ||
@@ -123,9 +120,29 @@ export function TemplateSection({
         if (!driverPickerState) return
 
         if (driverPickerState.success) {
-            toast.success(driverPickerState.message)
+            toast.success('Template adicionado com sucesso')
         } else {
-            toast.error(driverPickerState.message)
+            if (driverPickerState.errorType === 'google-token-refresh-failed') {
+                toast.error(
+                    'Sessão do Google expirada. Entre novamente com a sua conta.',
+                )
+                login()
+            } else if (
+                driverPickerState.errorType === 'unsupported-template-mimetype'
+            ) {
+                toast.error(
+                    'Tipo de arquivo não suportado. Apenas Google Slides, Google Docs, .pptx ou .docx são permitidos',
+                )
+            } else if (
+                driverPickerState.errorType ===
+                'template-variables-parsing-error'
+            ) {
+                toast.error(
+                    'Foi encontrado um erro de sintaxe do Liquid no template.',
+                )
+            } else {
+                toast.error('Ocorreu um erro ao tentar adicionar template')
+            }
         }
     }, [driverPickerState])
 
@@ -168,7 +185,7 @@ export function TemplateSection({
                         onSubmitUrl={handleSubmitUrl}
                         onSubmitDrive={handleSubmitDrive}
                         onSubmitUpload={handleSubmitUpload}
-                        isDriveLoading={drivePickerIsLoading}
+                        isDriveLoading={drivePickerIsLoading || loginIsLoading}
                         isUploadLoading={uploadIsLoading}
                         isUrlLoading={urlIsLoading}
                         radioGroupName={radioGroupName}
@@ -206,7 +223,7 @@ export function TemplateSection({
                     onSubmitUrl={handleSubmitUrl}
                     onSubmitDrive={handleSubmitDrive}
                     onSubmitUpload={handleSubmitUpload}
-                    isDriveLoading={drivePickerIsLoading}
+                    isDriveLoading={drivePickerIsLoading || loginIsLoading}
                     isUploadLoading={uploadIsLoading}
                     isUrlLoading={urlIsLoading}
                     radioGroupName={radioGroupName}

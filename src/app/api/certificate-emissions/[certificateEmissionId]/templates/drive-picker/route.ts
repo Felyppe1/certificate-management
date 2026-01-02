@@ -7,14 +7,13 @@ import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import z from 'zod'
-import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
 const addTemplateByDrivePickerSchema = z.object({
     fileId: z.string().min(1, 'File ID is required'),
@@ -27,12 +26,11 @@ export async function PUT(
     const certificateEmissionId = (await params).certificateEmissionId
 
     try {
-        const sessionToken = await getSessionToken(request)
+        const { userId } = await validateSessionToken(request)
 
         const body = await request.json()
         const parsed = addTemplateByDrivePickerSchema.parse(body)
 
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
@@ -48,7 +46,6 @@ export async function PUT(
         const addTemplateByDrivePickerUseCase =
             new AddTemplateByDrivePickerUseCase(
                 certificateEmissionsRepository,
-                sessionsRepository,
                 googleDriveGateway,
                 fileContentExtractorFactory,
                 externalUserAccountsRepository,
@@ -61,7 +58,7 @@ export async function PUT(
         await addTemplateByDrivePickerUseCase.execute({
             certificateId: certificateEmissionId,
             fileId: parsed.fileId,
-            sessionToken,
+            userId,
         })
 
         return new Response(null, { status: 204 })

@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { AiIcon3 } from '@/components/svg/AiIcon3'
 import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { toast } from 'sonner'
+import { useGoogleRelogin } from '@/components/useGoogleRelogin'
 
 interface DataSourceSectionProps {
     certificateId: string
@@ -100,6 +101,8 @@ export function DataSourceSection({
         setIsEditing(false)
     }
 
+    const { login, isLoading: loginIsLoading } = useGoogleRelogin({ userEmail })
+
     useEffect(() => {
         if (
             urlState?.success ||
@@ -124,9 +127,25 @@ export function DataSourceSection({
         if (!driverPickerState) return
 
         if (driverPickerState.success) {
-            toast.success(driverPickerState.message)
+            toast.success('Fonte de dados adicionada com sucesso')
         } else {
-            toast.error(driverPickerState.message)
+            if (driverPickerState.errorType === 'google-token-refresh-failed') {
+                toast.error(
+                    'Sessão do Google expirada. Entre novamente com a sua conta.',
+                )
+                login()
+            } else if (
+                driverPickerState.errorType ===
+                'unsupported-data-source-mimetype'
+            ) {
+                toast.error(
+                    'Tipo de arquivo não suportado. Apenas Google Planilhas, .csv ou .xlsx são permitidos',
+                )
+            } else {
+                toast.error(
+                    'Ocorreu um erro ao tentar adicionar fonte de dados',
+                )
+            }
         }
     }, [driverPickerState])
 
@@ -177,7 +196,7 @@ export function DataSourceSection({
                         onSubmitUrl={handleSubmitUrl}
                         onSubmitDrive={handleSubmitDrive}
                         onSubmitUpload={handleSubmitUpload}
-                        isDriveLoading={drivePickerIsLoading}
+                        isDriveLoading={drivePickerIsLoading || loginIsLoading}
                         isUploadLoading={uploadIsLoading}
                         isUrlLoading={urlIsLoading}
                         radioGroupName={radioGroupName}
@@ -223,7 +242,7 @@ export function DataSourceSection({
                     onSubmitUrl={handleSubmitUrl}
                     onSubmitDrive={handleSubmitDrive}
                     onSubmitUpload={handleSubmitUpload}
-                    isDriveLoading={drivePickerIsLoading}
+                    isDriveLoading={drivePickerIsLoading || loginIsLoading}
                     isUploadLoading={uploadIsLoading}
                     isUrlLoading={urlIsLoading}
                     radioGroupName={radioGroupName}

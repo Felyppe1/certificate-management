@@ -23,13 +23,12 @@ import { ITransactionManager } from './interfaces/itransaction-manager'
 interface AddTemplateByDrivePickerUseCaseInput {
     certificateId: string
     fileId: string
-    sessionToken: string
+    userId: string
 }
 
 export class AddTemplateByDrivePickerUseCase {
     constructor(
         private certificateEmissionsRepository: ICertificatesRepository,
-        private sessionsRepository: ISessionsRepository,
         private googleDriveGateway: IGoogleDriveGateway,
         private fileContentExtractorFactory: IFileContentExtractorFactory,
         private externalUserAccountsRepository: IExternalUserAccountsRepository,
@@ -46,14 +45,6 @@ export class AddTemplateByDrivePickerUseCase {
     ) {}
 
     async execute(input: AddTemplateByDrivePickerUseCaseInput) {
-        const session = await this.sessionsRepository.getById(
-            input.sessionToken,
-        )
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
         const certificate = await this.certificateEmissionsRepository.getById(
             input.certificateId,
         )
@@ -64,7 +55,7 @@ export class AddTemplateByDrivePickerUseCase {
 
         const externalAccount =
             await this.externalUserAccountsRepository.getById(
-                session.userId,
+                input.userId,
                 'GOOGLE',
             )
 

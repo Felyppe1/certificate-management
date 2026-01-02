@@ -23,14 +23,13 @@ import { ITransactionManager } from './interfaces/itransaction-manager'
 interface AddDataSourceByDrivePickerUseCaseInput {
     certificateId: string
     fileId: string
-    sessionToken: string
+    userId: string
 }
 
 export class AddDataSourceByDrivePickerUseCase {
     constructor(
         private certificateEmissionsRepository: ICertificatesRepository,
         private dataSetsRepository: Pick<IDataSetsRepository, 'upsert'>,
-        private sessionsRepository: ISessionsRepository,
         private googleDriveGateway: IGoogleDriveGateway,
         private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
         private externalUserAccountsRepository: IExternalUserAccountsRepository,
@@ -43,14 +42,6 @@ export class AddDataSourceByDrivePickerUseCase {
     ) {}
 
     async execute(input: AddDataSourceByDrivePickerUseCaseInput) {
-        const session = await this.sessionsRepository.getById(
-            input.sessionToken,
-        )
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
         const certificate = await this.certificateEmissionsRepository.getById(
             input.certificateId,
         )
@@ -61,7 +52,7 @@ export class AddDataSourceByDrivePickerUseCase {
 
         const externalAccount =
             await this.externalUserAccountsRepository.getById(
-                session.userId,
+                input.userId,
                 'GOOGLE',
             )
 

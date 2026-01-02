@@ -7,14 +7,13 @@ import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-driv
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { SpreadsheetContentExtractorFactory } from '@/backend/infrastructure/factory/spreadsheet-content-extractor-factory'
 import z from 'zod'
-import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
 const addDataSourceByDrivePickerSchema = z.object({
     fileId: z.string().min(1, 'File ID is required'),
@@ -27,12 +26,11 @@ export async function PUT(
     const certificateEmissionId = (await params).certificateEmissionId
 
     try {
-        const sessionToken = await getSessionToken(request)
+        const { userId } = await validateSessionToken(request)
 
         const body = await request.json()
         const parsed = addDataSourceByDrivePickerSchema.parse(body)
 
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
@@ -50,7 +48,6 @@ export async function PUT(
             new AddDataSourceByDrivePickerUseCase(
                 certificateEmissionsRepository,
                 dataSetsRepository,
-                sessionsRepository,
                 googleDriveGateway,
                 spreadsheetContentExtractorFactory,
                 externalUserAccountsRepository,
@@ -62,7 +59,7 @@ export async function PUT(
         await addDataSourceByDrivePickerUseCase.execute({
             certificateId: certificateEmissionId,
             fileId: parsed.fileId,
-            sessionToken,
+            userId,
         })
 
         return new Response(null, { status: 204 })
