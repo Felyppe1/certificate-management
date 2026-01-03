@@ -1,9 +1,9 @@
 import { Suspense } from 'react'
-import { List } from './components/List'
-import { CreationForm } from './components/CreationForm'
+import { List } from './_components/List'
+import { CreationForm } from './_components/CreationForm'
 import { Card, CardTitle } from '@/components/ui/card'
-import { ListLoading } from './components/ListLoading'
-import SearchBox from './components/SearchBox'
+import { ListLoading } from './_components/ListLoading'
+import SearchBox from './_components/SearchBox'
 
 export function CertificateEmissionsList() {
     return (

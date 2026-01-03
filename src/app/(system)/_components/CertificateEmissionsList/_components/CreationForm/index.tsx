@@ -7,18 +7,15 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
-import { createCertificateEmissionAction } from '@/backend/infrastructure/server-actions/create-certificate-emission-action'
-import { useActionState } from 'react'
 import { Plus, Loader2 } from 'lucide-react'
+import { useCreationForm } from './useCreationForm'
 
 export function CreationForm() {
-    const [, action, isLoading] = useActionState(
-        createCertificateEmissionAction,
-        null,
-    )
+    const { isOpen, setIsOpen, form, onSubmit, isSubmitting, errors } =
+        useCreationForm()
 
     return (
-        <Popover>
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
                 <Button size="lg">
                     <Plus />
@@ -32,7 +29,7 @@ export function CreationForm() {
                 align="end"
                 collisionPadding={16}
             >
-                <form action={action} className="space-y-5">
+                <form onSubmit={onSubmit} className="space-y-5">
                     <div className="space-y-4">
                         <label
                             htmlFor="emission-name"
@@ -43,20 +40,24 @@ export function CreationForm() {
                         <Input
                             id="emission-name"
                             type="text"
-                            name="name"
                             placeholder="Ex: Seminário sobre Cybersecurity"
-                            required
                             className="w-full mt-3 py-4 sm:py-5 dark:bg-bg"
-                            disabled={isLoading}
+                            disabled={isSubmitting}
+                            {...form.register('name')}
                         />
+                        {errors.name && (
+                            <p className="text-sm text-destructive">
+                                {errors.name.message}
+                            </p>
+                        )}
                     </div>
                     <Button
                         type="submit"
                         className="w-full"
                         size="default"
-                        disabled={isLoading}
+                        disabled={isSubmitting}
                     >
-                        {isLoading ? (
+                        {isSubmitting ? (
                             <>
                                 <Loader2 className="animate-spin" />
                                 Criando...

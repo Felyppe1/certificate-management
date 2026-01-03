@@ -6,28 +6,15 @@ import { PrismaCertificatesRepository } from '@/backend/infrastructure/repositor
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { updateTag } from 'next/cache'
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import z from 'zod'
 import { logoutAction } from './logout-action'
-
-const createCertificateEmissionActionSchema = z.object({
-    name: z
-        .string()
-        .min(1, 'Nome da emissão precisa ter no mínimo 3 caracteres')
-        .max(100, 'Nome da emissão pode ter no máximo 100 caracteres'),
-})
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { createCertificateEmissionSchema } from './schemas/certificate-emission-schemas'
 
 export async function createCertificateEmissionAction(
     _: unknown,
     formData: FormData,
 ) {
-    const cookie = await cookies()
-
-    const sessionToken = cookie.get('session_token')?.value
-
-    console.log(sessionToken)
-
     const rawData = {
         name: formData.get('name') as string,
     }
@@ -35,11 +22,9 @@ export async function createCertificateEmissionAction(
     let certificateEmissionId: string
 
     try {
-        if (!sessionToken) {
-            throw new AuthenticationError('missing-session')
-        }
+        const { token } = await validateSessionToken()
 
-        const parsedData = createCertificateEmissionActionSchema.parse(rawData)
+        const parsedData = createCertificateEmissionSchema.parse(rawData)
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const sessionsRepository = new PrismaSessionsRepository(prisma)
@@ -52,7 +37,7 @@ export async function createCertificateEmissionAction(
 
         certificateEmissionId = await createCertificateEmissionUseCase.execute({
             name: parsedData.name,
-            sessionToken,
+            sessionToken: token,
         })
 
         updateTag('certificate-emissions')
@@ -60,12 +45,17 @@ export async function createCertificateEmissionAction(
         console.log(error)
 
         if (error instanceof AuthenticationError) {
-            await logoutAction()
+            if (
+                error.type === 'missing-session' ||
+                error.type === 'session-not-found' ||
+                error.type === 'user-not-found'
+            ) {
+                await logoutAction()
+            }
         }
 
         return {
             success: false,
-            message: 'Ocorreu um erro ao criar a emissão de certificado',
         }
     }
 
