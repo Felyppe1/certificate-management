@@ -31,6 +31,12 @@ variable "smtp_password" {
   sensitive   = true
 }
 
+variable "google_api_key" {
+  description = "Google API key for the cloud run service"
+  type        = string
+  sensitive   = true
+}
+
 variable "environment_variables" {
   description = "Environment variables for the application"
   type        = map(string)

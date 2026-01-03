@@ -34,11 +34,13 @@ APP_BASE_URL = os.getenv('APP_BASE_URL')
 AUDIENCE = os.getenv("TOKEN_AUDIENCE", APP_BASE_URL) # For local environments
 SOFFICE_PATH = os.getenv('SOFFICE_PATH')
 CERTIFICATES_BUCKET = os.getenv('CERTIFICATES_BUCKET')
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
 for var_name, var_value in {
     "APP_BASE_URL": APP_BASE_URL,
     "SOFFICE_PATH": SOFFICE_PATH,
     "CERTIFICATES_BUCKET": CERTIFICATES_BUCKET,
+    "GOOGLE_API_KEY": GOOGLE_API_KEY,
 }.items():
     if not var_value:
         raise ValueError(f"Environment variable '{var_name}' is not set.")
@@ -329,8 +331,8 @@ def refresh_google_token(user_id):
 def download_from_google_drive_api(
     drive_file_id: str, 
     file_mime_type: str, 
-    access_token: str,
-    user_id: str,
+    access_token: Optional[str] = None,
+    user_id: Optional[str] = None,
 ) -> BytesIO:
     print('Downloading from Google Drive API', drive_file_id)
     
@@ -345,8 +347,15 @@ def download_from_google_drive_api(
         url = f"https://www.googleapis.com/drive/v3/files/{drive_file_id}?alt=media"
 
     def make_request(token):
-        headers = {'Authorization': f'Bearer {token}', 'Accept': 'application/json'}
-        return requests.get(url, headers=headers)
+        headers = {'Accept': 'application/json'}
+        params = {}
+        
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+        else:
+            params['key'] = GOOGLE_API_KEY
+            
+        return requests.get(url, headers=headers, params=params)
 
     # Primeira tentativa
     response = make_request(access_token)
