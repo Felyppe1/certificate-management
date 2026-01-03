@@ -25,8 +25,7 @@ import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { GoogleDriveIcon } from '../svg/GoogleDriveIcon'
 import { toast } from 'sonner'
-import { useGoogleLogin } from '@react-oauth/google'
-import { loginGoogleServerAction } from '@/backend/infrastructure/server-actions/login-google-server-action'
+import { useGoogleRelogin } from '../useGoogleRelogin'
 
 type SelectOption = 'upload' | 'link' | 'drive'
 
@@ -162,27 +161,10 @@ export function FileSelector({
                   },
     })
 
-    const login = useGoogleLogin({
-        flow: 'auth-code',
-        scope: [
-            'openid',
-            'email',
-            'profile',
-            'https://www.googleapis.com/auth/drive.file',
-            'https://www.googleapis.com/auth/drive.readonly',
-        ].join(' '),
-        hint: userEmail,
-        onSuccess: async codeResponse => {
-            console.log(codeResponse)
-
-            const formData = new FormData()
-            formData.append('code', codeResponse.code)
-
-            await loginGoogleServerAction(null, formData)
-        },
+    const { login } = useGoogleRelogin({
+        userEmail,
         onError: error => {
             setSelectedOption(null)
-
             console.error('Login Failed:', error)
         },
         onNonOAuthError: err => {
