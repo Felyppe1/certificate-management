@@ -3,14 +3,12 @@ import { UpdateCertificateEmissionUseCase } from '@/backend/application/update-c
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
-import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { cookies } from 'next/headers'
 import { NextRequest } from 'next/server'
 import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { handleError } from '@/utils/handle-error'
@@ -20,6 +18,7 @@ import {
     PROCESSING_STATUS_ENUM,
 } from '@/backend/domain/email'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
 export interface GetCertificateEmissionControllerResponse {
     certificateEmission: {
@@ -68,47 +67,21 @@ export async function GET(
     request: Request,
     { params }: { params: Promise<{ certificateEmissionId: string }> },
 ) {
-    const cookie = await cookies()
-
     const { certificateEmissionId } = await params
 
-    const sessionsRepository = new PrismaSessionsRepository(prisma)
-
-    const getCertificateUseCase = new GetCertificateEmissionUseCase(
-        sessionsRepository,
-    )
-
     try {
-        const sessionToken = cookie.get('session_token')?.value
+        const { userId } = await validateSessionToken()
 
-        if (!sessionToken) {
-            throw new AuthenticationError('missing-session')
-        }
+        const getCertificateUseCase = new GetCertificateEmissionUseCase()
 
         const certificateEmission = await getCertificateUseCase.execute({
             certificateId: certificateEmissionId,
-            sessionToken,
+            userId,
         })
 
         return Response.json({ certificateEmission })
     } catch (error: any) {
-        console.log(error.message)
-
-        if (error instanceof AuthenticationError) {
-            return Response.json(
-                { type: error.type, title: error.title },
-                { status: 401 },
-            )
-        }
-
-        return Response.json(
-            {
-                type: 'internal-server-error',
-                message:
-                    'An unexpected error occurred while getting the certificate emission',
-            },
-            { status: 500 },
-        )
+        return handleError(error)
     }
 }
 

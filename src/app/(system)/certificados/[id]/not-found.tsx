@@ -6,23 +6,21 @@ import { FileX2, Home } from 'lucide-react'
 export default function CertificateNotFound() {
     return (
         <>
-            <Card className="max-w-2xl w-full m-auto">
-                <CardContent className="flex flex-col items-center text-center gap-6 py-12">
+            <Card className="max-w-[20rem] md:max-w-lg w-full m-auto">
+                <CardContent className="flex flex-col items-center text-center gap-6 py-8">
                     <div className="relative">
-                        <div className="absolute inset-0 bg-destructive/20 rounded-full blur-2xl" />
-                        <div className="relative bg-destructive/10 p-6 rounded-full">
-                            <FileX2 className="size-16 text-destructive" />
-                        </div>
+                        <div className="absolute inset-0 bg-destructive/70 rounded-full blur-3xl animate-pulse" />
+                        <FileX2 className="size-14 md:size-18 text-destructive" />
                     </div>
 
                     <div className="space-y-3">
-                        <h1 className="text-3xl font-bold text-foreground">
+                        <h1 className="text-2xl md:text-3xl font-bold text-foreground">
                             Certificado não encontrado
                         </h1>
-                        <p className="text-lg text-muted-foreground max-w-md mx-auto">
+                        {/* <p className="text-muted-foreground">
                             O certificado que você está procurando não existe ou
                             foi removido.
-                        </p>
+                        </p> */}
                     </div>
 
                     <Button asChild size="lg">

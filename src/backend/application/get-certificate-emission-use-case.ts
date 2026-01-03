@@ -18,22 +18,16 @@ import { EMAIL_ERROR_TYPE_ENUM, PROCESSING_STATUS_ENUM } from '../domain/email'
 
 interface GetCertificateEmissionUseCaseInput {
     certificateId: string
-    sessionToken: string
+    userId: string
 }
 
 export class GetCertificateEmissionUseCase {
-    constructor(private sessionsRepository: ISessionsRepository) {}
+    constructor() {}
 
     async execute({
         certificateId,
-        sessionToken,
+        userId,
     }: GetCertificateEmissionUseCaseInput) {
-        const session = await this.sessionsRepository.getById(sessionToken)
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
         const certificateEmission = await prisma.certificateEmission.findUnique(
             {
                 where: {
@@ -55,12 +49,11 @@ export class GetCertificateEmissionUseCase {
                 },
             },
         )
-
         if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificateEmission.user_id !== session.userId) {
+        if (certificateEmission.user_id !== userId) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 

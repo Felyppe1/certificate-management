@@ -1,5 +1,6 @@
 import { fetchMe } from '@/api-calls/fetch-me'
 import { Header } from './_components/Header'
+import { Toast } from './Toast'
 
 interface SystemLayoutProps {
     children: React.ReactNode
@@ -10,6 +11,7 @@ export default async function Layout({ children }: SystemLayoutProps) {
 
     return (
         <>
+            <Toast />
             <Header userName={data.user.name} userId={data.user.id} />
 
             <div className="flex flex-col justify-center min-h-screen bg-background pt-25 sm:pt-30 px-5 xs:px-10 pb-20 relative z-10">
