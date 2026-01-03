@@ -9,50 +9,23 @@ import { PrismaCertificatesRepository } from '@/backend/infrastructure/repositor
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { updateTag } from 'next/cache'
-import { cookies } from 'next/headers'
-import z, { ZodError } from 'zod'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
-import { NotFoundError } from '@/backend/domain/error/not-found-error'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '@/backend/domain/error/validation-error'
-import { ActionResponse } from '@/types'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
+import { addTemplateByUrlSchema } from './schemas/certificate-emission-schemas'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
-interface AddTemplateByUrlActionInput {
-    certificateId: string
-    fileUrl: string
-}
-
-const addTemplateByUrlActionSchema = z.object({
-    certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
-    fileUrl: z.url('URL do arquivo inválida'),
-})
-
-export async function addTemplateByUrlAction(
-    _: unknown,
-    formData: FormData,
-): Promise<ActionResponse<AddTemplateByUrlActionInput>> {
-    const cookie = await cookies()
-
-    const sessionToken = cookie.get('session_token')?.value
-
+export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
     const rawData = {
         certificateId: formData.get('certificateId') as string,
         fileUrl: formData.get('fileUrl') as string,
     }
 
-    // let newTemplateId: string
-
     try {
-        if (!sessionToken) {
-            throw new AuthenticationError('missing-session')
-        }
+        const { token } = await validateSessionToken()
 
-        const parsedData = addTemplateByUrlActionSchema.parse(rawData)
+        const parsedData = addTemplateByUrlSchema.parse(rawData)
 
         const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
@@ -76,10 +49,16 @@ export async function addTemplateByUrlAction(
         )
 
         await addTemplateByUrlUseCase.execute({
-            certificateId: rawData.certificateId,
+            certificateId: parsedData.certificateId,
             fileUrl: parsedData.fileUrl,
-            sessionToken,
+            sessionToken: token,
         })
+
+        updateTag('certificate')
+
+        return {
+            success: true,
+        }
     } catch (error: any) {
         console.log(error)
 
@@ -93,64 +72,19 @@ export async function addTemplateByUrlAction(
             },
         })
 
-        if (error instanceof ZodError) {
-            return {
-                success: false,
-                message: 'Por favor, corrija os erros no formulário.',
-                errors: z.flattenError(
-                    error as ZodError<AddTemplateByUrlActionInput>,
-                ).fieldErrors,
-                inputs: rawData,
-            }
-        }
-
         if (error instanceof AuthenticationError) {
-            await logoutAction()
-        }
-
-        if (error instanceof NotFoundError) {
-            if (error.type === 'drive-file-not-found') {
-                return {
-                    success: false,
-                    message:
-                        'Arquivo não encontrado. Verifique se a URL está correta e se o arquivo no Drive está público',
-                }
-            }
-        }
-
-        if (error instanceof ValidationError) {
             if (
-                error.type ===
-                VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE
+                error.type === 'missing-session' ||
+                error.type === 'session-not-found' ||
+                error.type === 'user-not-found'
             ) {
-                return {
-                    success: false,
-                    message:
-                        'Tipo de arquivo não suportado. Apenas Google Slides, Google Docs, .pptx ou .docx são permitidos',
-                }
-            } else if (
-                error.type ===
-                VALIDATION_ERROR_TYPE.TEMPLATE_VARIABLES_PARSING_ERROR
-            ) {
-                return {
-                    success: false,
-                    message:
-                        'Foi encontrado um erro de sintaxe do Liquid no template.',
-                }
+                await logoutAction()
             }
         }
 
         return {
             success: false,
-            message: 'Ocorreu um erro ao tentar adicionar template',
+            errorType: error.type,
         }
     }
-
-    updateTag('certificate')
-
-    return {
-        success: true,
-        message: 'Template adicionado com sucesso',
-    }
-    // redirect('/templates/' + newTemplateId)
 }

@@ -5,34 +5,17 @@ import { PrismaCertificatesRepository } from '@/backend/infrastructure/repositor
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { updateTag } from 'next/cache'
-import { cookies } from 'next/headers'
-import z from 'zod'
 import { logoutAction } from './logout-action'
 import { UpdateCertificateEmissionUseCase } from '@/backend/application/update-certificate-emission-use-case'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { updateCertificateEmissionSchema } from './schemas/certificate-emission-schemas'
 
-const updateCertificateEmissionActionSchema = z.object({
-    name: z
-        .string()
-        .min(1, 'Nome da emissão precisa ter no mínimo 3 caracteres')
-        .max(100, 'Nome da emissão pode ter no máximo 100 caracteres')
-        .optional(),
-    id: z.string().min(1, 'ID da emissão é obrigatório'),
-    variableColumnMapping: z
-        .record(z.string(), z.string().nullable())
-        .nullable()
-        .optional(),
-})
-;('')
 export async function updateCertificateEmissionAction(
     _: unknown,
     formData: FormData,
 ) {
-    const cookie = await cookies()
-
-    const sessionToken = cookie.get('session_token')?.value
-
     const rawData = {
         name: formData.get('name') ?? undefined,
         id: formData.get('id') as string,
@@ -44,11 +27,9 @@ export async function updateCertificateEmissionAction(
     }
 
     try {
-        if (!sessionToken) {
-            throw new AuthenticationError('missing-session')
-        }
+        const { token } = await validateSessionToken()
 
-        const parsedData = updateCertificateEmissionActionSchema.parse(rawData)
+        const parsedData = updateCertificateEmissionSchema.parse(rawData)
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const sessionsRepository = new PrismaSessionsRepository(prisma)
@@ -67,25 +48,30 @@ export async function updateCertificateEmissionAction(
             id: parsedData.id,
             name: parsedData.name,
             variableColumnMapping: parsedData.variableColumnMapping,
-            sessionToken,
+            sessionToken: token,
         })
-
-        updateTag('certificate')
-
-        return {
-            success: true,
-            message: 'Certificado atualizado com sucesso',
-        }
-    } catch (error) {
+    } catch (error: any) {
         console.log(error)
 
         if (error instanceof AuthenticationError) {
-            await logoutAction()
+            if (
+                error.type === 'missing-session' ||
+                error.type === 'session-not-found' ||
+                error.type === 'user-not-found'
+            ) {
+                await logoutAction()
+            }
         }
 
         return {
             success: false,
-            message: 'Ocorreu um erro ao editar a emissão de certificado',
+            errorType: error.type,
         }
+    }
+
+    updateTag('certificate')
+
+    return {
+        success: true,
     }
 }

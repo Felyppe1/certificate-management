@@ -15,11 +15,7 @@ import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-
-const addDataSourceByDrivePickerActionSchema = z.object({
-    certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
-    fileId: z.string().min(1, 'ID do arquivo é obrigatório'),
-})
+import { addDataSourceByDrivePickerSchema } from './schemas/certificate-emission-schemas'
 
 export async function addDataSourceByDrivePickerAction(
     _: unknown,
@@ -33,7 +29,7 @@ export async function addDataSourceByDrivePickerAction(
     try {
         const { userId } = await validateSessionToken()
 
-        const parsedData = addDataSourceByDrivePickerActionSchema.parse(rawData)
+        const parsedData = addDataSourceByDrivePickerSchema.parse(rawData)
 
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,

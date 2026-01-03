@@ -27,7 +27,7 @@ import { GoogleDriveIcon } from '../svg/GoogleDriveIcon'
 import { toast } from 'sonner'
 import { useGoogleRelogin } from '../useGoogleRelogin'
 
-type SelectOption = 'upload' | 'link' | 'drive'
+export type SelectOption = 'upload' | 'link' | 'drive'
 
 type FileSelectorType = 'template' | 'data-source'
 
@@ -38,6 +38,7 @@ interface FileSelectorProps {
     onSubmitUrl: (formData: FormData) => void
     onSubmitDrive: (fileId: string) => void
     onSubmitUpload: (file: File) => void
+    onSelectedOptionChanged?: (value: SelectOption) => void
     urlInputError?: string
     userEmail: string
     googleOAuthToken: string | null
@@ -50,6 +51,7 @@ export function FileSelector({
     onSubmitUrl,
     onSubmitDrive,
     onSubmitUpload,
+    onSelectedOptionChanged,
     isDriveLoading,
     isUploadLoading,
     isUrlLoading,
@@ -74,6 +76,8 @@ export function FileSelector({
         if (value !== 'link') {
             setFileUrl('')
         }
+
+        onSelectedOptionChanged?.(value)
     }
 
     const handleSubmitUrl = async (e: React.FormEvent) => {

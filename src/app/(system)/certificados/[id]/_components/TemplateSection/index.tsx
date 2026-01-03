@@ -1,7 +1,6 @@
 'use client'
 
-import { FileSelector } from '@/components/FileSelector'
-import { addTemplateByUrlAction } from '@/backend/infrastructure/server-actions/add-template-by-url-action'
+import { FileSelector, SelectOption } from '@/components/FileSelector'
 import { startTransition, useActionState, useState, useEffect } from 'react'
 import { TemplateDisplay } from './template-display'
 import {
@@ -18,6 +17,7 @@ import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { addTemplateByUploadAction } from '@/backend/infrastructure/server-actions/add-template-by-upload-action'
 import { toast } from 'sonner'
 import { useGoogleRelogin } from '@/components/useGoogleRelogin'
+import { useTemplateUrlForm } from './useTemplateUrlForm'
 
 interface TemplateSectionProps {
     certificateId: string
@@ -46,10 +46,23 @@ export function TemplateSection({
     certificatesGenerated,
 }: TemplateSectionProps) {
     const [isEditing, setIsEditing] = useState(false)
-    const [urlState, urlAction, urlIsLoading] = useActionState(
-        addTemplateByUrlAction,
-        null,
-    )
+
+    const {
+        form: urlForm,
+        onSubmit: handleUrlSubmit,
+        isSubmitting: urlIsLoading,
+        errors: urlErrors,
+    } = useTemplateUrlForm({
+        certificateId,
+        onSuccess: () => setIsEditing(false),
+    })
+
+    const resetUrlForm = (value: SelectOption) => {
+        if (value !== 'link') {
+            urlForm.reset()
+        }
+    }
+
     const [driverPickerState, drivePickerAction, drivePickerIsLoading] =
         useActionState(addTemplateByDrivePickerAction, null)
     const [uploadState, uploadAction, uploadIsLoading] = useActionState(
@@ -58,11 +71,9 @@ export function TemplateSection({
     )
 
     const handleSubmitUrl = async (formData: FormData) => {
-        formData.append('certificateId', certificateId)
-
-        startTransition(() => {
-            urlAction(formData)
-        })
+        const fileUrl = formData.get('fileUrl') as string
+        urlForm.setValue('fileUrl', fileUrl)
+        await handleUrlSubmit()
     }
 
     const handleSubmitDrive = async (fileId: string) => {
@@ -97,24 +108,10 @@ export function TemplateSection({
     const { login, isLoading: loginIsLoading } = useGoogleRelogin({ userEmail })
 
     useEffect(() => {
-        if (
-            urlState?.success ||
-            driverPickerState?.success ||
-            uploadState?.success
-        ) {
+        if (driverPickerState?.success || uploadState?.success) {
             setIsEditing(false)
         }
-    }, [urlState, driverPickerState, uploadState])
-
-    useEffect(() => {
-        if (!urlState) return
-
-        if (urlState.success) {
-            toast.success(urlState.message)
-        } else {
-            toast.error(urlState?.message)
-        }
-    }, [urlState])
+    }, [driverPickerState, uploadState])
 
     useEffect(() => {
         if (!driverPickerState) return
@@ -185,9 +182,11 @@ export function TemplateSection({
                         onSubmitUrl={handleSubmitUrl}
                         onSubmitDrive={handleSubmitDrive}
                         onSubmitUpload={handleSubmitUpload}
+                        onSelectedOptionChanged={resetUrlForm}
                         isDriveLoading={drivePickerIsLoading || loginIsLoading}
                         isUploadLoading={uploadIsLoading}
                         isUrlLoading={urlIsLoading}
+                        urlInputError={urlErrors.fileUrl?.message}
                         radioGroupName={radioGroupName}
                         type="template"
                     />
@@ -223,9 +222,11 @@ export function TemplateSection({
                     onSubmitUrl={handleSubmitUrl}
                     onSubmitDrive={handleSubmitDrive}
                     onSubmitUpload={handleSubmitUpload}
+                    onSelectedOptionChanged={resetUrlForm}
                     isDriveLoading={drivePickerIsLoading || loginIsLoading}
                     isUploadLoading={uploadIsLoading}
                     isUrlLoading={urlIsLoading}
+                    urlInputError={urlErrors.fileUrl?.message}
                     radioGroupName={radioGroupName}
                     type="template"
                 />

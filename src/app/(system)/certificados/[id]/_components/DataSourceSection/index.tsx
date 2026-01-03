@@ -1,6 +1,6 @@
 'use client'
 
-import { FileSelector } from '@/components/FileSelector'
+import { FileSelector, SelectOption } from '@/components/FileSelector'
 import { startTransition, useActionState, useState, useEffect } from 'react'
 import { DataSourceDisplay } from './data-source-display'
 import {
@@ -13,7 +13,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
-import { addDataSourceByUrlAction } from '@/backend/infrastructure/server-actions/add-data-source-by-url-action'
 import { addDataSourceByDrivePickerAction } from '@/backend/infrastructure/server-actions/add-data-source-by-drive-picker-action'
 import { addDataSourceByUploadAction } from '@/backend/infrastructure/server-actions/add-data-source-by-upload-action'
 import { Badge } from '@/components/ui/badge'
@@ -21,6 +20,7 @@ import { AiIcon3 } from '@/components/svg/AiIcon3'
 import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { toast } from 'sonner'
 import { useGoogleRelogin } from '@/components/useGoogleRelogin'
+import { useDataSourceUrlForm } from './useDataSourceUrlForm'
 
 interface DataSourceSectionProps {
     certificateId: string
@@ -53,10 +53,23 @@ export function DataSourceSection({
     emailSent,
 }: DataSourceSectionProps) {
     const [isEditing, setIsEditing] = useState(false)
-    const [urlState, urlAction, urlIsLoading] = useActionState(
-        addDataSourceByUrlAction,
-        null,
-    )
+
+    const {
+        form: urlForm,
+        onSubmit: handleUrlSubmit,
+        isSubmitting: urlIsLoading,
+        errors: urlErrors,
+    } = useDataSourceUrlForm({
+        certificateId,
+        onSuccess: () => setIsEditing(false),
+    })
+
+    const resetUrlForm = (value: SelectOption) => {
+        if (value !== 'link') {
+            urlForm.reset()
+        }
+    }
+
     const [driverPickerState, drivePickerAction, drivePickerIsLoading] =
         useActionState(addDataSourceByDrivePickerAction, null)
     const [uploadState, uploadAction, uploadIsLoading] = useActionState(
@@ -65,11 +78,9 @@ export function DataSourceSection({
     )
 
     const handleSubmitUrl = async (formData: FormData) => {
-        formData.append('certificateId', certificateId)
-
-        startTransition(() => {
-            urlAction(formData)
-        })
+        const fileUrl = formData.get('fileUrl') as string
+        urlForm.setValue('fileUrl', fileUrl)
+        await handleUrlSubmit()
     }
 
     const handleSubmitDrive = async (fileId: string) => {
@@ -104,24 +115,10 @@ export function DataSourceSection({
     const { login, isLoading: loginIsLoading } = useGoogleRelogin({ userEmail })
 
     useEffect(() => {
-        if (
-            urlState?.success ||
-            driverPickerState?.success ||
-            uploadState?.success
-        ) {
+        if (driverPickerState?.success || uploadState?.success) {
             setIsEditing(false)
         }
-    }, [urlState, driverPickerState, uploadState])
-
-    useEffect(() => {
-        if (!urlState) return
-
-        if (urlState.success) {
-            toast.success(urlState.message)
-        } else {
-            toast.error(urlState?.message)
-        }
-    }, [urlState])
+    }, [driverPickerState, uploadState])
 
     useEffect(() => {
         if (!driverPickerState) return
@@ -196,9 +193,11 @@ export function DataSourceSection({
                         onSubmitUrl={handleSubmitUrl}
                         onSubmitDrive={handleSubmitDrive}
                         onSubmitUpload={handleSubmitUpload}
+                        onSelectedOptionChanged={resetUrlForm}
                         isDriveLoading={drivePickerIsLoading || loginIsLoading}
                         isUploadLoading={uploadIsLoading}
                         isUrlLoading={urlIsLoading}
+                        urlInputError={urlErrors.fileUrl?.message}
                         radioGroupName={radioGroupName}
                         type="data-source"
                     />
@@ -242,9 +241,11 @@ export function DataSourceSection({
                     onSubmitUrl={handleSubmitUrl}
                     onSubmitDrive={handleSubmitDrive}
                     onSubmitUpload={handleSubmitUpload}
+                    onSelectedOptionChanged={resetUrlForm}
                     isDriveLoading={drivePickerIsLoading || loginIsLoading}
                     isUploadLoading={uploadIsLoading}
                     isUrlLoading={urlIsLoading}
+                    urlInputError={urlErrors.fileUrl?.message}
                     radioGroupName={radioGroupName}
                     type="data-source"
                 />
