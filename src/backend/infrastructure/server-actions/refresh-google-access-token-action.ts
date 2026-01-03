@@ -6,7 +6,7 @@ import { PrismaSessionsRepository } from '../repository/prisma/prisma-sessions-r
 import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
 import { prisma } from '../repository/prisma'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
-import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-google-access-token'
+import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-google-access-token-use-case'
 import { logoutAction } from './logout-action'
 import { updateTag } from 'next/cache'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'

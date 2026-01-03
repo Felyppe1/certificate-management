@@ -1,4 +1,7 @@
-import { AuthenticationError } from '../domain/error/authentication-error'
+import {
+    FORBIDDEN_ERROR_TYPE,
+    ForbiddenError,
+} from '../domain/error/forbidden-error'
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 
@@ -17,7 +20,9 @@ export class RefreshGoogleAccessTokenUseCase {
             await this.externalUserAccountsRepository.getById(userId, 'GOOGLE')
 
         if (!externalAccount) {
-            throw new AuthenticationError('external-account-not-found')
+            throw new ForbiddenError(
+                FORBIDDEN_ERROR_TYPE.GOOGLE_ACCOUNT_NOT_FOUND,
+            )
         }
 
         const newToken = await this.googleAuthGateway.checkOrGetNewAccessToken({

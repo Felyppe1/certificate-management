@@ -1,6 +1,6 @@
 'use server'
 
-import { DeleteGoogleAccountUseCase } from '@/backend/application/delete-google-account-use-case'
+import { DeleteAccountUseCase } from '@/backend/application/delete-google-account-use-case'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
 import { prisma } from '../repository/prisma'
@@ -11,7 +11,7 @@ import { redirect } from 'next/navigation'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { cookies } from 'next/headers'
 
-export async function deleteGoogleAccountAction() {
+export async function deleteAccountAction() {
     try {
         const { userId } = await validateSessionToken()
 
@@ -20,13 +20,13 @@ export async function deleteGoogleAccountAction() {
             new PrismaExternalUserAccountsRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
 
-        const deleteGoogleAccountUseCase = new DeleteGoogleAccountUseCase(
+        const deleteAccountUseCase = new DeleteAccountUseCase(
             usersRepository,
             externalUserAccountsRepository,
             googleAuthGateway,
         )
 
-        await deleteGoogleAccountUseCase.execute({
+        await deleteAccountUseCase.execute({
             userId,
         })
 

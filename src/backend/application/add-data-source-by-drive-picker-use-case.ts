@@ -1,7 +1,5 @@
 import { INPUT_METHOD } from '../domain/certificate'
-import { ISessionsRepository } from './interfaces/isessions-repository'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
-import { AuthenticationError } from '../domain/error/authentication-error'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import {
     NOT_FOUND_ERROR_TYPE,
@@ -19,6 +17,10 @@ import {
 import { DataSet } from '../domain/data-set'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 import { ITransactionManager } from './interfaces/itransaction-manager'
+import {
+    FORBIDDEN_ERROR_TYPE,
+    ForbiddenError,
+} from '../domain/error/forbidden-error'
 
 interface AddDataSourceByDrivePickerUseCaseInput {
     certificateId: string
@@ -57,7 +59,9 @@ export class AddDataSourceByDrivePickerUseCase {
             )
 
         if (!externalAccount) {
-            throw new AuthenticationError('external-account-not-found')
+            throw new ForbiddenError(
+                FORBIDDEN_ERROR_TYPE.GOOGLE_ACCOUNT_NOT_FOUND,
+            )
         }
 
         const newData = await this.googleAuthGateway.checkOrGetNewAccessToken({

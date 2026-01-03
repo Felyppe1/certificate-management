@@ -194,9 +194,7 @@ export function DataSourceDisplay({
                 toast.error(
                     'Arquivo não encontrado. Verifique se ele ainda existe no Drive e se está público',
                 )
-            } else if (
-                refreshState.errorType === 'external-account-not-found'
-            ) {
+            } else if (refreshState.errorType === 'google-session-expired') {
                 toast.error('Sua conta da Google precisa ser reconectada')
             } else {
                 toast.error(

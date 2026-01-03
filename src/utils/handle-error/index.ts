@@ -1,5 +1,6 @@
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { ConflictError } from '@/backend/domain/error/conflict-error'
+import { ForbiddenError } from '@/backend/domain/error/forbidden-error'
 import { NotFoundError } from '@/backend/domain/error/not-found-error'
 import { ValidationError } from '@/backend/domain/error/validation-error'
 import { cookies } from 'next/headers'
@@ -33,7 +34,12 @@ export async function handleError(error: any) {
             { status: 401 },
         )
     }
-    // TODO: missing authorization error
+    if (error instanceof ForbiddenError) {
+        return NextResponse.json(
+            { type: error.type, title: error.title, detail: error.detail },
+            { status: 403 },
+        )
+    }
     if (error instanceof NotFoundError) {
         return NextResponse.json(
             { type: error.type, title: error.title, detail: error.detail },

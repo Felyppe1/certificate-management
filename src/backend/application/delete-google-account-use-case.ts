@@ -3,11 +3,11 @@ import { IUsersRepository } from './interfaces/iusers-repository'
 import { AuthenticationError } from '../domain/error/authentication-error'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 
-interface DeleteGoogleAccountUseCaseInput {
+interface DeleteAccountUseCaseInput {
     userId: string
 }
 
-export class DeleteGoogleAccountUseCase {
+export class DeleteAccountUseCase {
     constructor(
         private usersRepository: Pick<IUsersRepository, 'getById' | 'delete'>,
         private externalUserAccountsRepository: Pick<
@@ -20,7 +20,7 @@ export class DeleteGoogleAccountUseCase {
         >,
     ) {}
 
-    async execute({ userId }: DeleteGoogleAccountUseCaseInput) {
+    async execute({ userId }: DeleteAccountUseCaseInput) {
         const user = await this.usersRepository.getById(userId)
 
         if (!user) {
@@ -30,13 +30,11 @@ export class DeleteGoogleAccountUseCase {
         const externalAccount =
             await this.externalUserAccountsRepository.getById(user.id, 'GOOGLE')
 
-        if (!externalAccount) {
-            throw new AuthenticationError('external-account-not-found')
+        if (externalAccount) {
+            await this.googleAuthGateway.revokeRefreshToken(
+                externalAccount.refreshToken!,
+            )
         }
-
-        await this.googleAuthGateway.revokeRefreshToken(
-            externalAccount.refreshToken!,
-        )
 
         await this.usersRepository.delete(user.id)
     }

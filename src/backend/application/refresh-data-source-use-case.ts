@@ -9,7 +9,6 @@ import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
-import { AuthenticationError } from '../domain/error/authentication-error'
 import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
@@ -76,7 +75,9 @@ export class RefreshDataSourceUseCase {
             certificate.getDataSourceInputMethod() === INPUT_METHOD.GOOGLE_DRIVE
         ) {
             if (!externalAccount) {
-                throw new AuthenticationError('external-account-not-found')
+                throw new ForbiddenError(
+                    FORBIDDEN_ERROR_TYPE.GOOGLE_ACCOUNT_NOT_FOUND,
+                )
             }
 
             const newData =

@@ -1,6 +1,6 @@
 'use client'
 
-import { deleteGoogleAccountAction } from '@/backend/infrastructure/server-actions/delete-google-account-action'
+import { deleteAccountAction } from '@/backend/infrastructure/server-actions/delete-account-action'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import {
@@ -28,7 +28,7 @@ export function DeleteAccount({}: DeleteAccountProps) {
 
     const handleDeleteAccount = () => {
         startTransition(() => {
-            deleteGoogleAccountAction()
+            deleteAccountAction()
         })
         setIsOpen(false)
         setConfirmText('')
@@ -52,7 +52,7 @@ export function DeleteAccount({}: DeleteAccountProps) {
     //         formData.append('code', codeResponse.code)
 
     // startTransition(() => {
-    //     deleteGoogleAccountAction()
+    //     deleteAccountAction()
     // })
     //     },
     // })

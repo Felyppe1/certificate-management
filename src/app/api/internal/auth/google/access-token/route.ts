@@ -1,4 +1,4 @@
-import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-google-access-token'
+import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-google-access-token-use-case'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'

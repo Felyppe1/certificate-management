@@ -1,5 +1,4 @@
 import { google, Auth } from 'googleapis'
-import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import {
     CheckOrRefreshAccessTokenInput,
     GetAuthClientInput,
@@ -8,6 +7,10 @@ import {
     GetUserInfoInput,
     IGoogleAuthGateway,
 } from '@/backend/application/interfaces/igoogle-auth-gateway'
+import {
+    FORBIDDEN_ERROR_TYPE,
+    ForbiddenError,
+} from '@/backend/domain/error/forbidden-error'
 
 export class GoogleAuthGateway implements IGoogleAuthGateway {
     private readonly oauth2Client: Auth.OAuth2Client
@@ -45,7 +48,15 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
         refreshToken,
         accessTokenExpiryDateTime,
     }: CheckOrRefreshAccessTokenInput) {
-        // if (accessTokenExpiryDateTime! > new Date()) return null
+        const now = new Date()
+
+        const tenMinutesInMs = 10 * 60 * 1000
+        const threshold = new Date(now.getTime() + tenMinutesInMs)
+
+        if (accessTokenExpiryDateTime > threshold) {
+            return null
+        }
+
         this.oauth2Client.setCredentials({
             access_token: accessToken,
             refresh_token: refreshToken,
@@ -74,7 +85,9 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
         } catch (error: any) {
             console.error('Error refreshing access token:', error)
 
-            throw new AuthenticationError('google-token-refresh-failed')
+            throw new ForbiddenError(
+                FORBIDDEN_ERROR_TYPE.GOOGLE_SESSION_EXPIRED,
+            )
         }
     }
 

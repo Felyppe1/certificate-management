@@ -4,8 +4,6 @@ export type AuthenticationErrorType =
     | 'missing-session'
     | 'session-not-found'
     | 'user-not-found'
-    | 'external-account-not-found'
-    | 'google-token-refresh-failed'
     | 'insufficient-external-account-scopes'
     | 'incorrect-credentials'
     | 'invalid-service-account'
