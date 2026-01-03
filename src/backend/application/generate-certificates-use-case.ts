@@ -7,7 +7,6 @@ import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
-import { ISessionsRepository } from './interfaces/isessions-repository'
 import { GENERATION_STATUS } from '../domain/data-set'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
@@ -15,18 +14,16 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
-import { IExternalProcessing } from './interfaces/iexternal-processing'
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
 import { IPubSub } from './interfaces/ipubsub'
 
 interface GenerateCertificatesUseCaseInput {
     certificateEmissionId: string
-    sessionToken: string
+    userId: string
 }
 
 export class GenerateCertificatesUseCase {
     constructor(
-        private sessionsRepository: Pick<ISessionsRepository, 'getById'>,
         private externalUserAccountsRepository: Pick<
             IExternalUserAccountsRepository,
             'getById'
@@ -39,23 +36,13 @@ export class GenerateCertificatesUseCase {
             IDataSetsRepository,
             'getByCertificateEmissionId' | 'upsert'
         >,
-        private externalProcessing: Pick<
-            IExternalProcessing,
-            'triggerGenerateCertificatePDFs'
-        >,
         private pubSub: Pick<IPubSub, 'publish'>,
     ) {}
 
     async execute({
         certificateEmissionId,
-        sessionToken,
+        userId,
     }: GenerateCertificatesUseCaseInput) {
-        const session = await this.sessionsRepository.getById(sessionToken)
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
         const certificateEmission =
             await this.certificateEmissionsRepository.getById(
                 certificateEmissionId,
@@ -65,7 +52,7 @@ export class GenerateCertificatesUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificateEmission.getUserId() !== session.userId) {
+        if (certificateEmission.getUserId() !== userId) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
@@ -91,10 +78,7 @@ export class GenerateCertificatesUseCase {
         }
 
         const externalUserAccount =
-            await this.externalUserAccountsRepository.getById(
-                session.userId,
-                'GOOGLE',
-            )
+            await this.externalUserAccountsRepository.getById(userId, 'GOOGLE')
 
         const { dataSource, template, ...certificateEmissionData } =
             certificateEmission.serialize()
@@ -112,7 +96,6 @@ export class GenerateCertificatesUseCase {
         }
 
         await this.pubSub.publish('certificates-generation-started', body)
-        // await this.externalProcessing.triggerGenerateCertificatePDFs(body)
 
         dataSet.update({
             generationStatus: GENERATION_STATUS.PENDING,

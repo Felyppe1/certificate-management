@@ -188,9 +188,21 @@ export function DataSourceDisplay({
         if (!refreshState) return
 
         if (refreshState.success) {
-            toast.success(refreshState.message)
+            toast.success('Fonte de dados atualizada com sucesso')
         } else {
-            toast.error(refreshState.message)
+            if (refreshState.errorType === 'drive-file-not-found') {
+                toast.error(
+                    'Arquivo não encontrado. Verifique se ele ainda existe no Drive e se está público',
+                )
+            } else if (
+                refreshState.errorType === 'external-account-not-found'
+            ) {
+                toast.error('Sua conta da Google precisa ser reconectada')
+            } else {
+                toast.error(
+                    'Ocorreu um erro ao tentar atualizar a fonte de dados',
+                )
+            }
         }
     }, [refreshState])
 
@@ -198,9 +210,9 @@ export function DataSourceDisplay({
         if (!deleteState) return
 
         if (deleteState.success) {
-            toast.success(deleteState.message)
+            toast.success('Fonte de dados removida com sucesso')
         } else {
-            toast.error(deleteState.message)
+            toast.error('Ocorreu um erro ao deletar a fonte de dados')
         }
     }, [deleteState])
 
@@ -212,7 +224,7 @@ export function DataSourceDisplay({
 
             window.open(signedUrl, '_blank', 'noopener,noreferrer')
         } else {
-            toast.error(viewCertificateState.message)
+            toast.error('Ocorreu um erro ao tentar visualizar o certificado')
         }
     }, [viewCertificateState])
 
@@ -224,7 +236,7 @@ export function DataSourceDisplay({
 
             window.open(signedUrl, '_blank', 'noopener,noreferrer')
         } else {
-            toast.error(downloadDataSourceState.message)
+            toast.error('Ocorreu um erro ao tentar baixar a fonte de dados')
         }
     }, [downloadDataSourceState])
 

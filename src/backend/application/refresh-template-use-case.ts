@@ -18,13 +18,12 @@ import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-acc
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
-import { ISessionsRepository } from './interfaces/isessions-repository'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 import { Liquid } from 'liquidjs'
 import { ITransactionManager } from './interfaces/itransaction-manager'
 
 interface RefreshTemplateUseCaseInput {
-    sessionToken: string
+    userId: string
     certificateId: string
 }
 
@@ -35,7 +34,6 @@ export class RefreshTemplateUseCase {
             IDataSetsRepository,
             'getByCertificateEmissionId' | 'upsert'
         >,
-        private sessionsRepository: ISessionsRepository,
         private googleDriveGateway: IGoogleDriveGateway,
         private googleAuthGateway: Pick<
             IGoogleAuthGateway,
@@ -47,14 +45,6 @@ export class RefreshTemplateUseCase {
     ) {}
 
     async execute(input: RefreshTemplateUseCaseInput) {
-        const session = await this.sessionsRepository.getById(
-            input.sessionToken,
-        )
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
         const certificate = await this.certificateEmissionsRepository.getById(
             input.certificateId,
         )
@@ -63,7 +53,7 @@ export class RefreshTemplateUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.getUserId() !== session.userId) {
+        if (certificate.getUserId() !== input.userId) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 

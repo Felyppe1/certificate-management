@@ -2,14 +2,12 @@ import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
-import { AuthenticationError } from '../domain/error/authentication-error'
 import { IBucket } from './interfaces/ibucket'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
-import { ISessionsRepository } from './interfaces/isessions-repository'
 
 interface DeleteDataSourceUseCaseInput {
     certificateId: string
-    sessionToken: string
+    userId: string
 }
 
 export class DeleteDataSourceUseCase {
@@ -18,20 +16,10 @@ export class DeleteDataSourceUseCase {
             ICertificatesRepository,
             'getById' | 'update'
         >,
-        private sessionsRepository: Pick<ISessionsRepository, 'getById'>,
         private bucket: Pick<IBucket, 'deleteObject'>,
     ) {}
 
-    async execute({
-        certificateId,
-        sessionToken,
-    }: DeleteDataSourceUseCaseInput) {
-        const session = await this.sessionsRepository.getById(sessionToken)
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
+    async execute({ certificateId, userId }: DeleteDataSourceUseCaseInput) {
         const certificate =
             await this.certificateEmissionsRepository.getById(certificateId)
 
@@ -41,7 +29,7 @@ export class DeleteDataSourceUseCase {
 
         const storageFileUrl = certificate.getDataSourceStorageFileUrl()
 
-        certificate.removeDataSource(session.userId)
+        certificate.removeDataSource(userId)
 
         await this.certificateEmissionsRepository.update(certificate)
 

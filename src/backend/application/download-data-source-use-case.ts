@@ -1,7 +1,5 @@
 import { IBucket } from './interfaces/ibucket'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
-import { ISessionsRepository } from './interfaces/isessions-repository'
-import { AuthenticationError } from '../domain/error/authentication-error'
 import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
@@ -12,7 +10,7 @@ import {
 } from '../domain/error/forbidden-error'
 
 interface DownloadDataSourceUseCaseInput {
-    sessionToken: string
+    userId: string
     certificateEmissionId: string
 }
 
@@ -20,18 +18,9 @@ export class DownloadDataSourceUseCase {
     constructor(
         private bucket: Pick<IBucket, 'generateSignedUrl'>,
         private certificateRepository: Pick<ICertificatesRepository, 'getById'>,
-        private sessionsRepository: Pick<ISessionsRepository, 'getById'>,
     ) {}
 
     async execute(input: DownloadDataSourceUseCaseInput) {
-        const session = await this.sessionsRepository.getById(
-            input.sessionToken,
-        )
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
         const certificate = await this.certificateRepository.getById(
             input.certificateEmissionId,
         )
@@ -40,7 +29,7 @@ export class DownloadDataSourceUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.getUserId() !== session.userId) {
+        if (certificate.getUserId() !== input.userId) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 

@@ -9,17 +9,12 @@ import { PrismaCertificatesRepository } from '@/backend/infrastructure/repositor
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { updateTag } from 'next/cache'
-import z from 'zod'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-
-const addTemplateByDrivePickerActionSchema = z.object({
-    certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
-    fileId: z.string().min(1, 'ID do arquivo é obrigatório'),
-})
+import { addTemplateByDrivePickerSchema } from './schemas/certificate-emission-schemas'
 
 export async function addTemplateByDrivePickerAction(
     _: unknown,
@@ -33,7 +28,7 @@ export async function addTemplateByDrivePickerAction(
     try {
         const { userId } = await validateSessionToken()
 
-        const parsedData = addTemplateByDrivePickerActionSchema.parse(rawData)
+        const parsedData = addTemplateByDrivePickerSchema.parse(rawData)
 
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,

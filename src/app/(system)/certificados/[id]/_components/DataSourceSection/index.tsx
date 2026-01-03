@@ -150,9 +150,15 @@ export function DataSourceSection({
         if (!uploadState) return
 
         if (uploadState.success) {
-            toast.success(uploadState.message)
+            toast.success('Fonte de dados adicionada com sucesso')
         } else {
-            toast.error(uploadState.message)
+            if (uploadState.errorType === 'unsupported-data-source-mimetype') {
+                toast.error(
+                    'Tipo de arquivo não suportado. Apenas .csv ou .xlsx são permitidos',
+                )
+            } else {
+                toast.error('Ocorreu um erro ao fazer upload da fonte de dados')
+            }
         }
     }, [uploadState])
 

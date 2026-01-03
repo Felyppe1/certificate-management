@@ -2,28 +2,19 @@
 
 import { DeleteGoogleAccountUseCase } from '@/backend/application/delete-google-account-use-case'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import { cookies } from 'next/headers'
-import { PrismaSessionsRepository } from '../repository/prisma/prisma-sessions-repository'
 import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
 import { prisma } from '../repository/prisma'
 import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { logoutAction } from './logout-action'
 import { redirect } from 'next/navigation'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { cookies } from 'next/headers'
 
 export async function deleteGoogleAccountAction() {
-    const cookie = await cookies()
-
-    const sessionToken = cookie.get('session_token')?.value
-
     try {
-        if (!sessionToken) {
-            throw new AuthenticationError('missing-session')
-        }
+        const { userId } = await validateSessionToken()
 
-        // const parsedData = deleteDataSourceSchema.parse(rawData)
-
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const usersRepository = new PrismaUsersRepository(prisma)
         const externalUserAccountsRepository =
             new PrismaExternalUserAccountsRepository(prisma)
@@ -32,20 +23,26 @@ export async function deleteGoogleAccountAction() {
         const deleteGoogleAccountUseCase = new DeleteGoogleAccountUseCase(
             usersRepository,
             externalUserAccountsRepository,
-            sessionsRepository,
             googleAuthGateway,
         )
 
         await deleteGoogleAccountUseCase.execute({
-            sessionToken,
+            userId,
         })
 
+        const cookie = await cookies()
         cookie.delete('session_token')
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error deleting Google account:', error)
 
         if (error instanceof AuthenticationError) {
-            await logoutAction()
+            if (
+                error.type === 'missing-session' ||
+                error.type === 'session-not-found' ||
+                error.type === 'user-not-found'
+            ) {
+                await logoutAction()
+            }
         }
     }
 

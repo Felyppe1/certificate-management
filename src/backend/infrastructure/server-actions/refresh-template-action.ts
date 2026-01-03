@@ -4,10 +4,7 @@ import { RefreshTemplateUseCase } from '@/backend/application/refresh-template-u
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { updateTag } from 'next/cache'
-import { cookies } from 'next/headers'
-import z from 'zod'
 import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { logoutAction } from './logout-action'
@@ -15,29 +12,20 @@ import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { NotFoundError } from '@/backend/domain/error/not-found-error'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '@/backend/domain/error/validation-error'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
-
-const refreshTemplateActionSchema = z.object({
-    certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
-})
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { refreshTemplateSchema } from './schemas/certificate-emission-schemas'
 
 export async function refreshTemplateAction(_: unknown, formData: FormData) {
-    const cookie = await cookies()
-
     const rawData = {
         certificateId: formData.get('certificateId') as string,
     }
 
     try {
-        const sessionToken = cookie.get('session_token')!.value
+        const { userId } = await validateSessionToken()
 
-        const parsedData = refreshTemplateActionSchema.parse(rawData)
+        const parsedData = refreshTemplateSchema.parse(rawData)
 
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
@@ -50,7 +38,6 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
         const refreshTemplateUseCase = new RefreshTemplateUseCase(
             certificatesRepository,
             dataSetsRepository,
-            sessionsRepository,
             googleDriveGateway,
             googleAuthGateway,
             fileContentExtractorFactory,
@@ -59,7 +46,7 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
         )
 
         await refreshTemplateUseCase.execute({
-            sessionToken,
+            userId,
             certificateId: parsedData.certificateId,
         })
 
@@ -67,51 +54,30 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
 
         return {
             success: true,
-            message: 'Template atualizado com sucesso',
         }
-    } catch (error) {
+    } catch (error: any) {
         console.error(error)
 
         if (error instanceof AuthenticationError) {
             if (
                 error.type === 'missing-session' ||
-                error.type === 'session-not-found'
+                error.type === 'session-not-found' ||
+                error.type === 'user-not-found'
             ) {
                 await logoutAction()
-            }
-
-            return {
-                success: false,
-                message: 'Sua conta da Google precisa ser reconectada',
             }
         }
 
         if (error instanceof NotFoundError) {
-            if (error.type === 'drive-file-not-found') {
-                return {
-                    success: false,
-                    message:
-                        'Arquivo não encontrado. Verifique se ele ainda existe no Drive e se está público',
-                }
-            }
-        }
-
-        if (error instanceof ValidationError) {
-            if (
-                error.type ===
-                VALIDATION_ERROR_TYPE.TEMPLATE_VARIABLES_PARSING_ERROR
-            ) {
-                return {
-                    success: false,
-                    message:
-                        'Foi encontrado um erro de sintaxe do Liquid no template.',
-                }
+            return {
+                success: false,
+                errorType: error.type,
             }
         }
 
         return {
             success: false,
-            message: 'Ocorreu um erro ao tentar atualizar o template',
+            errorType: error.type,
         }
     }
 }

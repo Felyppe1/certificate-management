@@ -1,22 +1,14 @@
 'use server'
 
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
-import z from 'zod'
 import { logoutAction } from './logout-action'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { DownloadCertificateUseCase } from '@/backend/application/download-certificate-use-case'
-
-const downloadCertificateUrlActionSchema = z.object({
-    certificateEmissionId: z
-        .string()
-        .min(1, 'ID da emissão de certificado é obrigatório'),
-    certificateIndex: z.coerce.number().int().min(0),
-})
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { downloadCertificateUrlSchema } from './schemas/certificate-emission-schemas'
 
 export async function downloadCertificateUrlAction(
     _: unknown,
@@ -27,11 +19,10 @@ export async function downloadCertificateUrlAction(
         certificateIndex: formData.get('certificateIndex'),
     }
     try {
-        const sessionToken = await getSessionToken()
+        const { userId } = await validateSessionToken()
 
-        const parsedData = downloadCertificateUrlActionSchema.parse(rawData)
+        const parsedData = downloadCertificateUrlSchema.parse(rawData)
 
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const bucket = new GcpBucket()
@@ -39,13 +30,12 @@ export async function downloadCertificateUrlAction(
         const downloadCertificateUseCase = new DownloadCertificateUseCase(
             bucket,
             certificatesRepository,
-            sessionsRepository,
             dataSetsRepository,
         )
 
         const signedUrl = await downloadCertificateUseCase.execute({
             certificateEmissionId: parsedData.certificateEmissionId,
-            sessionToken,
+            userId,
             certificateIndex: parsedData.certificateIndex,
         })
 
@@ -59,20 +49,16 @@ export async function downloadCertificateUrlAction(
         if (error instanceof AuthenticationError) {
             if (
                 error.type === 'missing-session' ||
-                error.type === 'session-not-found'
+                error.type === 'session-not-found' ||
+                error.type === 'user-not-found'
             ) {
                 await logoutAction()
-            }
-
-            return {
-                success: false,
-                message: 'Sua sessão expirou. Por favor, faça login novamente.',
             }
         }
 
         return {
             success: false,
-            message: 'Ocorreu um erro ao tentar visualizar o certificado',
+            errorType: error.type,
         }
     }
 }

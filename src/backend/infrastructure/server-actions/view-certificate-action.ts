@@ -1,22 +1,14 @@
 'use server'
 
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
-import z from 'zod'
 import { logoutAction } from './logout-action'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { getSessionToken } from '@/utils/middleware/getSessionToken'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { ViewCertificateUseCase } from '@/backend/application/view-certificate-use-case'
-
-const viewCertificateActionSchema = z.object({
-    certificateEmissionId: z
-        .string()
-        .min(1, 'ID da emissão de certificado é obrigatório'),
-    certificateIndex: z.coerce.number().int().min(0),
-})
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { viewCertificateSchema } from './schemas/certificate-emission-schemas'
 
 export async function viewCertificateAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -24,11 +16,10 @@ export async function viewCertificateAction(_: unknown, formData: FormData) {
         certificateIndex: formData.get('certificateIndex'),
     }
     try {
-        const sessionToken = await getSessionToken()
+        const { userId } = await validateSessionToken()
 
-        const parsedData = viewCertificateActionSchema.parse(rawData)
+        const parsedData = viewCertificateSchema.parse(rawData)
 
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const bucket = new GcpBucket()
@@ -36,13 +27,12 @@ export async function viewCertificateAction(_: unknown, formData: FormData) {
         const viewCertificateUseCase = new ViewCertificateUseCase(
             bucket,
             certificatesRepository,
-            sessionsRepository,
             dataSetsRepository,
         )
 
         const signedUrl = await viewCertificateUseCase.execute({
             certificateEmissionId: parsedData.certificateEmissionId,
-            sessionToken,
+            userId,
             certificateIndex: parsedData.certificateIndex,
         })
 
@@ -56,22 +46,16 @@ export async function viewCertificateAction(_: unknown, formData: FormData) {
         if (error instanceof AuthenticationError) {
             if (
                 error.type === 'missing-session' ||
-                error.type === 'session-not-found'
+                error.type === 'session-not-found' ||
+                error.type === 'user-not-found'
             ) {
                 await logoutAction()
-            }
-
-            return {
-                success: false,
-                message: 'Sua sessão expirou. Por favor, faça login novamente.',
             }
         }
 
         return {
             success: false,
-            message:
-                error.message ||
-                'Erro ao gerar URL do certificado. Tente novamente.',
+            errorType: error.type,
         }
     }
 }

@@ -19,12 +19,11 @@ import { IDataSetsRepository } from './interfaces/idata-sets-repository'
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
-import { ISessionsRepository } from './interfaces/isessions-repository'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 import { ITransactionManager } from './interfaces/itransaction-manager'
 
 interface RefreshDataSourceUseCaseInput {
-    sessionToken: string
+    userId: string
     certificateId: string
 }
 
@@ -32,7 +31,6 @@ export class RefreshDataSourceUseCase {
     constructor(
         private certificateEmissionsRepository: ICertificatesRepository,
         private dataSetsRepository: Pick<IDataSetsRepository, 'upsert'>,
-        private sessionsRepository: ISessionsRepository,
         private googleDriveGateway: IGoogleDriveGateway,
         private googleAuthGateway: Pick<
             IGoogleAuthGateway,
@@ -44,14 +42,6 @@ export class RefreshDataSourceUseCase {
     ) {}
 
     async execute(input: RefreshDataSourceUseCaseInput) {
-        const session = await this.sessionsRepository.getById(
-            input.sessionToken,
-        )
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
         const certificate = await this.certificateEmissionsRepository.getById(
             input.certificateId,
         )
@@ -60,7 +50,7 @@ export class RefreshDataSourceUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.getUserId() !== session.userId) {
+        if (certificate.getUserId() !== input.userId) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 

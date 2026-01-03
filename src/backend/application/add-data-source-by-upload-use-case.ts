@@ -9,7 +9,6 @@ import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
-import { AuthenticationError } from '../domain/error/authentication-error'
 import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
@@ -17,14 +16,13 @@ import {
 import { IBucket } from './interfaces/ibucket'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
 import { IDataSetsRepository } from './interfaces/idata-sets-repository'
-import { ISessionsRepository } from './interfaces/isessions-repository'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 import { ITransactionManager } from './interfaces/itransaction-manager'
 
 interface AddDataSourceByUploadUseCaseInput {
     file: File
     certificateId: string
-    sessionToken: string
+    userId: string
 }
 
 const MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
@@ -35,7 +33,6 @@ const MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
 export class AddDataSourceByUploadUseCase {
     constructor(
         private bucket: IBucket,
-        private sessionsRepository: ISessionsRepository,
         private certificatesRepository: ICertificatesRepository,
         private dataSetsRepository: Pick<IDataSetsRepository, 'upsert'>,
         private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
@@ -43,14 +40,6 @@ export class AddDataSourceByUploadUseCase {
     ) {}
 
     async execute(input: AddDataSourceByUploadUseCaseInput) {
-        const session = await this.sessionsRepository.getById(
-            input.sessionToken,
-        )
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
         const certificate = await this.certificatesRepository.getById(
             input.certificateId,
         )
@@ -59,7 +48,7 @@ export class AddDataSourceByUploadUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.getUserId() !== session.userId) {
+        if (certificate.getUserId() !== input.userId) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
@@ -94,7 +83,7 @@ export class AddDataSourceByUploadUseCase {
 
         certificate.setDataSource(newDataSourceInput)
 
-        const path = `users/${session.userId}/certificates/${certificate.getId()}/data-source.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
+        const path = `users/${input.userId}/certificates/${certificate.getId()}/data-source.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
 
         certificate.setDataSourceStorageFileUrl(path)
 

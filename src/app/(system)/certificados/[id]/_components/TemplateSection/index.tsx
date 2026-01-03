@@ -147,9 +147,21 @@ export function TemplateSection({
         if (!uploadState) return
 
         if (uploadState.success) {
-            toast.success(uploadState.message)
+            toast.success('Template adicionado com sucesso')
         } else {
-            toast.error(uploadState.message)
+            if (uploadState.errorType === 'unsupported-template-mimetype') {
+                toast.error(
+                    'Tipo de arquivo não suportado. Apenas .pptx ou .docx são permitidos',
+                )
+            } else if (
+                uploadState.errorType === 'template-variables-parsing-error'
+            ) {
+                toast.error(
+                    'Foi encontrado um erro de sintaxe do Liquid no template.',
+                )
+            } else {
+                toast.error('Ocorreu um erro ao fazer upload do template')
+            }
         }
     }, [uploadState])
 

@@ -1,7 +1,5 @@
 import { IBucket } from './interfaces/ibucket'
 import { ICertificatesRepository } from './interfaces/icertificates-repository'
-import { ISessionsRepository } from './interfaces/isessions-repository'
-import { AuthenticationError } from '../domain/error/authentication-error'
 import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
@@ -13,7 +11,7 @@ import {
 import { TEMPLATE_FILE_EXTENSION } from '../domain/template'
 
 interface CreateWriteBucketSignedUrlUseCaseInput {
-    sessionToken: string
+    userId: string
     certificateId: string
     fileName: string
     mimeType: TEMPLATE_FILE_EXTENSION.PPTX | TEMPLATE_FILE_EXTENSION.DOCX
@@ -24,18 +22,9 @@ export class CreateWriteBucketSignedUrlUseCase {
     constructor(
         private bucket: IBucket,
         private certificateRepository: ICertificatesRepository,
-        private sessionsRepository: ISessionsRepository,
     ) {}
 
     async execute(input: CreateWriteBucketSignedUrlUseCaseInput) {
-        const session = await this.sessionsRepository.getById(
-            input.sessionToken,
-        )
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
         const certificate = await this.certificateRepository.getById(
             input.certificateId,
         )
@@ -44,18 +33,15 @@ export class CreateWriteBucketSignedUrlUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.getUserId() !== session.userId) {
+        if (certificate.getUserId() !== input.userId) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
-        // if (!certificate.hasTemplate()) {
-        //     throw new ValidationError('Certificate does not have a template')
-        // }
 
         const extension =
             input.mimeType === TEMPLATE_FILE_EXTENSION.PPTX ? 'pptx' : 'docx'
 
         // TODO: it's not this path
-        const path = `users/${session.userId}/certificates/${certificate.getId()}/original.${extension}`
+        const path = `users/${input.userId}/certificates/${certificate.getId()}/original.${extension}`
 
         const signedUrl = await this.bucket.generateSignedUrl({
             bucketName: process.env.CERTIFICATES_BUCKET!,

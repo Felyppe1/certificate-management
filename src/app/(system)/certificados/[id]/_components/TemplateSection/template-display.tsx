@@ -131,9 +131,19 @@ export function TemplateDisplay({
         if (!refreshState) return
 
         if (refreshState.success) {
-            toast.success(refreshState.message)
+            toast.success('Template atualizado com sucesso')
         } else {
-            toast.error(refreshState.message)
+            if (refreshState.errorType === 'drive-file-not-found') {
+                toast.error(
+                    'Arquivo não encontrado. Verifique se ele ainda existe no Drive e se está público',
+                )
+            } else if (
+                refreshState.errorType === 'external-account-not-found'
+            ) {
+                toast.error('Sua conta da Google precisa ser reconectada')
+            } else {
+                toast.error('Ocorreu um erro ao tentar atualizar o template')
+            }
         }
     }, [refreshState])
 
@@ -141,9 +151,9 @@ export function TemplateDisplay({
         if (!deleteState) return
 
         if (deleteState.success) {
-            toast.success(deleteState.message)
+            toast.success('Template removido com sucesso')
         } else {
-            toast.error(deleteState.message)
+            toast.error('Ocorreu um erro ao deletar o template')
         }
     }, [deleteState])
 
@@ -155,7 +165,7 @@ export function TemplateDisplay({
 
             window.open(signedUrl, '_blank', 'noopener,noreferrer')
         } else {
-            toast.error(downloadTemplateState.message)
+            toast.error('Ocorreu um erro ao tentar baixar o template')
         }
     }, [downloadTemplateState])
 

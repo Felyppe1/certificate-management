@@ -71,7 +71,13 @@ export function GenerateCertificatesSection({
         if (!state) return
 
         if (!state.success) {
-            toast.error(state.message)
+            if (state.errorType === 'no-data-set-rows') {
+                toast.error(
+                    'Não há linhas na fonte de dados para gerar certificados',
+                )
+            } else {
+                toast.error('Ocorreu um erro ao gerar os certificados')
+            }
         }
     }, [state])
 
@@ -112,6 +118,14 @@ export function GenerateCertificatesSection({
                             </div>
                         </div>
                     </div>
+                )}
+
+                {totalRecords === 0 && (
+                    <AlertMessage
+                        variant="warning"
+                        icon={<CheckCircle2 />}
+                        text={`É necessário pelo menos 1 linha na fonte de dados para gerar os certificados agora`}
+                    />
                 )}
 
                 {certificatesWereGenerated && (
@@ -183,7 +197,10 @@ export function GenerateCertificatesSection({
                         size="lg"
                         onClick={handleGenerate}
                         disabled={
-                            certificatesWereGenerated || isPending || emailSent
+                            certificatesWereGenerated ||
+                            isPending ||
+                            emailSent ||
+                            totalRecords === 0
                         }
                     >
                         {isPending ? (

@@ -2,40 +2,26 @@
 
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { DeleteTemplateUseCase } from '@/backend/application/delete-template-use-case'
 import { updateTag } from 'next/cache'
-import { cookies } from 'next/headers'
-import z from 'zod'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { deleteTemplateSchema } from './schemas/certificate-emission-schemas'
 
 export async function deleteTemplateAction(_: unknown, formData: FormData) {
-    const cookie = await cookies()
-
     const rawData = {
         certificateId: formData.get('certificateId') as string,
     }
 
     try {
-        const sessionToken = cookie.get('session_token')?.value
+        const { userId } = await validateSessionToken()
 
-        if (!sessionToken) {
-            throw new AuthenticationError('missing-session')
-        }
+        const parsedData = deleteTemplateSchema.parse(rawData)
 
-        const parsedData = z
-            .object({
-                certificateId: z
-                    .string()
-                    .min(1, 'ID do certificado é obrigatório'),
-            })
-            .parse(rawData)
-
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
@@ -46,29 +32,34 @@ export async function deleteTemplateAction(_: unknown, formData: FormData) {
         const deleteTemplateUseCase = new DeleteTemplateUseCase(
             certificateEmissionsRepository,
             dataSetsRepository,
-            sessionsRepository,
             bucket,
             transactionManager,
         )
 
         await deleteTemplateUseCase.execute({
             certificateId: parsedData.certificateId,
-            sessionToken,
+            userId,
         })
 
         updateTag('certificate')
 
-        return { success: true, message: 'Template deletado com sucesso' }
-    } catch (error) {
+        return { success: true }
+    } catch (error: any) {
         console.error('Error deleting template:', error)
 
         if (error instanceof AuthenticationError) {
-            await logoutAction()
+            if (
+                error.type === 'missing-session' ||
+                error.type === 'session-not-found' ||
+                error.type === 'user-not-found'
+            ) {
+                await logoutAction()
+            }
         }
 
         return {
             success: false,
-            message: 'Ocorreu um erro ao deletar o template',
+            errorType: error.type,
         }
     }
 }

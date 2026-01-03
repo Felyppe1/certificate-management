@@ -2,36 +2,24 @@
 
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { updateTag } from 'next/cache'
-import { cookies } from 'next/headers'
-import z from 'zod'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { DeleteDataSourceUseCase } from '@/backend/application/delete-data-source-use-case'
-
-const deleteDataSourceSchema = z.object({
-    certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
-})
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { deleteDataSourceSchema } from './schemas/certificate-emission-schemas'
 
 export async function deleteDataSourceAction(_: unknown, formData: FormData) {
-    const cookie = await cookies()
-
-    const sessionToken = cookie.get('session_token')?.value
-
     const rawData = {
         certificateId: formData.get('certificateId') as string,
     }
 
     try {
-        if (!sessionToken) {
-            throw new AuthenticationError('missing-session')
-        }
+        const { userId } = await validateSessionToken()
 
         const parsedData = deleteDataSourceSchema.parse(rawData)
 
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
@@ -39,28 +27,33 @@ export async function deleteDataSourceAction(_: unknown, formData: FormData) {
 
         const deleteDataSourceUseCase = new DeleteDataSourceUseCase(
             certificateEmissionsRepository,
-            sessionsRepository,
             bucket,
         )
 
         await deleteDataSourceUseCase.execute({
             certificateId: parsedData.certificateId,
-            sessionToken,
+            userId,
         })
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error deleting data source:', error)
 
         if (error instanceof AuthenticationError) {
-            await logoutAction()
+            if (
+                error.type === 'missing-session' ||
+                error.type === 'session-not-found' ||
+                error.type === 'user-not-found'
+            ) {
+                await logoutAction()
+            }
         }
 
         return {
             success: false,
-            message: 'Ocorreu um erro ao deletar a fonte de dados',
+            errorType: error.type,
         }
     }
 
     updateTag('certificate')
 
-    return { success: true, message: 'Fonte de dados deletada com sucesso' }
+    return { success: true }
 }
