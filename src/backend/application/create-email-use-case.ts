@@ -69,6 +69,8 @@ export class CreateEmailUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SET)
         }
 
+        // TODO: check if certificates were generated
+
         if (!certificateEmission.hasDataSource()) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }

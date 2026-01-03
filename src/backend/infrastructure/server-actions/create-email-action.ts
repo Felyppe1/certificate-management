@@ -1,8 +1,6 @@
 'use server'
 
 import { CreateEmailUseCase } from '@/backend/application/create-email-use-case'
-import { getSessionToken } from '@/utils/middleware/getSessionToken'
-import z from 'zod'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { prisma } from '../repository/prisma'
 import { PrismaEmailsRepository } from '../repository/prisma/prisma-emails-repository'
@@ -13,27 +11,9 @@ import { AuthenticationError } from '@/backend/domain/error/authentication-error
 import { logoutAction } from './logout-action'
 import { updateTag } from 'next/cache'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '@/backend/domain/error/validation-error'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
-
-const createEmailActionSchema = z.object({
-    certificateId: z.string().min(1, 'ID do certificado é obrigatório'),
-    subject: z
-        .string()
-        .min(1, 'O assunto do e-mail precisa ter no mínimo 1 caractere')
-        .max(255, 'O assunto do e-mail pode ter no máximo 255 caracteres'),
-    body: z
-        .string()
-        .min(1, 'O corpo do e-mail precisa ter no mínimo 1 caractere'),
-    emailColumn: z
-        .string()
-        .min(1, 'A coluna de e-mail precisa ter no mínimo 1 caractere')
-        .max(100, 'A coluna de e-mail pode ter no máximo 100 caracteres'),
-    scheduledAt: z.date().nullable(),
-})
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { createEmailSchema } from './schemas/certificate-emission-schemas'
 
 export async function createEmailAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -47,9 +27,9 @@ export async function createEmailAction(_: unknown, formData: FormData) {
     }
 
     try {
-        const sessionToken = await getSessionToken()
+        const { token } = await validateSessionToken()
 
-        const parsedData = createEmailActionSchema.parse(rawData)
+        const parsedData = createEmailSchema.parse(rawData)
 
         const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
@@ -74,7 +54,7 @@ export async function createEmailAction(_: unknown, formData: FormData) {
         )
 
         await createEmailUseCase.execute({
-            sessionToken,
+            sessionToken: token,
             body: parsedData.body,
             certificateEmissionId: parsedData.certificateId,
             emailColumn: parsedData.emailColumn,
@@ -83,36 +63,20 @@ export async function createEmailAction(_: unknown, formData: FormData) {
         })
     } catch (error: any) {
         console.log(error)
+
         if (error instanceof AuthenticationError) {
             if (
                 error.type === 'missing-session' ||
-                error.type === 'session-not-found'
+                error.type === 'session-not-found' ||
+                error.type === 'user-not-found'
             ) {
                 await logoutAction()
-            }
-
-            updateTag('certificate')
-
-            return {
-                success: false,
-                message: 'Sua conta da Google precisa ser reconectada',
-            }
-        }
-
-        if (
-            error instanceof ValidationError &&
-            error.type === VALIDATION_ERROR_TYPE.INVALID_RECIPIENT_EMAIL
-        ) {
-            return {
-                success: false,
-                message:
-                    'Há pelo menos um e-mail inválido na coluna selecionada',
             }
         }
 
         return {
             success: false,
-            message: 'Ocorreu um erro ao enviar o email',
+            errorType: error.type,
         }
     }
 
@@ -120,6 +84,5 @@ export async function createEmailAction(_: unknown, formData: FormData) {
 
     return {
         success: true,
-        message: 'Envio de email disparado com sucesso',
     }
 }

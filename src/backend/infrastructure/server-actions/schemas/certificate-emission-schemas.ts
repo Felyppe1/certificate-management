@@ -27,3 +27,11 @@ export const updateCertificateEmissionSchema = z.object({
         .nullable()
         .optional(),
 })
+
+export const createEmailSchema = z.object({
+    certificateId: z.string().min(1),
+    subject: z.string().min(1).max(255),
+    body: z.string().min(1),
+    emailColumn: z.string().min(1).max(100),
+    scheduledAt: z.date().nullable(),
+})

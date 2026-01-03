@@ -9,12 +9,11 @@ import {
 } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Send, Calendar, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
-import { startTransition, useActionState, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AlertMessage } from '@/components/ui/alert-message'
 import { EmailForm } from './EmailForm'
-import { createEmailAction } from '@/backend/infrastructure/server-actions/create-email-action'
-import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
+import { useEmailForm } from './useEmailForm'
 
 interface EmailSendingSectionProps {
     certificateId: string
@@ -42,60 +41,31 @@ export function EmailSendingSection({
     certificatesGenerated,
     emailData,
 }: EmailSendingSectionProps) {
-    const [state, action, isPending] = useActionState(createEmailAction, null)
+    const { form: emailForm, onSubmit } = useEmailForm({
+        certificateId,
+        totalRecipients,
+        defaultValues: emailData
+            ? {
+                  subject: emailData.subject,
+                  body: emailData.body,
+                  emailColumn: emailData.emailColumn || '',
+                  scheduledDate: emailData.scheduledAt
+                      ? new Date(emailData.scheduledAt)
+                            .toISOString()
+                            .split('T')[0]
+                      : '',
+                  scheduledTime: emailData.scheduledAt
+                      ? new Date(emailData.scheduledAt)
+                            .toTimeString()
+                            .slice(0, 5)
+                      : '',
+              }
+            : undefined,
+    })
 
-    const [emailColumn, setEmailColumn] = useState(emailData?.emailColumn || '')
     const [sendMode, setSendMode] = useState<'now' | 'scheduled'>(
         emailData?.scheduledAt ? 'scheduled' : 'now',
     )
-    const initialScheduledDateTime = emailData?.scheduledAt
-        ? new Date(emailData.scheduledAt).toISOString().split('T')[0]
-        : ''
-    const initialScheduledTime = emailData?.scheduledAt
-        ? new Date(emailData.scheduledAt).toTimeString().slice(0, 5)
-        : ''
-
-    const [scheduledDateTime, setScheduledDateTime] = useState(
-        initialScheduledDateTime,
-    )
-    const [scheduledTime, setScheduledTime] = useState(initialScheduledTime)
-    const [subject, setSubject] = useState(emailData?.subject || '')
-    const [message, setMessage] = useState(emailData?.body || '')
-
-    const handleSend = async () => {
-        const formData = new FormData()
-        formData.append('certificateId', certificateId)
-        formData.append('subject', subject)
-        formData.append('body', message)
-        formData.append('emailColumn', emailColumn)
-
-        let scheduledAt = null
-        if (sendMode === 'scheduled' && scheduledDateTime && scheduledTime) {
-            scheduledAt = new Date(`${scheduledDateTime}T${scheduledTime}`)
-        }
-
-        if (scheduledAt) {
-            formData.append('scheduledAt', scheduledAt.toISOString())
-        }
-
-        startTransition(() => {
-            action(formData)
-        })
-    }
-
-    useEffect(() => {
-        if (!state) return
-
-        if (state.success) {
-            toast.success(
-                totalRecipients < 2
-                    ? 'Email enviado com sucesso'
-                    : 'Emails enviados com sucesso',
-            )
-        } else {
-            toast.error(state.message)
-        }
-    }, [state])
 
     const isScheduled = !!scheduledDate
 
@@ -196,16 +166,10 @@ export function EmailSendingSection({
                             )}
 
                             <EmailForm
-                                subject={subject}
-                                message={message}
-                                emailColumn={emailColumn}
+                                form={emailForm}
                                 dataSourceColumns={dataSourceColumns}
                                 totalRecords={totalRecipients}
-                                onSubjectChange={setSubject}
-                                onMessageChange={setMessage}
-                                onEmailColumnChange={setEmailColumn}
-                                onSubmit={handleSend}
-                                isSending={isPending}
+                                onSubmit={onSubmit}
                                 isDisabled={
                                     emailSent ||
                                     isScheduled ||
@@ -221,26 +185,16 @@ export function EmailSendingSection({
                             className="space-y-6 mt-4"
                         >
                             <EmailForm
-                                subject={subject}
-                                message={message}
-                                emailColumn={emailColumn}
+                                form={emailForm}
                                 dataSourceColumns={dataSourceColumns}
                                 totalRecords={totalRecipients}
-                                onSubjectChange={setSubject}
-                                onMessageChange={setMessage}
-                                onEmailColumnChange={setEmailColumn}
-                                onSubmit={handleSend}
-                                isSending={isPending}
+                                onSubmit={onSubmit}
                                 isDisabled={
                                     emailSent ||
                                     isScheduled ||
                                     !certificatesGenerated
                                 }
                                 sendMode="scheduled"
-                                scheduledDateTime={scheduledDateTime}
-                                scheduledTime={scheduledTime}
-                                onScheduledDateTimeChange={setScheduledDateTime}
-                                onScheduledTimeChange={setScheduledTime}
                                 certificatesGenerated={certificatesGenerated}
                             />
                         </TabsContent>
