@@ -399,7 +399,6 @@ export function FileSelector({
                             <UrlForm
                                 urlForm={urlForm}
                                 onSubmitUrl={onSubmitUrl}
-                                type={type}
                             />
                         </CardContent>
                     </Card>
