@@ -20,7 +20,10 @@ import { AiIcon3 } from '@/components/svg/AiIcon3'
 import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { toast } from 'sonner'
 import { useGoogleRelogin } from '@/components/useGoogleRelogin'
-import { useDataSourceUrlForm } from './useDataSourceUrlForm'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import z from 'zod'
+import { addDataSourceByUrlAction } from '@/backend/infrastructure/server-actions/add-data-source-by-url-action'
 
 interface DataSourceSectionProps {
     certificateId: string
@@ -54,20 +57,47 @@ export function DataSourceSection({
 }: DataSourceSectionProps) {
     const [isEditing, setIsEditing] = useState(false)
 
-    const {
-        form: urlForm,
-        onSubmit: handleUrlSubmit,
-        isSubmitting: urlIsLoading,
-        errors: urlErrors,
-    } = useDataSourceUrlForm({
-        certificateId,
-        onSuccess: () => setIsEditing(false),
+    const dataSourceUrlFormSchema = z.object({
+        fileUrl: z.url('URL inválida'),
     })
 
-    const resetUrlForm = (value: SelectOption) => {
-        if (value !== 'link') {
-            urlForm.reset()
+    type DataSourceUrlForm = z.infer<typeof dataSourceUrlFormSchema>
+
+    const urlForm = useForm<DataSourceUrlForm>({
+        resolver: zodResolver(dataSourceUrlFormSchema),
+        defaultValues: { fileUrl: '' },
+    })
+
+    const onSubmitUrl = async (data: DataSourceUrlForm) => {
+        const formData = new FormData()
+        formData.append('certificateId', certificateId)
+        formData.append('fileUrl', data.fileUrl)
+
+        const result = await addDataSourceByUrlAction(null, formData)
+
+        if (!result?.success) {
+            if (result.errorType === 'drive-file-not-found') {
+                toast.error(
+                    'Arquivo não encontrado. Verifique se a URL está correta e se o arquivo no Drive está público',
+                )
+            } else if (
+                result.errorType === 'unsupported-data-source-mimetype'
+            ) {
+                toast.error(
+                    'Tipo de arquivo não suportado. Apenas Google Planilhas, .csv ou .xlsx são permitidos',
+                )
+            } else {
+                toast.error(
+                    'Ocorreu um erro ao tentar adicionar fonte de dados',
+                )
+            }
+
+            return
         }
+
+        toast.success('Fonte de dados adicionada com sucesso')
+        urlForm.reset()
+        setIsEditing(false)
     }
 
     const [driverPickerState, drivePickerAction, drivePickerIsLoading] =
@@ -76,12 +106,6 @@ export function DataSourceSection({
         addDataSourceByUploadAction,
         null,
     )
-
-    const handleSubmitUrl = async (formData: FormData) => {
-        const fileUrl = formData.get('fileUrl') as string
-        urlForm.setValue('fileUrl', fileUrl)
-        await handleUrlSubmit()
-    }
 
     const handleSubmitDrive = async (fileId: string) => {
         const formData = new FormData()
@@ -178,7 +202,10 @@ export function DataSourceSection({
                     <Button
                         variant="outline"
                         onClick={handleCancelEdit}
-                        disabled={urlIsLoading || drivePickerIsLoading}
+                        disabled={
+                            urlForm.formState.isSubmitting ||
+                            drivePickerIsLoading
+                        }
                         className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     >
                         Cancelar
@@ -196,14 +223,12 @@ export function DataSourceSection({
                     <FileSelector
                         userEmail={userEmail}
                         googleOAuthToken={googleOAuthToken}
-                        onSubmitUrl={handleSubmitUrl}
+                        urlForm={urlForm}
+                        onSubmitUrl={onSubmitUrl}
                         onSubmitDrive={handleSubmitDrive}
                         onSubmitUpload={handleSubmitUpload}
-                        onSelectedOptionChanged={resetUrlForm}
                         isDriveLoading={drivePickerIsLoading || loginIsLoading}
                         isUploadLoading={uploadIsLoading}
-                        isUrlLoading={urlIsLoading}
-                        urlInputError={urlErrors.fileUrl?.message}
                         radioGroupName={radioGroupName}
                         type="data-source"
                     />
@@ -244,14 +269,12 @@ export function DataSourceSection({
                 <FileSelector
                     userEmail={userEmail}
                     googleOAuthToken={googleOAuthToken}
-                    onSubmitUrl={handleSubmitUrl}
+                    urlForm={urlForm}
+                    onSubmitUrl={onSubmitUrl}
                     onSubmitDrive={handleSubmitDrive}
                     onSubmitUpload={handleSubmitUpload}
-                    onSelectedOptionChanged={resetUrlForm}
                     isDriveLoading={drivePickerIsLoading || loginIsLoading}
                     isUploadLoading={uploadIsLoading}
-                    isUrlLoading={urlIsLoading}
-                    urlInputError={urlErrors.fileUrl?.message}
                     radioGroupName={radioGroupName}
                     type="data-source"
                 />

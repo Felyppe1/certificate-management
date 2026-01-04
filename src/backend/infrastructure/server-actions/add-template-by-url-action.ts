@@ -17,6 +17,8 @@ import { addTemplateByUrlSchema } from './schemas'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
 export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
+    // add delay
+    await new Promise(resolve => setTimeout(resolve, 5000))
     const rawData = {
         certificateId: formData.get('certificateId') as string,
         fileUrl: formData.get('fileUrl') as string,

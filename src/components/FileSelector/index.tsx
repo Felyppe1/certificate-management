@@ -26,36 +26,33 @@ import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { GoogleDriveIcon } from '../svg/GoogleDriveIcon'
 import { toast } from 'sonner'
 import { useGoogleRelogin } from '../useGoogleRelogin'
+import { UseFormReturn } from 'react-hook-form'
+import { UrlForm } from './UrlForm'
 
 export type SelectOption = 'upload' | 'link' | 'drive'
 
-type FileSelectorType = 'template' | 'data-source'
+export type FileSelectorType = 'template' | 'data-source'
 
 interface FileSelectorProps {
     isDriveLoading: boolean
     isUploadLoading: boolean
-    isUrlLoading: boolean
-    onSubmitUrl: (formData: FormData) => void
+    urlForm: UseFormReturn<{ fileUrl: string }>
+    onSubmitUrl: (data: { fileUrl: string }) => void
     onSubmitDrive: (fileId: string) => void
     onSubmitUpload: (file: File) => void
-    onSelectedOptionChanged?: (value: SelectOption) => void
-    urlInputError?: string
     userEmail: string
     googleOAuthToken: string | null
     radioGroupName: string
     type: FileSelectorType
-    // urlAction: (_: unknown, formData: FormData) => Promise<any> // TODO: improve this type
 }
 
 export function FileSelector({
+    urlForm,
     onSubmitUrl,
     onSubmitDrive,
     onSubmitUpload,
-    onSelectedOptionChanged,
     isDriveLoading,
     isUploadLoading,
-    isUrlLoading,
-    urlInputError,
     userEmail,
     googleOAuthToken,
     radioGroupName,
@@ -64,7 +61,6 @@ export function FileSelector({
     const [selectedOption, setSelectedOption] = useState<SelectOption | null>(
         null,
     )
-    const [fileUrl, setFileUrl] = useState('')
 
     const [isRefreshTokenLoading, startRefreshTokenTransition] = useTransition()
     const [pickerIsReady, setPickerIsReady] = useState(false)
@@ -74,16 +70,8 @@ export function FileSelector({
         setSelectedOption(value)
 
         if (value !== 'link') {
-            setFileUrl('')
+            urlForm.reset()
         }
-
-        onSelectedOptionChanged?.(value)
-    }
-
-    const handleSubmitUrl = async (e: React.FormEvent) => {
-        e.preventDefault()
-        const formData = new FormData(e.currentTarget as HTMLFormElement)
-        onSubmitUrl(formData)
     }
 
     const handlePickerPicked = (event: PickerPickedEvent) => {
@@ -255,7 +243,7 @@ export function FileSelector({
     const allAreLoading =
         isDriveLoading ||
         isUploadLoading ||
-        isUrlLoading ||
+        urlForm.formState.isSubmitting ||
         isRefreshTokenLoading
 
     return (
@@ -356,7 +344,7 @@ export function FileSelector({
                                 </p>
                             </div>
                         </Card>
-                        {isUrlLoading && (
+                        {urlForm.formState.isSubmitting && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 <div className="bg-background/80 rounded-full p-2">
                                     <Loader2 className="w-10 h-10 animate-spin text-foreground" />
@@ -408,34 +396,11 @@ export function FileSelector({
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <form
-                                onSubmit={handleSubmitUrl}
-                                className="flex gap-3"
-                            >
-                                <div className="w-full">
-                                    <Input
-                                        type="url"
-                                        name="fileUrl"
-                                        value={fileUrl}
-                                        onChange={e =>
-                                            setFileUrl(e.target.value)
-                                        }
-                                        placeholder="https://docs.google.com/..."
-                                        className={`${urlInputError ? 'border-destructive focus-visible:ring-destructive' : ''} flex-1 px-4`}
-                                    />
-                                    {urlInputError && (
-                                        <span className="text-sm text-destructive mt-2 block">
-                                            {urlInputError}
-                                        </span>
-                                    )}
-                                </div>
-                                <Button
-                                    // onClick={handleConfirm}
-                                    disabled={!fileUrl.trim() || isUrlLoading}
-                                >
-                                    Confirmar
-                                </Button>
-                            </form>
+                            <UrlForm
+                                urlForm={urlForm}
+                                onSubmitUrl={onSubmitUrl}
+                                type={type}
+                            />
                         </CardContent>
                     </Card>
                 )}

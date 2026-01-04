@@ -17,7 +17,10 @@ import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { addTemplateByUploadAction } from '@/backend/infrastructure/server-actions/add-template-by-upload-action'
 import { toast } from 'sonner'
 import { useGoogleRelogin } from '@/components/useGoogleRelogin'
-import { useTemplateUrlForm } from './useTemplateUrlForm'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { addTemplateByUrlAction } from '@/backend/infrastructure/server-actions/add-template-by-url-action'
+import z from 'zod'
 
 interface TemplateSectionProps {
     certificateId: string
@@ -47,20 +50,49 @@ export function TemplateSection({
 }: TemplateSectionProps) {
     const [isEditing, setIsEditing] = useState(false)
 
-    const {
-        form: urlForm,
-        onSubmit: handleUrlSubmit,
-        isSubmitting: urlIsLoading,
-        errors: urlErrors,
-    } = useTemplateUrlForm({
-        certificateId,
-        onSuccess: () => setIsEditing(false),
+    const templateUrlFormSchema = z.object({
+        fileUrl: z.url('URL inválida'),
     })
 
-    const resetUrlForm = (value: SelectOption) => {
-        if (value !== 'link') {
-            urlForm.reset()
+    type TemplateUrlForm = z.infer<typeof templateUrlFormSchema>
+
+    const templateUrlForm = useForm<TemplateUrlForm>({
+        resolver: zodResolver(templateUrlFormSchema),
+        defaultValues: { fileUrl: '' },
+    })
+
+    const onSubmitUrl = async (data: TemplateUrlForm) => {
+        const formData = new FormData()
+        formData.append('certificateId', certificateId)
+        formData.append('fileUrl', data.fileUrl)
+
+        const result = await addTemplateByUrlAction(null, formData)
+
+        if (!result?.success) {
+            if (result.errorType === 'drive-file-not-found') {
+                toast.error(
+                    'Arquivo não encontrado. Verifique se a URL está correta e se o arquivo no Drive está público',
+                )
+            } else if (result.errorType === 'unsupported-template-mimetype') {
+                toast.error(
+                    'Tipo de arquivo não suportado. Apenas Google Slides, Google Docs, .pptx ou .docx são permitidos',
+                )
+            } else if (
+                result.errorType === 'template-variables-parsing-error'
+            ) {
+                toast.error(
+                    'Foi encontrado um erro de sintaxe do Liquid no template.',
+                )
+            } else {
+                toast.error('Ocorreu um erro ao tentar adicionar template')
+            }
+
+            return
         }
+
+        toast.success('Template adicionado com sucesso')
+        templateUrlForm.reset()
+        setIsEditing(false)
     }
 
     const [driverPickerState, drivePickerAction, drivePickerIsLoading] =
@@ -69,12 +101,6 @@ export function TemplateSection({
         addTemplateByUploadAction,
         null,
     )
-
-    const handleSubmitUrl = async (formData: FormData) => {
-        const fileUrl = formData.get('fileUrl') as string
-        urlForm.setValue('fileUrl', fileUrl)
-        await handleUrlSubmit()
-    }
 
     const handleSubmitDrive = async (fileId: string) => {
         const formData = new FormData()
@@ -181,7 +207,10 @@ export function TemplateSection({
                     <Button
                         variant="outline"
                         onClick={handleCancelEdit}
-                        disabled={urlIsLoading || drivePickerIsLoading}
+                        disabled={
+                            templateUrlForm.formState.isSubmitting ||
+                            drivePickerIsLoading
+                        }
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 self-end xs:self-auto"
                     >
                         Cancelar
@@ -191,14 +220,12 @@ export function TemplateSection({
                     <FileSelector
                         userEmail={userEmail}
                         googleOAuthToken={googleOAuthToken}
-                        onSubmitUrl={handleSubmitUrl}
+                        urlForm={templateUrlForm}
+                        onSubmitUrl={onSubmitUrl}
                         onSubmitDrive={handleSubmitDrive}
                         onSubmitUpload={handleSubmitUpload}
-                        onSelectedOptionChanged={resetUrlForm}
                         isDriveLoading={drivePickerIsLoading || loginIsLoading}
                         isUploadLoading={uploadIsLoading}
-                        isUrlLoading={urlIsLoading}
-                        urlInputError={urlErrors.fileUrl?.message}
                         radioGroupName={radioGroupName}
                         type="template"
                     />
@@ -231,14 +258,12 @@ export function TemplateSection({
                 <FileSelector
                     userEmail={userEmail}
                     googleOAuthToken={googleOAuthToken}
-                    onSubmitUrl={handleSubmitUrl}
+                    urlForm={templateUrlForm}
+                    onSubmitUrl={onSubmitUrl}
                     onSubmitDrive={handleSubmitDrive}
                     onSubmitUpload={handleSubmitUpload}
-                    onSelectedOptionChanged={resetUrlForm}
                     isDriveLoading={drivePickerIsLoading || loginIsLoading}
                     isUploadLoading={uploadIsLoading}
-                    isUrlLoading={urlIsLoading}
-                    urlInputError={urlErrors.fileUrl?.message}
                     radioGroupName={radioGroupName}
                     type="template"
                 />
