@@ -4,7 +4,7 @@ import { AuthenticationError } from '@/backend/domain/error/authentication-error
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+
 import { updateTag } from 'next/cache'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
@@ -23,11 +23,10 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
     }
 
     try {
-        const { token } = await validateSessionToken()
+        const { userId } = await validateSessionToken()
 
         const parsedData = addDataSourceByUrlSchema.parse(rawData)
 
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
@@ -42,7 +41,6 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
         const addDataSourceByUrlUseCase = new AddDataSourceByUrlUseCase(
             certificateEmissionsRepository,
             dataSetsRepository,
-            sessionsRepository,
             googleDriveGateway,
             spreadsheetContentExtractorFactory,
             bucket,
@@ -52,7 +50,7 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
         await addDataSourceByUrlUseCase.execute({
             certificateId: parsedData.certificateId,
             fileUrl: parsedData.fileUrl,
-            sessionToken: token,
+            userId,
         })
 
         updateTag('certificate')

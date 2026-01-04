@@ -4,7 +4,7 @@ import { CreateEmailUseCase } from '@/backend/application/create-email-use-case'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { prisma } from '../repository/prisma'
 import { PrismaEmailsRepository } from '../repository/prisma/prisma-emails-repository'
-import { PrismaSessionsRepository } from '../repository/prisma/prisma-sessions-repository'
+
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { CloudFunctionExternalProcessing } from '../cloud/gcp/cloud-function-external-processing'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
@@ -27,11 +27,10 @@ export async function createEmailAction(_: unknown, formData: FormData) {
     }
 
     try {
-        const { token } = await validateSessionToken()
+        const { userId } = await validateSessionToken()
 
         const parsedData = createEmailSchema.parse(rawData)
 
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
@@ -45,7 +44,6 @@ export async function createEmailAction(_: unknown, formData: FormData) {
         const transactionManager = new PrismaTransactionManager(prisma)
 
         const createEmailUseCase = new CreateEmailUseCase(
-            sessionsRepository,
             certificateEmissionsRepository,
             dataSetsRepository,
             emailsRepository,
@@ -54,7 +52,7 @@ export async function createEmailAction(_: unknown, formData: FormData) {
         )
 
         await createEmailUseCase.execute({
-            sessionToken: token,
+            userId,
             body: parsedData.body,
             certificateEmissionId: parsedData.certificateId,
             emailColumn: parsedData.emailColumn,

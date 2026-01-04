@@ -2,9 +2,9 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
-import { ISessionsRepository } from './interfaces/repository/isessions-repository'
+
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
-import { AuthenticationError } from '../domain/error/authentication-error'
+
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import {
     NOT_FOUND_ERROR_TYPE,
@@ -21,7 +21,7 @@ import { ITransactionManager } from './interfaces/repository/itransaction-manage
 interface AddDataSourceByUrlUseCaseInput {
     certificateId: string
     fileUrl: string
-    sessionToken: string
+    userId: string
 }
 
 export class AddDataSourceByUrlUseCase {
@@ -31,7 +31,7 @@ export class AddDataSourceByUrlUseCase {
             'getById' | 'update'
         >,
         private dataSetsRepository: Pick<IDataSetsRepository, 'upsert'>,
-        private sessionsRepository: Pick<ISessionsRepository, 'getById'>,
+
         private googleDriveGateway: Pick<
             IGoogleDriveGateway,
             'getFileMetadata' | 'downloadFile'
@@ -42,14 +42,6 @@ export class AddDataSourceByUrlUseCase {
     ) {}
 
     async execute(input: AddDataSourceByUrlUseCaseInput) {
-        const session = await this.sessionsRepository.getById(
-            input.sessionToken,
-        )
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
         const certificate = await this.certificateEmissionsRepository.getById(
             input.certificateId,
         )

@@ -3,25 +3,15 @@ import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
-import { AuthenticationError } from '../domain/error/authentication-error'
 import { prisma } from '../infrastructure/repository/prisma'
-import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 
 interface GetDataSetUseCaseInput {
     dataSetId: string
-    sessionToken: string
+    userId: string
 }
 
 export class GetDataSetUseCase {
-    constructor(private sessionsRepository: ISessionsRepository) {}
-
-    async execute({ dataSetId, sessionToken }: GetDataSetUseCaseInput) {
-        const session = await this.sessionsRepository.getById(sessionToken)
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
+    async execute({ dataSetId, userId }: GetDataSetUseCaseInput) {
         const dataSet = await prisma.dataSet.findUnique({
             where: {
                 id: dataSetId,
@@ -33,7 +23,7 @@ export class GetDataSetUseCase {
         }
 
         // TODO: check if the data set belongs to the user
-        // if (dataSet.user_id !== session.userId) {
+        // if (dataSet.user_id !== userId) {
         //     throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         // }
 

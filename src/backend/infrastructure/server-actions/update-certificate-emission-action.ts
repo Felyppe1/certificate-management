@@ -27,7 +27,7 @@ export async function updateCertificateEmissionAction(
     }
 
     try {
-        const { token } = await validateSessionToken()
+        const { userId } = await validateSessionToken()
 
         const parsedData = updateCertificateEmissionSchema.parse(rawData)
 
@@ -39,7 +39,6 @@ export async function updateCertificateEmissionAction(
         const updateCertificateEmissionUseCase =
             new UpdateCertificateEmissionUseCase(
                 certificatesRepository,
-                sessionsRepository,
                 dataSetsRepository,
                 transactionManager,
             )
@@ -48,7 +47,7 @@ export async function updateCertificateEmissionAction(
             id: parsedData.id,
             name: parsedData.name,
             variableColumnMapping: parsedData.variableColumnMapping,
-            sessionToken: token,
+            userId,
         })
     } catch (error: any) {
         console.log(error)

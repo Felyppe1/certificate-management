@@ -6,7 +6,7 @@ import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/fi
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { updateTag } from 'next/cache'
 import { logoutAction } from './logout-action'
@@ -23,11 +23,10 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
     }
 
     try {
-        const { token } = await validateSessionToken()
+        const { userId } = await validateSessionToken()
 
         const parsedData = addTemplateByUrlSchema.parse(rawData)
 
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
@@ -41,7 +40,6 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificateEmissionsRepository,
             dataSetsRepository,
-            sessionsRepository,
             googleDriveGateway,
             fileContentExtractorFactory,
             bucket,
@@ -51,7 +49,7 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
         await addTemplateByUrlUseCase.execute({
             certificateId: parsedData.certificateId,
             fileUrl: parsedData.fileUrl,
-            sessionToken: token,
+            userId,
         })
 
         updateTag('certificate')

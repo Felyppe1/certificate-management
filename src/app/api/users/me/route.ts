@@ -25,7 +25,7 @@ export async function GET(
     request: NextRequest,
 ): Promise<NextResponse<GetMeControllerResponse | HandleErrorResponse>> {
     try {
-        const { token } = await validateSessionToken(request)
+        const { userId } = await validateSessionToken(request)
 
         const usersRepository = new PrismaUsersRepository(prisma)
         const externalUserAccountsRepository =
@@ -36,7 +36,7 @@ export async function GET(
             externalUserAccountsRepository,
         )
 
-        const user = await getMeUseCase.execute({ userId: token })
+        const user = await getMeUseCase.execute({ userId })
 
         return NextResponse.json({ user })
     } catch (error: any) {

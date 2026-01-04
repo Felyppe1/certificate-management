@@ -5,7 +5,7 @@ import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
@@ -93,20 +93,18 @@ export async function PUT(
     const certificateEmissionId = (await params).certificateEmissionId
 
     try {
-        const { token } = await validateSessionToken(request)
+        const { userId } = await validateSessionToken(request)
 
         const body = await request.json()
         const parsed = updateCertificateEmissionSchema.parse(body)
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const transactionManager = new PrismaTransactionManager(prisma)
 
         const updateCertificateEmissionUseCase =
             new UpdateCertificateEmissionUseCase(
                 certificatesRepository,
-                sessionsRepository,
                 dataSetsRepository,
                 transactionManager,
             )
@@ -115,7 +113,7 @@ export async function PUT(
             id: certificateEmissionId,
             name: parsed.name,
             variableColumnMapping: parsed.variableColumnMapping,
-            sessionToken: token,
+            userId,
         })
 
         return new NextResponse(null, { status: 204 })

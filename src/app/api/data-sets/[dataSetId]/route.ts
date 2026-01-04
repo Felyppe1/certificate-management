@@ -1,4 +1,3 @@
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { handleError, HandleErrorResponse } from '@/utils/handle-error'
@@ -19,15 +18,13 @@ export async function GET(
     const dataSetId = (await params).dataSetId
 
     try {
-        const { token } = await validateSessionToken(request)
+        const { userId } = await validateSessionToken(request)
 
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
-
-        const getDataSetUseCase = new GetDataSetUseCase(sessionsRepository)
+        const getDataSetUseCase = new GetDataSetUseCase()
 
         const dataSet = await getDataSetUseCase.execute({
             dataSetId,
-            sessionToken: token,
+            userId,
         })
 
         return NextResponse.json({ dataSet })

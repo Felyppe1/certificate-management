@@ -4,10 +4,8 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
-import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor-factory'
-import { AuthenticationError } from '../domain/error/authentication-error'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import {
     NOT_FOUND_ERROR_TYPE,
@@ -21,7 +19,7 @@ import { ITransactionManager } from './interfaces/repository/itransaction-manage
 interface AddTemplateByUrlUseCaseInput {
     certificateId: string
     fileUrl: string
-    sessionToken: string
+    userId: string
 }
 
 export class AddTemplateByUrlUseCase {
@@ -34,7 +32,7 @@ export class AddTemplateByUrlUseCase {
             IDataSetsRepository,
             'getByCertificateEmissionId' | 'upsert'
         >,
-        private sessionsRepository: Pick<ISessionsRepository, 'getById'>,
+
         private googleDriveGateway: Pick<
             IGoogleDriveGateway,
             'getFileMetadata' | 'downloadFile'
@@ -48,14 +46,6 @@ export class AddTemplateByUrlUseCase {
     ) {}
 
     async execute(input: AddTemplateByUrlUseCaseInput) {
-        const session = await this.sessionsRepository.getById(
-            input.sessionToken,
-        )
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
         const certificate = await this.certificateEmissionsRepository.getById(
             input.certificateId,
         )

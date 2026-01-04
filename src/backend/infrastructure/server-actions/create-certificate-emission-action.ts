@@ -3,7 +3,7 @@
 import { CreateCertificateEmissionUseCase } from '@/backend/application/create-certificate-emission-use-case'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { updateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -22,22 +22,18 @@ export async function createCertificateEmissionAction(
     let certificateEmissionId: string
 
     try {
-        const { token } = await validateSessionToken()
+        const { userId } = await validateSessionToken()
 
         const parsedData = createCertificateEmissionSchema.parse(rawData)
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
 
         const createCertificateEmissionUseCase =
-            new CreateCertificateEmissionUseCase(
-                certificatesRepository,
-                sessionsRepository,
-            )
+            new CreateCertificateEmissionUseCase(certificatesRepository)
 
         certificateEmissionId = await createCertificateEmissionUseCase.execute({
             name: parsedData.name,
-            sessionToken: token,
+            userId,
         })
 
         updateTag('certificate-emissions')

@@ -6,7 +6,7 @@ import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { SpreadsheetContentExtractorFactory } from '@/backend/infrastructure/factory/spreadsheet-content-extractor-factory'
@@ -26,12 +26,11 @@ export async function PUT(
     const certificateEmissionId = (await params).certificateEmissionId
 
     try {
-        const { token } = await validateSessionToken(request)
+        const { userId } = await validateSessionToken(request)
 
         const body = await request.json()
         const parsed = addDataSourceByUrlBodySchema.parse(body)
 
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
@@ -46,7 +45,6 @@ export async function PUT(
         const addDataSourceByUrlUseCase = new AddDataSourceByUrlUseCase(
             certificateEmissionsRepository,
             dataSetsRepository,
-            sessionsRepository,
             googleDriveGateway,
             spreadsheetContentExtractorFactory,
             bucket,
@@ -56,7 +54,7 @@ export async function PUT(
         await addDataSourceByUrlUseCase.execute({
             certificateId: certificateEmissionId,
             fileUrl: parsed.fileUrl,
-            sessionToken: token,
+            userId,
         })
 
         return new NextResponse(null, { status: 204 })

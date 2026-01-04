@@ -1,29 +1,20 @@
 import { Certificate } from '../domain/certificate'
-import { AuthenticationError } from '../domain/error/authentication-error'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 
 interface CreateUseCaseEmissionUseCaseInput {
     name: string
-    sessionToken: string
+    userId: string
 }
 
 export class CreateCertificateEmissionUseCase {
     constructor(
         private certificateEmissionsRepository: ICertificatesRepository,
-        private sessionsRepository: ISessionsRepository,
     ) {}
 
-    async execute({ name, sessionToken }: CreateUseCaseEmissionUseCaseInput) {
-        const session = await this.sessionsRepository.getById(sessionToken)
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
+    async execute({ name, userId }: CreateUseCaseEmissionUseCaseInput) {
         const newCertificate = Certificate.create({
             name,
-            userId: session.userId,
+            userId,
             template: null,
             dataSource: null,
         })

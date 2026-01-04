@@ -17,7 +17,7 @@ import { ISessionsRepository } from './interfaces/repository/isessions-repositor
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 export interface CreateEmailUseCaseInput {
-    sessionToken: string
+    userId: string
     certificateEmissionId: string
     subject: string
     body: string
@@ -27,7 +27,6 @@ export interface CreateEmailUseCaseInput {
 
 export class CreateEmailUseCase {
     constructor(
-        private sessionsRepository: Pick<ISessionsRepository, 'getById'>,
         private certificateEmissionsRepository: Pick<
             ICertificatesRepository,
             'getById' | 'update'
@@ -45,12 +44,6 @@ export class CreateEmailUseCase {
     ) {}
 
     async execute(data: CreateEmailUseCaseInput) {
-        const session = await this.sessionsRepository.getById(data.sessionToken)
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
         const certificateEmission =
             await this.certificateEmissionsRepository.getById(
                 data.certificateEmissionId,
@@ -112,7 +105,7 @@ export class CreateEmailUseCase {
             await this.externalProcessing.triggerSendCertificateEmails({
                 certificateEmissionId: data.certificateEmissionId,
                 emailId: email.getId(),
-                userId: session.userId,
+                userId: data.userId,
                 sender: 'Gerenciador de Certificados',
                 subject: subject!,
                 body: body!,

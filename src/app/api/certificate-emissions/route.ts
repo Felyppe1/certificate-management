@@ -27,16 +27,13 @@ export async function GET(
     >
 > {
     try {
-        const { token } = await validateSessionToken(request)
+        const { userId } = await validateSessionToken(request)
 
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
-
-        const getAllCertificatesUseCase = new GetAllCertificateEmissionsUseCase(
-            sessionsRepository,
-        )
+        const getAllCertificatesUseCase =
+            new GetAllCertificateEmissionsUseCase()
 
         const certificateEmissions = await getAllCertificatesUseCase.execute({
-            sessionToken: token,
+            userId,
         })
 
         return NextResponse.json({ certificateEmissions })
@@ -57,24 +54,20 @@ export async function POST(
     >
 > {
     try {
-        const { token } = await validateSessionToken(request)
+        const { userId } = await validateSessionToken(request)
 
         const body = await request.json()
         const parsed = createCertificateEmissionSchema.parse(body)
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
 
         const createCertificateEmissionUseCase =
-            new CreateCertificateEmissionUseCase(
-                certificatesRepository,
-                sessionsRepository,
-            )
+            new CreateCertificateEmissionUseCase(certificatesRepository)
 
         const certificateEmissionId =
             await createCertificateEmissionUseCase.execute({
                 name: parsed.name,
-                sessionToken: token,
+                userId,
             })
 
         return NextResponse.json({ id: certificateEmissionId }, { status: 201 })

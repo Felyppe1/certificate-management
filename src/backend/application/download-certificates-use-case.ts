@@ -1,7 +1,5 @@
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { ISessionsRepository } from './interfaces/repository/isessions-repository'
-import { AuthenticationError } from '../domain/error/authentication-error'
 import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
@@ -21,7 +19,7 @@ import archiver from 'archiver' // TODO: dependency inversion
 import { PassThrough } from 'stream'
 
 interface DownloadCertificateUseCaseInput {
-    sessionToken: string
+    userId: string
     certificateEmissionId: string
 }
 
@@ -29,7 +27,6 @@ export class DownloadCertificatesUseCase {
     constructor(
         private bucket: Pick<IBucket, 'getObjectsWithPrefix'>,
         private certificateRepository: Pick<ICertificatesRepository, 'getById'>,
-        private sessionsRepository: Pick<ISessionsRepository, 'getById'>,
         private dataSetsRepository: Pick<
             IDataSetsRepository,
             'getByCertificateEmissionId'
@@ -37,14 +34,6 @@ export class DownloadCertificatesUseCase {
     ) {}
 
     async execute(input: DownloadCertificateUseCaseInput) {
-        const session = await this.sessionsRepository.getById(
-            input.sessionToken,
-        )
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
         const certificate = await this.certificateRepository.getById(
             input.certificateEmissionId,
         )
@@ -53,7 +42,7 @@ export class DownloadCertificatesUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.getUserId() !== session.userId) {
+        if (certificate.getUserId() !== input.userId) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
@@ -74,7 +63,7 @@ export class DownloadCertificatesUseCase {
 
         const bucketName = process.env.CERTIFICATES_BUCKET!
 
-        const prefix = `users/${session.userId}/certificates/${certificate.getId()}/certificate`
+        const prefix = `users/${input.userId}/certificates/${certificate.getId()}/certificate`
 
         const certificateObjects = await this.bucket.getObjectsWithPrefix({
             bucketName,

@@ -1,4 +1,3 @@
-import { AuthenticationError } from '../domain/error/authentication-error'
 import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
@@ -8,13 +7,12 @@ import {
     NotFoundError,
 } from '../domain/error/not-found-error'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
 import { GENERATION_STATUS } from '../domain/data-set'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 interface UpdateCertificateEmissionUseCaseInput {
-    sessionToken: string
+    userId: string
     id: string
     name?: string
     variableColumnMapping?: Record<string, string | null> | null
@@ -26,7 +24,6 @@ export class UpdateCertificateEmissionUseCase {
             ICertificatesRepository,
             'getById' | 'update'
         >,
-        private sessionsRepository: Pick<ISessionsRepository, 'getById'>,
         private dataSetsRepository: Pick<
             IDataSetsRepository,
             'getByCertificateEmissionId' | 'upsert'
@@ -35,12 +32,6 @@ export class UpdateCertificateEmissionUseCase {
     ) {}
 
     async execute(data: UpdateCertificateEmissionUseCaseInput) {
-        const session = await this.sessionsRepository.getById(data.sessionToken)
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
         const certificate = await this.certificateEmissionsRepository.getById(
             data.id,
         )
@@ -49,7 +40,7 @@ export class UpdateCertificateEmissionUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.getUserId() !== session.userId) {
+        if (certificate.getUserId() !== data.userId) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 

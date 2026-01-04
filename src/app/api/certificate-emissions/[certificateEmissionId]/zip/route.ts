@@ -3,7 +3,7 @@ import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+
 import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { NextRequest, NextResponse } from 'next/server'
@@ -15,9 +15,8 @@ export async function GET(
     const { certificateEmissionId } = await params
 
     try {
-        const { token } = await validateSessionToken()
+        const { userId } = await validateSessionToken()
 
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const bucket = new GcpBucket()
@@ -25,13 +24,12 @@ export async function GET(
         const downloadCertificatesUseCase = new DownloadCertificatesUseCase(
             bucket,
             certificatesRepository,
-            sessionsRepository,
             dataSetsRepository,
         )
 
         const zipStream = await downloadCertificatesUseCase.execute({
             certificateEmissionId,
-            sessionToken: token,
+            userId,
         })
 
         return new Response(zipStream as unknown as BodyInit, {
