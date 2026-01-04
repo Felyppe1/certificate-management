@@ -46,7 +46,6 @@ jobs:
           OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: ${{ secrets.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GA_ID: ${{ secrets.GA_ID }}
           SUFFIX: ${{ github.ref_name == 'main' && '' || format('-{0}', github.ref_name) }}
           NEXT_PUBLIC_BASE_URL: ${{ vars.NEXT_PUBLIC_BASE_URL }}
@@ -56,6 +55,7 @@ jobs:
           echo "TF_VAR_branch=${{ github.ref_name }}" >> $GITHUB_ENV
           echo "TF_VAR_smtp_user=${{ secrets.SMTP_USER }}" >> $GITHUB_ENV
           echo "TF_VAR_smtp_password=${{ secrets.SMTP_PASSWORD }}" >> $GITHUB_ENV
+          echo "TF_VAR_google_api_key=${{ secrets.GOOGLE_API_KEY }}" >> $GITHUB_ENV
           TF_ENV_VARS=$(jq -nc '{
             DB_USER: env.DB_USER,
             DB_PASSWORD: env.DB_PASSWORD,
@@ -69,7 +69,6 @@ jobs:
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: env.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
             GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
             GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
-            GOOGLE_API_KEY: env.GOOGLE_API_KEY,
             GA_ID: env.GA_ID,
             SUFFIX: env.SUFFIX,
             NEXT_PUBLIC_BASE_URL: env.NEXT_PUBLIC_BASE_URL
@@ -163,7 +162,6 @@ jobs:
           OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: ${{ secrets.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GA_ID: ${{ secrets.GA_ID }}
           SUFFIX: ${{ github.ref_name == 'main' && '' || format('-{0}', github.ref_name) }}
           NEXT_PUBLIC_BASE_URL: ${{ vars.NEXT_PUBLIC_BASE_URL }}
@@ -173,6 +171,7 @@ jobs:
           echo "TF_VAR_branch=${{ github.ref_name }}" >> $GITHUB_ENV
           echo "TF_VAR_smtp_user=${{ secrets.SMTP_USER }}" >> $GITHUB_ENV
           echo "TF_VAR_smtp_password=${{ secrets.SMTP_PASSWORD }}" >> $GITHUB_ENV
+          echo "TF_VAR_google_api_key=${{ secrets.GOOGLE_API_KEY }}" >> $GITHUB_ENV
           TF_ENV_VARS=$(jq -nc '{
             DB_USER: env.DB_USER,
             DB_PASSWORD: env.DB_PASSWORD,
@@ -186,7 +185,6 @@ jobs:
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: env.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
             GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
             GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
-            GOOGLE_API_KEY: env.GOOGLE_API_KEY,
             GA_ID: env.GA_ID,
             SUFFIX: env.SUFFIX,
             NEXT_PUBLIC_BASE_URL: env.NEXT_PUBLIC_BASE_URL
