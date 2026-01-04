@@ -1,29 +1,19 @@
 import { AuthenticationError } from '../domain/error/authentication-error'
 import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
-import { ISessionsRepository } from './interfaces/isessions-repository'
 import { IUsersRepository } from './interfaces/iusers-repository'
 
 interface GetMeUseCaseInput {
-    sessionToken: string
+    userId: string
 }
 
 export class GetMeUseCase {
     constructor(
-        private sessionsRepository: ISessionsRepository,
         private usersRepository: IUsersRepository,
         private externalUserAccountsRepository: IExternalUserAccountsRepository,
     ) {}
 
     async execute(input: GetMeUseCaseInput) {
-        const { sessionToken } = input
-
-        const session = await this.sessionsRepository.getById(sessionToken)
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
-
-        const user = await this.usersRepository.getById(session.userId)
+        const user = await this.usersRepository.getById(input.userId)
 
         if (!user) {
             throw new AuthenticationError('user-not-found')
