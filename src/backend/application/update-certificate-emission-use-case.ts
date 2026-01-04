@@ -7,11 +7,11 @@ import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
-import { ICertificatesRepository } from './interfaces/icertificates-repository'
-import { ISessionsRepository } from './interfaces/isessions-repository'
-import { IDataSetsRepository } from './interfaces/idata-sets-repository'
+import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { ISessionsRepository } from './interfaces/repository/isessions-repository'
+import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
 import { GENERATION_STATUS } from '../domain/data-set'
-import { ITransactionManager } from './interfaces/itransaction-manager'
+import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 interface UpdateCertificateEmissionUseCaseInput {
     sessionToken: string

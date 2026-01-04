@@ -6,29 +6,27 @@ import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/pr
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
-import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import { handleError } from '@/utils/handle-error'
+import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
-export async function GET(request: NextRequest) {
+export interface GetSessionControllerResponse {
+    token: string
+    userId: string
+}
+
+export async function GET(
+    request: NextRequest,
+): Promise<NextResponse<GetSessionControllerResponse | HandleErrorResponse>> {
     try {
-        const { token } = await validateSessionToken(request)
-
-        const session = await new PrismaSessionsRepository(prisma).getById(
-            token,
-        )
-
-        if (!session) {
-            throw new AuthenticationError('session-not-found')
-        }
+        const session = await validateSessionToken(request)
 
         return NextResponse.json(session)
-    } catch (error: any) {
+    } catch (error: unknown) {
         return await handleError(error)
     }
 }
 
-interface LoginResponse {
+export interface LoginSessionControllerResponse {
     id: string
     email: string
     name: string
@@ -36,24 +34,31 @@ interface LoginResponse {
 
 export async function POST(
     request: Request,
-): Promise<NextResponse<LoginResponse>> {
-    const { email, password } = await request.json()
+): Promise<NextResponse<LoginSessionControllerResponse | HandleErrorResponse>> {
+    try {
+        const { email, password } = await request.json()
 
-    const usersRepository = new PrismaUsersRepository(prisma)
-    const sessionsRepository = new PrismaSessionsRepository(prisma)
+        const usersRepository = new PrismaUsersRepository(prisma)
+        const sessionsRepository = new PrismaSessionsRepository(prisma)
 
-    const loginUseCase = new LoginUseCase(usersRepository, sessionsRepository)
+        const loginUseCase = new LoginUseCase(
+            usersRepository,
+            sessionsRepository,
+        )
 
-    const result = await loginUseCase.execute(email, password)
+        const result = await loginUseCase.execute(email, password)
 
-    const cookie = await cookies()
+        const cookie = await cookies()
 
-    cookie.set('session_token', result.token, {
-        // secure: true,
-        httpOnly: true,
-        path: '/',
-        // sameSite: "strict"
-    })
+        cookie.set('session_token', result.token, {
+            // secure: true,
+            httpOnly: true,
+            path: '/',
+            // sameSite: "strict"
+        })
 
-    return NextResponse.json(result.user)
+        return NextResponse.json(result.user)
+    } catch (error: unknown) {
+        return await handleError(error)
+    }
 }

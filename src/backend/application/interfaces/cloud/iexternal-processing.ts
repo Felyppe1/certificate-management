@@ -1,8 +1,8 @@
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
-import { INPUT_METHOD } from '../../domain/certificate'
-import { TEMPLATE_FILE_EXTENSION } from '../../domain/template'
+import { INPUT_METHOD } from '../../../domain/certificate'
+import { TEMPLATE_FILE_EXTENSION } from '../../../domain/template'
 
 export interface TriggerGenerateCertificatePDFsInput {
     certificateEmission: {

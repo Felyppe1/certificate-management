@@ -13,13 +13,13 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
-import { ICertificatesRepository } from './interfaces/icertificates-repository'
-import { IDataSetsRepository } from './interfaces/idata-sets-repository'
-import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
+import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
+import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
-import { ITransactionManager } from './interfaces/itransaction-manager'
+import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 interface RefreshDataSourceUseCaseInput {
     userId: string

@@ -1,6 +1,6 @@
 'use server'
 
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { DeleteDataSourceUseCase } from '@/backend/application/delete-data-source-use-case'
 import { RefreshDataSourceUseCase } from '@/backend/application/refresh-data-source-use-case'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
@@ -12,20 +12,19 @@ import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/pr
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { SpreadsheetContentExtractorFactory } from '@/backend/infrastructure/factory/spreadsheet-content-extractor-factory'
-import { getSessionToken } from '@/utils/middleware/getSessionToken'
-import { handleError } from '@/utils/handle-error'
+import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
 export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ certificateEmissionId: string }> },
-) {
+): Promise<NextResponse<null | HandleErrorResponse>> {
     const certificateEmissionId = (await params).certificateEmissionId
 
     try {
-        const sessionToken = await getSessionToken(request)
+        const { userId } = await validateSessionToken(request)
 
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
@@ -33,17 +32,16 @@ export async function DELETE(
 
         const deleteDataSourceUseCase = new DeleteDataSourceUseCase(
             certificateEmissionsRepository,
-            sessionsRepository,
             bucket,
         )
 
         await deleteDataSourceUseCase.execute({
             certificateId: certificateEmissionId,
-            sessionToken,
+            userId,
         })
 
-        return new Response(null, { status: 204 })
-    } catch (error: any) {
+        return new NextResponse(null, { status: 204 })
+    } catch (error: unknown) {
         return await handleError(error)
     }
 }
@@ -51,13 +49,12 @@ export async function DELETE(
 export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ certificateEmissionId: string }> },
-) {
+): Promise<NextResponse<null | HandleErrorResponse>> {
     const certificateEmissionId = (await params).certificateEmissionId
 
     try {
-        const sessionToken = await getSessionToken(request)
+        const { userId } = await validateSessionToken(request)
 
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
@@ -71,7 +68,6 @@ export async function PATCH(
         const refreshDataSourceUseCase = new RefreshDataSourceUseCase(
             certificatesRepository,
             dataSetsRepository,
-            sessionsRepository,
             googleDriveGateway,
             googleAuthGateway,
             spreadsheetContentExtractorFactory,
@@ -80,12 +76,12 @@ export async function PATCH(
         )
 
         await refreshDataSourceUseCase.execute({
-            sessionToken,
+            userId,
             certificateId: certificateEmissionId,
         })
 
-        return new Response(null, { status: 204 })
-    } catch (error: any) {
+        return new NextResponse(null, { status: 204 })
+    } catch (error: unknown) {
         return await handleError(error)
     }
 }

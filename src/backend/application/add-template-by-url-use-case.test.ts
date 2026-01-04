@@ -1,8 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
 import { AddTemplateByUrlUseCase } from './add-template-by-url-use-case'
-import { ICertificatesRepository } from './interfaces/icertificates-repository'
+import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { Certificate, CERTIFICATE_STATUS } from '../domain/certificate'
-import { Session, ISessionsRepository } from './interfaces/isessions-repository'
+import {
+    Session,
+    ISessionsRepository,
+} from './interfaces/repository/isessions-repository'
 import {
     GetFileMetadataOutput,
     IGoogleDriveGateway,
@@ -11,11 +14,11 @@ import { TEMPLATE_FILE_EXTENSION } from '../domain/template'
 import {
     IFileContentExtractorStrategy,
     IFileContentExtractorFactory,
-} from './interfaces/ifile-content-extractor'
+} from './interfaces/ifile-content-extractor-factory'
 import { AuthenticationError } from '../domain/error/authentication-error'
 import { NotFoundError } from '../domain/error/not-found-error'
 import { ValidationError } from '../domain/error/validation-error'
-import { IBucket } from './interfaces/ibucket'
+import { IBucket } from './interfaces/cloud/ibucket'
 
 describe('AddTemplateByUrlUseCase', () => {
     function createSession(id: string) {

@@ -1,6 +1,6 @@
 'use server'
 
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { AddDataSourceByUrlUseCase } from '@/backend/application/add-data-source-by-url-use-case'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
@@ -11,25 +11,25 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { SpreadsheetContentExtractorFactory } from '@/backend/infrastructure/factory/spreadsheet-content-extractor-factory'
 import z from 'zod'
-import { getSessionToken } from '@/utils/middleware/getSessionToken'
-import { handleError } from '@/utils/handle-error'
+import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
-const addDataSourceByUrlSchema = z.object({
+const addDataSourceByUrlBodySchema = z.object({
     fileUrl: z.url('Invalid file URL'),
 })
 
 export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ certificateEmissionId: string }> },
-) {
+): Promise<NextResponse<null | HandleErrorResponse>> {
     const certificateEmissionId = (await params).certificateEmissionId
 
     try {
-        const sessionToken = await getSessionToken(request)
+        const { token } = await validateSessionToken(request)
 
         const body = await request.json()
-        const parsed = addDataSourceByUrlSchema.parse(body)
+        const parsed = addDataSourceByUrlBodySchema.parse(body)
 
         const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
@@ -56,11 +56,11 @@ export async function PUT(
         await addDataSourceByUrlUseCase.execute({
             certificateId: certificateEmissionId,
             fileUrl: parsed.fileUrl,
-            sessionToken,
+            sessionToken: token,
         })
 
-        return new Response(null, { status: 204 })
-    } catch (error: any) {
+        return new NextResponse(null, { status: 204 })
+    } catch (error: unknown) {
         return await handleError(error)
     }
 }

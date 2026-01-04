@@ -10,7 +10,7 @@ import { UpdateCertificateEmissionUseCase } from '@/backend/application/update-c
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-import { updateCertificateEmissionSchema } from './schemas/certificate-emission-schemas'
+import { updateCertificateEmissionSchema } from './schemas'
 
 export async function updateCertificateEmissionAction(
     _: unknown,

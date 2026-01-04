@@ -1,5 +1,5 @@
-import { IBucket } from './interfaces/ibucket'
-import { ICertificatesRepository } from './interfaces/icertificates-repository'
+import { IBucket } from './interfaces/cloud/ibucket'
+import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,

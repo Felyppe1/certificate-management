@@ -1,13 +1,16 @@
 import {
     ExternalUserAccount,
     IExternalUserAccountsRepository,
-} from './interfaces/iexternal-user-accounts-repository'
-import { ISessionsRepository } from './interfaces/isessions-repository'
-import { User, IUsersRepository } from './interfaces/iusers-repository'
+} from './interfaces/repository/iexternal-user-accounts-repository'
+import { ISessionsRepository } from './interfaces/repository/isessions-repository'
+import {
+    User,
+    IUsersRepository,
+} from './interfaces/repository/iusers-repository'
 import crypto from 'crypto'
 import { AuthenticationError } from '../domain/error/authentication-error'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
-import { ITransactionManager } from './interfaces/itransaction-manager'
+import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 interface LoginGoogleUseCaseInput {
     code: string

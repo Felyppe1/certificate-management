@@ -14,7 +14,7 @@ import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-import { addTemplateByDrivePickerSchema } from './schemas/certificate-emission-schemas'
+import { addTemplateByDrivePickerSchema } from './schemas'
 
 export async function addTemplateByDrivePickerAction(
     _: unknown,

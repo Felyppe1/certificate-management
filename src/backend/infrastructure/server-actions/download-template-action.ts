@@ -7,7 +7,7 @@ import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certif
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { DownloadTemplateUseCase } from '@/backend/application/download-template-use-case'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-import { downloadTemplateSchema } from './schemas/certificate-emission-schemas'
+import { downloadTemplateSchema } from './schemas'
 
 export async function downloadTemplateAction(_: unknown, formData: FormData) {
     const rawData = {

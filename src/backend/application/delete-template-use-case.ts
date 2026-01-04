@@ -2,10 +2,10 @@ import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
-import { IBucket } from './interfaces/ibucket'
-import { ICertificatesRepository } from './interfaces/icertificates-repository'
-import { IDataSetsRepository } from './interfaces/idata-sets-repository'
-import { ITransactionManager } from './interfaces/itransaction-manager'
+import { IBucket } from './interfaces/cloud/ibucket'
+import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
+import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 interface DeleteTemplateUseCaseInput {
     certificateId: string

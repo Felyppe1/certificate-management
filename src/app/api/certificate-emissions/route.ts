@@ -4,11 +4,28 @@ import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/pr
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest, NextResponse } from 'next/server'
-import { handleError } from '@/utils/handle-error'
-import z from 'zod'
+import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { createCertificateEmissionSchema } from '@/backend/infrastructure/server-actions/schemas'
+import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 
-export async function GET(request: NextRequest) {
+export interface GetAllCertificateEmissionsControllerResponse {
+    certificateEmissions: {
+        id: string
+        name: string
+        userId: string
+        status: CERTIFICATE_STATUS
+        createdAt: Date
+    }[]
+}
+
+export async function GET(
+    request: NextRequest,
+): Promise<
+    NextResponse<
+        GetAllCertificateEmissionsControllerResponse | HandleErrorResponse
+    >
+> {
     try {
         const { token } = await validateSessionToken(request)
 
@@ -20,23 +37,25 @@ export async function GET(request: NextRequest) {
 
         const certificateEmissions = await getAllCertificatesUseCase.execute({
             sessionToken: token,
-            // userId,
         })
 
         return NextResponse.json({ certificateEmissions })
-    } catch (error: any) {
+    } catch (error: unknown) {
         return await handleError(error)
     }
 }
 
-const createCertificateEmissionSchema = z.object({
-    name: z
-        .string()
-        .min(1, 'Emission name must have at least 3 characters')
-        .max(100, 'Emission name must have at most 100 characters'),
-})
+export interface CreateCertificateEmissionControllerResponse {
+    id: string
+}
 
-export async function POST(request: NextRequest) {
+export async function POST(
+    request: NextRequest,
+): Promise<
+    NextResponse<
+        CreateCertificateEmissionControllerResponse | HandleErrorResponse
+    >
+> {
     try {
         const { token } = await validateSessionToken(request)
 
@@ -58,8 +77,8 @@ export async function POST(request: NextRequest) {
                 sessionToken: token,
             })
 
-        return Response.json({ id: certificateEmissionId }, { status: 201 })
-    } catch (error: any) {
+        return NextResponse.json({ id: certificateEmissionId }, { status: 201 })
+    } catch (error: unknown) {
         return await handleError(error)
     }
 }

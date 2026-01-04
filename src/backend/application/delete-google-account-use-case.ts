@@ -1,5 +1,5 @@
-import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
-import { IUsersRepository } from './interfaces/iusers-repository'
+import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { AuthenticationError } from '../domain/error/authentication-error'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 

@@ -5,7 +5,7 @@ import {
     GenerateSignedUrlInput,
     IBucket,
     UploadObjectInput,
-} from '@/backend/application/interfaces/ibucket'
+} from '@/backend/application/interfaces/cloud/ibucket'
 
 export class GcpBucket implements IBucket {
     private storage = new Storage()

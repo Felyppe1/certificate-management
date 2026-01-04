@@ -8,8 +8,8 @@ import { TEMPLATE_FILE_EXTENSION } from '../domain/template'
 import {
     IFileContentExtractorFactory,
     IFileContentExtractorStrategy,
-} from './interfaces/ifile-content-extractor'
-import { IBucket } from './interfaces/ibucket'
+} from './interfaces/ifile-content-extractor-factory'
+import { IBucket } from './interfaces/cloud/ibucket'
 import { PrismaCertificatesRepository } from '../infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '../infrastructure/repository/prisma/prisma-sessions-repository'
 import { AddTemplateByUrlUseCase } from './add-template-by-url-use-case'

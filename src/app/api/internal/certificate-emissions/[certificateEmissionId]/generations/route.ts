@@ -1,8 +1,8 @@
 import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { NextRequest } from 'next/server'
-import { handleError } from '@/utils/handle-error'
+import { NextRequest, NextResponse } from 'next/server'
+import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import z from 'zod'
 import { sseBroker } from '@/backend/infrastructure/sse'
 import { validateServiceAccountToken } from '@/utils/middleware/validateServiceAccountToken'
@@ -19,7 +19,7 @@ const updateDataSetSchema = z.object({
 export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ certificateEmissionId: string }> },
-) {
+): Promise<NextResponse<null | HandleErrorResponse>> {
     const certificateEmissionId = (await params).certificateEmissionId
 
     try {
@@ -43,8 +43,8 @@ export async function PATCH(
             generationStatus: parsed.generationStatus,
         })
 
-        return new Response(null, { status: 204 })
-    } catch (error: any) {
+        return new NextResponse(null, { status: 204 })
+    } catch (error: unknown) {
         return await handleError(error)
     }
 }

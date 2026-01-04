@@ -14,7 +14,7 @@ import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-import { addDataSourceByUrlSchema } from './schemas/certificate-emission-schemas'
+import { addDataSourceByUrlSchema } from './schemas'
 
 export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
     const rawData = {

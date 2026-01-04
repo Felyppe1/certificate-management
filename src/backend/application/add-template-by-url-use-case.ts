@@ -4,19 +4,19 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
-import { ISessionsRepository } from './interfaces/isessions-repository'
+import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
-import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'
+import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor-factory'
 import { AuthenticationError } from '../domain/error/authentication-error'
-import { ICertificatesRepository } from './interfaces/icertificates-repository'
+import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
-import { IBucket } from './interfaces/ibucket'
-import { IDataSetsRepository } from './interfaces/idata-sets-repository'
+import { IBucket } from './interfaces/cloud/ibucket'
+import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
 import { Liquid } from 'liquidjs'
-import { ITransactionManager } from './interfaces/itransaction-manager'
+import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 interface AddTemplateByUrlUseCaseInput {
     certificateId: string

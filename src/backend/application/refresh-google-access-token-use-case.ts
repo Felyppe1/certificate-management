@@ -2,7 +2,7 @@ import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
 } from '../domain/error/forbidden-error'
-import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
+import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 
 interface RefreshGoogleAccessTokenUseCaseInput {

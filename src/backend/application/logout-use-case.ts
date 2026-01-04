@@ -1,5 +1,5 @@
 import { AuthenticationError } from '../domain/error/authentication-error'
-import { ISessionsRepository } from './interfaces/isessions-repository'
+import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 
 export class LogoutUseCase {
     constructor(private readonly sessionsRepository: ISessionsRepository) {}

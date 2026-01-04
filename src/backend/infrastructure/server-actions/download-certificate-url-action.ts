@@ -8,7 +8,7 @@ import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { DownloadCertificateUseCase } from '@/backend/application/download-certificate-use-case'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-import { downloadCertificateUrlSchema } from './schemas/certificate-emission-schemas'
+import { downloadCertificateUrlSchema } from './schemas'
 
 export async function downloadCertificateUrlAction(
     _: unknown,

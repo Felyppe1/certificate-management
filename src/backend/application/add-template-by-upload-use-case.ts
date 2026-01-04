@@ -12,12 +12,12 @@ import {
 } from '../domain/error/validation-error'
 import { INPUT_METHOD } from '../domain/certificate'
 import { Template, TEMPLATE_FILE_EXTENSION } from '../domain/template'
-import { IBucket } from './interfaces/ibucket'
-import { ICertificatesRepository } from './interfaces/icertificates-repository'
-import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'
-import { IDataSetsRepository } from './interfaces/idata-sets-repository'
+import { IBucket } from './interfaces/cloud/ibucket'
+import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor-factory'
+import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
 import { Liquid } from 'liquidjs'
-import { ITransactionManager } from './interfaces/itransaction-manager'
+import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 interface AddTemplateByUploadUseCaseInput {
     file: File

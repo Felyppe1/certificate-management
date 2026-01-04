@@ -1,4 +1,4 @@
-import { IPubSub } from '@/backend/application/interfaces/ipubsub'
+import { IPubSub } from '@/backend/application/interfaces/cloud/ipubsub'
 import { PubSub } from '@google-cloud/pubsub'
 
 export class GcpPubSub implements IPubSub {

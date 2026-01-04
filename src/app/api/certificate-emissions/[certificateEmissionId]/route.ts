@@ -9,16 +9,15 @@ import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/pr
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { NextRequest } from 'next/server'
-import { getSessionToken } from '@/utils/middleware/getSessionToken'
-import { handleError } from '@/utils/handle-error'
-import z from 'zod'
+import { NextRequest, NextResponse } from 'next/server'
+import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import {
     EMAIL_ERROR_TYPE_ENUM,
     PROCESSING_STATUS_ENUM,
 } from '@/backend/domain/email'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { updateCertificateEmissionSchema } from '@/backend/infrastructure/server-actions/schemas'
 
 export interface GetCertificateEmissionControllerResponse {
     certificateEmission: {
@@ -27,7 +26,7 @@ export interface GetCertificateEmissionControllerResponse {
         userId: string
         status: CERTIFICATE_STATUS
         createdAt: Date
-        variableColumnMapping: Record<string, string | null>
+        variableColumnMapping: Record<string, string | null> | null
         template: {
             driveFileId: string | null
             storageFileUrl: string | null
@@ -56,7 +55,7 @@ export interface GetCertificateEmissionControllerResponse {
             subject: string
             body: string
             scheduledAt: Date | null
-            emailColumn: string | null
+            emailColumn: string
             emailErrorType: EMAIL_ERROR_TYPE_ENUM | null
             status: PROCESSING_STATUS_ENUM
         } | null
@@ -66,7 +65,9 @@ export interface GetCertificateEmissionControllerResponse {
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ certificateEmissionId: string }> },
-) {
+): Promise<
+    NextResponse<GetCertificateEmissionControllerResponse | HandleErrorResponse>
+> {
     const { certificateEmissionId } = await params
 
     try {
@@ -79,32 +80,20 @@ export async function GET(
             userId,
         })
 
-        return Response.json({ certificateEmission })
-    } catch (error: any) {
-        return handleError(error)
+        return NextResponse.json({ certificateEmission })
+    } catch (error: unknown) {
+        return await handleError(error)
     }
 }
-
-const updateCertificateEmissionSchema = z.object({
-    name: z
-        .string()
-        .min(1, 'Emission name must have at least 3 characters')
-        .max(100, 'Emission name must have at most 100 characters')
-        .optional(),
-    variableColumnMapping: z
-        .record(z.string(), z.string().nullable())
-        .nullable()
-        .optional(),
-})
 
 export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ certificateEmissionId: string }> },
-) {
+): Promise<NextResponse<null | HandleErrorResponse>> {
     const certificateEmissionId = (await params).certificateEmissionId
 
     try {
-        const sessionToken = await getSessionToken(request)
+        const { token } = await validateSessionToken(request)
 
         const body = await request.json()
         const parsed = updateCertificateEmissionSchema.parse(body)
@@ -126,11 +115,11 @@ export async function PUT(
             id: certificateEmissionId,
             name: parsed.name,
             variableColumnMapping: parsed.variableColumnMapping,
-            sessionToken,
+            sessionToken: token,
         })
 
-        return new Response(null, { status: 204 })
-    } catch (error: any) {
+        return new NextResponse(null, { status: 204 })
+    } catch (error: unknown) {
         return await handleError(error)
     }
 }

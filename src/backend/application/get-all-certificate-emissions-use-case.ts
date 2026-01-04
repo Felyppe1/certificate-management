@@ -1,6 +1,7 @@
+import { CERTIFICATE_STATUS } from '../domain/certificate'
 import { AuthenticationError } from '../domain/error/authentication-error'
 import { prisma } from '../infrastructure/repository/prisma'
-import { ISessionsRepository } from './interfaces/isessions-repository'
+import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 
 interface GetAllCertificateEmissionsUseCaseInput {
     sessionToken: string
@@ -30,7 +31,7 @@ export class GetAllCertificateEmissionsUseCase {
             id: certificate.id,
             name: certificate.title,
             userId: certificate.user_id,
-            status: certificate.status,
+            status: certificate.status as CERTIFICATE_STATUS,
             createdAt: certificate.created_at,
         }))
     }

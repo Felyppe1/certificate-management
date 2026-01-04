@@ -1,7 +1,7 @@
 import {
     User,
     IUsersRepository,
-} from '@/backend/application/interfaces/iusers-repository'
+} from '@/backend/application/interfaces/repository/iusers-repository'
 import { PrismaExecutor } from '.'
 import { transactionStorage } from './prisma-transaction-manager'
 

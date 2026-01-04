@@ -1,10 +1,10 @@
 import { sseBroker } from '@/backend/infrastructure/sse'
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ certificateEmissionId: string }> },
-) {
+): Promise<Response> {
     const certificateEmissionId = (await params).certificateEmissionId
 
     let clientId: string | null = null
@@ -17,13 +17,6 @@ export async function GET(
             controller.enqueue(
                 `data: ${JSON.stringify({ connected: true })}\n\n`,
             )
-
-            // Avoid connection timeouts
-            // const keepAlive = setInterval(() => {
-            //     // Lines starting with ':' are treated as comments and ignored by EventSource clients (pattern by W3C SSE Spec)
-            //     // SSE format is always: <field>:<value>\n\n
-            //     controller.enqueue(': keep-alive\n\n')
-            // }, 10000)
         },
         cancel() {
             console.log('SSE Client disconnected:', clientId)

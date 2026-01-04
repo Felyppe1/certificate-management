@@ -1,6 +1,6 @@
 import JSZip from 'jszip'
 import { DOMParser } from 'xmldom'
-import { IFileContentExtractorStrategy } from '../../../application/interfaces/ifile-content-extractor'
+import { IFileContentExtractorStrategy } from '../../../application/interfaces/ifile-content-extractor-factory'
 
 export class PptxContentExtractorStrategy
     implements IFileContentExtractorStrategy

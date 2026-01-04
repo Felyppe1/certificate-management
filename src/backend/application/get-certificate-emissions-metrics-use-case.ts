@@ -1,6 +1,6 @@
 import { AuthenticationError } from '../domain/error/authentication-error'
-import { ICertificatesRepository } from './interfaces/icertificates-repository'
-import { ISessionsRepository } from './interfaces/isessions-repository'
+import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 
 interface GetCertificateEmissionsMetricsUseCaseInput {
     sessionToken: string
@@ -26,8 +26,6 @@ export class GetCertificateEmissionsMetricsUseCase {
             await this.certificateEmissionsRepository.getCertificateEmissionsMetricsByUserId(
                 session.userId,
             )
-
-        console.log(certificateEmissionsMetrics)
 
         return certificateEmissionsMetrics
     }

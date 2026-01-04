@@ -2,7 +2,7 @@ import {
     ExternalUserAccount,
     IExternalUserAccountsRepository,
     Provider,
-} from '@/backend/application/interfaces/iexternal-user-accounts-repository'
+} from '@/backend/application/interfaces/repository/iexternal-user-accounts-repository'
 import { PrismaExecutor } from '.'
 import { transactionStorage } from './prisma-transaction-manager'
 

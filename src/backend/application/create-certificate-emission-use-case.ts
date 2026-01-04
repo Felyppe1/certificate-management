@@ -1,7 +1,7 @@
 import { Certificate } from '../domain/certificate'
 import { AuthenticationError } from '../domain/error/authentication-error'
-import { ICertificatesRepository } from './interfaces/icertificates-repository'
-import { ISessionsRepository } from './interfaces/isessions-repository'
+import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 
 interface CreateUseCaseEmissionUseCaseInput {
     name: string

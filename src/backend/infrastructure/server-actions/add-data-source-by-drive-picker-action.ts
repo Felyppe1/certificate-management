@@ -15,7 +15,7 @@ import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-import { addDataSourceByDrivePickerSchema } from './schemas/certificate-emission-schemas'
+import { addDataSourceByDrivePickerSchema } from './schemas'
 
 export async function addDataSourceByDrivePickerAction(
     _: unknown,

@@ -1,6 +1,6 @@
 'use server'
 
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { AddTemplateByUrlUseCase } from '@/backend/application/add-template-by-url-use-case'
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
@@ -10,26 +10,26 @@ import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/pr
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import z from 'zod'
-import { getSessionToken } from '@/utils/middleware/getSessionToken'
-import { handleError } from '@/utils/handle-error'
+import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
-const addTemplateByUrlSchema = z.object({
+const addTemplateByUrlBodySchema = z.object({
     fileUrl: z.url('File URL is invalid'),
 })
 
 export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ certificateEmissionId: string }> },
-) {
+): Promise<NextResponse<null | HandleErrorResponse>> {
     const certificateEmissionId = (await params).certificateEmissionId
 
     try {
-        const sessionToken = await getSessionToken(request)
+        const { token } = await validateSessionToken(request)
 
         const body = await request.json()
-        const parsed = addTemplateByUrlSchema.parse(body)
+        const parsed = addTemplateByUrlBodySchema.parse(body)
 
         const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
@@ -55,11 +55,11 @@ export async function PUT(
         await addTemplateByUrlUseCase.execute({
             certificateId: certificateEmissionId,
             fileUrl: parsed.fileUrl,
-            sessionToken,
+            sessionToken: token,
         })
 
-        return new Response(null, { status: 204 })
-    } catch (error: any) {
+        return new NextResponse(null, { status: 204 })
+    } catch (error: unknown) {
         return await handleError(error)
     }
 }

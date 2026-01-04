@@ -1,54 +1,48 @@
 'use server'
 
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { CreateWriteBucketSignedUrlUseCase } from '@/backend/application/create-write-bucket-signed-url-use-case'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
-import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
-import z from 'zod'
-import { getSessionToken } from '@/utils/middleware/getSessionToken'
-import { handleError } from '@/utils/handle-error'
+import { handleError, HandleErrorResponse } from '@/utils/handle-error'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { createWriteBucketSignedUrlSchema } from '@/backend/infrastructure/server-actions/schemas'
 
-const createWriteBucketSignedUrlSchema = z.object({
-    certificateId: z.string().min(1, 'Certificate ID is required'),
-    fileName: z.string().min(1, 'File name is required'),
-    mimeType: z.enum([
-        TEMPLATE_FILE_EXTENSION.PPTX,
-        TEMPLATE_FILE_EXTENSION.DOCX,
-    ]),
-    type: z.enum(['TEMPLATE']),
-})
+export interface CreateSignedUrlControllerResponse {
+    signedUrl: string
+}
 
-export async function POST(request: NextRequest) {
+export async function POST(
+    request: NextRequest,
+): Promise<
+    NextResponse<CreateSignedUrlControllerResponse | HandleErrorResponse>
+> {
     try {
-        const sessionToken = await getSessionToken(request)
+        const { userId } = await validateSessionToken()
 
         const body = await request.json()
         const parsed = createWriteBucketSignedUrlSchema.parse(body)
 
         const bucket = new GcpBucket()
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
 
         const createWriteBucketSignedUrlUseCase =
             new CreateWriteBucketSignedUrlUseCase(
                 bucket,
                 certificatesRepository,
-                sessionsRepository,
             )
 
         const signedUrl = await createWriteBucketSignedUrlUseCase.execute({
-            sessionToken,
             certificateId: parsed.certificateId,
             fileName: parsed.fileName,
             mimeType: parsed.mimeType,
             type: parsed.type,
+            userId,
         })
 
-        return Response.json({ signedUrl }, { status: 200 })
-    } catch (error: any) {
+        return NextResponse.json({ signedUrl }, { status: 200 })
+    } catch (error: unknown) {
         return await handleError(error)
     }
 }

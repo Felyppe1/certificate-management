@@ -13,7 +13,7 @@ import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
-import { addTemplateByUrlSchema } from './schemas/certificate-emission-schemas'
+import { addTemplateByUrlSchema } from './schemas'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
 export async function addTemplateByUrlAction(_: unknown, formData: FormData) {

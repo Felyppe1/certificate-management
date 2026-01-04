@@ -8,7 +8,7 @@ import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { DeleteDataSourceUseCase } from '@/backend/application/delete-data-source-use-case'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-import { deleteDataSourceSchema } from './schemas/certificate-emission-schemas'
+import { deleteDataSourceSchema } from './schemas'
 
 export async function deleteDataSourceAction(_: unknown, formData: FormData) {
     const rawData = {

@@ -1,11 +1,11 @@
-import { IFileContentExtractorStrategy } from '../../application/interfaces/ifile-content-extractor'
+import { IFileContentExtractorStrategy } from '../../application/interfaces/ifile-content-extractor-factory'
 import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../../domain/error/validation-error'
 import { DocxContentExtractorStrategy } from './strategy/docx-content-extractor-strategy'
 import { PptxContentExtractorStrategy } from './strategy/pptx-content-extractor-strategy'
-import { IFileContentExtractorFactory } from '../../application/interfaces/ifile-content-extractor'
+import { IFileContentExtractorFactory } from '../../application/interfaces/ifile-content-extractor-factory'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 
 export class FileContentExtractorFactory

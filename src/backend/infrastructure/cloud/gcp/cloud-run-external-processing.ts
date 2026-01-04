@@ -1,7 +1,7 @@
 import {
     IExternalProcessing,
     TriggerGenerateCertificatePDFsInput,
-} from '@/backend/application/interfaces/iexternal-processing'
+} from '@/backend/application/interfaces/cloud/iexternal-processing'
 import { IGoogleAuthGateway } from '@/backend/application/interfaces/igoogle-auth-gateway'
 
 export class CloudRunExternalProcessing

@@ -13,7 +13,7 @@ import { updateTag } from 'next/cache'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-import { createEmailSchema } from './schemas/certificate-emission-schemas'
+import { createEmailSchema } from './schemas'
 
 export async function createEmailAction(_: unknown, formData: FormData) {
     const rawData = {

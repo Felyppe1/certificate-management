@@ -7,6 +7,17 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import z from 'zod'
 
+export interface HandleErrorResponse {
+    type: string
+    title: string
+    detail?: string
+    errors?: {
+        detail: string
+        pointer: string
+    }[]
+    pointers?: string[]
+}
+
 export async function handleError(error: any) {
     // TODO: send to observability service
     console.error(error)
@@ -16,6 +27,7 @@ export async function handleError(error: any) {
             {
                 type: 'validation-error',
                 title: 'Your request is not valid',
+                detail: 'The data provided is not valid',
                 errors: error.issues.map(issue => {
                     return {
                         detail: issue.message,
@@ -30,7 +42,7 @@ export async function handleError(error: any) {
         ;(await cookies()).delete('session_token')
 
         return NextResponse.json(
-            { type: error.type, title: error.title },
+            { type: error.type, title: error.title, detail: error.detail },
             { status: 401 },
         )
     }
@@ -68,7 +80,7 @@ export async function handleError(error: any) {
         {
             type: 'about:blank',
             title: 'An internal error occurred',
-            detail: error.message,
+            detail: error.message as string,
         },
         { status: 500 },
     )

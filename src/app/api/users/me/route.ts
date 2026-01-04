@@ -1,10 +1,10 @@
 import { GetMeUseCase } from '@/backend/application/get-me-use-case'
-import { Provider } from '@/backend/application/interfaces/iexternal-user-accounts-repository'
+import { Provider } from '@/backend/application/interfaces/repository/iexternal-user-accounts-repository'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest, NextResponse } from 'next/server'
-import { handleError } from '@/utils/handle-error'
+import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
 export interface GetMeControllerResponse {
@@ -23,9 +23,7 @@ export interface GetMeControllerResponse {
 
 export async function GET(
     request: NextRequest,
-): Promise<
-    NextResponse<GetMeControllerResponse | { type: string; title: string }>
-> {
+): Promise<NextResponse<GetMeControllerResponse | HandleErrorResponse>> {
     try {
         const { token } = await validateSessionToken(request)
 

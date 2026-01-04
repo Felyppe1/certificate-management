@@ -2,7 +2,7 @@ import {
     CONFLICT_ERROR_TYPE,
     ConflictError,
 } from '../domain/error/conflict-error'
-import { IUsersRepository } from './interfaces/iusers-repository'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import bcrypt from 'bcrypt'
 
 interface SignUpInput {

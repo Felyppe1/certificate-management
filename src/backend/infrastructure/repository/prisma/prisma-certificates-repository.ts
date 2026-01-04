@@ -1,4 +1,4 @@
-import { ICertificatesRepository } from '@/backend/application/interfaces/icertificates-repository'
+import { ICertificatesRepository } from '@/backend/application/interfaces/repository/icertificates-repository'
 import {
     Certificate,
     CERTIFICATE_STATUS,

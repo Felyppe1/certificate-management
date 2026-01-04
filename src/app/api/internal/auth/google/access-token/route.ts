@@ -2,7 +2,7 @@ import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-g
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { handleError } from '@/utils/handle-error'
+import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { NextRequest, NextResponse } from 'next/server'
 import { validateServiceAccountToken } from '@/utils/middleware/validateServiceAccountToken'
 import z from 'zod'
@@ -11,7 +11,17 @@ const bodySchema = z.object({
     userId: z.string().min(1),
 })
 
-export async function POST(request: NextRequest) {
+export interface RefreshGoogleAccessTokenControllerResponse {
+    accessToken: string
+}
+
+export async function POST(
+    request: NextRequest,
+): Promise<
+    NextResponse<
+        RefreshGoogleAccessTokenControllerResponse | HandleErrorResponse
+    >
+> {
     try {
         await validateServiceAccountToken(request)
 
@@ -34,7 +44,7 @@ export async function POST(request: NextRequest) {
         })
 
         return NextResponse.json({ accessToken })
-    } catch (error) {
+    } catch (error: unknown) {
         return await handleError(error)
     }
 }

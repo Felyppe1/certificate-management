@@ -11,7 +11,7 @@ import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
 import { GcpPubSub } from '../cloud/gcp/gcp-pubsub'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-import { generateCertificatesSchema } from './schemas/certificate-emission-schemas'
+import { generateCertificatesSchema } from './schemas'
 
 export async function generateCertificatesAction(
     _: unknown,

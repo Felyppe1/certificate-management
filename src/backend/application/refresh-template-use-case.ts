@@ -12,14 +12,14 @@ import {
 } from '../domain/error/validation-error'
 import { INPUT_METHOD } from '../domain/certificate'
 import { Template } from '../domain/template'
-import { ICertificatesRepository } from './interfaces/icertificates-repository'
-import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
-import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor'
+import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
+import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor-factory'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
-import { IDataSetsRepository } from './interfaces/idata-sets-repository'
+import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
 import { Liquid } from 'liquidjs'
-import { ITransactionManager } from './interfaces/itransaction-manager'
+import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 interface RefreshTemplateUseCaseInput {
     userId: string

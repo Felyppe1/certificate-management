@@ -8,14 +8,14 @@ import {
     NotFoundError,
 } from '../domain/error/not-found-error'
 import { GENERATION_STATUS } from '../domain/data-set'
-import { ICertificatesRepository } from './interfaces/icertificates-repository'
-import { IDataSetsRepository } from './interfaces/idata-sets-repository'
+import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
 import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
-import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
-import { IPubSub } from './interfaces/ipubsub'
+import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
+import { IPubSub } from './interfaces/cloud/ipubsub'
 
 interface GenerateCertificatesUseCaseInput {
     certificateEmissionId: string

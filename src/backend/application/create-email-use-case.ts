@@ -9,12 +9,12 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
-import { ICertificatesRepository } from './interfaces/icertificates-repository'
-import { IDataSetsRepository } from './interfaces/idata-sets-repository'
-import { IEmailsRepository } from './interfaces/iemails-repository'
-import { IExternalProcessing } from './interfaces/iexternal-processing'
-import { ISessionsRepository } from './interfaces/isessions-repository'
-import { ITransactionManager } from './interfaces/itransaction-manager'
+import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
+import { IEmailsRepository } from './interfaces/repository/iemails-repository'
+import { IExternalProcessing } from './interfaces/cloud/iexternal-processing'
+import { ISessionsRepository } from './interfaces/repository/isessions-repository'
+import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 export interface CreateEmailUseCaseInput {
     sessionToken: string

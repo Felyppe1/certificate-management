@@ -8,7 +8,7 @@ import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { ViewCertificateUseCase } from '@/backend/application/view-certificate-use-case'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-import { viewCertificateSchema } from './schemas/certificate-emission-schemas'
+import { viewCertificateSchema } from './schemas'
 
 export async function viewCertificateAction(_: unknown, formData: FormData) {
     const rawData = {

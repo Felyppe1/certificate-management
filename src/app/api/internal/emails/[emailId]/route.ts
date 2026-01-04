@@ -1,6 +1,6 @@
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { NextRequest } from 'next/server'
-import { handleError } from '@/utils/handle-error'
+import { NextRequest, NextResponse } from 'next/server'
+import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import z from 'zod'
 import { sseBroker } from '@/backend/infrastructure/sse'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/email'
@@ -21,7 +21,7 @@ const updateEmailSchema = z.object({
 export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ emailId: string }> },
-) {
+): Promise<NextResponse<null | HandleErrorResponse>> {
     const emailId = (await params).emailId
 
     try {
@@ -54,8 +54,8 @@ export async function PATCH(
             status: parsed.status,
         })
 
-        return new Response(null, { status: 204 })
-    } catch (error: any) {
+        return new NextResponse(null, { status: 204 })
+    } catch (error: unknown) {
         return await handleError(error)
     }
 }

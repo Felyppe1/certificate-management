@@ -1,7 +1,7 @@
-import { IUsersRepository } from './interfaces/iusers-repository'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
-import { ISessionsRepository } from './interfaces/isessions-repository'
+import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 import { AuthenticationError } from '../domain/error/authentication-error'
 
 export class LoginUseCase {

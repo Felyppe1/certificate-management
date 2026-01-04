@@ -7,7 +7,7 @@ import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certif
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { DownloadDataSourceUseCase } from '@/backend/application/download-data-source-use-case'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-import { downloadDataSourceSchema } from './schemas/certificate-emission-schemas'
+import { downloadDataSourceSchema } from './schemas'
 
 export async function downloadDataSourceAction(_: unknown, formData: FormData) {
     const rawData = {

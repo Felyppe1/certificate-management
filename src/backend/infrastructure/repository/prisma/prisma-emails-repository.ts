@@ -1,4 +1,4 @@
-import { IEmailsRepository } from '@/backend/application/interfaces/iemails-repository'
+import { IEmailsRepository } from '@/backend/application/interfaces/repository/iemails-repository'
 import {
     Email,
     EMAIL_ERROR_TYPE_ENUM,

@@ -1,5 +1,5 @@
 import officeParser from 'officeparser'
-import { IFileContentExtractorStrategy } from '../../../application/interfaces/ifile-content-extractor'
+import { IFileContentExtractorStrategy } from '../../../application/interfaces/ifile-content-extractor-factory'
 
 export class DocxContentExtractorStrategy
     implements IFileContentExtractorStrategy

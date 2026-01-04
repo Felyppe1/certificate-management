@@ -14,7 +14,7 @@ import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-
 import { NotFoundError } from '@/backend/domain/error/not-found-error'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-import { refreshTemplateSchema } from './schemas/certificate-emission-schemas'
+import { refreshTemplateSchema } from './schemas'
 
 export async function refreshTemplateAction(_: unknown, formData: FormData) {
     const rawData = {

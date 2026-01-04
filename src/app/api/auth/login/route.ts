@@ -1,22 +1,20 @@
 'use server'
 
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { LoginUseCase } from '@/backend/application/login-use-case'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { handleError } from '@/utils/handle-error'
-import z from 'zod'
+import { handleError, HandleErrorResponse } from '@/utils/handle-error'
+import { loginSchema } from '@/backend/infrastructure/server-actions/schemas'
 
-const loginSchema = z.object({
-    email: z.email('Invalid email format'),
-    password: z
-        .string()
-        .min(2, 'Password must have at least 6 characters')
-        .max(100, 'Password must have at most 100 characters'),
-})
+export interface LoginControllerResponse {
+    token: string
+}
 
-export async function POST(request: NextRequest) {
+export async function POST(
+    request: NextRequest,
+): Promise<NextResponse<LoginControllerResponse | HandleErrorResponse>> {
     try {
         const body = await request.json()
         const parsed = loginSchema.parse(body)
@@ -31,7 +29,7 @@ export async function POST(request: NextRequest) {
 
         const result = await loginUseCase.execute(parsed.email, parsed.password)
 
-        return Response.json(
+        return NextResponse.json(
             { token: result.token },
             {
                 status: 200,
@@ -40,7 +38,7 @@ export async function POST(request: NextRequest) {
                 },
             },
         )
-    } catch (error: any) {
+    } catch (error: unknown) {
         return await handleError(error)
     }
 }

@@ -7,7 +7,7 @@ import { prisma } from '../repository/prisma'
 import { CreateWriteBucketSignedUrlUseCase } from '@/backend/application/create-write-bucket-signed-url-use-case'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { logoutAction } from './logout-action'
-import { createWriteBucketSignedUrlSchema } from './schemas/certificate-emission-schemas'
+import { createWriteBucketSignedUrlSchema } from './schemas'
 
 export async function createWriteBucketSignedUrlAction(
     _: unknown,

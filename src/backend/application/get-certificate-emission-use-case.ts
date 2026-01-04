@@ -9,11 +9,9 @@ import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
-import { AuthenticationError } from '../domain/error/authentication-error'
 import { INPUT_METHOD } from '../domain/certificate'
 import { TEMPLATE_FILE_EXTENSION } from '../domain/template'
 import { prisma } from '../infrastructure/repository/prisma'
-import { ISessionsRepository } from './interfaces/isessions-repository'
 import { EMAIL_ERROR_TYPE_ENUM, PROCESSING_STATUS_ENUM } from '../domain/email'
 
 interface GetCertificateEmissionUseCaseInput {
@@ -107,7 +105,8 @@ export class GetCertificateEmissionUseCase {
                           certificateEmission.DataSource.thumbnail_url,
                       dataSet: {
                           id: certificateEmission.DataSource.DataSet!.id,
-                          rows: certificateEmission.DataSource.DataSet!.rows,
+                          rows: certificateEmission.DataSource.DataSet!
+                              .rows as Record<string, any>[],
                           totalBytes:
                               certificateEmission.DataSource.DataSet!
                                   .total_bytes,
@@ -118,13 +117,13 @@ export class GetCertificateEmissionUseCase {
                 : null,
             email: certificateEmission.Email
                 ? {
-                      subject: certificateEmission.Email.subject,
-                      body: certificateEmission.Email.body,
-                      scheduledAt: certificateEmission.Email.scheduled_at,
-                      emailColumn: certificateEmission.Email.email_column,
-                      emailErrorType: certificateEmission.Email
+                      subject: certificateEmission.Email!.subject!,
+                      body: certificateEmission.Email!.body!,
+                      scheduledAt: certificateEmission.Email!.scheduled_at,
+                      emailColumn: certificateEmission.Email!.email_column!,
+                      emailErrorType: certificateEmission.Email!
                           .email_error_type as EMAIL_ERROR_TYPE_ENUM | null,
-                      status: certificateEmission.Email
+                      status: certificateEmission.Email!
                           .status as PROCESSING_STATUS_ENUM,
                   }
                 : null,

@@ -1,6 +1,6 @@
 'use server'
 
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { AddTemplateByDrivePickerUseCase } from '@/backend/application/add-template-by-drive-picker-use-case'
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
@@ -10,26 +10,26 @@ import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/r
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import z from 'zod'
-import { handleError } from '@/utils/handle-error'
+import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
-const addTemplateByDrivePickerSchema = z.object({
+const addTemplateByDrivePickerBodySchema = z.object({
     fileId: z.string().min(1, 'File ID is required'),
 })
 
 export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ certificateEmissionId: string }> },
-) {
+): Promise<NextResponse<null | HandleErrorResponse>> {
     const certificateEmissionId = (await params).certificateEmissionId
 
     try {
         const { userId } = await validateSessionToken(request)
 
         const body = await request.json()
-        const parsed = addTemplateByDrivePickerSchema.parse(body)
+        const parsed = addTemplateByDrivePickerBodySchema.parse(body)
 
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
@@ -61,8 +61,8 @@ export async function PUT(
             userId,
         })
 
-        return new Response(null, { status: 204 })
-    } catch (error: any) {
+        return new NextResponse(null, { status: 204 })
+    } catch (error: unknown) {
         return await handleError(error)
     }
 }

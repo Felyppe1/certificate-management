@@ -9,7 +9,7 @@ import { updateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { logoutAction } from './logout-action'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-import { createCertificateEmissionSchema } from './schemas/certificate-emission-schemas'
+import { createCertificateEmissionSchema } from './schemas'
 
 export async function createCertificateEmissionAction(
     _: unknown,

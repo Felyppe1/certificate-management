@@ -1,4 +1,4 @@
-import { ITransactionManager } from '@/backend/application/interfaces/itransaction-manager'
+import { ITransactionManager } from '@/backend/application/interfaces/repository/itransaction-manager'
 import { PrismaClient } from './client/client'
 import { TransactionClient } from './client/internal/prismaNamespace'
 

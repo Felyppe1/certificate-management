@@ -3,7 +3,7 @@ import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
-import { IDataSetsRepository } from './interfaces/idata-sets-repository'
+import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
 
 interface FinishCertificatesGenerationUseCaseInput {
     certificateEmissionId: string

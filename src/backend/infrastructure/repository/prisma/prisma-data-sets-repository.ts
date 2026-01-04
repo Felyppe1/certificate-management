@@ -1,4 +1,4 @@
-import { IDataSetsRepository } from '@/backend/application/interfaces/idata-sets-repository'
+import { IDataSetsRepository } from '@/backend/application/interfaces/repository/idata-sets-repository'
 import { DataSet, GENERATION_STATUS } from '@/backend/domain/data-set'
 import { Prisma } from './client/client'
 import { isPrismaClient, PrismaExecutor } from '.'

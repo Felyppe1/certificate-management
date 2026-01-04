@@ -1,13 +1,13 @@
 import { INPUT_METHOD } from '../domain/certificate'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
-import { ICertificatesRepository } from './interfaces/icertificates-repository'
+import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
-import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
+import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
-import { IBucket } from './interfaces/ibucket'
+import { IBucket } from './interfaces/cloud/ibucket'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 import { DATA_SOURCE_FILE_EXTENSION, DataSource } from '../domain/data-source'
 import {
@@ -15,8 +15,8 @@ import {
     ValidationError,
 } from '../domain/error/validation-error'
 import { DataSet } from '../domain/data-set'
-import { IDataSetsRepository } from './interfaces/idata-sets-repository'
-import { ITransactionManager } from './interfaces/itransaction-manager'
+import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
+import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,

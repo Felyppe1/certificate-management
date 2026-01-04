@@ -13,11 +13,11 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
-import { IBucket } from './interfaces/ibucket'
-import { ICertificatesRepository } from './interfaces/icertificates-repository'
-import { IDataSetsRepository } from './interfaces/idata-sets-repository'
+import { IBucket } from './interfaces/cloud/ibucket'
+import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
-import { ITransactionManager } from './interfaces/itransaction-manager'
+import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 interface AddDataSourceByUploadUseCaseInput {
     file: File

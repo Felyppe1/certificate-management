@@ -1,6 +1,6 @@
 'use server'
 
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { AddDataSourceByUploadUseCase } from '@/backend/application/add-data-source-by-upload-use-case'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
@@ -9,13 +9,13 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { SpreadsheetContentExtractorFactory } from '@/backend/infrastructure/factory/spreadsheet-content-extractor-factory'
 import z from 'zod'
-import { getSessionToken } from '@/utils/middleware/getSessionToken'
-import { handleError } from '@/utils/handle-error'
+import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
 const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
 
-const addDataSourceByUploadSchema = z.object({
+const addDataSourceByUploadBodySchema = z.object({
     file: z.instanceof(File).refine(file => file.size <= MAXIMUM_FILE_SIZE, {
         message: 'File size must be less than 5MB',
     }),
@@ -24,28 +24,26 @@ const addDataSourceByUploadSchema = z.object({
 export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ certificateEmissionId: string }> },
-) {
+): Promise<NextResponse<null | HandleErrorResponse>> {
     const certificateEmissionId = (await params).certificateEmissionId
 
     try {
-        const sessionToken = await getSessionToken(request)
+        const { userId } = await validateSessionToken(request)
 
         const formData = await request.formData()
         const file = formData.get('file') as File
 
-        const parsed = addDataSourceByUploadSchema.parse({ file })
+        const parsed = addDataSourceByUploadBodySchema.parse({ file })
 
         const bucket = new GcpBucket()
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const dataSetsRepository = new PrismaDataSetsRepository(prisma)
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
         const transactionManager = new PrismaTransactionManager(prisma)
 
         const addDataSourceByUploadUseCase = new AddDataSourceByUploadUseCase(
             bucket,
-            sessionsRepository,
             certificatesRepository,
             dataSetsRepository,
             spreadsheetContentExtractorFactory,
@@ -53,13 +51,13 @@ export async function PUT(
         )
 
         await addDataSourceByUploadUseCase.execute({
-            sessionToken,
+            userId,
             certificateId: certificateEmissionId,
             file: parsed.file,
         })
 
-        return new Response(null, { status: 204 })
-    } catch (error: any) {
+        return new NextResponse(null, { status: 204 })
+    } catch (error: unknown) {
         return await handleError(error)
     }
 }

@@ -6,6 +6,15 @@ export const createCertificateEmissionSchema = z.object({
     name: z.string().min(1).max(100),
 })
 
+export const updateCertificateEmissionSchema = z.object({
+    id: z.string().min(1),
+    name: z.string().min(1).max(100).optional(),
+    variableColumnMapping: z
+        .record(z.string(), z.string().nullable())
+        .nullable()
+        .optional(),
+})
+
 // Data Source
 export const addDataSourceByDrivePickerSchema = z.object({
     certificateId: z.string().min(1),
@@ -92,14 +101,22 @@ export const createEmailSchema = z.object({
     scheduledAt: z.date().nullable(),
 })
 
-// Variable Mapping
-export const updateCertificateEmissionSchema = z.object({
-    id: z.string().min(1),
-    name: z.string().min(1).max(100).optional(),
-    variableColumnMapping: z
-        .record(z.string(), z.string().nullable())
-        .nullable()
-        .optional(),
+// Auth
+export const loginSchema = z.object({
+    email: z.email('Invalid email format'),
+    password: z
+        .string()
+        .min(2, 'Password must have at least 6 characters')
+        .max(100, 'Password must have at most 100 characters'),
+})
+
+export const signUpSchema = z.object({
+    email: z.email('Invalid email format'),
+    name: z.string().min(1, 'Name is required'),
+    password: z
+        .string()
+        .min(6, 'Password must have at least 6 characters')
+        .max(100, 'Password must have at most 100 characters'),
 })
 
 // Utility

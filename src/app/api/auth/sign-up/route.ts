@@ -1,22 +1,15 @@
 'use server'
 
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { SignUpUseCase } from '@/backend/application/sign-up-use-case'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { handleError } from '@/utils/handle-error'
-import z from 'zod'
+import { handleError, HandleErrorResponse } from '@/utils/handle-error'
+import { signUpSchema } from '@/backend/infrastructure/server-actions/schemas'
 
-const signUpSchema = z.object({
-    email: z.email('Invalid email format'),
-    name: z.string().min(1, 'Name is required'),
-    password: z
-        .string()
-        .min(6, 'Password must have at least 6 characters')
-        .max(100, 'Password must have at most 100 characters'),
-})
-
-export async function POST(request: NextRequest) {
+export async function POST(
+    request: NextRequest,
+): Promise<NextResponse<null | HandleErrorResponse>> {
     try {
         const body = await request.json()
         const parsed = signUpSchema.parse(body)
@@ -31,8 +24,8 @@ export async function POST(request: NextRequest) {
             password: parsed.password,
         })
 
-        return new Response(null, { status: 201 })
-    } catch (error: any) {
+        return new NextResponse(null, { status: 201 })
+    } catch (error: unknown) {
         return await handleError(error)
     }
 }

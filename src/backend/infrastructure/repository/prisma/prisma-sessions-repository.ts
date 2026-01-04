@@ -1,7 +1,7 @@
 import {
     Session,
     ISessionsRepository,
-} from '@/backend/application/interfaces/isessions-repository'
+} from '@/backend/application/interfaces/repository/isessions-repository'
 import { PrismaExecutor } from '.'
 import { transactionStorage } from './prisma-transaction-manager'
 

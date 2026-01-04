@@ -1,6 +1,6 @@
 import { AuthenticationError } from '../domain/error/authentication-error'
-import { IExternalUserAccountsRepository } from './interfaces/iexternal-user-accounts-repository'
-import { IUsersRepository } from './interfaces/iusers-repository'
+import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
 
 interface GetMeUseCaseInput {
     userId: string

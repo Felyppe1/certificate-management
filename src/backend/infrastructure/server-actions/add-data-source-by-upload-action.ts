@@ -11,7 +11,7 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { logoutAction } from './logout-action'
-import { addDataSourceByUploadSchema } from './schemas/certificate-emission-schemas'
+import { addDataSourceByUploadSchema } from './schemas'
 
 export async function addDataSourceByUploadAction(
     _: unknown,

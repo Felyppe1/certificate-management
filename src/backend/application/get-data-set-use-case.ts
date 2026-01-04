@@ -5,7 +5,7 @@ import {
 } from '../domain/error/not-found-error'
 import { AuthenticationError } from '../domain/error/authentication-error'
 import { prisma } from '../infrastructure/repository/prisma'
-import { ISessionsRepository } from './interfaces/isessions-repository'
+import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 
 interface GetDataSetUseCaseInput {
     dataSetId: string

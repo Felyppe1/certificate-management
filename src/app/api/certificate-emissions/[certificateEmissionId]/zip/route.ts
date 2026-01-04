@@ -4,18 +4,18 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
-import { handleError } from '@/utils/handle-error'
-import { getSessionToken } from '@/utils/middleware/getSessionToken'
-import { NextRequest } from 'next/server'
+import { handleError, HandleErrorResponse } from '@/utils/handle-error'
+import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ certificateEmissionId: string }> },
-) {
+): Promise<Response | NextResponse<HandleErrorResponse>> {
     const { certificateEmissionId } = await params
 
     try {
-        const sessionToken = await getSessionToken()
+        const { token } = await validateSessionToken()
 
         const sessionsRepository = new PrismaSessionsRepository(prisma)
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
@@ -31,16 +31,16 @@ export async function GET(
 
         const zipStream = await downloadCertificatesUseCase.execute({
             certificateEmissionId,
-            sessionToken,
+            sessionToken: token,
         })
 
-        return new Response(zipStream as any, {
+        return new Response(zipStream as unknown as BodyInit, {
             headers: {
                 'Content-Type': 'application/zip',
                 'Content-Disposition': `attachment; filename=certificates-${certificateEmissionId}.zip`,
             },
         })
-    } catch (error: any) {
+    } catch (error: unknown) {
         return await handleError(error)
     }
 }

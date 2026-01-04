@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
-import { IBucket } from '@/backend/application/interfaces/ibucket'
+import { IBucket } from '@/backend/application/interfaces/cloud/ibucket'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'

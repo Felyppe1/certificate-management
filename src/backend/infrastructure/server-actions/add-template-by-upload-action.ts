@@ -11,7 +11,7 @@ import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-
 import { logoutAction } from './logout-action'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-import { addTemplateByUploadSchema } from './schemas/certificate-emission-schemas'
+import { addTemplateByUploadSchema } from './schemas'
 
 export async function addTemplateByUploadAction(
     _: unknown,

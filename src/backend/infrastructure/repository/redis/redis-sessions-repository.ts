@@ -1,7 +1,7 @@
 import {
     Session,
     ISessionsRepository,
-} from '@/backend/application/interfaces/isessions-repository'
+} from '@/backend/application/interfaces/repository/isessions-repository'
 import { redisClient } from '.'
 
 export class PrismaSessionsRepository implements ISessionsRepository {
