@@ -1,35 +1,15 @@
 'use server'
 
 import { LoginUseCase } from '@/backend/application/login-use-case'
-import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { ActionResponse } from '@/types'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { z, ZodError } from 'zod'
+import { loginSchema } from './schemas'
 
-interface LoginActionInput {
-    email: string
-    password: string
-}
-
-const loginSchema = z.object({
-    email: z.email('Formato de email inválido'),
-    password: z
-        .string()
-        .min(2, 'Senha deve ter pelo menos 6 caracteres')
-        .max(100, 'Senha deve ter no máximo 100 caracteres'),
-})
-
-export async function loginAction(
-    _: unknown,
-    formData: FormData,
-): Promise<ActionResponse<LoginActionInput>> {
-    // await new Promise((resolve) => setTimeout(resolve, 3000))
-
-    const rawData: LoginActionInput = {
+export async function loginAction(_: unknown, formData: FormData) {
+    const rawData = {
         email: formData.get('email') as string,
         password: formData.get('password') as string,
     }
@@ -58,31 +38,10 @@ export async function loginAction(
             // secure: true,
             // sameSite: "strict"
         })
-    } catch (error) {
-        if (error instanceof ZodError) {
-            return {
-                success: false,
-                message: 'Por favor, corrija os erros no formulário.',
-                errors: z.flattenError(error as ZodError<LoginActionInput>)
-                    .fieldErrors,
-                inputs: rawData,
-            }
-        }
-
-        if (error instanceof AuthenticationError) {
-            return {
-                success: false,
-                message: 'Email ou senha incorretos.',
-                inputs: {
-                    email: rawData.email,
-                },
-            }
-        }
-
+    } catch (error: any) {
         return {
             success: false,
-            message: 'Ocorreu um erro inesperado. Tente novamente.',
-            inputs: rawData,
+            errorType: error.type,
         }
     }
 

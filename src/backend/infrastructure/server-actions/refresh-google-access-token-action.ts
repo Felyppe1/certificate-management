@@ -1,8 +1,6 @@
 'use server'
 
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import { cookies } from 'next/headers'
-import { PrismaSessionsRepository } from '../repository/prisma/prisma-sessions-repository'
 import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
 import { prisma } from '../repository/prisma'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'

@@ -4,20 +4,64 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Link from 'next/link'
-import { useActionState } from 'react'
-import { loginAction } from '../../../backend/infrastructure/server-actions/login-action'
 import { AlertCircle, ArrowRight } from 'lucide-react'
 import { AlertMessage } from '@/components/ui/alert-message'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { loginAction } from '../../../backend/infrastructure/server-actions/login-action'
+import { useState, useTransition } from 'react'
+
+const loginSchema = z.object({
+    email: z.email('Formato de email inválido'),
+    password: z
+        .string()
+        .min(6, 'Senha deve ter pelo menos 6 caracteres')
+        .max(100, 'Senha deve ter no máximo 100 caracteres'),
+})
+
+type LoginFormData = z.infer<typeof loginSchema>
 
 export function LoginForm() {
-    const [state, action, isPending] = useActionState(loginAction, null)
+    const [isPending, startTransition] = useTransition()
+    const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<LoginFormData>({
+        resolver: zodResolver(loginSchema),
+    })
+
+    const onSubmit = async (data: LoginFormData) => {
+        setErrorMessage(null)
+
+        startTransition(async () => {
+            const formData = new FormData()
+            formData.append('email', data.email)
+            formData.append('password', data.password)
+
+            const result = await loginAction(null, formData)
+
+            if (result?.success === false) {
+                if (result.errorType === 'invalid-credentials') {
+                    setErrorMessage('Email ou senha incorretos.')
+                } else {
+                    setErrorMessage(
+                        'Ocorreu um erro inesperado. Tente novamente.',
+                    )
+                }
+            }
+        })
+    }
 
     return (
-        <form action={action} className="space-y-4">
-            {state?.success === false && state?.message && !state?.errors && (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {errorMessage && (
                 <AlertMessage
                     variant={'error'}
-                    text={state.message}
+                    text={errorMessage}
                     icon={<AlertCircle className="" />}
                 />
             )}
@@ -29,15 +73,13 @@ export function LoginForm() {
                 <Input
                     type="email"
                     id="email"
-                    name="email"
                     placeholder="nome@email.com"
-                    defaultValue={state?.inputs?.email}
-                    required
-                    className={`${state?.errors?.email ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    {...register('email')}
+                    aria-invalid={!!errors?.email}
                 />
-                {state?.errors?.email && (
+                {errors.email && (
                     <span className="text-sm text-destructive">
-                        {state?.errors.email}
+                        {errors.email.message}
                     </span>
                 )}
             </div>
@@ -57,15 +99,13 @@ export function LoginForm() {
                 <Input
                     type="password"
                     id="password"
-                    name="password"
                     placeholder="••••••••"
-                    defaultValue={state?.inputs?.password}
-                    required
-                    className={`${state?.errors?.password ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    {...register('password')}
+                    aria-invalid={!!errors?.password}
                 />
-                {state?.errors?.password && (
+                {errors.password && (
                     <span className="text-sm text-destructive">
-                        {state?.errors.password}
+                        {errors.password.message}
                     </span>
                 )}
             </div>
