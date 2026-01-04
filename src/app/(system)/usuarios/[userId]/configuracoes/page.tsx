@@ -1,10 +1,9 @@
 'use server'
 
-import { Button } from '@/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { fetchMe } from '@/api-calls/fetch-me'
 import { DeleteAccount } from './_components/DeleteAccount'
+import { GoBackButton } from '@/components/GoBackButton'
 
 export default async function UserConfigurationsPage() {
     const data = await fetchMe()
@@ -12,12 +11,7 @@ export default async function UserConfigurationsPage() {
     return (
         <>
             <div className="mb-8">
-                <Link href="/">
-                    <Button variant="outline" size="sm" className="mb-6">
-                        <ArrowLeft className="w-4 h-4" />
-                        Voltar
-                    </Button>
-                </Link>
+                <GoBackButton />
 
                 <h1 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
                     Configurações da Conta

@@ -8,15 +8,17 @@ export function GoBackButton() {
     const router = useRouter()
 
     const handleBack = () => {
-        if (window.history.length > 1) {
-            router.back()
-        } else {
-            router.push('/')
-        }
+        // TODO: try to track the history myself and prevent user from leaving the app
+        router.back()
     }
 
     return (
-        <Button variant="outline" size="sm" onClick={handleBack}>
+        <Button
+            variant="outline"
+            size="sm"
+            onClick={handleBack}
+            className="mb-6"
+        >
             <ArrowLeft className="w-4 h-4" />
             Voltar
         </Button>
