@@ -11,7 +11,7 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { updateTag } from 'next/cache'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
-import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
+import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { addTemplateByDrivePickerSchema } from './schemas'
@@ -33,7 +33,9 @@ export async function addTemplateByDrivePickerAction(
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
@@ -48,7 +50,7 @@ export async function addTemplateByDrivePickerAction(
                 googleDriveGateway,
                 fileContentExtractorFactory,
                 externalUserAccountsRepository,
-                dataSetsRepository,
+                dataSourceRowsRepository,
                 googleAuthGateway,
                 bucket,
                 transactionManager,

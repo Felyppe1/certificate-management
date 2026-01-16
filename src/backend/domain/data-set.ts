@@ -4,6 +4,7 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from './error/validation-error'
+import { ColumnType } from './data-source'
 
 export enum GENERATION_STATUS {
     PENDING = 'PENDING', // TODO: change to IN_PROGRESS

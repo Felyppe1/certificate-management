@@ -7,6 +7,7 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GenerateCertificatesUseCase } from '@/backend/application/generate-certificates-use-case'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
+import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
 import { GcpPubSub } from '../cloud/gcp/gcp-pubsub'
@@ -31,6 +32,9 @@ export async function generateCertificatesAction(
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
         const pubSub = new GcpPubSub()
@@ -38,6 +42,7 @@ export async function generateCertificatesAction(
         const generateCertificatesUseCase = new GenerateCertificatesUseCase(
             externalUserAccountsRepository,
             certificateEmissionsRepository,
+            dataSourceRowsRepository,
             dataSetsRepository,
             pubSub,
         )

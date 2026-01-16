@@ -9,12 +9,12 @@ import { logoutAction } from './logout-action'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { RefreshDataSourceUseCase } from '@/backend/application/refresh-data-source-use-case'
 import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
-import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NotFoundError } from '@/backend/domain/error/not-found-error'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { refreshDataSourceSchema } from './schemas'
+import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 
 export async function refreshDataSourceAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -27,7 +27,9 @@ export async function refreshDataSourceAction(_: unknown, formData: FormData) {
         const parsedData = refreshDataSourceSchema.parse(rawData)
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const spreadsheetContentExtractorFactory =
@@ -38,7 +40,7 @@ export async function refreshDataSourceAction(_: unknown, formData: FormData) {
 
         const refreshDataSourceUseCase = new RefreshDataSourceUseCase(
             certificatesRepository,
-            dataSetsRepository,
+            dataSourceRowsRepository,
             googleDriveGateway,
             googleAuthGateway,
             spreadsheetContentExtractorFactory,

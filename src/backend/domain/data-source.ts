@@ -1,3 +1,4 @@
+import z from 'zod'
 import { INPUT_METHOD } from './certificate'
 
 export enum DATA_SOURCE_FILE_EXTENSION {
@@ -7,6 +8,18 @@ export enum DATA_SOURCE_FILE_EXTENSION {
     GOOGLE_SHEETS = 'application/vnd.google-apps.spreadsheet',
 }
 
+export type ColumnType = 'string' | 'number' | 'boolean' | 'date' | 'array'
+
+type ArrayMetadata = {
+    separator: string
+}
+
+type Column = {
+    name: string
+    type: ColumnType
+    arrayMetadata: ArrayMetadata | null
+}
+
 export interface DataSourceInput {
     driveFileId: string | null
     storageFileUrl: string | null
@@ -14,12 +27,17 @@ export interface DataSourceInput {
     fileName: string
     fileExtension: DATA_SOURCE_FILE_EXTENSION
     thumbnailUrl: string | null
-    columns: string[]
+    columnsRow: number
+    dataRowStart: number
+    columns: Column[]
 }
 
 export interface DataSourceOutput extends DataSourceInput {}
 
-export interface CreateDataSourceInput extends DataSourceInput {}
+export interface CreateDataSourceInput
+    extends Omit<DataSourceInput, 'columns'> {
+    rows: Record<string, string>[]
+}
 
 // export interface UpdateDataSourceInput
 //     extends Partial<Omit<DataSourceInput>> {}
@@ -30,16 +48,21 @@ export class DataSource {
     private inputMethod: INPUT_METHOD
     private fileName: string
     private fileExtension: DATA_SOURCE_FILE_EXTENSION
-    private columns: string[]
+    private columns: Column[]
+    private columnsRow: number
+    private dataRowStart: number
     private thumbnailUrl: string | null
+
+    static create(data: CreateDataSourceInput): DataSource {
+        return new DataSource({
+            ...data,
+            columns: this.inferTypes(data.rows),
+        })
+    }
 
     constructor(data: DataSourceInput) {
         if (!data.inputMethod) {
             throw new Error('DataSource input method is required')
-        }
-
-        if (!data.columns) {
-            throw new Error('DataSource columns is required')
         }
 
         if (!data.fileName) {
@@ -51,6 +74,28 @@ export class DataSource {
             throw new Error('DataSource file extension is required')
         }
 
+        if (!data.columnsRow) {
+            throw new Error('DataSource columns row is required')
+        }
+
+        if (!data.dataRowStart) {
+            throw new Error('DataSource data row start is required')
+        }
+
+        if (data.columnsRow < 1) {
+            throw new Error('DataSource columns row must be greater than 0')
+        }
+
+        if (data.dataRowStart <= data.columnsRow) {
+            throw new Error(
+                'DataSource data row start must be greater than columns row',
+            )
+        }
+
+        if (!data.columns) {
+            throw new Error('DataSource columns is required')
+        }
+
         this.validateDriveFileId(data.driveFileId, data.inputMethod)
         this.validateStorageFileUrl(data.storageFileUrl, data.inputMethod)
 
@@ -59,8 +104,115 @@ export class DataSource {
         this.inputMethod = data.inputMethod
         this.fileName = data.fileName
         this.fileExtension = data.fileExtension
-        this.columns = data.columns
         this.thumbnailUrl = data.thumbnailUrl
+        this.columnsRow = data.columnsRow ?? 1
+        this.dataRowStart = data.dataRowStart ?? 2
+        this.columns = data.columns
+    }
+
+    private static inferTypes(rows: Record<string, string>[]): Column[] {
+        const columnValues: Record<string, string[]> = {}
+
+        for (const row of rows) {
+            for (const key in row) {
+                columnValues[key] ??= []
+                columnValues[key].push(row[key])
+            }
+        }
+
+        return Object.entries(columnValues).map(([name, values]) => {
+            const result = this.inferColumnType(values)
+            return {
+                name,
+                type: result.type,
+                arrayMetadata: result.arrayMetadata,
+            }
+        })
+    }
+
+    private static inferColumnType(values: string[]): {
+        type: ColumnType
+        arrayMetadata: ArrayMetadata | null
+    } {
+        const nonEmpty = values
+            .filter(v => v != null)
+            .map(v => v.trim())
+            .filter(v => v !== '')
+
+        if (nonEmpty.length === 0) {
+            return { type: 'string', arrayMetadata: null }
+        }
+
+        const separator = this.detectArraySeparator(nonEmpty)
+        if (separator) {
+            return {
+                type: 'array',
+                arrayMetadata: { separator },
+            }
+        }
+
+        if (nonEmpty.every(this.isBoolean))
+            return { type: 'boolean', arrayMetadata: null }
+        if (nonEmpty.every(this.isNumber))
+            return { type: 'number', arrayMetadata: null }
+        if (nonEmpty.every(this.isDate))
+            return { type: 'date', arrayMetadata: null }
+
+        return { type: 'string', arrayMetadata: null }
+    }
+
+    private static detectArraySeparator(values: string[]): ',' | ';' | null {
+        let commaCount = 0
+        let semicolonCount = 0
+
+        for (const value of values) {
+            if (!value) continue
+            commaCount += (value.match(/,/g) || []).length
+            semicolonCount += (value.match(/;/g) || []).length
+        }
+
+        // TODO: validate values of the array if it is an array
+
+        if (commaCount === 0 && semicolonCount === 0) return null
+        if (commaCount > semicolonCount) return ','
+        if (semicolonCount > commaCount) return ';'
+
+        return null
+    }
+
+    static isBoolean(value: string): boolean {
+        return (
+            value.trim().toLowerCase() === 'true' ||
+            value.trim().toLowerCase() === 'false'
+        )
+    }
+
+    static isNumber(value: string): boolean {
+        const parsed = z.coerce.number().safeParse(value)
+
+        return parsed.success
+    }
+
+    static isDate(value: string): boolean {
+        const parsed = z.coerce.date().safeParse(value)
+
+        return parsed.success
+
+        // validate format YYYY-MM-DD
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            return false
+        }
+
+        // validate real date
+        const [year, month, day] = value.split('-').map(Number)
+
+        const date = new Date(Date.UTC(year, month - 1, day))
+
+        return (
+            date.getUTCFullYear() === year &&
+            date.getUTCMonth() === month - 1 &&
+            date.getUTCDate() === day
+        )
     }
 
     // update(data: Partial<Omit<DataSourceInput, 'id'>>) {
@@ -122,7 +274,7 @@ export class DataSource {
     }
 
     hasColumn(columnName: string): boolean {
-        return this.columns.includes(columnName)
+        return this.columns.some(column => column.name === columnName)
     }
 
     getInputMethod() {
@@ -163,6 +315,8 @@ export class DataSource {
             fileExtension: this.fileExtension,
             columns: this.columns,
             thumbnailUrl: this.thumbnailUrl,
+            columnsRow: this.columnsRow,
+            dataRowStart: this.dataRowStart,
         }
     }
 }

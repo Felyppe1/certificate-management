@@ -1,6 +1,6 @@
 'use client'
 
-import { GENERATION_STATUS } from '@/backend/domain/data-set'
+import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
 import { generateCertificatesAction } from '@/backend/infrastructure/server-actions/generate-certificates-action'
 import { AlertMessage } from '@/components/ui/alert-message'
 import { Button } from '@/components/ui/button'
@@ -20,19 +20,20 @@ import { toast } from 'sonner'
 interface GenerateCertificatesSectionProps {
     certificateId: string
     allVariablesWereMapped: boolean
-    dataSet: {
+    rows: {
         id: string
-        rows: Record<string, any>[]
-        generationStatus: GENERATION_STATUS | null
-    } | null
+        processingStatus: PROCESSING_STATUS_ENUM
+    }[]
     emailSent: boolean
+    certificatesGenerated: boolean
 }
 
 export function GenerateCertificatesSection({
     certificateId,
     allVariablesWereMapped,
-    dataSet,
+    rows,
     emailSent,
+    certificatesGenerated,
 }: GenerateCertificatesSectionProps) {
     const [state, action, isGeneratePending] = useActionState(
         generateCertificatesAction,
@@ -45,17 +46,21 @@ export function GenerateCertificatesSection({
 
     const router = useRouter()
 
+    const isGenerating = rows.some(
+        row => row.processingStatus === PROCESSING_STATUS_ENUM.RUNNING,
+    )
+
     useSSE(`/api/certificate-emissions/${certificateId}/events`, {
         onEvent: data => {
-            if (data.generationStatus) {
-                if (data.generationStatus === GENERATION_STATUS.COMPLETED) {
+            if (data.processingStatus) {
+                if (data.processingStatus === 'COMPLETED') {
                     toast.success('Certificados gerados com sucesso')
                 }
 
                 router.refresh()
             }
         },
-        enabled: dataSet?.generationStatus === GENERATION_STATUS.PENDING,
+        enabled: isGenerating,
     })
 
     const handleGenerate = async () => {
@@ -81,16 +86,13 @@ export function GenerateCertificatesSection({
         }
     }, [state])
 
-    const totalRecords = dataSet?.rows.length || 0
-    const certificatesWereGenerated =
-        dataSet?.generationStatus === GENERATION_STATUS.COMPLETED
+    const totalRecords = rows.length
 
-    const isPending =
-        isGeneratePending ||
-        dataSet?.generationStatus === GENERATION_STATUS.PENDING
+    const isPending = isGeneratePending || isGenerating
 
-    const certificatesGenerationFailed =
-        dataSet?.generationStatus === GENERATION_STATUS.FAILED
+    const certificatesGenerationFailed = rows.some(
+        row => row.processingStatus === PROCESSING_STATUS_ENUM.FAILED,
+    )
 
     return (
         <Card>
@@ -128,7 +130,7 @@ export function GenerateCertificatesSection({
                     />
                 )}
 
-                {certificatesWereGenerated && (
+                {certificatesGenerated && (
                     <AlertMessage
                         variant="success"
                         icon={<CheckCircle2 />}
@@ -182,7 +184,7 @@ export function GenerateCertificatesSection({
                                     : 'certificados'}
                             </p>
                             <p className="text-xs sm:text-sm text-muted-foreground">
-                                {certificatesWereGenerated
+                                {certificatesGenerated
                                     ? totalRecords === 1
                                         ? 'Gerado e disponível'
                                         : 'Gerados e disponíveis'
@@ -197,7 +199,7 @@ export function GenerateCertificatesSection({
                         size="lg"
                         onClick={handleGenerate}
                         disabled={
-                            certificatesWereGenerated ||
+                            certificatesGenerated ||
                             isPending ||
                             emailSent ||
                             totalRecords === 0
@@ -223,7 +225,7 @@ export function GenerateCertificatesSection({
 
 interface UseDataSetPollingOptions {
     enabled: boolean
-    onComplete?: (status: GENERATION_STATUS) => void
+    onComplete?: (status: PROCESSING_STATUS_ENUM) => void
 }
 
 export function useDataSetPolling(
@@ -253,10 +255,12 @@ export function useDataSetPolling(
                 const { dataSet } = await response.json()
 
                 const isComplete =
-                    dataSet.generationStatus !== GENERATION_STATUS.PENDING
+                    dataSet.processingStatus !==
+                        PROCESSING_STATUS_ENUM.PENDING &&
+                    dataSet.processingStatus !== PROCESSING_STATUS_ENUM.RUNNING
 
                 if (isComplete) {
-                    onComplete?.(dataSet.generationStatus)
+                    onComplete?.(dataSet.processingStatus)
                     router.refresh()
 
                     return true

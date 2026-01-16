@@ -5,7 +5,7 @@ import { AddDataSourceByUrlUseCase } from '@/backend/application/add-data-source
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
+import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
 
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
@@ -34,7 +34,9 @@ export async function PUT(
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const spreadsheetContentExtractorFactory =
@@ -44,7 +46,7 @@ export async function PUT(
 
         const addDataSourceByUrlUseCase = new AddDataSourceByUrlUseCase(
             certificateEmissionsRepository,
-            dataSetsRepository,
+            dataSourceRowsRepository,
             googleDriveGateway,
             spreadsheetContentExtractorFactory,
             bucket,

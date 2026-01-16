@@ -4,8 +4,8 @@ import {
 } from '../domain/error/not-found-error'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
+import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 
 interface DeleteTemplateUseCaseInput {
     certificateId: string
@@ -18,9 +18,9 @@ export class DeleteTemplateUseCase {
             ICertificatesRepository,
             'getById' | 'update'
         >,
-        private dataSetsRepository: Pick<
-            IDataSetsRepository,
-            'getByCertificateEmissionId' | 'upsert'
+        private dataSourceRowsRepository: Pick<
+            IDataSourceRowsRepository,
+            'resetProcessingStatusByCertificateEmissionId'
         >,
         private bucket: Pick<IBucket, 'deleteObject'>,
         private transactionManager: ITransactionManager,
@@ -38,18 +38,11 @@ export class DeleteTemplateUseCase {
 
         certificate.removeTemplate(userId)
 
-        const dataSet =
-            await this.dataSetsRepository.getByCertificateEmissionId(
-                certificate.getId(),
-            )
-
         await this.transactionManager.run(async () => {
-            if (dataSet) {
-                dataSet.update({
-                    generationStatus: null,
-                })
-
-                await this.dataSetsRepository.upsert(dataSet)
+            if (certificate.hasDataSource()) {
+                await this.dataSourceRowsRepository.resetProcessingStatusByCertificateEmissionId(
+                    certificate.getId(),
+                )
             }
 
             await this.certificateEmissionsRepository.update(certificate)

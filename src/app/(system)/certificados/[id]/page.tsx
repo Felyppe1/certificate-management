@@ -7,7 +7,7 @@ import { DataSourceSection } from './_components/DataSourceSection'
 import { VariableMappingSection } from './_components/VariableMappingSection'
 import { EmailSendingSection } from './_components/EmailSendingSection'
 import { GenerateCertificatesSection } from './_components/GenerateCertificatesSection'
-import { GENERATION_STATUS } from '@/backend/domain/data-set'
+import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
 import { TipsButton } from './_components/TipsButton'
 
 const statusMapping = {
@@ -43,18 +43,30 @@ export default async function CertificatePage({
     const dataSourceColumns =
         certificateEmissionResponse.certificateEmission.dataSource?.columns ||
         []
-    const dataSet =
-        certificateEmissionResponse.certificateEmission.dataSource?.dataSet ??
-        null
+    const rows =
+        certificateEmissionResponse.certificateEmission.dataSource?.rows ?? []
     const email = certificateEmissionResponse.certificateEmission.email
     const hasTemplateVariables = templateVariables.length === 0 ? false : true
+    console.log('hasTemplateVariables', hasTemplateVariables)
+    console.log(
+        'certificateEmissionResponse.certificateEmission.variableColumnMapping',
+        certificateEmissionResponse.certificateEmission.variableColumnMapping,
+    )
     const variablesMapped = hasTemplateVariables
-        ? true
-        : Object.values(
+        ? Object.values(
               certificateEmissionResponse.certificateEmission
                   .variableColumnMapping!,
           ).every(mapping => mapping !== null)
-    // const hasRows = dataSet && dataSet.rows.length > 0
+        : false
+
+    // Certificates are generated if all rows have processingStatus of COMPLETED or FAILED
+    const certificatesGenerated =
+        rows.length > 0 &&
+        rows.every(
+            row =>
+                row.processingStatus === PROCESSING_STATUS_ENUM.COMPLETED ||
+                row.processingStatus === PROCESSING_STATUS_ENUM.FAILED,
+        )
 
     const emailSent = (email && !email.scheduledAt) || false
 
@@ -112,10 +124,7 @@ export default async function CertificatePage({
                         certificateEmissionResponse.certificateEmission.template
                     }
                     emailSent={emailSent}
-                    certificatesGenerated={
-                        dataSet?.generationStatus ===
-                        GENERATION_STATUS.COMPLETED
-                    }
+                    certificatesGenerated={certificatesGenerated}
                 />
 
                 <DataSourceSection
@@ -142,10 +151,7 @@ export default async function CertificatePage({
                                 .variableColumnMapping!
                         }
                         emailSent={emailSent}
-                        certificatesGenerated={
-                            dataSet?.generationStatus ===
-                            GENERATION_STATUS.COMPLETED
-                        }
+                        certificatesGenerated={certificatesGenerated}
                     />
                 )}
 
@@ -153,8 +159,9 @@ export default async function CertificatePage({
                     <GenerateCertificatesSection
                         certificateId={certificateId}
                         allVariablesWereMapped={variablesMapped}
-                        dataSet={dataSet}
+                        rows={rows}
                         emailSent={emailSent}
+                        certificatesGenerated={certificatesGenerated}
                     />
                 )}
 
@@ -164,11 +171,8 @@ export default async function CertificatePage({
                         dataSourceColumns={dataSourceColumns}
                         variablesMapped={variablesMapped}
                         emailSent={emailSent}
-                        totalRecipients={dataSet?.rows.length || 0}
-                        certificatesGenerated={
-                            dataSet?.generationStatus ===
-                            GENERATION_STATUS.COMPLETED
-                        }
+                        totalRecipients={rows.length}
+                        certificatesGenerated={certificatesGenerated}
                         emailData={
                             email
                                 ? {

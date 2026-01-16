@@ -17,9 +17,9 @@ import { IExternalUserAccountsRepository } from './interfaces/repository/iextern
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor-factory'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
-import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
 import { Liquid } from 'liquidjs'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
+import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 
 interface RefreshTemplateUseCaseInput {
     userId: string
@@ -29,9 +29,9 @@ interface RefreshTemplateUseCaseInput {
 export class RefreshTemplateUseCase {
     constructor(
         private certificateEmissionsRepository: ICertificatesRepository,
-        private dataSetsRepository: Pick<
-            IDataSetsRepository,
-            'getByCertificateEmissionId' | 'upsert'
+        private dataSourceRowsRepository: Pick<
+            IDataSourceRowsRepository,
+            'resetProcessingStatusByCertificateEmissionId'
         >,
         private googleDriveGateway: IGoogleDriveGateway,
         private googleAuthGateway: Pick<
@@ -164,18 +164,11 @@ export class RefreshTemplateUseCase {
 
         certificate.setTemplate(newTemplateInput)
 
-        const dataSet =
-            await this.dataSetsRepository.getByCertificateEmissionId(
-                certificate.getId(),
-            )
-
         await this.transactionManager.run(async () => {
-            if (dataSet) {
-                dataSet.update({
-                    generationStatus: null,
-                })
-
-                await this.dataSetsRepository.upsert(dataSet)
+            if (certificate.hasDataSource()) {
+                await this.dataSourceRowsRepository.resetProcessingStatusByCertificateEmissionId(
+                    certificate.getId(),
+                )
             }
 
             await this.certificateEmissionsRepository.update(certificate)

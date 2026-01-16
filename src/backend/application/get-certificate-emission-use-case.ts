@@ -1,5 +1,4 @@
 import { CERTIFICATE_STATUS } from '../domain/certificate'
-import { GENERATION_STATUS } from '../domain/data-set'
 import { DATA_SOURCE_FILE_EXTENSION } from '../domain/data-source'
 import {
     FORBIDDEN_ERROR_TYPE,
@@ -13,6 +12,10 @@ import { INPUT_METHOD } from '../domain/certificate'
 import { TEMPLATE_FILE_EXTENSION } from '../domain/template'
 import { prisma } from '../infrastructure/repository/prisma'
 import { EMAIL_ERROR_TYPE_ENUM, PROCESSING_STATUS_ENUM } from '../domain/email'
+import {
+    PROCESSING_STATUS_ENUM as DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM,
+    RowType,
+} from '../domain/data-source-row'
 
 interface GetCertificateEmissionUseCaseInput {
     certificateId: string
@@ -39,8 +42,15 @@ export class GetCertificateEmissionUseCase {
                     },
                     DataSource: {
                         include: {
-                            DataSourceColumn: true,
-                            DataSet: true,
+                            DataSourceColumn: {
+                                include: {
+                                    DataSourceValue: {
+                                        include: {
+                                            DataSourceRow: true,
+                                        },
+                                    },
+                                },
+                            },
                         },
                     },
                     Email: true,
@@ -53,6 +63,50 @@ export class GetCertificateEmissionUseCase {
 
         if (certificateEmission.user_id !== userId) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+        }
+
+        let rows: {
+            id: string
+            processingStatus: DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM
+            fileBytes: number | null
+            data: Record<string, RowType>
+        }[] = []
+
+        if (certificateEmission.DataSource) {
+            // Aggregate rows from DataSourceColumn -> DataSourceValue -> DataSourceRow
+            const rowsMap = new Map<
+                string,
+                {
+                    id: string
+                    processingStatus: string
+                    fileBytes: number | null
+                    data: Record<string, string>
+                }
+            >()
+
+            for (const column of certificateEmission.DataSource
+                .DataSourceColumn) {
+                for (const value of column.DataSourceValue) {
+                    const row = value.DataSourceRow
+                    if (!rowsMap.has(row.id)) {
+                        rowsMap.set(row.id, {
+                            id: row.id,
+                            processingStatus: row.processing_status,
+                            fileBytes: row.file_bytes,
+                            data: {},
+                        })
+                    }
+                    rowsMap.get(row.id)!.data[column.name] = value.value
+                }
+            }
+
+            rows = Array.from(rowsMap.values()).map(row => ({
+                id: row.id,
+                processingStatus:
+                    row.processingStatus as DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM,
+                fileBytes: row.fileBytes,
+                data: row.data,
+            }))
         }
 
         const certificate = {
@@ -103,16 +157,7 @@ export class GetCertificateEmissionUseCase {
                           ),
                       thumbnailUrl:
                           certificateEmission.DataSource.thumbnail_url,
-                      dataSet: {
-                          id: certificateEmission.DataSource.DataSet!.id,
-                          rows: certificateEmission.DataSource.DataSet!
-                              .rows as Record<string, any>[],
-                          totalBytes:
-                              certificateEmission.DataSource.DataSet!
-                                  .total_bytes,
-                          generationStatus: certificateEmission.DataSource
-                              .DataSet!.generation_status as GENERATION_STATUS,
-                      },
+                      rows,
                   }
                 : null,
             email: certificateEmission.Email

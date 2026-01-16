@@ -1,10 +1,18 @@
 datasource db {
-    provider  = "postgresql"
+    provider = "postgresql"
 }
 
 generator client {
     provider = "prisma-client"
     output   = "client"
+}
+
+enum COLUMN_TYPE {
+    STRING
+    NUMBER
+    BOOLEAN
+    DATE
+    ARRAY
 }
 
 model User {
@@ -106,34 +114,51 @@ model DataSource {
     file_extension   String
 
     DataSourceColumn    DataSourceColumn[]
+    DataSourceRow       DataSourceRow[]
     CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id], onDelete: Cascade)
-    DataSet             DataSet?
 
     @@map("data_sources")
 }
 
 model DataSourceColumn {
-    data_source_id String
-    name           String
+    data_source_id  String
+    name            String
+    type            COLUMN_TYPE
+    array_separator String?
 
     DataSource       DataSource        @relation(fields: [data_source_id], references: [certificate_emission_id], onDelete: Cascade)
     TemplateVariable TemplateVariable?
+    DataSourceValue  DataSourceValue[]
 
     @@id([name, data_source_id])
     @@map("data_source_columns")
 }
 
-model DataSet {
-    id                String  @id @default(cuid())
-    generation_status String? // "PENDING" | "COMPLETED" | "FAILED"
-    total_bytes       Int
-    rows              Json
+model DataSourceValue {
+    data_source_id     String
+    column_name        String
+    data_source_row_id String
+    value              String
 
-    certificate_emission_id String @unique
+    DataSourceColumn DataSourceColumn @relation(fields: [data_source_id, column_name], references: [data_source_id, name], onDelete: Cascade)
+    DataSourceRow    DataSourceRow    @relation(fields: [data_source_id, data_source_row_id], references: [data_source_id, id], onDelete: Cascade)
 
-    DataSource DataSource @relation(fields: [certificate_emission_id], references: [certificate_emission_id], onDelete: Cascade)
+    @@id([data_source_id, column_name, data_source_row_id])
+    @@map("data_source_values")
+}
 
-    @@map("data_sets")
+model DataSourceRow {
+    id                String @id @default(cuid())
+    data_source_id    String
+    file_bytes        Int?
+    processing_status String // "PENDING" | "RUNNING" | "COMPLETED" | "FAILED"
+
+    DataSourceValue DataSourceValue[]
+
+    DataSource DataSource @relation(fields: [data_source_id], references: [certificate_emission_id], onDelete: Cascade)
+
+    @@unique([id, data_source_id])
+    @@map("data_source_rows")
 }
 
 model Email {
@@ -160,8 +185,8 @@ model EmailGenerationHistory {
 
     Email Email @relation(fields: [email_id], references: [id], onDelete: Cascade)
 
-    @@map("email_generation_histories")
     @@id([email_id, created_at])
+    @@map("email_generation_histories")
 }
 
 model CertificateGenerationHistory {
@@ -171,8 +196,8 @@ model CertificateGenerationHistory {
 
     CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id], onDelete: Cascade)
 
-    @@map("certificate_generation_histories")
     @@id([certificate_emission_id, created_at])
+    @@map("certificate_generation_histories")
 }
 
 model Outbox {

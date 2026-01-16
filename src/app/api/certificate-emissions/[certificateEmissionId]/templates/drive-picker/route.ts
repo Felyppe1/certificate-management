@@ -11,7 +11,7 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import z from 'zod'
 import { handleError, HandleErrorResponse } from '@/utils/handle-error'
-import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
+import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
@@ -34,7 +34,9 @@ export async function PUT(
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
@@ -49,7 +51,7 @@ export async function PUT(
                 googleDriveGateway,
                 fileContentExtractorFactory,
                 externalUserAccountsRepository,
-                dataSetsRepository,
+                dataSourceRowsRepository,
                 googleAuthGateway,
                 bucket,
                 transactionManager,

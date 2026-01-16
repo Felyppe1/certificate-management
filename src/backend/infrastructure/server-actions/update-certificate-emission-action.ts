@@ -7,7 +7,7 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { updateTag } from 'next/cache'
 import { logoutAction } from './logout-action'
 import { UpdateCertificateEmissionUseCase } from '@/backend/application/update-certificate-emission-use-case'
-import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
+import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { updateCertificateEmissionSchema } from './schemas'
@@ -33,13 +33,15 @@ export async function updateCertificateEmissionAction(
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const sessionsRepository = new PrismaSessionsRepository(prisma)
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const transactionManager = new PrismaTransactionManager(prisma)
 
         const updateCertificateEmissionUseCase =
             new UpdateCertificateEmissionUseCase(
                 certificatesRepository,
-                dataSetsRepository,
+                dataSourceRowsRepository,
                 transactionManager,
             )
 

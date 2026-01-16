@@ -33,7 +33,7 @@ import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
 import { deleteDataSourceAction } from '@/backend/infrastructure/server-actions/delete-data-source-action'
 import { refreshDataSourceAction } from '@/backend/infrastructure/server-actions/refresh-data-source-action'
 import { SourceIcon } from '@/components/svg/SourceIcon'
-import { GENERATION_STATUS } from '@/backend/domain/data-set'
+import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
 import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
 import { toast } from 'sonner'
 import { viewCertificateAction } from '@/backend/infrastructure/server-actions/view-certificate-action'
@@ -74,12 +74,12 @@ interface DataSourceDisplayProps {
         fileExtension: DATA_SOURCE_FILE_EXTENSION
         columns: string[]
         thumbnailUrl: string | null
-        dataSet: {
+        rows: {
             id: string
-            rows: Record<string, any>[]
-            totalBytes: number
-            generationStatus: GENERATION_STATUS | null
-        }
+            processingStatus: PROCESSING_STATUS_ENUM
+            fileBytes: number | null
+            data: Record<string, any>
+        }[]
     }
     certificateId: string
     onEdit: () => void
@@ -238,9 +238,15 @@ export function DataSourceDisplay({
         }
     }, [downloadDataSourceState])
 
+    const rows = dataSource.rows
     const certificatesGenerated =
-        dataSource.dataSet.generationStatus === GENERATION_STATUS.COMPLETED
-    const rows = dataSource.dataSet.rows
+        rows.length > 0 &&
+        rows.every(
+            row =>
+                row.processingStatus === PROCESSING_STATUS_ENUM.COMPLETED ||
+                row.processingStatus === PROCESSING_STATUS_ENUM.FAILED,
+        )
+    const totalBytes = rows.reduce((acc, row) => acc + (row.fileBytes || 0), 0)
 
     return (
         <>
@@ -514,7 +520,8 @@ export function DataSourceDisplay({
                                                                                         column
                                                                                     }
                                                                                 >
-                                                                                    {row[
+                                                                                    {row
+                                                                                        .data[
                                                                                         column
                                                                                     ] ||
                                                                                         '-'}
@@ -582,9 +589,7 @@ export function DataSourceDisplay({
                                                                 Tamanho total:{' '}
                                                                 <span className="font-medium text-foreground">
                                                                     {formatBytes(
-                                                                        dataSource
-                                                                            .dataSet
-                                                                            .totalBytes,
+                                                                        totalBytes,
                                                                     )}
                                                                 </span>
                                                             </p>

@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { AddDataSourceByUploadUseCase } from '@/backend/application/add-data-source-by-upload-use-case'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
+import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
@@ -37,7 +37,9 @@ export async function PUT(
 
         const bucket = new GcpBucket()
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
         const transactionManager = new PrismaTransactionManager(prisma)
@@ -45,7 +47,7 @@ export async function PUT(
         const addDataSourceByUploadUseCase = new AddDataSourceByUploadUseCase(
             bucket,
             certificatesRepository,
-            dataSetsRepository,
+            dataSourceRowsRepository,
             spreadsheetContentExtractorFactory,
             transactionManager,
         )

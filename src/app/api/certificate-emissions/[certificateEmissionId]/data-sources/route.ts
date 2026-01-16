@@ -6,9 +6,8 @@ import { RefreshDataSourceUseCase } from '@/backend/application/refresh-data-sou
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
+import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { SpreadsheetContentExtractorFactory } from '@/backend/infrastructure/factory/spreadsheet-content-extractor-factory'
@@ -56,7 +55,9 @@ export async function PATCH(
         const { userId } = await validateSessionToken(request)
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const spreadsheetContentExtractorFactory =
@@ -67,7 +68,7 @@ export async function PATCH(
 
         const refreshDataSourceUseCase = new RefreshDataSourceUseCase(
             certificatesRepository,
-            dataSetsRepository,
+            dataSourceRowsRepository,
             googleDriveGateway,
             googleAuthGateway,
             spreadsheetContentExtractorFactory,

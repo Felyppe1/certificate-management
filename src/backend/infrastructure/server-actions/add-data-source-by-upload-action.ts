@@ -6,7 +6,7 @@ import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certif
 import { updateTag } from 'next/cache'
 import { AddDataSourceByUploadUseCase } from '@/backend/application/add-data-source-by-upload-use-case'
 import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
-import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
+import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
@@ -29,7 +29,9 @@ export async function addDataSourceByUploadAction(
 
         const bucket = new GcpBucket()
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
         const transactionManager = new PrismaTransactionManager(prisma)
@@ -37,7 +39,7 @@ export async function addDataSourceByUploadAction(
         const addDataSourceByUploadUseCase = new AddDataSourceByUploadUseCase(
             bucket,
             certificatesRepository,
-            dataSetsRepository,
+            dataSourceRowsRepository,
             spreadsheetContentExtractorFactory,
             transactionManager,
         )

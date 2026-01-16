@@ -11,7 +11,7 @@ import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { AddDataSourceByDrivePickerUseCase } from '@/backend/application/add-data-source-by-drive-picker-use-case'
 import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
-import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
+import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
@@ -34,7 +34,9 @@ export async function addDataSourceByDrivePickerAction(
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const spreadsheetContentExtractorFactory =
@@ -47,7 +49,7 @@ export async function addDataSourceByDrivePickerAction(
         const addDataSourceByDrivePickerUseCase =
             new AddDataSourceByDrivePickerUseCase(
                 certificateEmissionsRepository,
-                dataSetsRepository,
+                dataSourceRowsRepository,
                 googleDriveGateway,
                 spreadsheetContentExtractorFactory,
                 externalUserAccountsRepository,

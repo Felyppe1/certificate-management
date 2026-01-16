@@ -1,4 +1,3 @@
-import { DataSet } from '../domain/data-set'
 import { INPUT_METHOD } from '../domain/certificate'
 import { DATA_SOURCE_FILE_EXTENSION, DataSource } from '../domain/data-source'
 import {
@@ -15,9 +14,10 @@ import {
 } from '../domain/error/validation-error'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
+import { DataSourceDomainService } from '../domain/domain-service/data-source-domain-service'
 
 interface AddDataSourceByUploadUseCaseInput {
     file: File
@@ -34,7 +34,10 @@ export class AddDataSourceByUploadUseCase {
     constructor(
         private bucket: IBucket,
         private certificatesRepository: ICertificatesRepository,
-        private dataSetsRepository: Pick<IDataSetsRepository, 'upsert'>,
+        private dataSourceRowsRepository: Pick<
+            IDataSourceRowsRepository,
+            'saveMany' | 'deleteManyByCertificateEmissionId'
+        >,
         private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
         private transactionManager: ITransactionManager,
     ) {}
@@ -66,26 +69,12 @@ export class AddDataSourceByUploadUseCase {
         const contentExtractor =
             this.spreadsheetContentExtractorFactory.create(fileExtension)
 
-        const { columns, rows } = contentExtractor.extractColumns(buffer)
+        const { rows } = contentExtractor.extractColumns(buffer)
 
         const previousDataSourceStorageFileUrl =
             certificate.getDataSourceStorageFileUrl()
 
-        const newDataSourceInput = {
-            inputMethod: INPUT_METHOD.UPLOAD,
-            driveFileId: null,
-            storageFileUrl: null,
-            fileName: input.file.name,
-            fileExtension,
-            columns,
-            thumbnailUrl: null,
-        }
-
-        certificate.setDataSource(newDataSourceInput)
-
         const path = `users/${input.userId}/certificates/${certificate.getId()}/data-source.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
-
-        certificate.setDataSourceStorageFileUrl(path)
 
         await this.bucket.uploadObject({
             buffer,
@@ -94,15 +83,31 @@ export class AddDataSourceByUploadUseCase {
             mimeType: fileExtension,
         })
 
-        const newDataSet = DataSet.create({
-            certificateEmissionId: certificate.getId(),
-            rows,
+        const dataSourceDomainService = new DataSourceDomainService()
+
+        const dataSourceRows = dataSourceDomainService.createDataSource({
+            certificate,
+            newDataSourceData: {
+                inputMethod: INPUT_METHOD.UPLOAD,
+                driveFileId: null,
+                storageFileUrl: path,
+                fileName: input.file.name,
+                fileExtension,
+                thumbnailUrl: null,
+                columnsRow: 1,
+                dataRowStart: 2,
+                rows,
+            },
         })
 
         await this.transactionManager.run(async () => {
             await this.certificatesRepository.update(certificate)
 
-            await this.dataSetsRepository.upsert(newDataSet)
+            await this.dataSourceRowsRepository.deleteManyByCertificateEmissionId(
+                certificate.getId(),
+            )
+
+            await this.dataSourceRowsRepository.saveMany(dataSourceRows)
         })
 
         // TODO: it should be done using outbox pattern

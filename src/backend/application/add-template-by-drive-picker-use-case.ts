@@ -14,9 +14,9 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
-import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
 import { Liquid } from 'liquidjs'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
+import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
@@ -34,9 +34,9 @@ export class AddTemplateByDrivePickerUseCase {
         private googleDriveGateway: IGoogleDriveGateway,
         private fileContentExtractorFactory: IFileContentExtractorFactory,
         private externalUserAccountsRepository: IExternalUserAccountsRepository,
-        private dataSetsRepository: Pick<
-            IDataSetsRepository,
-            'getByCertificateEmissionId' | 'upsert'
+        private dataSourceRowsRepository: Pick<
+            IDataSourceRowsRepository,
+            'resetProcessingStatusByCertificateEmissionId'
         >,
         private googleAuthGateway: Pick<
             IGoogleAuthGateway,
@@ -138,18 +138,11 @@ export class AddTemplateByDrivePickerUseCase {
 
         certificate.setTemplate(newTemplateInput)
 
-        const dataSet =
-            await this.dataSetsRepository.getByCertificateEmissionId(
-                certificate.getId(),
-            )
-
         await this.transactionManager.run(async () => {
-            if (dataSet) {
-                dataSet.update({
-                    generationStatus: null,
-                })
-
-                await this.dataSetsRepository.upsert(dataSet)
+            if (certificate.hasDataSource()) {
+                await this.dataSourceRowsRepository.resetProcessingStatusByCertificateEmissionId(
+                    certificate.getId(),
+                )
             }
 
             await this.certificateEmissionsRepository.update(certificate)

@@ -1,4 +1,3 @@
-import { AuthenticationError } from '../domain/error/authentication-error'
 import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
@@ -7,7 +6,6 @@ import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
-import { GENERATION_STATUS } from '../domain/data-set'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
 import {
@@ -16,6 +14,7 @@ import {
 } from '../domain/error/validation-error'
 import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
 import { IPubSub } from './interfaces/cloud/ipubsub'
+import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 
 interface GenerateCertificatesUseCaseInput {
     certificateEmissionId: string
@@ -31,6 +30,10 @@ export class GenerateCertificatesUseCase {
         private certificateEmissionsRepository: Pick<
             ICertificatesRepository,
             'getById'
+        >,
+        private dataSourceRowsRepository: Pick<
+            IDataSourceRowsRepository,
+            'getManyByCertificateEmissionId' | 'updateMany'
         >,
         private dataSetsRepository: Pick<
             IDataSetsRepository,
@@ -64,17 +67,13 @@ export class GenerateCertificatesUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }
 
-        const dataSet =
-            await this.dataSetsRepository.getByCertificateEmissionId(
+        const dataSourceRows =
+            await this.dataSourceRowsRepository.getManyByCertificateEmissionId(
                 certificateEmission.getId(),
             )
 
-        if (!dataSet) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SET)
-        }
-
-        if (dataSet.hasRows() === false) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.NO_DATA_SET_ROWS)
+        if (dataSourceRows.length === 0) {
+            throw new ValidationError(VALIDATION_ERROR_TYPE.NO_DATA_SOURCE_ROWS)
         }
 
         const externalUserAccount =
@@ -90,17 +89,29 @@ export class GenerateCertificatesUseCase {
                 template: template!,
                 dataSource: {
                     ...dataSource!,
-                    dataSet: dataSet.serialize(),
+                    rows: dataSourceRows.map(dataSourceRow => {
+                        const { id, data, ...rest } = dataSourceRow.serialize()
+
+                        return {
+                            id,
+                            data,
+                        }
+                    }),
                 },
             },
         }
 
         await this.pubSub.publish('certificates-generation-started', body)
 
-        dataSet.update({
-            generationStatus: GENERATION_STATUS.PENDING,
+        dataSourceRows.forEach(dataSourceRow => {
+            dataSourceRow.startGeneration()
         })
 
-        await this.dataSetsRepository.upsert(dataSet)
+        await this.dataSourceRowsRepository.updateMany(dataSourceRows)
+        // dataSet.update({
+        //     generationStatus: GENERATION_STATUS.PENDING,
+        // })
+
+        // await this.dataSetsRepository.upsert(dataSet)
     }
 }

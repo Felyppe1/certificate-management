@@ -4,7 +4,7 @@ import {
     CERTIFICATE_STATUS,
     INPUT_METHOD,
 } from '@/backend/domain/certificate'
-import { Prisma } from './client/client'
+import { COLUMN_TYPE, Prisma } from './client/client'
 import { Template, TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import {
     DATA_SOURCE_FILE_EXTENSION,
@@ -13,6 +13,22 @@ import {
 import { TransactionClient } from './client/internal/prismaNamespace'
 import { isPrismaClient, PrismaExecutor } from '.'
 import { transactionStorage } from './prisma-transaction-manager'
+
+const COLUMN_TYPE_TO_SQL_MAPPER = {
+    string: COLUMN_TYPE.STRING,
+    number: COLUMN_TYPE.NUMBER,
+    boolean: COLUMN_TYPE.BOOLEAN,
+    date: COLUMN_TYPE.DATE,
+    array: COLUMN_TYPE.ARRAY,
+}
+
+const COLUMN_TYPE_TO_OBJECT_MAPPER = {
+    [COLUMN_TYPE.STRING]: 'string',
+    [COLUMN_TYPE.NUMBER]: 'number',
+    [COLUMN_TYPE.BOOLEAN]: 'boolean',
+    [COLUMN_TYPE.DATE]: 'date',
+    [COLUMN_TYPE.ARRAY]: 'array',
+} as const
 
 export class PrismaCertificatesRepository implements ICertificatesRepository {
     constructor(private readonly defaultPrisma: PrismaExecutor) {}
@@ -200,7 +216,13 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                     createMany: {
                                         data: dataSource.columns.map(
                                             column => ({
-                                                name: column,
+                                                name: column.name,
+                                                type: COLUMN_TYPE_TO_SQL_MAPPER[
+                                                    column.type
+                                                ],
+                                                array_separator:
+                                                    column.arrayMetadata
+                                                        ?.separator ?? null,
                                             }),
                                         ),
                                     },
@@ -379,15 +401,6 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                     file_name: dataSource.fileName,
                                     file_extension: dataSource.fileExtension,
                                     thumbnail_url: dataSource.thumbnailUrl,
-                                    DataSourceColumn: {
-                                        createMany: {
-                                            data: dataSource.columns.map(
-                                                column => ({
-                                                    name: column,
-                                                }),
-                                            ),
-                                        },
-                                    },
                                 },
                                 update: {
                                     drive_file_id: dataSource.driveFileId,
@@ -396,18 +409,8 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                     input_method: dataSource.inputMethod,
                                     file_extension: dataSource.fileExtension,
                                     thumbnail_url: dataSource.thumbnailUrl,
-                                    DataSourceColumn: {
-                                        deleteMany: {},
-                                        createMany: {
-                                            data: dataSource.columns.map(
-                                                column => ({
-                                                    name: column,
-                                                }),
-                                            ),
-                                        },
-                                    },
+                                    // where: { id: template.id }, // TODO: must be the id of the previous template, not the new one
                                 },
-                                // where: { id: template.id }, // TODO: must be the id of the previous template, not the new one
                             },
                         }),
                     },
@@ -475,6 +478,33 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                     },
                 },
             })
+
+            if (dataSource) {
+                await Promise.all(
+                    dataSource.columns.map(column => {
+                        return tx.dataSourceColumn.upsert({
+                            where: {
+                                name_data_source_id: {
+                                    data_source_id: id,
+                                    name: column.name,
+                                },
+                            },
+                            update: {
+                                type: COLUMN_TYPE_TO_SQL_MAPPER[column.type],
+                                array_separator:
+                                    column.arrayMetadata?.separator ?? null,
+                            },
+                            create: {
+                                data_source_id: id,
+                                name: column.name,
+                                type: COLUMN_TYPE_TO_SQL_MAPPER[column.type],
+                                array_separator:
+                                    column.arrayMetadata?.separator ?? null,
+                            },
+                        })
+                    }),
+                )
+            }
 
             await tx.outbox.createMany({
                 data: domainEvents.map(event => ({
@@ -674,8 +704,18 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                   fileExtension: certificate.DataSource
                       .file_extension as DATA_SOURCE_FILE_EXTENSION,
                   columns: certificate.DataSource.DataSourceColumn.map(
-                      column => column.name,
+                      column => ({
+                          name: column.name,
+                          type: COLUMN_TYPE_TO_OBJECT_MAPPER[column.type],
+                          arrayMetadata: column.array_separator
+                              ? {
+                                    separator: column.array_separator,
+                                }
+                              : null,
+                      }),
                   ),
+                  columnsRow: 1,
+                  dataRowStart: 2,
                   thumbnailUrl: certificate.DataSource.thumbnail_url,
               })
             : null

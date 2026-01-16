@@ -9,18 +9,18 @@ import { IExternalUserAccountsRepository } from './interfaces/repository/iextern
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
-import { DATA_SOURCE_FILE_EXTENSION, DataSource } from '../domain/data-source'
+import { DataSource } from '../domain/data-source'
 import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
-import { DataSet } from '../domain/data-set'
-import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
 } from '../domain/error/forbidden-error'
+import { DataSourceDomainService } from '../domain/domain-service/data-source-domain-service'
 
 interface AddDataSourceByDrivePickerUseCaseInput {
     certificateId: string
@@ -31,7 +31,10 @@ interface AddDataSourceByDrivePickerUseCaseInput {
 export class AddDataSourceByDrivePickerUseCase {
     constructor(
         private certificateEmissionsRepository: ICertificatesRepository,
-        private dataSetsRepository: Pick<IDataSetsRepository, 'upsert'>,
+        private dataSourceRowsRepository: Pick<
+            IDataSourceRowsRepository,
+            'saveMany' | 'deleteManyByCertificateEmissionId'
+        >,
         private googleDriveGateway: IGoogleDriveGateway,
         private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
         private externalUserAccountsRepository: IExternalUserAccountsRepository,
@@ -101,32 +104,36 @@ export class AddDataSourceByDrivePickerUseCase {
         const contentExtractor =
             this.spreadsheetContentExtractorFactory.create(fileExtension)
 
-        const { columns, rows } = contentExtractor.extractColumns(buffer)
+        const { rows } = contentExtractor.extractColumns(buffer)
 
         const dataSourceStorageFileUrl =
             certificate.getDataSourceStorageFileUrl()
 
-        const newDataSourceInput = {
-            driveFileId: input.fileId,
-            storageFileUrl: null,
-            inputMethod: INPUT_METHOD.GOOGLE_DRIVE,
-            fileName: name,
-            fileExtension: fileExtension as DATA_SOURCE_FILE_EXTENSION,
-            columns,
-            thumbnailUrl,
-        }
+        const dataSourceDomainService = new DataSourceDomainService()
 
-        certificate.setDataSource(newDataSourceInput)
-
-        const newDataSet = DataSet.create({
-            certificateEmissionId: certificate.getId()!,
-            rows,
+        const dataSourceRows = dataSourceDomainService.createDataSource({
+            certificate,
+            newDataSourceData: {
+                driveFileId: input.fileId,
+                storageFileUrl: null,
+                inputMethod: INPUT_METHOD.GOOGLE_DRIVE,
+                fileName: name,
+                fileExtension: fileExtension,
+                thumbnailUrl,
+                columnsRow: 1,
+                dataRowStart: 2,
+                rows,
+            },
         })
 
         await this.transactionManager.run(async () => {
             await this.certificateEmissionsRepository.update(certificate)
 
-            await this.dataSetsRepository.upsert(newDataSet)
+            await this.dataSourceRowsRepository.deleteManyByCertificateEmissionId(
+                certificate.getId(),
+            )
+
+            await this.dataSourceRowsRepository.saveMany(dataSourceRows)
         })
 
         if (dataSourceStorageFileUrl) {

@@ -263,7 +263,7 @@ def delete_by_prefix(prefix: str):
 
 
 ################################ Functions to call backend endpoints ################################
-def finish_certificates_generation(certificate_emission_id, status, total_bytes=None):
+def finish_certificates_generation(certificate_emission_id, success, total_bytes=None):
     print('Inside update')
     url = f"{APP_BASE_URL}/api/internal/certificate-emissions/{certificate_emission_id}/generations"
     auth_req = google.auth.transport.requests.Request()
@@ -276,7 +276,7 @@ def finish_certificates_generation(certificate_emission_id, status, total_bytes=
     }
     
     body = {k: v for k, v in {
-        "generationStatus": status,
+        "success": success,
         "totalBytes": total_bytes,
     }.items() if v is not None}
 
@@ -579,11 +579,9 @@ class DataSourceFileExtension(str, Enum):
     ODS = 'application/vnd.oasis.opendocument.spreadsheet',
     GOOGLE_SHEETS = 'application/vnd.google-apps.spreadsheet'
 
-class DataSetModel(BaseModel):
+class DataSourceRowModel(BaseModel):
     id: str
-    generationStatus: Optional[str] = None # TODO: ENUM
-    totalBytes: int
-    rows: List[Dict[str, Any]]
+    data: Dict[str, Any]
 
 class TemplateModel(BaseModel):
     driveFileId: Optional[str] = None
@@ -594,15 +592,30 @@ class TemplateModel(BaseModel):
     variables: List[str]
     thumbnailUrl: Optional[str] = None
 
+class ColumnType(str, Enum):
+    STRING = "string"
+    NUMBER = "number"
+    BOOLEAN = "boolean"
+    DATE = "date"
+    ARRAY = "array"
+
+class ArrayMetadata(BaseModel):
+    separator: str
+
+class Column(BaseModel):
+    name: str
+    type: ColumnType
+    arrayMetadata: Optional[ArrayMetadata] = None
+
 class DataSourceModel(BaseModel):
     driveFileId: Optional[str] = None
     storageFileUrl: Optional[str] = None
     inputMethod: InputMethod
     fileName: str
     fileExtension: DataSourceFileExtension
-    columns: List[str]
+    columns: List[Column]
     thumbnailUrl: Optional[str] = None
-    dataSet: DataSetModel
+    rows: List[DataSourceRowModel]
 
 class CertificateEmissionModel(BaseModel):
     id: str
@@ -667,10 +680,10 @@ def main(request):
         
         certificate_emission = input_data.certificateEmission
         template = certificate_emission.template
-        data_set = certificate_emission.dataSource.dataSet
+        data_source = certificate_emission.dataSource
         certificate_emission_id = certificate_emission.id
         variable_mapping = certificate_emission.variableColumnMapping or {}
-        rows = data_set.rows or []
+        rows = data_source.rows or []
         user_id = certificate_emission.userId
         input_method = template.inputMethod.value
         file_mime_type = template.fileExtension.value
@@ -702,7 +715,7 @@ def main(request):
         elif input_method == 'GOOGLE_DRIVE':
             drive_file_id = template.driveFileId            
             google_access_token = certificate_emission.googleAccessToken
-            print('google_access_token', google_access_token)
+
             template_buffer = download_from_google_drive_api(drive_file_id, file_mime_type, access_token=google_access_token, user_id=user_id)
 
         total_bytes = 0
@@ -712,15 +725,26 @@ def main(request):
         print('Generating certificates...')
         for index, row in enumerate(rows):
             print(f'Row {index}: ', row)
-            row['Idade'] = int(row['Idade'])
+            # row['Idade'] = int(row['Idade'])
             certificate_buffer = BytesIO(template_buffer.getvalue())
 
             print('variable_mapping: ', variable_mapping)
             if variable_mapping:
                 row_variable_mapping = {}
                 for template_var, column_name in variable_mapping.items():
-                    if column_name and column_name in row:
-                        row_variable_mapping[template_var] = row[column_name]
+                    if column_name and column_name in row.data:
+                        for column in data_source.columns:
+                            if column.name == column_name:
+                                row_value = row.data[column_name]
+
+                                if column.type == ColumnType.ARRAY:
+                                    row_variable_mapping[template_var] = row_value.split(column.arrayMetadata.separator)
+                                elif column.type == ColumnType.BOOLEAN:
+                                    row_variable_mapping[template_var] = True if row_value.lower().strip() == 'true' else False
+                                else:
+                                    row_variable_mapping[template_var] = row_value
+                                
+                                break
                 print('Row variable mapping: ', row_variable_mapping)
                 if is_docx:
                     certificate_buffer = replace_variables_in_docx_liquid(certificate_buffer, row_variable_mapping)
@@ -734,7 +758,7 @@ def main(request):
 
             total_bytes += blob.size
         
-        finish_certificates_generation(certificate_emission_id, 'COMPLETED', total_bytes)
+        finish_certificates_generation(certificate_emission_id, True, total_bytes)
         
         return "", 204
         
@@ -757,7 +781,7 @@ def main(request):
         print("Validation errors:", friendly_errors)
         
         if certificate_emission_id:
-            finish_certificates_generation(certificate_emission_id, 'FAILED')
+            finish_certificates_generation(certificate_emission_id, False)
             
         return {"error": friendly_errors}, 200
     
@@ -767,7 +791,7 @@ def main(request):
 
         try:
             print('Sending error status update...')
-            finish_certificates_generation(certificate_emission_id, 'FAILED')
+            finish_certificates_generation(certificate_emission_id, False)
         except Exception as inner_e:
             update_error = str(inner_e)
 

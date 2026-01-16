@@ -21,6 +21,7 @@ export interface HandleErrorResponse {
 export async function handleError(error: any) {
     // TODO: send to observability service
     console.error(error)
+    console.error('META', error.meta)
 
     if (error instanceof z.ZodError) {
         return NextResponse.json(

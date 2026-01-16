@@ -7,7 +7,7 @@ import { prisma } from '../repository/prisma'
 import { AddTemplateByUploadUseCase } from '@/backend/application/add-template-by-upload-use-case'
 import { FileContentExtractorFactory } from '../factory/file-content-extractor-factory'
 import { updateTag } from 'next/cache'
-import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
+import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { logoutAction } from './logout-action'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
@@ -29,14 +29,16 @@ export async function addTemplateByUploadAction(
 
         const bucket = new GcpBucket()
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const transactionManager = new PrismaTransactionManager(prisma)
 
         const addTemplateByUploadUseCase = new AddTemplateByUploadUseCase(
             bucket,
             certificatesRepository,
-            dataSetsRepository,
+            dataSourceRowsRepository,
             fileContentExtractorFactory,
             transactionManager,
         )

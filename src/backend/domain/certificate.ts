@@ -76,7 +76,7 @@ export class Certificate extends AggregateRoot {
     static create(data: CreateCertificateInput): Certificate {
         const template = data.template ? new Template(data.template) : null
         const dataSource = data.dataSource
-            ? new DataSource(data.dataSource)
+            ? DataSource.create(data.dataSource)
             : null
 
         const variableColumnMapping = this.mapVariablesToColumns(
@@ -198,7 +198,7 @@ export class Certificate extends AggregateRoot {
 
             const columnExistsInDataSource = this.dataSource
                 ?.getColumns()
-                .some(column => column === mappedColumn)
+                .some(column => column.name === mappedColumn)
 
             if (mappedColumn && !columnExistsInDataSource) {
                 throw new Error(
@@ -270,7 +270,7 @@ export class Certificate extends AggregateRoot {
     }
 
     setDataSource(data: CreateDataSourceInput) {
-        const dataSource = new DataSource(data)
+        const dataSource = DataSource.create(data)
         this.dataSource = dataSource
 
         this.variableColumnMapping = Certificate.mapVariablesToColumns(
@@ -302,6 +302,10 @@ export class Certificate extends AggregateRoot {
 
     getDataSourceInputMethod() {
         return this.dataSource?.getInputMethod() ?? null
+    }
+
+    getDataSourceColumns() {
+        return this.dataSource?.getColumns() ?? []
     }
 
     setDataSourceStorageFileUrl(url: string) {
@@ -370,7 +374,7 @@ export class Certificate extends AggregateRoot {
             if (previousColumn) {
                 const previousColumnStillExists = columns.some(
                     column =>
-                        normalizeString(column) ===
+                        normalizeString(column.name) ===
                         normalizeString(previousColumn),
                 )
 
@@ -401,11 +405,12 @@ export class Certificate extends AggregateRoot {
 
             const sameNameNotMapped = columns.find(column => {
                 return (
-                    normalizeString(column) === normalizeString(variable) &&
+                    normalizeString(column.name) ===
+                        normalizeString(variable) &&
                     Object.values(variableColumnMapping).every(mappedColumn => {
                         return (
                             normalizeString(mappedColumn || '') !==
-                            normalizeString(column)
+                            normalizeString(column.name)
                         )
                     })
                 )
@@ -413,7 +418,7 @@ export class Certificate extends AggregateRoot {
 
             variableColumnMapping[variable] =
                 sameNameNotMapped && !hasAlreadyBeenMapped
-                    ? sameNameNotMapped
+                    ? sameNameNotMapped.name
                     : null
         }
 

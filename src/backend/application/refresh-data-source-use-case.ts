@@ -1,4 +1,3 @@
-import { DataSet } from '../domain/data-set'
 import { INPUT_METHOD } from '../domain/certificate'
 import { DataSource } from '../domain/data-source'
 import {
@@ -14,12 +13,13 @@ import {
     ValidationError,
 } from '../domain/error/validation-error'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
 import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
+import { DataSourceDomainService } from '../domain/domain-service/data-source-domain-service'
+import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 
 interface RefreshDataSourceUseCaseInput {
     userId: string
@@ -29,7 +29,10 @@ interface RefreshDataSourceUseCaseInput {
 export class RefreshDataSourceUseCase {
     constructor(
         private certificateEmissionsRepository: ICertificatesRepository,
-        private dataSetsRepository: Pick<IDataSetsRepository, 'upsert'>,
+        private dataSourceRowsRepository: Pick<
+            IDataSourceRowsRepository,
+            'saveMany' | 'deleteManyByCertificateEmissionId'
+        >,
         private googleDriveGateway: IGoogleDriveGateway,
         private googleAuthGateway: Pick<
             IGoogleAuthGateway,
@@ -131,27 +134,31 @@ export class RefreshDataSourceUseCase {
 
         const { columns, rows } = contentExtractor.extractColumns(buffer)
 
-        const newDataSourceInput = {
-            driveFileId,
-            storageFileUrl: null,
-            fileExtension: fileExtension,
-            inputMethod: INPUT_METHOD.URL,
-            fileName: name,
-            columns,
-            thumbnailUrl,
-        }
+        const dataSourceDomainService = new DataSourceDomainService()
 
-        certificate.setDataSource(newDataSourceInput)
-
-        const newDataSet = DataSet.create({
-            certificateEmissionId: certificate.getId(),
-            rows,
+        const dataSourceRows = dataSourceDomainService.createDataSource({
+            certificate,
+            newDataSourceData: {
+                driveFileId,
+                storageFileUrl: null,
+                fileName: name,
+                fileExtension,
+                inputMethod: INPUT_METHOD.URL,
+                thumbnailUrl,
+                columnsRow: 1,
+                dataRowStart: 2,
+                rows,
+            },
         })
 
         await this.transactionManager.run(async () => {
             await this.certificateEmissionsRepository.update(certificate)
 
-            await this.dataSetsRepository.upsert(newDataSet)
+            await this.dataSourceRowsRepository.deleteManyByCertificateEmissionId(
+                certificate.getId(),
+            )
+
+            await this.dataSourceRowsRepository.saveMany(dataSourceRows)
         })
     }
 }

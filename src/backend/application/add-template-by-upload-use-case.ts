@@ -15,9 +15,9 @@ import { Template, TEMPLATE_FILE_EXTENSION } from '../domain/template'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor-factory'
-import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
 import { Liquid } from 'liquidjs'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
+import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 
 interface AddTemplateByUploadUseCaseInput {
     file: File
@@ -35,9 +35,9 @@ export class AddTemplateByUploadUseCase {
     constructor(
         private bucket: IBucket,
         private certificatesRepository: ICertificatesRepository,
-        private dataSetsRepository: Pick<
-            IDataSetsRepository,
-            'getByCertificateEmissionId' | 'upsert'
+        private dataSourceRowsRepository: Pick<
+            IDataSourceRowsRepository,
+            'resetProcessingStatusByCertificateEmissionId'
         >,
         private fileContentExtractorFactory: Pick<
             IFileContentExtractorFactory,
@@ -119,18 +119,11 @@ export class AddTemplateByUploadUseCase {
             mimeType: fileExtension,
         })
 
-        const dataSet =
-            await this.dataSetsRepository.getByCertificateEmissionId(
-                certificate.getId(),
-            )
-
         await this.transactionManager.run(async () => {
-            if (dataSet) {
-                dataSet.update({
-                    generationStatus: null,
-                })
-
-                await this.dataSetsRepository.upsert(dataSet)
+            if (certificate.hasDataSource()) {
+                await this.dataSourceRowsRepository.resetProcessingStatusByCertificateEmissionId(
+                    certificate.getId(),
+                )
             }
 
             await this.certificatesRepository.update(certificate)

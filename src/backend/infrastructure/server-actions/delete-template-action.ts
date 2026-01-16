@@ -7,7 +7,7 @@ import { DeleteTemplateUseCase } from '@/backend/application/delete-template-use
 import { updateTag } from 'next/cache'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
-import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
+import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { deleteTemplateSchema } from './schemas'
@@ -22,16 +22,16 @@ export async function deleteTemplateAction(_: unknown, formData: FormData) {
 
         const parsedData = deleteTemplateSchema.parse(rawData)
 
-        const certificateEmissionsRepository = new PrismaCertificatesRepository(
+        const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,
         )
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const bucket = new GcpBucket()
         const transactionManager = new PrismaTransactionManager(prisma)
 
         const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepository,
-            dataSetsRepository,
+            certificatesRepository,
+            dataSourceRowsRepository,
             bucket,
             transactionManager,
         )

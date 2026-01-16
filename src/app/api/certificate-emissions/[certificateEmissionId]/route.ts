@@ -7,17 +7,21 @@ import { INPUT_METHOD } from '@/backend/domain/certificate'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
+import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import {
     EMAIL_ERROR_TYPE_ENUM,
-    PROCESSING_STATUS_ENUM,
+    PROCESSING_STATUS_ENUM as EMAIL_PROCESSING_STATUS_ENUM,
 } from '@/backend/domain/email'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { updateCertificateEmissionSchema } from '@/backend/infrastructure/server-actions/schemas'
+import {
+    PROCESSING_STATUS_ENUM as DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM,
+    RowType,
+} from '@/backend/domain/data-source-row'
 
 export interface GetCertificateEmissionControllerResponse {
     certificateEmission: {
@@ -44,12 +48,12 @@ export interface GetCertificateEmissionControllerResponse {
             fileExtension: DATA_SOURCE_FILE_EXTENSION
             columns: string[]
             thumbnailUrl: string | null
-            dataSet: {
+            rows: {
                 id: string
-                generationStatus: GENERATION_STATUS | null
-                totalBytes: number
-                rows: Record<string, any>[]
-            }
+                processingStatus: DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM
+                fileBytes: number | null
+                data: Record<string, RowType>
+            }[]
         } | null
         email: {
             subject: string
@@ -57,7 +61,7 @@ export interface GetCertificateEmissionControllerResponse {
             scheduledAt: Date | null
             emailColumn: string
             emailErrorType: EMAIL_ERROR_TYPE_ENUM | null
-            status: PROCESSING_STATUS_ENUM
+            status: EMAIL_PROCESSING_STATUS_ENUM
         } | null
     }
 }
@@ -99,13 +103,15 @@ export async function PUT(
         const parsed = updateCertificateEmissionSchema.parse(body)
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const transactionManager = new PrismaTransactionManager(prisma)
 
         const updateCertificateEmissionUseCase =
             new UpdateCertificateEmissionUseCase(
                 certificatesRepository,
-                dataSetsRepository,
+                dataSourceRowsRepository,
                 transactionManager,
             )
 

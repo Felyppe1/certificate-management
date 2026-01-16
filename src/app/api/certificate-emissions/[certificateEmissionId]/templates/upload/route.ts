@@ -9,7 +9,7 @@ import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import z from 'zod'
 import { handleError, HandleErrorResponse } from '@/utils/handle-error'
-import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
+import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
@@ -37,14 +37,16 @@ export async function PUT(
 
         const bucket = new GcpBucket()
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const transactionManager = new PrismaTransactionManager(prisma)
 
         const addTemplateByUploadUseCase = new AddTemplateByUploadUseCase(
             bucket,
             certificatesRepository,
-            dataSetsRepository,
+            dataSourceRowsRepository,
             fileContentExtractorFactory,
             transactionManager,
         )

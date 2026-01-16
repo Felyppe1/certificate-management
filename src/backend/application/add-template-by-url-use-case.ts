@@ -15,6 +15,7 @@ import { IBucket } from './interfaces/cloud/ibucket'
 import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
 import { Liquid } from 'liquidjs'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
+import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 
 interface AddTemplateByUrlUseCaseInput {
     certificateId: string
@@ -28,9 +29,9 @@ export class AddTemplateByUrlUseCase {
             ICertificatesRepository,
             'getById' | 'update'
         >,
-        private dataSetsRepository: Pick<
-            IDataSetsRepository,
-            'getByCertificateEmissionId' | 'upsert'
+        private dataSourceRowsRepository: Pick<
+            IDataSourceRowsRepository,
+            'resetProcessingStatusByCertificateEmissionId'
         >,
 
         private googleDriveGateway: Pick<
@@ -115,18 +116,11 @@ export class AddTemplateByUrlUseCase {
 
         certificate.setTemplate(newTemplateInput)
 
-        const dataSet =
-            await this.dataSetsRepository.getByCertificateEmissionId(
-                certificate.getId(),
-            )
-
         await this.transactionManager.run(async () => {
-            if (dataSet) {
-                dataSet.update({
-                    generationStatus: null,
-                })
-
-                await this.dataSetsRepository.upsert(dataSet)
+            if (certificate.hasDataSource()) {
+                await this.dataSourceRowsRepository.resetProcessingStatusByCertificateEmissionId(
+                    certificate.getId(),
+                )
             }
 
             await this.certificateEmissionsRepository.update(certificate)

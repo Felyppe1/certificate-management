@@ -17,7 +17,7 @@ import { addDataSourceByDrivePickerAction } from '@/backend/infrastructure/serve
 import { addDataSourceByUploadAction } from '@/backend/infrastructure/server-actions/add-data-source-by-upload-action'
 import { Badge } from '@/components/ui/badge'
 import { AiIcon3 } from '@/components/svg/AiIcon3'
-import { GENERATION_STATUS } from '@/backend/domain/data-set'
+import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
 import { toast } from 'sonner'
 import { useGoogleRelogin } from '@/components/useGoogleRelogin'
 import { useForm } from 'react-hook-form'
@@ -35,12 +35,12 @@ interface DataSourceSectionProps {
         fileExtension: DATA_SOURCE_FILE_EXTENSION
         columns: string[]
         thumbnailUrl: string | null
-        dataSet: {
+        rows: {
             id: string
-            rows: Record<string, any>[]
-            totalBytes: number
-            generationStatus: GENERATION_STATUS | null
-        }
+            processingStatus: PROCESSING_STATUS_ENUM
+            fileBytes: number | null
+            data: Record<string, any>
+        }[]
     } | null
     userEmail: string
     googleOAuthToken: string | null

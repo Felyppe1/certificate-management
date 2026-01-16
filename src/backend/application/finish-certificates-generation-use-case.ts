@@ -1,39 +1,47 @@
-import { GENERATION_STATUS } from '../domain/data-set'
 import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
-import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '../domain/error/validation-error'
+import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 
 interface FinishCertificatesGenerationUseCaseInput {
     certificateEmissionId: string
-    generationStatus?: GENERATION_STATUS | null
+    success: boolean
     totalBytes?: number
 }
 
-export class FinishCertificatesGenerationSetUseCase {
+export class FinishCertificatesGenerationUseCase {
     constructor(
-        private dataSetsRepository: Pick<
-            IDataSetsRepository,
-            'getById' | 'upsert' | 'getByCertificateEmissionId'
+        private dataSourceRowsRepository: Pick<
+            IDataSourceRowsRepository,
+            'getManyByCertificateEmissionId' | 'updateMany'
         >,
     ) {}
 
     async execute(input: FinishCertificatesGenerationUseCaseInput) {
-        const dataSet =
-            await this.dataSetsRepository.getByCertificateEmissionId(
+        const dataSourceRows =
+            await this.dataSourceRowsRepository.getManyByCertificateEmissionId(
                 input.certificateEmissionId,
             )
 
-        if (!dataSet) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SET)
+        if (dataSourceRows.length === 0) {
+            throw new ValidationError(VALIDATION_ERROR_TYPE.NO_DATA_SOURCE_ROWS)
         }
 
-        dataSet.update({
-            generationStatus: input.generationStatus,
-            totalBytes: input.totalBytes,
-        })
+        if (input.success) {
+            const bytesPerRow = input.totalBytes
+                ? Math.floor(input.totalBytes! / dataSourceRows.length)
+                : 0
 
-        await this.dataSetsRepository.upsert(dataSet)
+            dataSourceRows.forEach(dataSourceRow => {
+                dataSourceRow.finishGenerationSuccessfully(bytesPerRow)
+            })
+        } else {
+            dataSourceRows.forEach(dataSourceRow => {
+                dataSourceRow.finishGenerationWithError()
+            })
+        }
+
+        await this.dataSourceRowsRepository.updateMany(dataSourceRows)
     }
 }

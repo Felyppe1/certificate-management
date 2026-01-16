@@ -10,11 +10,11 @@ import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { AddDataSourceByUrlUseCase } from '@/backend/application/add-data-source-by-url-use-case'
 import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
-import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { addDataSourceByUrlSchema } from './schemas'
+import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 
 export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -30,7 +30,9 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const spreadsheetContentExtractorFactory =
@@ -40,7 +42,7 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
 
         const addDataSourceByUrlUseCase = new AddDataSourceByUrlUseCase(
             certificateEmissionsRepository,
-            dataSetsRepository,
+            dataSourceRowsRepository,
             googleDriveGateway,
             spreadsheetContentExtractorFactory,
             bucket,
