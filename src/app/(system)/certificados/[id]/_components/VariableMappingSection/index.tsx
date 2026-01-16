@@ -64,11 +64,9 @@ export function VariableMappingSection({
         string,
         string | null
     > | null>(currentMapping)
-    const [mappingsSaved, setMappingsSaved] = useState(false)
 
     useEffect(() => {
         setMappings(currentMapping)
-        setMappingsSaved(false)
     }, [currentMapping])
 
     // Check if there were changes in relation to the initial mapping
@@ -97,8 +95,6 @@ export function VariableMappingSection({
         dataSourceColumns.length < templateVariables.length
 
     const handleMappingChange = (variable: string, column: string) => {
-        setMappingsSaved(false)
-
         if (column === '__clear__') {
             setMappings(prev => ({
                 ...prev,
@@ -144,13 +140,10 @@ export function VariableMappingSection({
         startTransition(() => {
             mappingAction(formData)
         })
-
-        setMappingsSaved(true)
     }
 
     const handleUndoChanges = () => {
         setMappings(currentMapping)
-        setMappingsSaved(false)
     }
 
     useEffect(() => {
@@ -311,14 +304,14 @@ export function VariableMappingSection({
                         <Button
                             onClick={handleSaveClick}
                             disabled={mappingIsLoading || !hasChanges}
-                            variant={mappingsSaved ? 'outline' : 'default'}
+                            variant={!hasChanges ? 'outline' : 'default'}
                         >
                             {mappingIsLoading ? (
                                 <>
                                     <Loader2 className="animate-spin" />
                                     Salvando...
                                 </>
-                            ) : mappingsSaved ? (
+                            ) : !hasChanges ? (
                                 'Mapeamento Salvo'
                             ) : (
                                 'Salvar Mapeamento'

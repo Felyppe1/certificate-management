@@ -1,5 +1,5 @@
 import { INPUT_METHOD } from '../domain/certificate'
-import { Template } from '../domain/template'
+import { Template, TEMPLATE_FILE_EXTENSION } from '../domain/template'
 import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
@@ -16,6 +16,13 @@ import { IDataSetsRepository } from './interfaces/repository/idata-sets-reposito
 import { Liquid } from 'liquidjs'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+
+const MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
+    [TEMPLATE_FILE_EXTENSION.DOCX]: 'docx',
+    [TEMPLATE_FILE_EXTENSION.PPTX]: 'pptx',
+    [TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS]: 'docx',
+    [TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES]: 'pptx',
+}
 
 interface AddTemplateByUrlUseCaseInput {
     certificateId: string
@@ -42,7 +49,7 @@ export class AddTemplateByUrlUseCase {
             IFileContentExtractorFactory,
             'create'
         >,
-        private bucket: Pick<IBucket, 'deleteObject'>,
+        private bucket: Pick<IBucket, 'deleteObject' | 'uploadObject'>,
         private transactionManager: ITransactionManager,
     ) {}
 
@@ -102,11 +109,13 @@ export class AddTemplateByUrlUseCase {
             )
         }
 
-        const templateStorageFileUrl = certificate.getTemplateStorageFileUrl()
+        // const templateStorageFileUrl = certificate.getTemplateStorageFileUrl()
+
+        const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
 
         const newTemplateInput = {
             driveFileId,
-            storageFileUrl: null,
+            storageFileUrl: path,
             inputMethod: INPUT_METHOD.URL,
             fileName: name,
             variables: uniqueVariables,
@@ -115,6 +124,13 @@ export class AddTemplateByUrlUseCase {
         }
 
         certificate.setTemplate(newTemplateInput)
+
+        await this.bucket.uploadObject({
+            buffer,
+            bucketName: process.env.CERTIFICATES_BUCKET!,
+            objectName: path,
+            mimeType: fileExtension,
+        })
 
         await this.transactionManager.run(async () => {
             if (certificate.hasDataSource()) {
@@ -126,11 +142,11 @@ export class AddTemplateByUrlUseCase {
             await this.certificateEmissionsRepository.update(certificate)
         })
 
-        if (templateStorageFileUrl) {
-            await this.bucket.deleteObject({
-                bucketName: process.env.CERTIFICATES_BUCKET!,
-                objectName: templateStorageFileUrl,
-            })
-        }
+        // if (templateStorageFileUrl) {
+        //     await this.bucket.deleteObject({
+        //         bucketName: process.env.CERTIFICATES_BUCKET!,
+        //         objectName: templateStorageFileUrl,
+        //     })
+        // }
     }
 }

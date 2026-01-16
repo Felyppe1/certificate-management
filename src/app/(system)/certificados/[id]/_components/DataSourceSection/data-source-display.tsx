@@ -1,6 +1,5 @@
 'use client'
 
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
     Card,
@@ -29,7 +28,10 @@ import {
 } from 'lucide-react'
 import { startTransition, useActionState, useEffect, useState } from 'react'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
-import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
+import {
+    DATA_SOURCE_FILE_EXTENSION,
+    ColumnType,
+} from '@/backend/domain/data-source'
 import { deleteDataSourceAction } from '@/backend/infrastructure/server-actions/delete-data-source-action'
 import { refreshDataSourceAction } from '@/backend/infrastructure/server-actions/refresh-data-source-action'
 import { SourceIcon } from '@/components/svg/SourceIcon'
@@ -38,6 +40,8 @@ import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
 import { toast } from 'sonner'
 import { viewCertificateAction } from '@/backend/infrastructure/server-actions/view-certificate-action'
 import { downloadDataSourceAction } from '@/backend/infrastructure/server-actions/download-data-source-action'
+import { ColumnsConfigurationSection } from './ColumnsConfigurationSection'
+import { columnTypeConfig } from './ColumnTypeSelect'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -72,7 +76,11 @@ interface DataSourceDisplayProps {
         inputMethod: INPUT_METHOD
         fileName: string
         fileExtension: DATA_SOURCE_FILE_EXTENSION
-        columns: string[]
+        columns: {
+            name: string
+            type: ColumnType
+            arraySeparator: string | null
+        }[]
         thumbnailUrl: string | null
         rows: {
             id: string
@@ -407,24 +415,20 @@ export function DataSourceDisplay({
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-muted-foreground mb-1">
-                                        Colunas
+                                        Colunas e tipagem
                                     </p>
-                                    <div className="mt-3">
-                                        {dataSource.columns.length === 0 ? (
-                                            <p>Nenhuma coluna encontrada</p>
-                                        ) : (
-                                            dataSource.columns.map(
-                                                (column, index) => (
-                                                    <Badge
-                                                        key={index}
-                                                        className="font-mono mr-2 mb-2 bg-muted text-accent-foreground"
-                                                    >
-                                                        {column}
-                                                    </Badge>
-                                                ),
-                                            )
-                                        )}
-                                    </div>
+                                    <p className="text-sm text-muted-foreground mb-3">
+                                        Selecione o tipo de dado correto para
+                                        cada coluna para garantir a formatação
+                                        adequada.
+                                    </p>
+                                    <ColumnsConfigurationSection
+                                        certificateId={certificateId}
+                                        columns={dataSource.columns}
+                                        certificatesGenerated={
+                                            certificatesGenerated
+                                        }
+                                    />
                                 </div>
                             </div>
 
@@ -462,17 +466,36 @@ export function DataSourceDisplay({
                                                                     </TableHead>
                                                                 )}
                                                                 {dataSource.columns.map(
-                                                                    column => (
-                                                                        <TableHead
-                                                                            key={
+                                                                    column => {
+                                                                        const config =
+                                                                            columnTypeConfig[
                                                                                 column
-                                                                            }
-                                                                        >
-                                                                            {
-                                                                                column
-                                                                            }
-                                                                        </TableHead>
-                                                                    ),
+                                                                                    .type
+                                                                            ]
+                                                                        const Icon =
+                                                                            config?.icon
+
+                                                                        return (
+                                                                            <TableHead
+                                                                                key={
+                                                                                    column.name
+                                                                                }
+                                                                            >
+                                                                                <div className="flex items-center gap-2">
+                                                                                    {Icon && (
+                                                                                        <Icon
+                                                                                            className={`size-3.5 ${config.iconColor}`}
+                                                                                        />
+                                                                                    )}
+                                                                                    <span className="whitespace-nowrap">
+                                                                                        {
+                                                                                            column.name
+                                                                                        }
+                                                                                    </span>
+                                                                                </div>
+                                                                            </TableHead>
+                                                                        )
+                                                                    },
                                                                 )}
                                                             </TableRow>
                                                         </TableHeader>
@@ -517,12 +540,13 @@ export function DataSourceDisplay({
                                                                             column => (
                                                                                 <TableCell
                                                                                     key={
-                                                                                        column
+                                                                                        column.name
                                                                                     }
                                                                                 >
                                                                                     {row
                                                                                         .data[
                                                                                         column
+                                                                                            .name
                                                                                     ] ||
                                                                                         '-'}
                                                                                 </TableCell>

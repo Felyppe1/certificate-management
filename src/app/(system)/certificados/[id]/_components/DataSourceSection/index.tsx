@@ -12,7 +12,10 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
-import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
+import {
+    DATA_SOURCE_FILE_EXTENSION,
+    ColumnType,
+} from '@/backend/domain/data-source'
 import { addDataSourceByDrivePickerAction } from '@/backend/infrastructure/server-actions/add-data-source-by-drive-picker-action'
 import { addDataSourceByUploadAction } from '@/backend/infrastructure/server-actions/add-data-source-by-upload-action'
 import { Badge } from '@/components/ui/badge'
@@ -33,7 +36,11 @@ interface DataSourceSectionProps {
         inputMethod: INPUT_METHOD
         fileName: string
         fileExtension: DATA_SOURCE_FILE_EXTENSION
-        columns: string[]
+        columns: {
+            name: string
+            type: ColumnType
+            arraySeparator: string | null
+        }[]
         thumbnailUrl: string | null
         rows: {
             id: string

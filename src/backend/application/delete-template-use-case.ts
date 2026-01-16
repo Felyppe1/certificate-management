@@ -34,7 +34,11 @@ export class DeleteTemplateUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        const storageFileUrl = certificate.getTemplateStorageFileUrl()
+        if (!certificate.hasTemplate()) {
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
+        }
+
+        const storageFileUrl = certificate.getTemplateStorageFileUrl()!
 
         certificate.removeTemplate(userId)
 
@@ -48,12 +52,9 @@ export class DeleteTemplateUseCase {
             await this.certificateEmissionsRepository.update(certificate)
         })
 
-        if (storageFileUrl) {
-            // TODO: do this on outbox pattern?
-            await this.bucket.deleteObject({
-                bucketName: process.env.CERTIFICATES_BUCKET!,
-                objectName: storageFileUrl,
-            })
-        }
+        await this.bucket.deleteObject({
+            bucketName: process.env.CERTIFICATES_BUCKET!,
+            objectName: storageFileUrl,
+        })
     }
 }

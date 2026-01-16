@@ -11,6 +11,7 @@ import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
 import { GcpPubSub } from '../cloud/gcp/gcp-pubsub'
+import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { generateCertificatesSchema } from './schemas'
 
@@ -27,6 +28,7 @@ export async function generateCertificatesAction(
 
         const parsedData = generateCertificatesSchema.parse(rawData)
 
+        const bucket = new GcpBucket()
         const externalUserAccountsRepository =
             new PrismaExternalUserAccountsRepository(prisma)
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
@@ -40,6 +42,7 @@ export async function generateCertificatesAction(
         const pubSub = new GcpPubSub()
 
         const generateCertificatesUseCase = new GenerateCertificatesUseCase(
+            bucket,
             externalUserAccountsRepository,
             certificateEmissionsRepository,
             dataSourceRowsRepository,

@@ -89,6 +89,12 @@ export class DataSourceRow {
     }
 
     finishGenerationSuccessfully(fileBytes: number) {
+        if (!fileBytes) {
+            throw new Error(
+                'DataSourceRow file bytes is required for successful generation',
+            )
+        }
+
         this.processingStatus = PROCESSING_STATUS_ENUM.COMPLETED
         this.fileBytes = fileBytes
     }

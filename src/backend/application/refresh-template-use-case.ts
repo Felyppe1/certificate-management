@@ -11,7 +11,7 @@ import {
     ValidationError,
 } from '../domain/error/validation-error'
 import { INPUT_METHOD } from '../domain/certificate'
-import { Template } from '../domain/template'
+import { Template, TEMPLATE_FILE_EXTENSION } from '../domain/template'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor-factory'
@@ -20,6 +20,14 @@ import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { Liquid } from 'liquidjs'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { IBucket } from './interfaces/cloud/ibucket'
+
+const MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
+    [TEMPLATE_FILE_EXTENSION.DOCX]: 'docx',
+    [TEMPLATE_FILE_EXTENSION.PPTX]: 'pptx',
+    [TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS]: 'docx',
+    [TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES]: 'pptx',
+}
 
 interface RefreshTemplateUseCaseInput {
     userId: string
@@ -41,6 +49,7 @@ export class RefreshTemplateUseCase {
         private fileContentExtractorFactory: IFileContentExtractorFactory,
         private externalUserAccountsRepository: IExternalUserAccountsRepository,
         private transactionManager: ITransactionManager,
+        private bucket: Pick<IBucket, 'uploadObject'>,
     ) {}
 
     async execute(input: RefreshTemplateUseCaseInput) {
@@ -152,17 +161,26 @@ export class RefreshTemplateUseCase {
             )
         }
 
+        const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
+
         const newTemplateInput = {
             driveFileId,
-            storageFileUrl: null,
+            storageFileUrl: path,
             fileExtension: fileExtension,
-            inputMethod: INPUT_METHOD.GOOGLE_DRIVE,
+            inputMethod: certificate.getTemplateInputMethod()!,
             fileName: name,
             variables: uniqueVariables,
             thumbnailUrl,
         }
 
         certificate.setTemplate(newTemplateInput)
+
+        await this.bucket.uploadObject({
+            buffer,
+            bucketName: process.env.CERTIFICATES_BUCKET!,
+            objectName: path,
+            mimeType: fileExtension,
+        })
 
         await this.transactionManager.run(async () => {
             if (certificate.hasDataSource()) {

@@ -1,8 +1,10 @@
 import { GetCertificateEmissionUseCase } from '@/backend/application/get-certificate-emission-use-case'
 import { UpdateCertificateEmissionUseCase } from '@/backend/application/update-certificate-emission-use-case'
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
-import { GENERATION_STATUS } from '@/backend/domain/data-set'
-import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
+import {
+    ColumnType,
+    DATA_SOURCE_FILE_EXTENSION,
+} from '@/backend/domain/data-source'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 
@@ -46,7 +48,11 @@ export interface GetCertificateEmissionControllerResponse {
             inputMethod: INPUT_METHOD
             fileName: string
             fileExtension: DATA_SOURCE_FILE_EXTENSION
-            columns: string[]
+            columns: {
+                name: string
+                type: ColumnType
+                arraySeparator: string | null
+            }[]
             thumbnailUrl: string | null
             rows: {
                 id: string

@@ -1,5 +1,5 @@
 import { INPUT_METHOD } from '../domain/certificate'
-import { Template } from '../domain/template'
+import { Template, TEMPLATE_FILE_EXTENSION } from '../domain/template'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor-factory'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
@@ -22,6 +22,13 @@ import {
     ForbiddenError,
 } from '../domain/error/forbidden-error'
 
+const MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
+    [TEMPLATE_FILE_EXTENSION.DOCX]: 'docx',
+    [TEMPLATE_FILE_EXTENSION.PPTX]: 'pptx',
+    [TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS]: 'docx',
+    [TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES]: 'pptx',
+}
+
 interface AddTemplateByDrivePickerUseCaseInput {
     certificateId: string
     fileId: string
@@ -42,7 +49,7 @@ export class AddTemplateByDrivePickerUseCase {
             IGoogleAuthGateway,
             'checkOrGetNewAccessToken'
         >,
-        private bucket: Pick<IBucket, 'deleteObject'>,
+        private bucket: Pick<IBucket, 'deleteObject' | 'uploadObject'>,
         private transactionManager: ITransactionManager,
     ) {}
 
@@ -126,9 +133,11 @@ export class AddTemplateByDrivePickerUseCase {
 
         const templateStorageFileUrl = certificate.getTemplateStorageFileUrl()
 
+        const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
+
         const newTemplateInput = {
             driveFileId: input.fileId,
-            storageFileUrl: null,
+            storageFileUrl: path,
             inputMethod: INPUT_METHOD.GOOGLE_DRIVE,
             fileName: name,
             variables: uniqueVariables,
@@ -137,6 +146,13 @@ export class AddTemplateByDrivePickerUseCase {
         }
 
         certificate.setTemplate(newTemplateInput)
+
+        await this.bucket.uploadObject({
+            buffer,
+            bucketName: process.env.CERTIFICATES_BUCKET!,
+            objectName: path,
+            mimeType: fileExtension,
+        })
 
         await this.transactionManager.run(async () => {
             if (certificate.hasDataSource()) {

@@ -13,6 +13,7 @@ export enum VALIDATION_ERROR_TYPE {
     INVALID_RECIPIENT_EMAIL = 'invalid-recipient-email',
     CERTIFICATES_NOT_GENERATED = 'certificates-not-generated',
     TEMPLATE_VARIABLES_PARSING_ERROR = 'template-variables-parsing-error',
+    FILE_BYTES_MISSING = 'file-bytes-missing',
 }
 
 export class ValidationError extends AppError<VALIDATION_ERROR_TYPE> {

@@ -9,7 +9,7 @@ export enum TEMPLATE_FILE_EXTENSION {
 
 export interface TemplateInput {
     driveFileId: string | null
-    storageFileUrl: string | null
+    storageFileUrl: string
     inputMethod: INPUT_METHOD
     fileName: string
     fileExtension: TEMPLATE_FILE_EXTENSION
@@ -26,7 +26,7 @@ export interface CreateTemplateInput extends TemplateInput {}
 
 export class Template {
     private driveFileId: string | null
-    private storageFileUrl: string | null
+    private storageFileUrl: string
     private inputMethod: INPUT_METHOD
     private fileName: string
     private fileExtension: TEMPLATE_FILE_EXTENSION
@@ -55,11 +55,8 @@ export class Template {
             Template.validateDriveFileId(data.driveFileId, data.inputMethod)
         }
 
-        if (data.storageFileUrl) {
-            Template.validateStorageFileUrl(
-                data.storageFileUrl,
-                data.inputMethod,
-            )
+        if (!data.storageFileUrl) {
+            throw new Error('Template storage file URL is required')
         }
 
         this.driveFileId = data.driveFileId
@@ -104,10 +101,6 @@ export class Template {
         }
 
         if (data.storageFileUrl !== undefined) {
-            Template.validateStorageFileUrl(
-                data.storageFileUrl,
-                data.inputMethod,
-            )
             this.storageFileUrl = data.storageFileUrl
         }
 
@@ -125,17 +118,6 @@ export class Template {
         if (inputMethod === INPUT_METHOD.UPLOAD && driveFileId) {
             throw new Error(
                 'Drive file ID should not be provided for UPLOAD input method',
-            )
-        }
-    }
-
-    private static validateStorageFileUrl(
-        storageFileUrl: string | null,
-        inputMethod?: INPUT_METHOD,
-    ) {
-        if (inputMethod !== INPUT_METHOD.UPLOAD && storageFileUrl) {
-            throw new Error(
-                'File storage URL should only be provided for UPLOAD input method',
             )
         }
     }

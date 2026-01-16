@@ -15,6 +15,7 @@ import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { addTemplateByUrlSchema } from './schemas'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 
 export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
     // add delay
@@ -32,7 +33,9 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
@@ -41,7 +44,7 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
 
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificateEmissionsRepository,
-            dataSetsRepository,
+            dataSourceRowsRepository,
             googleDriveGateway,
             fileContentExtractorFactory,
             bucket,

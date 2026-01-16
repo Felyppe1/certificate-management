@@ -9,6 +9,7 @@ import {
     DataSource,
     DataSourceOutput,
     CreateDataSourceInput,
+    DataSourceColumn,
 } from './data-source'
 import { NOT_FOUND_ERROR_TYPE, NotFoundError } from './error/not-found-error'
 import { DataSourceSetDomainEvent } from './events/data-source-set-domain-event'
@@ -282,6 +283,14 @@ export class Certificate extends AggregateRoot {
         const domainEvent = new DataSourceSetDomainEvent(this.id)
 
         this.addDomainEvent(domainEvent)
+    }
+
+    updateDataSourceColumns(columns: DataSourceColumn[]): string[] {
+        if (!this.dataSource) {
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
+        }
+
+        return this.dataSource.setColumns(columns)
     }
 
     hasDataSource() {

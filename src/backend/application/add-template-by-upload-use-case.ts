@@ -93,13 +93,12 @@ export class AddTemplateByUploadUseCase {
             )
         }
 
-        const previousTemplateStorageFileUrl =
-            certificate.getTemplateStorageFileUrl()
+        const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
 
         const newTemplateInput = {
             inputMethod: INPUT_METHOD.UPLOAD,
             driveFileId: null,
-            storageFileUrl: null,
+            storageFileUrl: path,
             fileName: input.file.name,
             fileExtension,
             variables: uniqueVariables,
@@ -107,10 +106,6 @@ export class AddTemplateByUploadUseCase {
         }
 
         certificate.setTemplate(newTemplateInput)
-
-        const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
-
-        certificate.setTemplateStorageFileUrl(path)
 
         await this.bucket.uploadObject({
             buffer,
@@ -129,11 +124,11 @@ export class AddTemplateByUploadUseCase {
             await this.certificatesRepository.update(certificate)
         })
 
-        if (previousTemplateStorageFileUrl) {
-            await this.bucket.deleteObject({
-                bucketName: process.env.CERTIFICATES_BUCKET!,
-                objectName: previousTemplateStorageFileUrl,
-            })
-        }
+        // if (previousTemplateStorageFileUrl) {
+        //     await this.bucket.deleteObject({
+        //         bucketName: process.env.CERTIFICATES_BUCKET!,
+        //         objectName: previousTemplateStorageFileUrl,
+        //     })
+        // }
     }
 }

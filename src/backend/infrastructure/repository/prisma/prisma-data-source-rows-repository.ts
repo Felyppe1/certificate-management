@@ -105,6 +105,64 @@ export class PrismaDataSourceRowsRepository
     //     })
     // }
 
+    async getById(id: string): Promise<DataSourceRow | null> {
+        const row = await this.prisma.dataSourceRow.findUnique({
+            where: { id },
+            include: {
+                DataSourceValue: {
+                    include: {
+                        DataSourceColumn: true,
+                    },
+                },
+            },
+        })
+
+        if (!row) {
+            return null
+        }
+
+        const certificateEmissionId = row.data_source_id
+
+        // Get the data source columns
+        const dataSourceColumns = await this.prisma.dataSourceColumn.findMany({
+            where: {
+                data_source_id: certificateEmissionId,
+            },
+        })
+
+        const columns = dataSourceColumns.map(col => ({
+            name: col.name,
+            type: col.type.toLowerCase() as ColumnType,
+        }))
+
+        const data: Record<string, string> = {}
+        for (const value of row.DataSourceValue) {
+            data[value.column_name] = value.value
+        }
+
+        return new DataSourceRow({
+            id: row.id,
+            certificateEmissionId,
+            fileBytes: row.file_bytes,
+            data,
+            dataSourceColumns: columns,
+            processingStatus: row.processing_status as any,
+        })
+    }
+
+    async update(dataSourceRow: DataSourceRow): Promise<void> {
+        const { id, fileBytes, processingStatus, certificateEmissionId } =
+            dataSourceRow.serialize()
+
+        await this.prisma.dataSourceRow.update({
+            where: { id },
+            data: {
+                file_bytes: fileBytes,
+                processing_status: processingStatus,
+            },
+        })
+    }
+
     async getManyByCertificateEmissionId(
         certificateEmissionId: string,
     ): Promise<DataSourceRow[]> {
@@ -132,7 +190,7 @@ export class PrismaDataSourceRowsRepository
             },
         })
 
-        const columnTypeMap = dataSourceColumns.map(col => ({
+        const columns = dataSourceColumns.map(col => ({
             name: col.name,
             type: col.type.toLowerCase() as ColumnType,
         }))
@@ -148,7 +206,7 @@ export class PrismaDataSourceRowsRepository
                 certificateEmissionId,
                 fileBytes: row.file_bytes,
                 data,
-                dataSourceColumns: columnTypeMap,
+                dataSourceColumns: columns,
                 processingStatus: row.processing_status as any,
             })
         })
@@ -200,6 +258,23 @@ export class PrismaDataSourceRowsRepository
                 data_source_id: certificateEmissionId,
             },
         })
+    }
+
+    async getColumnValuesByCertificateEmissionId(
+        certificateEmissionId: string,
+        columnName: string,
+    ): Promise<string[]> {
+        const values = await this.prisma.dataSourceValue.findMany({
+            where: {
+                data_source_id: certificateEmissionId,
+                column_name: columnName,
+            },
+            select: {
+                value: true,
+            },
+        })
+
+        return values.map(v => v.value)
     }
 
     // async upsert(dataSet: DataSet): Promise<void> {

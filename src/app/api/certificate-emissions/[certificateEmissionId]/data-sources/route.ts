@@ -14,6 +14,9 @@ import { SpreadsheetContentExtractorFactory } from '@/backend/infrastructure/fac
 import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { ColumnType } from '@/backend/domain/data-source'
+import { updateDataSourceColumnsSchema } from '@/backend/infrastructure/server-actions/schemas'
+import { UpdateDataSourceColumnsUseCase } from '@/backend/application/update-data-source-columns-use-case'
 
 export async function DELETE(
     request: NextRequest,
@@ -82,6 +85,71 @@ export async function PATCH(
         })
 
         return new NextResponse(null, { status: 204 })
+    } catch (error: unknown) {
+        return await handleError(error)
+    }
+}
+
+interface UpdateDataSourceColumnsBody {
+    columns: {
+        name: string
+        type: ColumnType
+        arraySeparator: string | null
+    }[]
+}
+
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: Promise<{ certificateEmissionId: string }> },
+): Promise<NextResponse<any | HandleErrorResponse>> {
+    const certificateEmissionId = (await params).certificateEmissionId
+
+    try {
+        const { userId } = await validateSessionToken(request)
+
+        const body = await request.json()
+
+        const parsedData = updateDataSourceColumnsSchema.parse({
+            certificateId: certificateEmissionId,
+            columns: body.columns,
+        })
+
+        const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
+
+        const useCase = new UpdateDataSourceColumnsUseCase(
+            certificatesRepository,
+            dataSourceRowsRepository,
+        )
+
+        const columns = parsedData.columns.map(col => ({
+            name: col.name,
+            type: col.type,
+            arrayMetadata:
+                col.type === 'array' && col.arraySeparator
+                    ? { separator: col.arraySeparator }
+                    : null,
+        }))
+
+        const result = await useCase.execute({
+            userId,
+            certificateId: parsedData.certificateId,
+            columns,
+        })
+
+        if (result.invalidColumns.length > 0) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    invalidColumns: result.invalidColumns,
+                },
+                { status: 422 },
+            )
+        }
+
+        return NextResponse.json({ success: true }, { status: 200 })
     } catch (error: unknown) {
         return await handleError(error)
     }

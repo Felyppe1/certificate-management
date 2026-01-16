@@ -1,11 +1,15 @@
 import {
+    NOT_FOUND_ERROR_TYPE,
+    NotFoundError,
+} from '../domain/error/not-found-error'
+import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 
 interface FinishCertificatesGenerationUseCaseInput {
-    certificateEmissionId: string
+    dataSourceRowId: string
     success: boolean
     totalBytes?: number
 }
@@ -14,34 +18,36 @@ export class FinishCertificatesGenerationUseCase {
     constructor(
         private dataSourceRowsRepository: Pick<
             IDataSourceRowsRepository,
-            'getManyByCertificateEmissionId' | 'updateMany'
+            'getById' | 'update'
         >,
     ) {}
 
     async execute(input: FinishCertificatesGenerationUseCaseInput) {
-        const dataSourceRows =
-            await this.dataSourceRowsRepository.getManyByCertificateEmissionId(
-                input.certificateEmissionId,
-            )
+        const dataSourceRow = await this.dataSourceRowsRepository.getById(
+            input.dataSourceRowId,
+        )
 
-        if (dataSourceRows.length === 0) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.NO_DATA_SOURCE_ROWS)
+        if (!dataSourceRow) {
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE_ROW)
         }
 
         if (input.success) {
-            const bytesPerRow = input.totalBytes
-                ? Math.floor(input.totalBytes! / dataSourceRows.length)
-                : 0
+            if (!input.totalBytes) {
+                throw new ValidationError(
+                    VALIDATION_ERROR_TYPE.FILE_BYTES_MISSING,
+                )
+            }
 
-            dataSourceRows.forEach(dataSourceRow => {
-                dataSourceRow.finishGenerationSuccessfully(bytesPerRow)
-            })
+            dataSourceRow.finishGenerationSuccessfully(input.totalBytes)
         } else {
-            dataSourceRows.forEach(dataSourceRow => {
-                dataSourceRow.finishGenerationWithError()
-            })
+            dataSourceRow.finishGenerationWithError()
         }
 
-        await this.dataSourceRowsRepository.updateMany(dataSourceRows)
+        await this.dataSourceRowsRepository.update(dataSourceRow)
+
+        return {
+            certificateEmissionId:
+                dataSourceRow.serialize().certificateEmissionId,
+        }
     }
 }

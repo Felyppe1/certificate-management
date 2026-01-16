@@ -14,7 +14,13 @@ import {
 import { useSSE } from '@/custom-hooks/use-sse'
 import { FileCheck, Loader2, CheckCircle2, CircleAlert } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { startTransition, useActionState, useEffect, useRef } from 'react'
+import {
+    startTransition,
+    useActionState,
+    useEffect,
+    useRef,
+    useState,
+} from 'react'
 import { toast } from 'sonner'
 
 interface GenerateCertificatesSectionProps {
@@ -40,28 +46,13 @@ export function GenerateCertificatesSection({
         null,
     )
 
-    // useDataSetPolling(dataSet?.id || null, {
-    //     enabled: dataSet?.generationStatus === GENERATION_STATUS.PENDING,
-    // })
-
     const router = useRouter()
+    const [completedRows, setCompletedRows] = useState(0)
+    const totalRows = rows.length
 
     const isGenerating = rows.some(
         row => row.processingStatus === PROCESSING_STATUS_ENUM.RUNNING,
     )
-
-    useSSE(`/api/certificate-emissions/${certificateId}/events`, {
-        onEvent: data => {
-            if (data.processingStatus) {
-                if (data.processingStatus === 'COMPLETED') {
-                    toast.success('Certificados gerados com sucesso')
-                }
-
-                router.refresh()
-            }
-        },
-        enabled: isGenerating,
-    })
 
     const handleGenerate = async () => {
         const formData = new FormData()
@@ -71,6 +62,33 @@ export function GenerateCertificatesSection({
             action(formData)
         })
     }
+
+    // Reset progress when starting a new generation
+    useEffect(() => {
+        if (isGeneratePending) {
+            setCompletedRows(0)
+        }
+    }, [isGeneratePending])
+
+    useSSE(`/api/certificate-emissions/${certificateId}/events`, {
+        onEvent: data => {
+            if (data.type === 'row-completed') {
+                setCompletedRows(prev => {
+                    const newCount = prev + 1
+
+                    return newCount
+                })
+            }
+        },
+        enabled: isGenerating,
+    })
+
+    useEffect(() => {
+        if (completedRows === totalRows) {
+            toast.success('A geração de certificados finalizou')
+            router.refresh()
+        }
+    }, [completedRows, totalRows, router])
 
     useEffect(() => {
         if (!state) return
@@ -93,6 +111,9 @@ export function GenerateCertificatesSection({
     const certificatesGenerationFailed = rows.some(
         row => row.processingStatus === PROCESSING_STATUS_ENUM.FAILED,
     )
+
+    const progressPercentage =
+        totalRows > 0 ? (completedRows / totalRows) * 100 : 0
 
     return (
         <Card>
@@ -171,6 +192,23 @@ export function GenerateCertificatesSection({
                     />
                 )}
 
+                {isGenerating && (
+                    <div className="space-y-2">
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                            <span>Gerando certificados...</span>
+                            <span>
+                                {completedRows} de {totalRows}
+                            </span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                            <div
+                                className="bg-primary h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${progressPercentage}%` }}
+                            />
+                        </div>
+                    </div>
+                )}
+
                 <div className="flex gap-4 items-center justify-between flex-wrap p-6 py-4 sm:py-6 border rounded-lg bg-muted/30">
                     <div className="flex items-center gap-4">
                         <div className="p-3 rounded-full bg-primary/10">
@@ -186,8 +224,8 @@ export function GenerateCertificatesSection({
                             <p className="text-xs sm:text-sm text-muted-foreground">
                                 {certificatesGenerated
                                     ? totalRecords === 1
-                                        ? 'Gerado e disponível'
-                                        : 'Gerados e disponíveis'
+                                        ? 'Processado'
+                                        : 'Processados'
                                     : totalRecords === 1
                                       ? 'será gerado'
                                       : 'serão gerados'}
@@ -208,7 +246,7 @@ export function GenerateCertificatesSection({
                         {isPending ? (
                             <>
                                 <Loader2 className="h-4 w-4 animate-spin" />
-                                Gerando...
+                                Processando...
                             </>
                         ) : (
                             <>

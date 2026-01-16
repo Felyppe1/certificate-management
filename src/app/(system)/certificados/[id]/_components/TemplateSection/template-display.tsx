@@ -146,6 +146,7 @@ export function TemplateDisplay({
     }, [refreshState])
 
     useEffect(() => {
+        console.log('DELETE', deleteState)
         if (!deleteState) return
 
         if (deleteState.success) {

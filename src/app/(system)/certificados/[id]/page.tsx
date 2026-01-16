@@ -43,6 +43,7 @@ export default async function CertificatePage({
     const dataSourceColumns =
         certificateEmissionResponse.certificateEmission.dataSource?.columns ||
         []
+    const dataSourceColumnNames = dataSourceColumns.map(col => col.name)
     const rows =
         certificateEmissionResponse.certificateEmission.dataSource?.rows ?? []
     const email = certificateEmissionResponse.certificateEmission.email
@@ -145,7 +146,7 @@ export default async function CertificatePage({
                     <VariableMappingSection
                         certificateId={certificateId}
                         templateVariables={templateVariables}
-                        dataSourceColumns={dataSourceColumns}
+                        dataSourceColumns={dataSourceColumnNames}
                         currentMapping={
                             certificateEmissionResponse.certificateEmission
                                 .variableColumnMapping!
@@ -168,7 +169,7 @@ export default async function CertificatePage({
                 {hasTemplate && hasDataSource && variablesMapped && (
                     <EmailSendingSection
                         certificateId={certificateId}
-                        dataSourceColumns={dataSourceColumns}
+                        dataSourceColumns={dataSourceColumnNames}
                         variablesMapped={variablesMapped}
                         emailSent={emailSent}
                         totalRecipients={rows.length}

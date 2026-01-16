@@ -14,6 +14,7 @@ import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
 
 const addTemplateByUrlBodySchema = z.object({
     fileUrl: z.url('File URL is invalid'),
@@ -34,7 +35,9 @@ export async function PUT(
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
@@ -43,7 +46,7 @@ export async function PUT(
 
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificateEmissionsRepository,
-            dataSetsRepository,
+            dataSourceRowsRepository,
             googleDriveGateway,
             fileContentExtractorFactory,
             bucket,

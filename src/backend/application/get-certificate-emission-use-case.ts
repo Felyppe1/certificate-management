@@ -1,5 +1,5 @@
 import { CERTIFICATE_STATUS } from '../domain/certificate'
-import { DATA_SOURCE_FILE_EXTENSION } from '../domain/data-source'
+import { ColumnType, DATA_SOURCE_FILE_EXTENSION } from '../domain/data-source'
 import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
@@ -153,7 +153,11 @@ export class GetCertificateEmissionUseCase {
                           .file_extension as DATA_SOURCE_FILE_EXTENSION,
                       columns:
                           certificateEmission.DataSource.DataSourceColumn.map(
-                              column => column.name,
+                              column => ({
+                                  name: column.name,
+                                  type: column.type.toLowerCase() as ColumnType,
+                                  arraySeparator: column.array_separator,
+                              }),
                           ),
                       thumbnailUrl:
                           certificateEmission.DataSource.thumbnail_url,

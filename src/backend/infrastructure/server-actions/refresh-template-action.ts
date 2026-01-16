@@ -15,6 +15,7 @@ import { NotFoundError } from '@/backend/domain/error/not-found-error'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { refreshTemplateSchema } from './schemas'
+import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 
 export async function refreshTemplateAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -36,6 +37,7 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
         const externalUserAccountsRepository =
             new PrismaExternalUserAccountsRepository(prisma)
         const transactionManager = new PrismaTransactionManager(prisma)
+        const bucket = new GcpBucket()
 
         const refreshTemplateUseCase = new RefreshTemplateUseCase(
             certificatesRepository,
@@ -45,6 +47,7 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
             fileContentExtractorFactory,
             externalUserAccountsRepository,
             transactionManager,
+            bucket,
         )
 
         await refreshTemplateUseCase.execute({

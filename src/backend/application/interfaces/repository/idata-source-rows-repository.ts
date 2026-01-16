@@ -1,7 +1,8 @@
 import { DataSourceRow } from '@/backend/domain/data-source-row'
 
 export interface IDataSourceRowsRepository {
-    // save(dataSourceRow: DataSourceRow): Promise<void>
+    getById(id: string): Promise<DataSourceRow | null>
+    update(dataSourceRow: DataSourceRow): Promise<void>
     saveMany(dataSourceRows: DataSourceRow[]): Promise<void>
     updateMany(dataSourceRows: DataSourceRow[]): Promise<void>
     deleteManyByCertificateEmissionId(
@@ -13,9 +14,8 @@ export interface IDataSourceRowsRepository {
     resetProcessingStatusByCertificateEmissionId(
         certificateEmissionId: string,
     ): Promise<void>
-    // getById(dataSourceRowId: string): Promise<DataSourceRow | null>
-    // getByCertificateEmissionId(
-    //     certificateEmissionId: string,
-    // ): Promise<DataSourceRow[]>
-    // upsert(dataSourceRow: DataSourceRow): Promise<void>
+    getColumnValuesByCertificateEmissionId(
+        certificateEmissionId: string,
+        columnName: string,
+    ): Promise<string[]>
 }

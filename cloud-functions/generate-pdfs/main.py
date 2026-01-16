@@ -263,9 +263,9 @@ def delete_by_prefix(prefix: str):
 
 
 ################################ Functions to call backend endpoints ################################
-def finish_certificates_generation(certificate_emission_id, success, total_bytes=None):
+def finish_certificates_generation(data_source_row_id, success, total_bytes=None):
     print('Inside update')
-    url = f"{APP_BASE_URL}/api/internal/certificate-emissions/{certificate_emission_id}/generations"
+    url = f"{APP_BASE_URL}/api/internal/data-source-rows/{data_source_row_id}/generations"
     auth_req = google.auth.transport.requests.Request()
 
     id_token = google.oauth2.id_token.fetch_id_token(auth_req, AUDIENCE)
@@ -335,6 +335,8 @@ def download_from_google_drive_api(
     user_id: Optional[str] = None,
 ) -> BytesIO:
     print('Downloading from Google Drive API', drive_file_id)
+    print('File drive id: ', drive_file_id)
+    print('Access token: ', access_token)
     
     mime_type_mapping = {
         GOOGLE_DOCS_MIME_TYPE: DOCX_MIME_TYPE,
@@ -357,21 +359,21 @@ def download_from_google_drive_api(
             
         return requests.get(url, headers=headers, params=params)
 
-    # Primeira tentativa
+    # First attempt
     response = make_request(access_token)
 
-    # Se der 401, tentamos renovar o token UMA vez
+    # If it returns 401, we try to refresh the token ONCE
     if response.status_code == 401:
         try:
             new_access_token = refresh_google_token(user_id)
-            # Tenta novamente com o novo token
+            # Try again with the new token
             response = make_request(new_access_token)
             
-            # Opcional: Aqui você deve salvar o new_token no seu banco/cache 
-            # para não ter que dar refresh em toda chamada subsequente.
+            # Optional: Here you should save the new_token in your database/cache 
+            # so you don't have to refresh on every subsequent call.
         except Exception as e:
-            print(f"Erro ao tentar o refresh: {e}")
-            # Se o refresh falhar, o status_code continuará 401 e cairá no raise_for_status abaixo
+            print(f"Error trying to refresh: {e}")
+            # If the refresh fails, the status_code will continue to be 401 and fall into raise_for_status below
 
     if response.status_code != 200:
         print(f"Erro {response.status_code}: {response.text}")
@@ -470,6 +472,7 @@ def convert_to_pdf_with_libreoffice(input_bytes: BytesIO, input_ext: str) -> Byt
     with tempfile.TemporaryDirectory() as tmpdir:
         input_path = os.path.join(tmpdir, f"input.{input_ext}")
         output_path = os.path.join(tmpdir, f"input.pdf")
+        user_profile = os.path.join(tmpdir, "profile")
 
         with open(input_path, "wb") as f:
             f.write(input_bytes.read())
@@ -477,6 +480,7 @@ def convert_to_pdf_with_libreoffice(input_bytes: BytesIO, input_ext: str) -> Byt
         subprocess.run([
             SOFFICE_PATH,
             "--headless",
+            f"-env:UserInstallation=file://{user_profile}",
             "--convert-to", "pdf:draw_pdf_Export",
             "--outdir", tmpdir,
             input_path
@@ -615,7 +619,7 @@ class DataSourceModel(BaseModel):
     fileExtension: DataSourceFileExtension
     columns: List[Column]
     thumbnailUrl: Optional[str] = None
-    rows: List[DataSourceRowModel]
+    row: DataSourceRowModel
 
 class CertificateEmissionModel(BaseModel):
     id: str
@@ -663,6 +667,7 @@ def main(request):
 
     envelop = request.get_json()
     certificate_emission_id = None
+    data_source_row_id = None
 
     try:
         pubsub_message = envelop.get('message', {})
@@ -670,6 +675,7 @@ def main(request):
         raw_data = json.loads(data_str)
 
         certificate_emission_id = raw_data.get('certificateEmission', {}).get('id')
+        data_source_row_id = raw_data.get('certificateEmission', {}).get('dataSource', {}).get('row', {}).get('id')
     except Exception as e:
         print(f"Error to decode message: {e}")
 
@@ -683,7 +689,8 @@ def main(request):
         data_source = certificate_emission.dataSource
         certificate_emission_id = certificate_emission.id
         variable_mapping = certificate_emission.variableColumnMapping or {}
-        rows = data_source.rows or []
+        row = data_source.row
+        data_source_row_id = row.id
         user_id = certificate_emission.userId
         input_method = template.inputMethod.value
         file_mime_type = template.fileExtension.value
@@ -700,65 +707,43 @@ def main(request):
         else:
             raise Exception(f'Unsupported template file extension: {file_mime_type}')
 
-        print('Input method: ', input_method)
-        if input_method == 'UPLOAD':
-            storage_file_url = template.storageFileUrl
-            
-            template_bytes = get_from_bucket(storage_file_url)
-            template_buffer = BytesIO(template_bytes)
-
-        elif input_method == 'URL':
-            drive_file_id = template.driveFileId
-
-            template_buffer = download_from_google_drive_api(drive_file_id, file_mime_type)
-
-        elif input_method == 'GOOGLE_DRIVE':
-            drive_file_id = template.driveFileId            
-            google_access_token = certificate_emission.googleAccessToken
-
-            template_buffer = download_from_google_drive_api(drive_file_id, file_mime_type, access_token=google_access_token, user_id=user_id)
-
-        total_bytes = 0
-        delete_by_prefix(f"users/{user_id}/certificates/{certificate_emission_id}/certificate")
+        print('Loading template from bucket: ', template.storageFileUrl)
+        template_bytes = get_from_bucket(template.storageFileUrl)
+        template_buffer = BytesIO(template_bytes)
 
         # inspecionar_runs_docx(template_buffer)
-        print('Generating certificates...')
-        for index, row in enumerate(rows):
-            print(f'Row {index}: ', row)
-            # row['Idade'] = int(row['Idade'])
-            certificate_buffer = BytesIO(template_buffer.getvalue())
+        print(f'Generating certificate for row {row.id}: ', row)
+        certificate_buffer = BytesIO(template_buffer.getvalue())
 
-            print('variable_mapping: ', variable_mapping)
-            if variable_mapping:
-                row_variable_mapping = {}
-                for template_var, column_name in variable_mapping.items():
-                    if column_name and column_name in row.data:
-                        for column in data_source.columns:
-                            if column.name == column_name:
-                                row_value = row.data[column_name]
+        print('variable_mapping: ', variable_mapping)
+        if variable_mapping:
+            row_variable_mapping = {}
+            for template_var, column_name in variable_mapping.items():
+                if column_name and column_name in row.data:
+                    for column in data_source.columns:
+                        if column.name == column_name:
+                            row_value = row.data[column_name]
 
-                                if column.type == ColumnType.ARRAY:
-                                    row_variable_mapping[template_var] = row_value.split(column.arrayMetadata.separator)
-                                elif column.type == ColumnType.BOOLEAN:
-                                    row_variable_mapping[template_var] = True if row_value.lower().strip() == 'true' else False
-                                else:
-                                    row_variable_mapping[template_var] = row_value
-                                
-                                break
-                print('Row variable mapping: ', row_variable_mapping)
-                if is_docx:
-                    certificate_buffer = replace_variables_in_docx_liquid(certificate_buffer, row_variable_mapping)
-                else:
-                    certificate_buffer = replace_variables_in_pptx(certificate_buffer, row_variable_mapping)
-            
-            pdf_buffer = convert_to_pdf_with_libreoffice(certificate_buffer, file_extension_str)
-
-            pdf_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.pdf"
-            blob = upload_to_bucket(pdf_buffer, pdf_path)
-
-            total_bytes += blob.size
+                            if column.type == ColumnType.ARRAY:
+                                row_variable_mapping[template_var] = row_value.split(column.arrayMetadata.separator)
+                            elif column.type == ColumnType.BOOLEAN:
+                                row_variable_mapping[template_var] = True if row_value.lower().strip() == 'true' else False
+                            else:
+                                row_variable_mapping[template_var] = row_value
+                            
+                            break
+            print('Row variable mapping: ', row_variable_mapping)
+            if is_docx:
+                certificate_buffer = replace_variables_in_docx_liquid(certificate_buffer, row_variable_mapping)
+            else:
+                certificate_buffer = replace_variables_in_pptx(certificate_buffer, row_variable_mapping)
         
-        finish_certificates_generation(certificate_emission_id, True, total_bytes)
+        pdf_buffer = convert_to_pdf_with_libreoffice(certificate_buffer, file_extension_str)
+
+        pdf_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{row.id}.pdf"
+        blob = upload_to_bucket(pdf_buffer, pdf_path)
+
+        finish_certificates_generation(row.id, True, blob.size)
         
         return "", 204
         
@@ -780,8 +765,8 @@ def main(request):
 
         print("Validation errors:", friendly_errors)
         
-        if certificate_emission_id:
-            finish_certificates_generation(certificate_emission_id, False)
+        if data_source_row_id:
+            finish_certificates_generation(data_source_row_id, False)
             
         return {"error": friendly_errors}, 200
     
@@ -791,7 +776,8 @@ def main(request):
 
         try:
             print('Sending error status update...')
-            finish_certificates_generation(certificate_emission_id, False)
+            if data_source_row_id:
+                finish_certificates_generation(data_source_row_id, False)
         except Exception as inner_e:
             update_error = str(inner_e)
 

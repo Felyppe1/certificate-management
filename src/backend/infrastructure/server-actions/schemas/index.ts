@@ -47,6 +47,17 @@ export const downloadDataSourceSchema = z.object({
     certificateEmissionId: z.string().min(1),
 })
 
+export const updateDataSourceColumnsSchema = z.object({
+    certificateId: z.string().min(1),
+    columns: z.array(
+        z.object({
+            name: z.string().min(1),
+            type: z.enum(['string', 'number', 'boolean', 'date', 'array']),
+            arraySeparator: z.string().min(1).max(3).nullable(),
+        }),
+    ),
+})
+
 // Template
 export const addTemplateByUrlSchema = z.object({
     certificateId: z.string().min(1),

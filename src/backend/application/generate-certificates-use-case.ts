@@ -15,6 +15,7 @@ import {
 import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
 import { IPubSub } from './interfaces/cloud/ipubsub'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { IBucket } from './interfaces/cloud/ibucket'
 
 interface GenerateCertificatesUseCaseInput {
     certificateEmissionId: string
@@ -23,6 +24,7 @@ interface GenerateCertificatesUseCaseInput {
 
 export class GenerateCertificatesUseCase {
     constructor(
+        private bucket: Pick<IBucket, 'deleteObjectsWithPrefix'>,
         private externalUserAccountsRepository: Pick<
             IExternalUserAccountsRepository,
             'getById'
@@ -79,29 +81,37 @@ export class GenerateCertificatesUseCase {
         const externalUserAccount =
             await this.externalUserAccountsRepository.getById(userId, 'GOOGLE')
 
+        // Delete old certificates before generating new ones
+        await this.bucket.deleteObjectsWithPrefix({
+            bucketName: process.env.CERTIFICATES_BUCKET!,
+            prefix: `users/${userId}/certificates/${certificateEmissionId}/certificate`,
+        })
+
         const { dataSource, template, ...certificateEmissionData } =
             certificateEmission.serialize()
 
-        const body = {
-            certificateEmission: {
-                ...certificateEmissionData,
-                googleAccessToken: externalUserAccount?.accessToken || null,
-                template: template!,
-                dataSource: {
-                    ...dataSource!,
-                    rows: dataSourceRows.map(dataSourceRow => {
-                        const { id, data, ...rest } = dataSourceRow.serialize()
+        const publishPromises = dataSourceRows.map(dataSourceRow => {
+            const { id, data } = dataSourceRow.serialize()
 
-                        return {
+            const body = {
+                certificateEmission: {
+                    ...certificateEmissionData,
+                    googleAccessToken: externalUserAccount?.accessToken || null,
+                    template: template!,
+                    dataSource: {
+                        ...dataSource!,
+                        row: {
                             id,
                             data,
-                        }
-                    }),
+                        },
+                    },
                 },
-            },
-        }
+            }
 
-        await this.pubSub.publish('certificates-generation-started', body)
+            return this.pubSub.publish('certificates-generation-started', body)
+        })
+
+        await Promise.all(publishPromises)
 
         dataSourceRows.forEach(dataSourceRow => {
             dataSourceRow.startGeneration()

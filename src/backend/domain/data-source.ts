@@ -1,6 +1,22 @@
 import z from 'zod'
 import { INPUT_METHOD } from './certificate'
 
+export const FORBIDDEN_TYPE_CHANGE: Record<ColumnType, ColumnType[]> = {
+    string: [],
+    number: ['boolean'],
+    boolean: ['date', 'number'],
+    date: ['boolean'],
+    array: [],
+}
+
+const UNSAFE_TYPE_CHANGE: Record<ColumnType, ColumnType[]> = {
+    string: ['number', 'boolean', 'date'],
+    number: ['date'],
+    boolean: [],
+    date: ['number'],
+    array: ['number', 'boolean', 'date'],
+}
+
 export enum DATA_SOURCE_FILE_EXTENSION {
     CSV = 'text/csv',
     XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -14,7 +30,7 @@ type ArrayMetadata = {
     separator: string
 }
 
-type Column = {
+export type DataSourceColumn = {
     name: string
     type: ColumnType
     arrayMetadata: ArrayMetadata | null
@@ -29,7 +45,7 @@ export interface DataSourceInput {
     thumbnailUrl: string | null
     columnsRow: number
     dataRowStart: number
-    columns: Column[]
+    columns: DataSourceColumn[]
 }
 
 export interface DataSourceOutput extends DataSourceInput {}
@@ -48,7 +64,7 @@ export class DataSource {
     private inputMethod: INPUT_METHOD
     private fileName: string
     private fileExtension: DATA_SOURCE_FILE_EXTENSION
-    private columns: Column[]
+    private columns: DataSourceColumn[]
     private columnsRow: number
     private dataRowStart: number
     private thumbnailUrl: string | null
@@ -110,7 +126,69 @@ export class DataSource {
         this.columns = data.columns
     }
 
-    private static inferTypes(rows: Record<string, string>[]): Column[] {
+    setColumns(columns: DataSourceColumn[]) {
+        const allColumnsExist = columns.every(column =>
+            this.columns.find(c => c.name === column.name),
+        )
+
+        if (!allColumnsExist) {
+            throw new Error(
+                'All existing columns must be present when updating columns',
+            )
+        }
+
+        const allColumnsValid = columns.every(column => {
+            if (column.type === 'array') {
+                const separator = column.arrayMetadata?.separator
+
+                return (
+                    typeof separator === 'string' &&
+                    separator.length >= 1 &&
+                    separator.length <= 3
+                )
+            }
+
+            return column.arrayMetadata === null
+        })
+
+        if (!allColumnsValid) {
+            throw new Error('All columns must have valid types and metadata')
+        }
+
+        // 3. Verificação de Transições de Tipo (NOVA LÓGICA)
+        const unsafeColumnNames: string[] = []
+
+        for (const newCol of columns) {
+            // Encontramos a coluna antiga correspondente
+            // (o find aqui é seguro pois já validamos allColumnsExist acima)
+            const oldCol = this.columns.find(c => c.name === newCol.name)!
+
+            // Se o tipo não mudou, pula para a próxima
+            if (oldCol.type === newCol.type) {
+                continue
+            }
+
+            const forbiddenTargets = FORBIDDEN_TYPE_CHANGE[oldCol.type]
+            if (forbiddenTargets.includes(newCol.type)) {
+                throw new Error(
+                    `Forbidden transition: Cannot change column '${newCol.name}' from '${oldCol.type}' to '${newCol.type}'.`,
+                )
+            }
+
+            const unsafeTargets = UNSAFE_TYPE_CHANGE[oldCol.type]
+            if (unsafeTargets?.includes(newCol.type)) {
+                unsafeColumnNames.push(newCol.name)
+            }
+        }
+
+        this.columns = columns
+
+        return unsafeColumnNames
+    }
+
+    private static inferTypes(
+        rows: Record<string, string>[],
+    ): DataSourceColumn[] {
         const columnValues: Record<string, string[]> = {}
 
         for (const row of rows) {

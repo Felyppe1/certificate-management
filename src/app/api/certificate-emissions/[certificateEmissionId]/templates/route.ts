@@ -72,6 +72,8 @@ export async function PATCH(
             new PrismaExternalUserAccountsRepository(prisma)
         const transactionManager = new PrismaTransactionManager(prisma)
 
+        const bucket = new GcpBucket()
+
         const refreshTemplateUseCase = new RefreshTemplateUseCase(
             certificatesRepository,
             dataSourceRowsRepository,
@@ -80,6 +82,7 @@ export async function PATCH(
             fileContentExtractorFactory,
             externalUserAccountsRepository,
             transactionManager,
+            bucket,
         )
 
         await refreshTemplateUseCase.execute({
