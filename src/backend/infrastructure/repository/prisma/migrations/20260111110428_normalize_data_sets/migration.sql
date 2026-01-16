@@ -20,6 +20,7 @@ CREATE TABLE "public"."data_source_rows" (
     "data_source_id" TEXT NOT NULL,
     "file_bytes" INTEGER,
     "processing_status" TEXT NOT NULL,
+    "legacy_file_index" INTEGER,
 
     CONSTRAINT "data_source_rows_pkey" PRIMARY KEY ("id"),
     CONSTRAINT "data_source_rows_id_data_source_id_key" UNIQUE ("id", "data_source_id")
@@ -54,6 +55,7 @@ DECLARE
     column_value TEXT;
     row_count INTEGER;
     bytes_per_row INTEGER;
+    row_idx INTEGER;
 BEGIN
     -- Iterate through each data_set
     FOR dataset_record IN 
@@ -75,8 +77,9 @@ BEGIN
             END;
             
             -- Iterate through each row in the JSON array
-            FOR row_data IN 
-                SELECT * FROM jsonb_array_elements(dataset_record.rows::jsonb)
+            FOR row_data, row_idx IN 
+                SELECT value, ordinality 
+                FROM jsonb_array_elements(dataset_record.rows::jsonb) WITH ORDINALITY
             LOOP
                 -- Generate a unique ID for this row
                 row_id := gen_random_uuid()::TEXT;
@@ -84,12 +87,13 @@ BEGIN
                 -- Insert into data_source_rows
                 -- Map generation_status -> processing_status
                 -- Distribute total_bytes evenly across rows
-                INSERT INTO "public"."data_source_rows" (id, data_source_id, file_bytes, processing_status)
+                INSERT INTO "public"."data_source_rows" (id, data_source_id, file_bytes, processing_status, legacy_file_index)
                 VALUES (
                     row_id,
                     dataset_record.certificate_emission_id,
                     bytes_per_row,
-                    COALESCE(dataset_record.generation_status, 'PENDING')
+                    COALESCE(dataset_record.generation_status, 'PENDING'),
+                    row_idx
                 );
                 
                 -- Get all columns for this data source

@@ -386,34 +386,64 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                 })
             }
 
+            // First, update/create DataSource and DataSourceColumns
+            // This must happen BEFORE creating TemplateVariables that reference them
+            if (dataSource) {
+                await tx.dataSource.upsert({
+                    where: { certificate_emission_id: id },
+                    create: {
+                        certificate_emission_id: id,
+                        drive_file_id: dataSource.driveFileId,
+                        storage_file_url: dataSource.storageFileUrl,
+                        input_method: dataSource.inputMethod,
+                        file_name: dataSource.fileName,
+                        file_extension: dataSource.fileExtension,
+                        thumbnail_url: dataSource.thumbnailUrl,
+                    },
+                    update: {
+                        drive_file_id: dataSource.driveFileId,
+                        storage_file_url: dataSource.storageFileUrl,
+                        file_name: dataSource.fileName,
+                        input_method: dataSource.inputMethod,
+                        file_extension: dataSource.fileExtension,
+                        thumbnail_url: dataSource.thumbnailUrl,
+                    },
+                })
+
+                // Now upsert the DataSourceColumns before creating TemplateVariables
+                await Promise.all(
+                    dataSource.columns.map(column => {
+                        return tx.dataSourceColumn.upsert({
+                            where: {
+                                name_data_source_id: {
+                                    data_source_id: id,
+                                    name: column.name,
+                                },
+                            },
+                            update: {
+                                type: COLUMN_TYPE_TO_SQL_MAPPER[column.type],
+                                array_separator:
+                                    column.arrayMetadata?.separator ?? null,
+                            },
+                            create: {
+                                data_source_id: id,
+                                name: column.name,
+                                type: COLUMN_TYPE_TO_SQL_MAPPER[column.type],
+                                array_separator:
+                                    column.arrayMetadata?.separator ?? null,
+                            },
+                        })
+                    }),
+                )
+            }
+
+            // Now update the certificate emission with Template and TemplateVariables
+            // At this point, DataSourceColumns exist, so the foreign key constraint will be satisfied
             await tx.certificateEmission.update({
                 where: { id },
                 data: {
                     title: name,
                     status,
-                    DataSource: {
-                        ...(dataSource && {
-                            upsert: {
-                                create: {
-                                    drive_file_id: dataSource.driveFileId,
-                                    storage_file_url: dataSource.storageFileUrl,
-                                    input_method: dataSource.inputMethod,
-                                    file_name: dataSource.fileName,
-                                    file_extension: dataSource.fileExtension,
-                                    thumbnail_url: dataSource.thumbnailUrl,
-                                },
-                                update: {
-                                    drive_file_id: dataSource.driveFileId,
-                                    storage_file_url: dataSource.storageFileUrl,
-                                    file_name: dataSource.fileName,
-                                    input_method: dataSource.inputMethod,
-                                    file_extension: dataSource.fileExtension,
-                                    thumbnail_url: dataSource.thumbnailUrl,
-                                    // where: { id: template.id }, // TODO: must be the id of the previous template, not the new one
-                                },
-                            },
-                        }),
-                    },
                     Template: {
                         ...(template && {
                             upsert: {
@@ -478,33 +508,6 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                     },
                 },
             })
-
-            if (dataSource) {
-                await Promise.all(
-                    dataSource.columns.map(column => {
-                        return tx.dataSourceColumn.upsert({
-                            where: {
-                                name_data_source_id: {
-                                    data_source_id: id,
-                                    name: column.name,
-                                },
-                            },
-                            update: {
-                                type: COLUMN_TYPE_TO_SQL_MAPPER[column.type],
-                                array_separator:
-                                    column.arrayMetadata?.separator ?? null,
-                            },
-                            create: {
-                                data_source_id: id,
-                                name: column.name,
-                                type: COLUMN_TYPE_TO_SQL_MAPPER[column.type],
-                                array_separator:
-                                    column.arrayMetadata?.separator ?? null,
-                            },
-                        })
-                    }),
-                )
-            }
 
             await tx.outbox.createMany({
                 data: domainEvents.map(event => ({

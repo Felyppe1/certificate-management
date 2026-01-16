@@ -152,6 +152,7 @@ model DataSourceRow {
     data_source_id    String
     file_bytes        Int?
     processing_status String // "PENDING" | "RUNNING" | "COMPLETED" | "FAILED"
+    legacy_file_index Int?
 
     DataSourceValue DataSourceValue[]
 
