@@ -639,13 +639,9 @@ class DataSourceRowModel(BaseModel):
     data: Dict[str, Any]
 
 class TemplateModel(BaseModel):
-    driveFileId: Optional[str] = None
     storageFileUrl: Optional[str] = None
-    inputMethod: InputMethod
-    fileName: str
     fileExtension: TemplateFileExtension
     variables: List[str]
-    thumbnailUrl: Optional[str] = None
 
 class ColumnType(str, Enum):
     STRING = "string"
@@ -663,29 +659,18 @@ class Column(BaseModel):
     arrayMetadata: Optional[ArrayMetadata] = None
 
 class DataSourceModel(BaseModel):
-    driveFileId: Optional[str] = None
-    storageFileUrl: Optional[str] = None
-    inputMethod: InputMethod
-    fileName: str
-    fileExtension: DataSourceFileExtension
     columns: List[Column]
-    thumbnailUrl: Optional[str] = None
-    row: DataSourceRowModel
 
 class CertificateEmissionModel(BaseModel):
     id: str
-    name: str
     userId: str
-    status: str
-    createdAt: datetime
-    # Record<string, string | null> | null
-    variableColumnMapping: Optional[Dict[str, Optional[str]]] = None
-    googleAccessToken: Optional[str] = None
+    variableColumnMapping: Optional[Dict[str, Optional[str]]] = None # Record<string, string | null> | null
     template: TemplateModel
     dataSource: DataSourceModel
 
 class TriggerGenerateCertificatePDFsInput(BaseModel):
     certificateEmission: CertificateEmissionModel
+    row: DataSourceRowModel
 
 @functions_framework.http
 def main(request):
@@ -717,7 +702,6 @@ def main(request):
     #     return {"error": "Invalid fields", "details": friendly_errors}, 400
 
     envelop = request.get_json()
-    certificate_emission_id = None
     data_source_row_id = None
 
     try:
@@ -725,8 +709,7 @@ def main(request):
         data_str = base64.b64decode(pubsub_message.get('data', '')).decode('utf-8')
         raw_data = json.loads(data_str)
 
-        certificate_emission_id = raw_data.get('certificateEmission', {}).get('id')
-        data_source_row_id = raw_data.get('certificateEmission', {}).get('dataSource', {}).get('row', {}).get('id')
+        data_source_row_id = raw_data.get('row', {}).get('id')
     except Exception as e:
         print(f"Error to decode message: {e}")
 
@@ -736,14 +719,14 @@ def main(request):
         input_data = TriggerGenerateCertificatePDFsInput(**raw_data)
         
         certificate_emission = input_data.certificateEmission
+        certificate_emission_id = certificate_emission.id
         template = certificate_emission.template
         data_source = certificate_emission.dataSource
-        certificate_emission_id = certificate_emission.id
         variable_mapping = certificate_emission.variableColumnMapping or {}
-        row = data_source.row
+        row = input_data.row
         data_source_row_id = row.id
         user_id = certificate_emission.userId
-        input_method = template.inputMethod.value
+        # input_method = template.inputMethod.value
         file_mime_type = template.fileExtension.value
 
         template_buffer = None
@@ -763,7 +746,7 @@ def main(request):
         template_buffer = BytesIO(template_bytes)
 
         # inspecionar_runs_docx(template_buffer)
-        print(f'Generating certificate for row {row.id}: ', row)
+        print(f'Generating certificate for row {data_source_row_id}: ', row)
         certificate_buffer = BytesIO(template_buffer.getvalue())
 
         print('variable_mapping: ', variable_mapping)
@@ -778,7 +761,11 @@ def main(request):
                             if column.type == ColumnType.ARRAY:
                                 row_variable_mapping[template_var] = row_value.split(column.arrayMetadata.separator)
                             elif column.type == ColumnType.BOOLEAN:
-                                row_variable_mapping[template_var] = True if row_value.lower().strip() == 'true' else False
+                                normalizedValue = row_value.lower().strip()
+
+                                row_variable_mapping[template_var] = True if normalizedValue == 'true' or normalizedValue == '1' else False
+                            elif column.type == ColumnType.NUMBER:
+                                row_variable_mapping[template_var] = float(row_value)
                             else:
                                 row_variable_mapping[template_var] = row_value
                             
@@ -791,10 +778,10 @@ def main(request):
         
         pdf_buffer = convert_to_pdf_with_libreoffice(certificate_buffer, file_extension_str)
 
-        pdf_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{row.id}.pdf"
+        pdf_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{data_source_row_id}.pdf"
         blob = upload_to_bucket(pdf_buffer, pdf_path)
 
-        finish_certificates_generation(row.id, True, blob.size)
+        finish_certificates_generation(data_source_row_id, True, blob.size)
         
         return "", 204
         

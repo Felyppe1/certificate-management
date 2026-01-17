@@ -7,9 +7,12 @@ import {
     PROCESSING_STATUS_ENUM,
 } from '@/backend/domain/data-source-row'
 import { TransactionClient } from './client/internal/prismaNamespace'
+import { IDataSourceRowsReadRepository } from '@/backend/application/interfaces/repository/idata-source-rows-read-repository'
+
+const GET_MANY_DEFAULT_LIMIT = 100
 
 export class PrismaDataSourceRowsRepository
-    implements IDataSourceRowsRepository
+    implements IDataSourceRowsRepository, IDataSourceRowsReadRepository
 {
     constructor(private readonly defaultPrisma: PrismaExecutor) {}
 
@@ -163,78 +166,69 @@ export class PrismaDataSourceRowsRepository
         })
     }
 
-    async getManyByCertificateEmissionId(
-        certificateEmissionId: string,
-    ): Promise<DataSourceRow[]> {
-        // Query through DataSourceValue since that's where the certificate_emission_id (data_source_id) is stored
-        const dataSourceRows = await this.prisma.dataSourceRow.findMany({
+    // async getManyByCertificateEmissionId(
+    //     certificateEmissionId: string,
+    // ): Promise<DataSourceRow[]> {
+    //     // Query through DataSourceValue since that's where the certificate_emission_id (data_source_id) is stored
+    //     const dataSourceRows = await this.prisma.dataSourceRow.findMany({
+    //         where: {
+    //             data_source_id: certificateEmissionId,
+    //         },
+    //         include: {
+    //             DataSourceValue: {
+    //                 where: {
+    //                     data_source_id: certificateEmissionId,
+    //                 },
+    //                 include: {
+    //                     DataSourceColumn: true,
+    //                 },
+    //             },
+    //         },
+    //     })
+
+    //     // Get the data source columns once (all rows have the same columns)
+    //     const dataSourceColumns = await this.prisma.dataSourceColumn.findMany({
+    //         where: {
+    //             data_source_id: certificateEmissionId,
+    //         },
+    //     })
+
+    //     const columns = dataSourceColumns.map(col => ({
+    //         name: col.name,
+    //         type: col.type.toLowerCase() as ColumnType,
+    //     }))
+
+    //     return dataSourceRows.map(row => {
+    //         const data: Record<string, string> = {}
+    //         for (const value of row.DataSourceValue) {
+    //             data[value.column_name] = value.value
+    //         }
+
+    //         return new DataSourceRow({
+    //             id: row.id,
+    //             certificateEmissionId,
+    //             fileBytes: row.file_bytes,
+    //             data,
+    //             dataSourceColumns: columns,
+    //             processingStatus: row.processing_status as any,
+    //         })
+    //     })
+    // }
+
+    async updateManyProcessingStatus(
+        ids: string[],
+        status: PROCESSING_STATUS_ENUM,
+    ): Promise<void> {
+        if (ids.length === 0) return
+
+        await this.prisma.dataSourceRow.updateMany({
             where: {
-                data_source_id: certificateEmissionId,
+                id: { in: ids },
             },
-            include: {
-                DataSourceValue: {
-                    where: {
-                        data_source_id: certificateEmissionId,
-                    },
-                    include: {
-                        DataSourceColumn: true,
-                    },
-                },
+            data: {
+                processing_status: status,
             },
         })
-
-        // Get the data source columns once (all rows have the same columns)
-        const dataSourceColumns = await this.prisma.dataSourceColumn.findMany({
-            where: {
-                data_source_id: certificateEmissionId,
-            },
-        })
-
-        const columns = dataSourceColumns.map(col => ({
-            name: col.name,
-            type: col.type.toLowerCase() as ColumnType,
-        }))
-
-        return dataSourceRows.map(row => {
-            const data: Record<string, string> = {}
-            for (const value of row.DataSourceValue) {
-                data[value.column_name] = value.value
-            }
-
-            return new DataSourceRow({
-                id: row.id,
-                certificateEmissionId,
-                fileBytes: row.file_bytes,
-                data,
-                dataSourceColumns: columns,
-                processingStatus: row.processing_status as any,
-            })
-        })
-    }
-
-    async updateMany(dataSourceRows: DataSourceRow[]): Promise<void> {
-        const execute = async (tx: TransactionClient) => {
-            await Promise.all(
-                dataSourceRows.map(dataSourceRow => {
-                    const { id, fileBytes, processingStatus } =
-                        dataSourceRow.serialize()
-
-                    return tx.dataSourceRow.update({
-                        where: { id },
-                        data: {
-                            file_bytes: fileBytes,
-                            processing_status: processingStatus,
-                        },
-                    })
-                }),
-            )
-        }
-
-        if (isPrismaClient(this.prisma)) {
-            await this.prisma.$transaction(execute)
-        } else {
-            await execute(this.prisma)
-        }
     }
 
     async resetProcessingStatusByCertificateEmissionId(
@@ -336,5 +330,84 @@ export class PrismaDataSourceRowsRepository
         })
 
         return count === 0
+    }
+
+    // IDataSourceRowsReadRepository
+    async getManyByCertificateEmissionId(
+        certificateEmissionId: string,
+        limit = GET_MANY_DEFAULT_LIMIT,
+        cursor?: string,
+    ) {
+        const rows = await this.prisma.dataSourceRow.findMany({
+            where: {
+                data_source_id: certificateEmissionId,
+            },
+            take: limit + 1, // Get lines + 1 to determine if there's a next page
+            ...(cursor && {
+                cursor: { id: cursor },
+                skip: 1,
+            }),
+            orderBy: { id: 'asc' },
+            include: {
+                DataSourceValue: {
+                    where: {
+                        data_source_id: certificateEmissionId,
+                    },
+                    select: {
+                        column_name: true,
+                        value: true,
+                    },
+                },
+            },
+        })
+
+        let nextCursor: string | null = null
+
+        if (rows.length > limit) {
+            const nextItem = rows.pop()!
+            nextCursor = nextItem.id
+        }
+
+        const resultRows = rows.map(resultRow => {
+            const data: Record<string, string> = {}
+
+            for (const value of resultRow.DataSourceValue) {
+                data[value.column_name] = value.value
+            }
+
+            return {
+                id: resultRow.id,
+                data,
+            }
+        })
+
+        return {
+            data: resultRows,
+            nextCursor,
+        }
+    }
+
+    async countByCertificateEmissionId(
+        certificateEmissionId: string,
+    ): Promise<number> {
+        return this.prisma.dataSourceRow.count({
+            where: {
+                data_source_id: certificateEmissionId,
+            },
+        })
+    }
+
+    async countWithStatuses(
+        certificateEmissionId: string,
+        statuses: [PROCESSING_STATUS_ENUM],
+    ): Promise<number> {
+        return this.prisma.dataSourceRow.count({
+            where: {
+                data_source_id: certificateEmissionId,
+                processing_status: {
+                    in: statuses,
+                },
+            },
+        })
     }
 }

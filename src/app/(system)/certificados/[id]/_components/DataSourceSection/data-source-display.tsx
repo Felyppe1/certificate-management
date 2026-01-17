@@ -25,6 +25,7 @@ import {
     Table2,
     ALargeSmall,
     Eye,
+    RotateCw,
 } from 'lucide-react'
 import { startTransition, useActionState, useEffect, useState } from 'react'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
@@ -34,6 +35,7 @@ import {
 } from '@/backend/domain/data-source'
 import { deleteDataSourceAction } from '@/backend/infrastructure/server-actions/delete-data-source-action'
 import { refreshDataSourceAction } from '@/backend/infrastructure/server-actions/refresh-data-source-action'
+import { retryDataSourceRowAction } from '@/backend/infrastructure/server-actions/retry-data-source-row-action'
 import { SourceIcon } from '@/components/svg/SourceIcon'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
 import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
@@ -125,6 +127,11 @@ export function DataSourceDisplay({
         isDownloadingDataSource,
     ] = useActionState(downloadDataSourceAction, null)
 
+    const [retryState, retryActionHandler, isRetrying] = useActionState(
+        retryDataSourceRowAction,
+        null,
+    )
+
     const handleRefresh = () => {
         const formData = new FormData()
         formData.append('certificateId', certificateId)
@@ -190,6 +197,25 @@ export function DataSourceDisplay({
         const url = `/api/certificate-emissions/${certificateId}/zip`
         window.open(url, '_blank', 'noopener,noreferrer')
     }
+
+    const handleRetry = (rowId: string) => {
+        const formData = new FormData()
+        formData.append('rowId', rowId)
+
+        startTransition(() => {
+            retryActionHandler(formData)
+        })
+    }
+
+    useEffect(() => {
+        if (!retryState) return
+
+        if (retryState.success) {
+            toast.success('Reprocessamento iniciado')
+        } else {
+            toast.error('Erro ao tentar reprocessar o registro')
+        }
+    }, [retryState])
 
     useEffect(() => {
         if (!refreshState) return
@@ -514,23 +540,51 @@ export function DataSourceDisplay({
                                                                         key={
                                                                             index
                                                                         }
+                                                                        className={
+                                                                            row.processingStatus ===
+                                                                            PROCESSING_STATUS_ENUM.FAILED
+                                                                                ? 'bg-destructive/10 hover:bg-destructive/20'
+                                                                                : ''
+                                                                        }
                                                                     >
                                                                         {certificatesGenerated && (
                                                                             <TableCell>
                                                                                 <div className="flex gap-1">
-                                                                                    <Button
-                                                                                        onClick={() => {
-                                                                                            handleViewCertificate(
-                                                                                                row.id,
-                                                                                            )
-                                                                                        }}
-                                                                                        variant="ghost"
-                                                                                        size="sm"
-                                                                                        className="h-8 w-8 p-0"
-                                                                                        title="Visualizar certificado"
-                                                                                    >
-                                                                                        <Eye />
-                                                                                    </Button>
+                                                                                    {row.processingStatus ===
+                                                                                        PROCESSING_STATUS_ENUM.COMPLETED && (
+                                                                                        <Button
+                                                                                            onClick={() => {
+                                                                                                handleViewCertificate(
+                                                                                                    row.id,
+                                                                                                )
+                                                                                            }}
+                                                                                            variant="ghost"
+                                                                                            size="sm"
+                                                                                            className="h-8 w-8 p-0"
+                                                                                            title="Visualizar certificado"
+                                                                                        >
+                                                                                            <Eye />
+                                                                                        </Button>
+                                                                                    )}
+                                                                                    {/* {row.processingStatus ===
+                                                                                        PROCESSING_STATUS_ENUM.FAILED && (
+                                                                                        <Button
+                                                                                            onClick={() =>
+                                                                                                handleRetry(
+                                                                                                    row.id,
+                                                                                                )
+                                                                                            }
+                                                                                            variant="ghost"
+                                                                                            size="sm"
+                                                                                            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                                                            title="Tentar novamente"
+                                                                                            disabled={
+                                                                                                isRetrying
+                                                                                            }
+                                                                                        >
+                                                                                            <RotateCw className="h-4 w-4" />
+                                                                                        </Button>
+                                                                                    )} */}
                                                                                 </div>
                                                                             </TableCell>
                                                                         )}

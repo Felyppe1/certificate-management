@@ -1,14 +1,11 @@
 import { GenerateCertificatesUseCase } from '@/backend/application/generate-certificates-use-case'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
 import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
-import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { GcpPubSub } from '@/backend/infrastructure/cloud/gcp/gcp-pubsub'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 
@@ -21,26 +18,21 @@ export async function POST(
     try {
         const { userId } = await validateSessionToken(request)
 
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
         const bucket = new GcpBucket()
-        const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository(prisma)
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,
         )
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
         const pubSub = new GcpPubSub()
 
         const generateCertificatesUseCase = new GenerateCertificatesUseCase(
             bucket,
-            externalUserAccountsRepository,
             certificateEmissionsRepository,
             dataSourceRowsRepository,
-            dataSetsRepository,
+            dataSourceRowsRepository,
             pubSub,
         )
 

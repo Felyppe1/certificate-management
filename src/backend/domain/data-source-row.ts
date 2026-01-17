@@ -128,7 +128,7 @@ export class DataSourceRow {
                 )
             }
 
-            const coercedValue = this.coerceValue(
+            const coercedValue = DataSourceRow.coerceValue(
                 value,
                 columnDef.type,
                 columnName,
@@ -140,7 +140,7 @@ export class DataSourceRow {
         return result
     }
 
-    private coerceValue(
+    static coerceValue(
         value: string,
         type: ColumnType,
         columnName: string,

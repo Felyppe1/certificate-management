@@ -1,55 +1,46 @@
 'use server'
 
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import { updateTag } from 'next/cache'
 import { logoutAction } from './logout-action'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { GenerateCertificatesUseCase } from '@/backend/application/generate-certificates-use-case'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
-import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { GcpPubSub } from '../cloud/gcp/gcp-pubsub'
-import { GcpBucket } from '../cloud/gcp/gcp-bucket'
+import { RetryDataSourceRowUseCase } from '@/backend/application/generate-certificate-use-case'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-import { generateCertificatesSchema } from './schemas'
+import { retryDataSourceRowSchema } from './schemas'
 
-export async function generateCertificatesAction(
-    _: unknown,
-    formData: FormData,
-) {
+export async function retryDataSourceRowAction(_: unknown, formData: FormData) {
     const rawData = {
-        certificateId: formData.get('certificateId') as string,
+        rowId: formData.get('rowId') as string,
     }
-
     try {
         const { userId } = await validateSessionToken()
 
-        const parsedData = generateCertificatesSchema.parse(rawData)
+        const parsedData = retryDataSourceRowSchema.parse(rawData)
 
-        const bucket = new GcpBucket()
-        const certificateEmissionsRepository = new PrismaCertificatesRepository(
-            prisma,
-        )
+        const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,
         )
-        const googleAuthGateway = new GoogleAuthGateway()
         const pubSub = new GcpPubSub()
 
-        const generateCertificatesUseCase = new GenerateCertificatesUseCase(
-            bucket,
-            certificateEmissionsRepository,
-            dataSourceRowsRepository,
+        const retryDataSourceRowUseCase = new RetryDataSourceRowUseCase(
+            certificatesRepository,
             dataSourceRowsRepository,
             pubSub,
         )
 
-        await generateCertificatesUseCase.execute({
-            certificateEmissionId: parsedData.certificateId,
+        await retryDataSourceRowUseCase.execute({
+            rowId: parsedData.rowId,
             userId,
         })
+
+        return {
+            success: true,
+        }
     } catch (error: any) {
-        console.log(error)
+        console.error(error)
 
         if (error instanceof AuthenticationError) {
             if (
@@ -63,13 +54,7 @@ export async function generateCertificatesAction(
 
         return {
             success: false,
-            errorType: error.type,
+            errorType: error.type || 'unknown',
         }
-    }
-
-    updateTag('certificate')
-
-    return {
-        success: true,
     }
 }

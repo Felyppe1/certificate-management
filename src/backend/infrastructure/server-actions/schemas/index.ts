@@ -139,3 +139,7 @@ export const createWriteBucketSignedUrlSchema = z.object({
     ]),
     type: z.enum(['TEMPLATE']),
 })
+
+export const retryDataSourceRowSchema = z.object({
+    rowId: z.string().min(1),
+})

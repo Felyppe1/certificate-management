@@ -231,10 +231,10 @@ export class DataSource {
 
         if (nonEmpty.every(this.isBoolean))
             return { type: 'boolean', arrayMetadata: null }
-        if (nonEmpty.every(this.isNumber))
-            return { type: 'number', arrayMetadata: null }
         if (nonEmpty.every(this.isDate))
             return { type: 'date', arrayMetadata: null }
+        if (nonEmpty.every(this.isNumber))
+            return { type: 'number', arrayMetadata: null }
 
         return { type: 'string', arrayMetadata: null }
     }
@@ -259,9 +259,13 @@ export class DataSource {
     }
 
     static isBoolean(value: string): boolean {
+        const normalizedValue = value.trim().toLowerCase()
+
         return (
-            value.trim().toLowerCase() === 'true' ||
-            value.trim().toLowerCase() === 'false'
+            normalizedValue === 'true' ||
+            normalizedValue === 'false' ||
+            normalizedValue === '1' ||
+            normalizedValue === '0'
         )
     }
 

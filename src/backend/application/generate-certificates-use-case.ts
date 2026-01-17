@@ -7,15 +7,15 @@ import {
     NotFoundError,
 } from '../domain/error/not-found-error'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
 import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
-import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
 import { IPubSub } from './interfaces/cloud/ipubsub'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { IBucket } from './interfaces/cloud/ibucket'
+import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
+import { PROCESSING_STATUS_ENUM } from '../domain/data-source-row'
 
 interface GenerateCertificatesUseCaseInput {
     certificateEmissionId: string
@@ -25,21 +25,19 @@ interface GenerateCertificatesUseCaseInput {
 export class GenerateCertificatesUseCase {
     constructor(
         private bucket: Pick<IBucket, 'deleteObjectsWithPrefix'>,
-        private externalUserAccountsRepository: Pick<
-            IExternalUserAccountsRepository,
-            'getById'
-        >,
         private certificateEmissionsRepository: Pick<
             ICertificatesRepository,
             'getById'
         >,
         private dataSourceRowsRepository: Pick<
             IDataSourceRowsRepository,
-            'getManyByCertificateEmissionId' | 'updateMany'
+            'updateManyProcessingStatus'
         >,
-        private dataSetsRepository: Pick<
-            IDataSetsRepository,
-            'getByCertificateEmissionId' | 'upsert'
+        private dataSourceRowsReadRepository: Pick<
+            IDataSourceRowsReadRepository,
+            | 'getManyByCertificateEmissionId'
+            | 'countByCertificateEmissionId'
+            | 'countWithStatuses'
         >,
         private pubSub: Pick<IPubSub, 'publish'>,
     ) {}
@@ -69,17 +67,26 @@ export class GenerateCertificatesUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }
 
-        const dataSourceRows =
-            await this.dataSourceRowsRepository.getManyByCertificateEmissionId(
-                certificateEmission.getId(),
+        const totalRows =
+            await this.dataSourceRowsReadRepository.countByCertificateEmissionId(
+                certificateEmissionId,
             )
 
-        if (dataSourceRows.length === 0) {
+        if (totalRows === 0) {
             throw new ValidationError(VALIDATION_ERROR_TYPE.NO_DATA_SOURCE_ROWS)
         }
 
-        const externalUserAccount =
-            await this.externalUserAccountsRepository.getById(userId, 'GOOGLE')
+        const totalPendingRows =
+            await this.dataSourceRowsReadRepository.countWithStatuses(
+                certificateEmissionId,
+                [PROCESSING_STATUS_ENUM.PENDING],
+            )
+
+        if (totalPendingRows !== totalRows) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.DATA_SOURCE_ROWS_NOT_READY,
+            )
+        }
 
         // Delete old certificates before generating new ones
         await this.bucket.deleteObjectsWithPrefix({
@@ -90,38 +97,47 @@ export class GenerateCertificatesUseCase {
         const { dataSource, template, ...certificateEmissionData } =
             certificateEmission.serialize()
 
-        const publishPromises = dataSourceRows.map(dataSourceRow => {
-            const { id, data } = dataSourceRow.serialize()
+        const PAGE_SIZE = 100
+        let cursor: string | undefined = undefined
 
-            const body = {
-                certificateEmission: {
-                    ...certificateEmissionData,
-                    googleAccessToken: externalUserAccount?.accessToken || null,
-                    template: template!,
-                    dataSource: {
-                        ...dataSource!,
-                        row: {
-                            id,
-                            data,
+        do {
+            const { data, nextCursor } =
+                await this.dataSourceRowsReadRepository.getManyByCertificateEmissionId(
+                    certificateEmissionId,
+                    PAGE_SIZE,
+                    cursor,
+                )
+
+            if (data.length === 0) break
+
+            const publishPromises = data.map(({ id, data }) => {
+                return this.pubSub.publish('certificates-generation-started', {
+                    certificateEmission: {
+                        id: certificateEmissionData.id,
+                        userId: certificateEmissionData.userId,
+                        variableColumnMapping:
+                            certificateEmissionData.variableColumnMapping,
+                        template: {
+                            storageFileUrl: template!.storageFileUrl,
+                            fileExtension: template!.fileExtension,
+                            variables: template!.variables,
+                        },
+                        dataSource: {
+                            columns: dataSource!.columns,
                         },
                     },
-                },
-            }
+                    row: { id, data },
+                })
+            })
 
-            return this.pubSub.publish('certificates-generation-started', body)
-        })
+            await Promise.all(publishPromises)
 
-        await Promise.all(publishPromises)
+            await this.dataSourceRowsRepository.updateManyProcessingStatus(
+                data.map(row => row.id),
+                PROCESSING_STATUS_ENUM.RUNNING,
+            )
 
-        dataSourceRows.forEach(dataSourceRow => {
-            dataSourceRow.startGeneration()
-        })
-
-        await this.dataSourceRowsRepository.updateMany(dataSourceRows)
-        // dataSet.update({
-        //     generationStatus: GENERATION_STATUS.PENDING,
-        // })
-
-        // await this.dataSetsRepository.upsert(dataSet)
+            cursor = nextCursor ?? undefined
+        } while (cursor)
     }
 }

@@ -48,11 +48,27 @@ export function GenerateCertificatesSection({
 
     const router = useRouter()
     const [completedRows, setCompletedRows] = useState(0)
-    const totalRows = rows.length
 
-    const isGenerating = rows.some(
-        row => row.processingStatus === PROCESSING_STATUS_ENUM.RUNNING,
-    )
+    let isGenerating = false
+
+    let totalRows = 0
+    let failedRows = 0
+    let successRows = 0
+
+    rows.forEach(row => {
+        if (row.processingStatus === PROCESSING_STATUS_ENUM.COMPLETED) {
+            successRows += 1
+        } else if (row.processingStatus === PROCESSING_STATUS_ENUM.FAILED) {
+            failedRows += 1
+        } else if (
+            row.processingStatus === PROCESSING_STATUS_ENUM.RUNNING &&
+            !isGenerating
+        ) {
+            isGenerating = true
+        }
+
+        totalRows += 1
+    })
 
     const handleGenerate = async () => {
         const formData = new FormData()
@@ -104,13 +120,7 @@ export function GenerateCertificatesSection({
         }
     }, [state])
 
-    const totalRecords = rows.length
-
     const isPending = isGeneratePending || isGenerating
-
-    const certificatesGenerationFailed = rows.some(
-        row => row.processingStatus === PROCESSING_STATUS_ENUM.FAILED,
-    )
 
     const progressPercentage =
         totalRows > 0 ? (completedRows / totalRows) * 100 : 0
@@ -124,6 +134,57 @@ export function GenerateCertificatesSection({
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+                <div className="space-y-2">
+                    {successRows > 0 && (
+                        <AlertMessage
+                            variant="success"
+                            icon={<CheckCircle2 />}
+                            text={`
+                                ${totalRows}
+                                ${totalRows !== 1 ? 'certificados' : 'certificado'}
+                                ${totalRows !== 1 ? 'gerados' : 'gerado'}
+                                com sucesso
+                            `}
+                            // description={
+                            //     <p>
+                            //         Você pode visualiza-
+                            //         {totalRows !== 1 ? 'los' : 'lo'} ou baixa-
+                            //         {totalRows !== 1 ? 'los' : 'lo'} na seção de{' '}
+                            //         <span
+                            //             className="cursor-pointer underline"
+                            //             onClick={() => {
+                            //                 const el = document.getElementById(
+                            //                     'data-source-section',
+                            //                 )
+                            //                 el?.scrollIntoView({
+                            //                     behavior: 'smooth',
+                            //                 })
+                            //             }}
+                            //         >
+                            //             Fonte de Dados
+                            //         </span>
+                            //     </p>
+                            // }
+                        />
+                    )}
+
+                    {failedRows > 0 && failedRows !== totalRows && (
+                        <AlertMessage
+                            variant="error"
+                            icon={<CircleAlert />}
+                            text={`${failedRows} ${failedRows !== 1 ? 'gerações de certificados falharam' : 'geração de certificado falhou'}.`}
+                        />
+                    )}
+                </div>
+
+                {failedRows > 0 && failedRows === totalRows && (
+                    <AlertMessage
+                        variant="error"
+                        icon={<CircleAlert />}
+                        text={`Todas as gerações de certificados falharam.`}
+                    />
+                )}
+
                 {!allVariablesWereMapped && (
                     <div className="bg-muted/50 border rounded-lg p-4">
                         <div className="flex gap-3">
@@ -143,52 +204,11 @@ export function GenerateCertificatesSection({
                     </div>
                 )}
 
-                {totalRecords === 0 && (
+                {totalRows === 0 && (
                     <AlertMessage
                         variant="warning"
                         icon={<CheckCircle2 />}
                         text={`É necessário pelo menos 1 linha na fonte de dados para gerar os certificados agora`}
-                    />
-                )}
-
-                {certificatesGenerated && (
-                    <AlertMessage
-                        variant="success"
-                        icon={<CheckCircle2 />}
-                        text={`
-                            ${totalRecords}
-                            ${totalRecords !== 1 ? 'certificados' : 'certificado'}
-                            ${totalRecords !== 1 ? 'gerados' : 'gerado'}
-                            com sucesso
-                        `}
-                        description={
-                            <p>
-                                Você pode visualiza-
-                                {totalRecords !== 1 ? 'los' : 'lo'} ou baixa-
-                                {totalRecords !== 1 ? 'los' : 'lo'} na seção de{' '}
-                                <span
-                                    className="cursor-pointer underline"
-                                    onClick={() => {
-                                        const el = document.getElementById(
-                                            'data-source-section',
-                                        )
-                                        el?.scrollIntoView({
-                                            behavior: 'smooth',
-                                        })
-                                    }}
-                                >
-                                    Fonte de Dados
-                                </span>
-                            </p>
-                        }
-                    />
-                )}
-
-                {certificatesGenerationFailed && (
-                    <AlertMessage
-                        variant="error"
-                        icon={<CircleAlert />}
-                        text="A geração de certificados anterior falhou. Tente novamente."
                     />
                 )}
 
@@ -216,19 +236,38 @@ export function GenerateCertificatesSection({
                         </div>
                         <div>
                             <p className="font-medium text-base sm:text-lg">
-                                {totalRecords}{' '}
-                                {totalRecords === 1
+                                {totalRows}{' '}
+                                {totalRows === 1
                                     ? 'certificado'
                                     : 'certificados'}
                             </p>
                             <p className="text-xs sm:text-sm text-muted-foreground">
-                                {certificatesGenerated
-                                    ? totalRecords === 1
-                                        ? 'Processado'
-                                        : 'Processados'
-                                    : totalRecords === 1
-                                      ? 'será gerado'
-                                      : 'serão gerados'}
+                                {certificatesGenerated ? (
+                                    <p>
+                                        {totalRows === 1
+                                            ? 'Processado'
+                                            : 'Processados'}
+                                        . Veja os detalhes na seção de{' '}
+                                        <span
+                                            className="cursor-pointer underline"
+                                            onClick={() => {
+                                                const el =
+                                                    document.getElementById(
+                                                        'data-source-section',
+                                                    )
+                                                el?.scrollIntoView({
+                                                    behavior: 'smooth',
+                                                })
+                                            }}
+                                        >
+                                            Fonte de Dados
+                                        </span>
+                                    </p>
+                                ) : totalRows === 1 ? (
+                                    'será gerado'
+                                ) : (
+                                    'serão gerados'
+                                )}
                             </p>
                         </div>
                     </div>
@@ -240,7 +279,7 @@ export function GenerateCertificatesSection({
                             certificatesGenerated ||
                             isPending ||
                             emailSent ||
-                            totalRecords === 0
+                            totalRows === 0
                         }
                     >
                         {isPending ? (
