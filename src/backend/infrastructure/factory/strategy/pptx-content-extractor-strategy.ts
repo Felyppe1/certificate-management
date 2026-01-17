@@ -27,11 +27,28 @@ export class PptxContentExtractorStrategy
 
             const textNodes = xmlDoc.getElementsByTagNameNS(aNamespace, 't')
             for (let i = 0; i < textNodes.length; i++) {
-                extractedText += textNodes[i].textContent + '\n'
+                extractedText += textNodes[i].textContent
             }
+            extractedText += '\n'
             slideIndex++
         }
 
-        return extractedText.trim()
+        return this.normalizeLiquidSyntax(extractedText.trim())
+    }
+
+    private normalizeLiquidSyntax(content: string): string {
+        return (
+            content
+                // Normalize {{ variables }}
+                .replace(/{{([\s\S]*?)}}/g, (_, inner) => {
+                    const normalized = inner.replace(/\s+/g, '')
+                    return `{{ ${normalized} }}`
+                })
+                // Normalize {% blocks %}
+                .replace(/{%([\s\S]*?)%}/g, (_, inner) => {
+                    const normalized = inner.replace(/\s+/g, ' ').trim()
+                    return `{% ${normalized} %}`
+                })
+        )
     }
 }

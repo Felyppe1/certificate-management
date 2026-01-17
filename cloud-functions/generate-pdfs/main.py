@@ -441,28 +441,152 @@ def replace_variables_in_pptx(template_buffer, variable_mapping):
     for slide in prs.slides:
         for shape in slide.shapes:
             process_shape(shape)
-    # for slide in prs.slides:
-    #     for shape in slide.shapes:
-    #         # Replace in text boxes and placeholders
-    #         if hasattr(shape, "text_frame") and shape.text_frame:
-    #             for paragraph in shape.text_frame.paragraphs:
-    #                 for run in paragraph.runs:
-    #                     new_text = replace_in_text(run.text)
-    #                     run.text = new_text
-
-    #         # Replace in tables
-    #         if shape.has_table:
-    #             for row in shape.table.rows:
-    #                 for cell in row.cells:
-    #                     for paragraph in cell.text_frame.paragraphs:
-    #                         for run in paragraph.runs:
-    #                             new_text = replace_in_text(run.text)
-    #                             run.text = new_text
 
     output_buffer = BytesIO()
     prs.save(output_buffer)
     output_buffer.seek(0)
     return output_buffer
+
+
+################################ Functions to process PPTX with Liquid ################################
+def pptx_paragraph_iterator(prs):
+    """
+    Yields tuples of (paragraph, shape) for all paragraphs in the presentation.
+    Includes text frames, tables, and grouped shapes.
+    """
+    def process_shape(shape):
+        if hasattr(shape, "text_frame") and shape.text_frame:
+            for paragraph in shape.text_frame.paragraphs:
+                yield (paragraph, shape)
+
+        if shape.has_table:
+            for row in shape.table.rows:
+                for cell in row.cells:
+                    for paragraph in cell.text_frame.paragraphs:
+                        yield (paragraph, shape)
+
+        if shape.shape_type == 6:  # MSO_SHAPE_TYPE.GROUP
+            for subshape in shape.shapes:
+                yield from process_shape(subshape)
+
+    for slide in prs.slides:
+        for shape in slide.shapes:
+            yield from process_shape(shape)
+
+
+def consolidate_broken_runs_pptx(paragraph):
+    """Merges runs within the SAME paragraph to fix PowerPoint breaks."""
+    text = "".join(run.text for run in paragraph.runs)
+    if not ('{{' in text or '{%' in text):
+        return
+
+    runs = paragraph.runs
+    if not runs:
+        return
+
+    i = 0
+    while i < len(runs):
+        text_run = runs[i].text
+        has_open = '{%' in text_run or '{{' in text_run
+        
+        if has_open:
+            closure = '%}' if '{%' in text_run else '}}'
+            j = i + 1
+            while closure not in runs[i].text and j < len(runs):
+                next_run = runs[j]
+                runs[i].text += next_run.text
+                next_run.text = ""
+                j += 1
+        i += 1
+
+
+def process_buffer_pptx(paragraph_list, text_list, context):
+    """
+    Takes N paragraphs, joins the text, runs Liquid, and returns the result
+    in the FIRST paragraph, clearing the others.
+    """
+    complete_text = "\n".join(text_list)
+    
+    if not ("{{" in complete_text or "{%" in complete_text):
+        return
+
+    sanitized_text = (complete_text
+                      .replace('“', '"').replace('”', '"')
+                      .replace('‘', "'").replace('’', "'"))
+    
+    if "append" in sanitized_text:
+        print(f"DEBUG LIQUID PPTX: {sanitized_text}")
+        
+    try:
+        template = Template(sanitized_text)
+        new_complete_text = template.render(**context)
+        
+        if new_complete_text == complete_text:
+            return
+
+        main_paragraph = paragraph_list[0]
+        
+        for run in main_paragraph.runs:
+            run.text = ""
+        
+        if main_paragraph.runs:
+            main_paragraph.runs[0].text = new_complete_text
+        else:
+            main_paragraph.add_run().text = new_complete_text
+
+        for p in paragraph_list[1:]:
+            for run in p.runs:
+                run.text = ""
+
+    except Exception as e:
+        print(f"Error Liquid block started in '{text_list[0][:20]}...': {e}")
+
+
+def replace_variables_in_pptx_liquid(in_buffer, context_data):
+    in_buffer.seek(0)
+    prs = Presentation(in_buffer)
+    
+    # 1. Pre-processing: Consolidate runs (intra-line)
+    all_paragraphs = list(pptx_paragraph_iterator(prs))
+    for p, _ in all_paragraphs:
+        consolidate_broken_runs_pptx(p)
+
+    # 2. Processing with Buffer (Inter-line)
+    buffer_paragraphs = []
+    accumulated_text = []
+    block_level = 0
+
+    idx = 0
+    while idx < len(all_paragraphs):
+        p, _ = all_paragraphs[idx]
+        paragraph_text = "".join(run.text for run in p.runs)
+        
+        delta = calculate_delta_blocks(paragraph_text)
+        
+        if block_level > 0 or (delta > 0):
+            buffer_paragraphs.append(p)
+            accumulated_text.append(paragraph_text)
+            block_level += delta
+            
+            if block_level == 0:
+                process_buffer_pptx(buffer_paragraphs, accumulated_text, context_data)
+                buffer_paragraphs = []
+                accumulated_text = []
+                
+        else:
+            process_buffer_pptx([p], [paragraph_text], context_data)
+        
+        idx += 1
+
+    if buffer_paragraphs:
+        print("WARNING: Liquid block not closed at the end of the presentation.")
+        process_buffer_pptx(buffer_paragraphs, accumulated_text, context_data)
+
+    # 3. Save
+    out_buffer = BytesIO()
+    prs.save(out_buffer)
+    out_buffer.seek(0)
+    return out_buffer
 
 def convert_to_pdf_with_libreoffice(input_bytes: BytesIO, input_ext: str) -> BytesIO:
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -774,7 +898,7 @@ def main(request):
             if is_docx:
                 certificate_buffer = replace_variables_in_docx_liquid(certificate_buffer, row_variable_mapping)
             else:
-                certificate_buffer = replace_variables_in_pptx(certificate_buffer, row_variable_mapping)
+                certificate_buffer = replace_variables_in_pptx_liquid(certificate_buffer, row_variable_mapping)
         
         pdf_buffer = convert_to_pdf_with_libreoffice(certificate_buffer, file_extension_str)
 
