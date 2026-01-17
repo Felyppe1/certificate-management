@@ -2,7 +2,7 @@ import { DownloadCertificatesUseCase } from '@/backend/application/download-cert
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaDataSetsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-sets-repository'
+import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
 
 import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
@@ -18,13 +18,15 @@ export async function GET(
         const { userId } = await validateSessionToken()
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const bucket = new GcpBucket()
 
         const downloadCertificatesUseCase = new DownloadCertificatesUseCase(
             bucket,
             certificatesRepository,
-            dataSetsRepository,
+            dataSourceRowsRepository,
         )
 
         const zipStream = await downloadCertificatesUseCase.execute({

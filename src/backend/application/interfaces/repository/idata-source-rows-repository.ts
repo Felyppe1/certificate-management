@@ -18,4 +18,5 @@ export interface IDataSourceRowsRepository {
         certificateEmissionId: string,
         columnName: string,
     ): Promise<string[]>
+    allRowsFinishedProcessing(certificateEmissionId: string): Promise<boolean>
 }

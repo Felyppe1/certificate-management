@@ -319,4 +319,22 @@ export class PrismaDataSourceRowsRepository
     //         await execute(this.prisma)
     //     }
     // }
+
+    async allRowsFinishedProcessing(
+        certificateEmissionId: string,
+    ): Promise<boolean> {
+        const count = await this.prisma.dataSourceRow.count({
+            where: {
+                data_source_id: certificateEmissionId,
+                processing_status: {
+                    notIn: [
+                        PROCESSING_STATUS_ENUM.COMPLETED,
+                        PROCESSING_STATUS_ENUM.FAILED,
+                    ],
+                },
+            },
+        })
+
+        return count === 0
+    }
 }

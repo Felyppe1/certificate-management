@@ -8,8 +8,6 @@ import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
 } from '../domain/error/forbidden-error'
-import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
-import { GENERATION_STATUS } from '../domain/data-set'
 import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
@@ -17,6 +15,7 @@ import {
 
 import archiver from 'archiver' // TODO: dependency inversion
 import { PassThrough } from 'stream'
+import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 
 interface DownloadCertificateUseCaseInput {
     userId: string
@@ -27,9 +26,9 @@ export class DownloadCertificatesUseCase {
     constructor(
         private bucket: Pick<IBucket, 'getObjectsWithPrefix'>,
         private certificateRepository: Pick<ICertificatesRepository, 'getById'>,
-        private dataSetsRepository: Pick<
-            IDataSetsRepository,
-            'getByCertificateEmissionId'
+        private dataSourceRowsRepository: Pick<
+            IDataSourceRowsRepository,
+            'allRowsFinishedProcessing'
         >,
     ) {}
 
@@ -46,16 +45,12 @@ export class DownloadCertificatesUseCase {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
-        const dataSet =
-            await this.dataSetsRepository.getByCertificateEmissionId(
+        const allRowsFinishedProcessing =
+            await this.dataSourceRowsRepository.allRowsFinishedProcessing(
                 input.certificateEmissionId,
             )
 
-        if (!dataSet) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SET)
-        }
-
-        if (dataSet.getGenerationStatus() !== GENERATION_STATUS.COMPLETED) {
+        if (!allRowsFinishedProcessing) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.CERTIFICATES_NOT_GENERATED,
             )
