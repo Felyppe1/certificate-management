@@ -684,7 +684,8 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         const template = certificate.Template
             ? new Template({
                   driveFileId: certificate.Template.drive_file_id,
-                  storageFileUrl: certificate.Template.storage_file_url,
+                  storageFileUrl: certificate.Template
+                      .storage_file_url as string, // TODO: create a migration after running the script
                   inputMethod: certificate.Template
                       .input_method as INPUT_METHOD,
                   fileName: certificate.Template.file_name,
