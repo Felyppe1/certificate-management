@@ -1,3 +1,4 @@
+from threading import Event, Lock, current_thread
 import functions_framework
 from dotenv import load_dotenv
 import os
@@ -7,6 +8,7 @@ from docx import Document
 from docx.text.paragraph import Paragraph
 from pptx import Presentation
 from google.cloud import storage
+from google.cloud.storage.blob import Blob
 import re
 import google.auth.transport.requests
 import google.oauth2.id_token
@@ -22,11 +24,6 @@ from enum import Enum
 
 import tempfile
 import subprocess
-
-from google.auth import default
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
-# from google.oauth2 import service_account
 
 load_dotenv()
 
@@ -243,10 +240,9 @@ def upload_to_bucket(file_buffer, file_path):
     blob.upload_from_file(file_buffer, rewind=True, content_type="application/pdf")
     return blob
 
-def get_from_bucket(file_path):
+def get_from_bucket(file_path) -> Blob:
     bucket = storage_client.bucket(CERTIFICATES_BUCKET)
-    blob = bucket.blob(file_path)
-    return blob.download_as_bytes()
+    return bucket.blob(file_path)
 
 def delete_by_prefix(prefix: str):
     bucket = storage_client.bucket(CERTIFICATES_BUCKET)
@@ -565,6 +561,61 @@ def inspecionar_runs_docx(buffer):
         print("   Nenhuma caixa de texto detectada via XML padrão.")
 
 
+CACHE = {}
+IN_FLIGHT = {}
+LOCK = Lock()
+
+def get_template_cached(storage_file_url: str) -> bytes:
+    thread_name = current_thread().name
+    print(f"[{thread_name}] Requesting template: {storage_file_url}")
+
+    template_blob = get_from_bucket(storage_file_url)
+    template_blob.reload()
+    generation = str(template_blob.generation)
+
+    with LOCK:
+        cached = CACHE.get(storage_file_url)
+        if cached and cached["generation"] == generation:
+            print(f"[{thread_name}] CACHE HIT (generation={generation})")
+            return cached["bytes"]
+
+        print(f"[{thread_name}] CACHE MISS")
+
+        if storage_file_url in IN_FLIGHT:
+            print(f"[{thread_name}] Another thread is downloading → waiting")
+            event = IN_FLIGHT[storage_file_url]
+            is_downloader = False
+        else:
+            print(f"[{thread_name}] Elected as downloader")
+            event = Event()
+            IN_FLIGHT[storage_file_url] = event
+            is_downloader = True
+
+    # 🔹 Threads that DO NOT download wait here
+    if not is_downloader:
+        event.wait()
+        print(f"[{thread_name}] Download finished → reading from cache")
+        return CACHE[storage_file_url]["bytes"]
+
+    # 🔹 Only ONE thread arrives here
+    try:
+        print(f"[{thread_name}] Downloading template (generation={generation})")
+        template_bytes = template_blob.download_as_bytes()
+
+        with LOCK:
+            CACHE[storage_file_url] = {
+                "generation": generation,
+                "bytes": template_bytes
+            }
+            print(f"[{thread_name}] Cache updated")
+    finally:
+        with LOCK:
+            event.set()
+            IN_FLIGHT.pop(storage_file_url, None)
+            print(f"[{thread_name}] Released waiting threads")
+
+    return template_bytes
+
 
 class InputMethod(str, Enum):
     UPLOAD = "UPLOAD"
@@ -708,7 +759,7 @@ def main(request):
             raise Exception(f'Unsupported template file extension: {file_mime_type}')
 
         print('Loading template from bucket: ', template.storageFileUrl)
-        template_bytes = get_from_bucket(template.storageFileUrl)
+        template_bytes = get_template_cached(template.storageFileUrl)
         template_buffer = BytesIO(template_bytes)
 
         # inspecionar_runs_docx(template_buffer)
