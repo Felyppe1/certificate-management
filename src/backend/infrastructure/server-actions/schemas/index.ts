@@ -94,8 +94,7 @@ export const generateCertificatesSchema = z.object({
 })
 
 export const viewCertificateSchema = z.object({
-    certificateEmissionId: z.string().min(1),
-    certificateIndex: z.coerce.number().int().min(0),
+    rowId: z.string().min(1),
 })
 
 export const downloadCertificateUrlSchema = z.object({

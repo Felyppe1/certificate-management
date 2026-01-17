@@ -12,8 +12,7 @@ import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-
 
 interface ViewCertificateUseCaseInput {
     userId: string
-    certificateEmissionId: string
-    certificateIndex: number
+    rowId: string
 }
 
 export class ViewCertificateUseCase {
@@ -22,13 +21,21 @@ export class ViewCertificateUseCase {
         private certificateRepository: Pick<ICertificatesRepository, 'getById'>,
         private dataSourceRowsRepository: Pick<
             IDataSourceRowsRepository,
-            'getManyByCertificateEmissionId'
+            'getById'
         >,
     ) {}
 
     async execute(input: ViewCertificateUseCaseInput) {
+        const dataSourceRow = await this.dataSourceRowsRepository.getById(
+            input.rowId,
+        )
+
+        if (!dataSourceRow) {
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE_ROW)
+        }
+
         const certificate = await this.certificateRepository.getById(
-            input.certificateEmissionId,
+            dataSourceRow.getCertificateEmissionId(),
         )
 
         if (!certificate) {
@@ -38,19 +45,11 @@ export class ViewCertificateUseCase {
         if (certificate.getUserId() !== input.userId) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
-
-        const dataSourceRows =
-            await this.dataSourceRowsRepository.getManyByCertificateEmissionId(
-                certificate.getId(),
-            )
-
-        const dataSourceRow = dataSourceRows[input.certificateIndex]
-
         // TODO: handle error
 
         const bucketName = process.env.CERTIFICATES_BUCKET!
 
-        const filePath = `users/${input.userId}/certificates/${certificate.getId()}/certificate-${input.certificateIndex}.pdf`
+        const filePath = `users/${input.userId}/certificates/${certificate.getId()}/certificate-${dataSourceRow.getId()}.pdf`
 
         const signedUrl = await this.bucket.generateSignedUrl({
             bucketName,

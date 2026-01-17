@@ -177,10 +177,9 @@ export function DataSourceDisplay({
         }
     }
 
-    const handleViewCertificate = (index: number) => {
+    const handleViewCertificate = (rowId: string) => {
         const formData = new FormData()
-        formData.append('certificateEmissionId', certificateId)
-        formData.append('certificateIndex', index.toString())
+        formData.append('rowId', rowId)
 
         startTransition(() => {
             viewCertificateActionHandler(formData)
@@ -522,8 +521,7 @@ export function DataSourceDisplay({
                                                                                     <Button
                                                                                         onClick={() => {
                                                                                             handleViewCertificate(
-                                                                                                index +
-                                                                                                    1,
+                                                                                                row.id,
                                                                                             )
                                                                                         }}
                                                                                         variant="ghost"

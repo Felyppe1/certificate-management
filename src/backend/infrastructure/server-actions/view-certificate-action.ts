@@ -13,9 +13,9 @@ import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data
 
 export async function viewCertificateAction(_: unknown, formData: FormData) {
     const rawData = {
-        certificateEmissionId: formData.get('certificateEmissionId') as string,
-        certificateIndex: formData.get('certificateIndex'),
+        rowId: formData.get('rowId') as string,
     }
+
     try {
         const { userId } = await validateSessionToken()
 
@@ -34,9 +34,8 @@ export async function viewCertificateAction(_: unknown, formData: FormData) {
         )
 
         const signedUrl = await viewCertificateUseCase.execute({
-            certificateEmissionId: parsedData.certificateEmissionId,
             userId,
-            certificateIndex: parsedData.certificateIndex,
+            rowId: parsedData.rowId,
         })
 
         return {

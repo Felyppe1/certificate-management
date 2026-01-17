@@ -103,6 +103,14 @@ export class DataSourceRow {
         this.processingStatus = PROCESSING_STATUS_ENUM.FAILED
     }
 
+    getId() {
+        return this.id
+    }
+
+    getCertificateEmissionId() {
+        return this.certificateEmissionId
+    }
+
     private parseAndValidate(
         rawData: Record<string, string>,
         dataSourceColumns: { name: string; type: ColumnType }[],
