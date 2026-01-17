@@ -1,6 +1,5 @@
 import { CERTIFICATE_STATUS } from '../domain/certificate'
 import { Email, PROCESSING_STATUS_ENUM } from '../domain/email'
-import { AuthenticationError } from '../domain/error/authentication-error'
 import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
@@ -10,10 +9,9 @@ import {
     ValidationError,
 } from '../domain/error/validation-error'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
+import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
 import { IEmailsRepository } from './interfaces/repository/iemails-repository'
 import { IExternalProcessing } from './interfaces/cloud/iexternal-processing'
-import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 export interface CreateEmailUseCaseInput {
@@ -31,9 +29,9 @@ export class CreateEmailUseCase {
             ICertificatesRepository,
             'getById' | 'update'
         >,
-        private dataSetsRepository: Pick<
-            IDataSetsRepository,
-            'getByCertificateEmissionId'
+        private dataSourceRowsReadRepository: Pick<
+            IDataSourceRowsReadRepository,
+            'countByCertificateEmissionId' | 'getManyByCertificateEmissionId'
         >,
         private emailsRepository: Pick<IEmailsRepository, 'save'>,
         private externalProcessing: Pick<
@@ -53,14 +51,10 @@ export class CreateEmailUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        const dataSet =
-            await this.dataSetsRepository.getByCertificateEmissionId(
+        const rowsCount =
+            await this.dataSourceRowsReadRepository.countByCertificateEmissionId(
                 data.certificateEmissionId,
             )
-
-        if (!dataSet) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SET)
-        }
 
         // TODO: check if certificates were generated
 
@@ -68,8 +62,8 @@ export class CreateEmailUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }
 
-        if (data.scheduledAt && !dataSet.hasRows()) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.NO_DATA_SET_ROWS)
+        if (data.scheduledAt && rowsCount === 0) {
+            throw new ValidationError(VALIDATION_ERROR_TYPE.NO_DATA_SOURCE_ROWS)
         }
 
         if (!certificateEmission.hasDataSourceColumn(data.emailColumn)) {
@@ -78,8 +72,23 @@ export class CreateEmailUseCase {
             )
         }
 
-        const recipients = dataSet.getRowsFromColumn(data.emailColumn)
+        const rows: { data: Record<string, string> }[] = []
+        let cursor: string | undefined
 
+        do {
+            const { data: fetchedRows, nextCursor } =
+                await this.dataSourceRowsReadRepository.getManyByCertificateEmissionId(
+                    data.certificateEmissionId,
+                    undefined,
+                    cursor,
+                )
+
+            rows.push(...fetchedRows)
+            cursor = nextCursor || undefined
+        } while (cursor)
+
+        const recipients = rows.map(row => row.data[data.emailColumn])
+        console.log(recipients)
         if (!Email.validateEmailColumnRecords(recipients)) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.INVALID_RECIPIENT_EMAIL,

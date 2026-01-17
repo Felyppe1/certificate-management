@@ -4,11 +4,11 @@ import { AuthenticationError } from '@/backend/domain/error/authentication-error
 import { logoutAction } from './logout-action'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
-import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { DownloadCertificateUseCase } from '@/backend/application/download-certificate-use-case'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { downloadCertificateUrlSchema } from './schemas'
+import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 
 export async function downloadCertificateUrlAction(
     _: unknown,
@@ -24,19 +24,20 @@ export async function downloadCertificateUrlAction(
         const parsedData = downloadCertificateUrlSchema.parse(rawData)
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const dataSetsRepository = new PrismaDataSetsRepository(prisma)
+        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
+            prisma,
+        )
         const bucket = new GcpBucket()
 
         const downloadCertificateUseCase = new DownloadCertificateUseCase(
             bucket,
             certificatesRepository,
-            dataSetsRepository,
+            dataSourceRowsRepository,
         )
 
         const signedUrl = await downloadCertificateUseCase.execute({
-            certificateEmissionId: parsedData.certificateEmissionId,
             userId,
-            certificateIndex: parsedData.certificateIndex,
+            rowId: parsedData.rowId,
         })
 
         return {

@@ -12,7 +12,6 @@ import {
     NotFoundError,
 } from '../domain/error/not-found-error'
 import { IBucket } from './interfaces/cloud/ibucket'
-import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
 import { Liquid } from 'liquidjs'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'

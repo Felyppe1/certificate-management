@@ -1,5 +1,4 @@
 import { ICertificatesRepository } from './icertificates-repository'
-import { IDataSetsRepository } from './idata-sets-repository'
 import { IEmailsRepository } from './iemails-repository'
 
 export interface IUnitOfWork {
@@ -10,6 +9,5 @@ export interface IUnitOfWork {
     execute<T>(fn: (uow: IUnitOfWork) => Promise<T>): Promise<T>
 
     // certificateEmissionsRepository: ICertificatesRepository
-    // dataSetsRepository: IDataSetsRepository
     // emailsRepository: IEmailsRepository
 }

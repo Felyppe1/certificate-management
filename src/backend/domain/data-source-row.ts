@@ -107,6 +107,10 @@ export class DataSourceRow {
         return this.id
     }
 
+    getProcessingStatus() {
+        return this.processingStatus
+    }
+
     getCertificateEmissionId() {
         return this.certificateEmissionId
     }

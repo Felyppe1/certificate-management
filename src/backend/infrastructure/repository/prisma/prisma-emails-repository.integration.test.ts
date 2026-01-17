@@ -29,7 +29,6 @@ import {
     DataSetInput,
     GENERATION_STATUS,
 } from '@/backend/domain/data-set'
-import { PrismaDataSetsRepository } from './prisma-data-sets-repository'
 
 const createTemplateData = (
     overrides?: Partial<TemplateInput>,

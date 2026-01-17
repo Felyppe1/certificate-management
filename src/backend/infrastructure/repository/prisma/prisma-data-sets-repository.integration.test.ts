@@ -1,6 +1,5 @@
 import { prisma } from '@/tests/setup.integration'
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { PrismaDataSetsRepository } from './prisma-data-sets-repository'
 import {
     DataSet,
     DataSetInput,

@@ -4,7 +4,6 @@ import { AuthenticationError } from '@/backend/domain/error/authentication-error
 import { logoutAction } from './logout-action'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
-import { PrismaDataSetsRepository } from '../repository/prisma/prisma-data-sets-repository'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { ViewCertificateUseCase } from '@/backend/application/view-certificate-use-case'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'

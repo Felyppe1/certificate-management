@@ -5,7 +5,7 @@ import {
     NotFoundError,
 } from '../domain/error/not-found-error'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSetsRepository } from './interfaces/repository/idata-sets-repository'
+import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
 import { IEmailsRepository } from './interfaces/repository/iemails-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
@@ -21,9 +21,9 @@ export class FinishCertificateEmailSendingProcessUseCase {
             ICertificatesRepository,
             'getById' | 'update'
         >,
-        private dataSetsRepository: Pick<
-            IDataSetsRepository,
-            'getByCertificateEmissionId'
+        private dataSourceRowsReadRepository: Pick<
+            IDataSourceRowsReadRepository,
+            'countByCertificateEmissionId'
         >,
         private transactionManager: ITransactionManager,
     ) {}
@@ -46,16 +46,10 @@ export class FinishCertificateEmailSendingProcessUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        const dataSet =
-            await this.dataSetsRepository.getByCertificateEmissionId(
+        const rowsCount =
+            await this.dataSourceRowsReadRepository.countByCertificateEmissionId(
                 certificateEmission.getId(),
             )
-
-        if (!dataSet) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SET)
-        }
-
-        const rowsCount = dataSet.getRowsCount()
 
         email.setProcessingStatus(status, rowsCount)
 
