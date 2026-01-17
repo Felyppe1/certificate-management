@@ -16,7 +16,7 @@ const tips = [
     {
         title: 'Use Variáveis',
         description:
-            'Você pode inserir variáveis no seu template usando chaves duplas, como <code class="bg-blue-900 px-1 rounded">{{ nome }}</code>.',
+            'O template suporta a sintaxe <strong>Liquid</strong>, permitindo o uso de variáveis, condicionais e filtros. Exemplo: <code class="bg-blue-900 px-1 rounded">{{ nome }}</code>. Consulte a <a href="https://shopify.github.io/liquid/" target="_blank" rel="noopener noreferrer" class="underline">documentação oficial</a>.',
     },
     {
         title: 'Mapeamento',
@@ -37,16 +37,18 @@ export function TipsButton() {
 
     useEffect(() => {
         const dismissed = localStorage.getItem(TIPS_STORAGE_KEY)
-        if (!dismissed) {
-            setOpen(true)
-        } else {
+        if (dismissed) {
             setDontShowAgain(true)
+        } else {
+            setOpen(true)
         }
     }, [])
 
     const handleDismiss = () => {
         if (dontShowAgain) {
             localStorage.setItem(TIPS_STORAGE_KEY, 'true')
+        } else {
+            localStorage.removeItem(TIPS_STORAGE_KEY)
         }
         setOpen(false)
     }
