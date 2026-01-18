@@ -6,7 +6,11 @@ import {
 import { CloudTasksClient } from '@google-cloud/tasks'
 
 export class CloudTasksQueue implements IQueue {
-    private queue = new CloudTasksClient()
+    private queue: CloudTasksClient
+
+    constructor() {
+        this.queue = new CloudTasksClient()
+    }
 
     async enqueueGenerateCertificatePDF(
         data: EnqueueGenerateCertificatePDFInput,

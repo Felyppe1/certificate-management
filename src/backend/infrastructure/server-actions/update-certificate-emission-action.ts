@@ -19,11 +19,12 @@ export async function updateCertificateEmissionAction(
     const rawData = {
         name: formData.get('name') ?? undefined,
         id: formData.get('id') as string,
-        variableColumnMapping: formData.get('variableColumnMapping')
-            ? JSON.parse(formData.get('variableColumnMapping') as string)
-            : formData.get('variableColumnMapping') === null
-              ? null
-              : undefined,
+        variableColumnMapping:
+            formData.get('variableColumnMapping') === 'undefined'
+                ? undefined
+                : formData.get('variableColumnMapping')
+                  ? JSON.parse(formData.get('variableColumnMapping') as string)
+                  : null,
     }
 
     try {

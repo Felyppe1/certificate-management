@@ -78,6 +78,7 @@ export function CertificateHeader({
         const formData = new FormData()
         formData.append('id', certificateId)
         formData.append('name', validName)
+        formData.append('variableColumnMapping', 'undefined')
 
         startTransition(() => {
             action(formData)
@@ -121,18 +122,18 @@ export function CertificateHeader({
                                 variant="outline"
                                 onClick={handleSave}
                                 disabled={isPending}
-                                className="h-10 w-10 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950/20"
+                                className="h-10 w-10 text-green-600 hover:text-green-500"
                             >
-                                <Check className="h-5 w-5" strokeWidth={1.5} />
+                                <Check className="h-5 w-5" strokeWidth={3} />
                             </Button>
                             <Button
                                 size="icon"
                                 variant="outline"
                                 onClick={handleCancel}
                                 disabled={isPending}
-                                className="h-10 w-10 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
+                                className="h-10 w-10 text-red-600 hover:text-red-500"
                             >
-                                <X className="h-5 w-5" strokeWidth={1.5} />
+                                <X className="h-5 w-5" strokeWidth={3} />
                             </Button>
                         </div>
                     </div>
