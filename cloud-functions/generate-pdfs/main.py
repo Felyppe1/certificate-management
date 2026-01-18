@@ -27,7 +27,8 @@ import subprocess
 
 load_dotenv()
 
-AUDIENCE = os.getenv("TOKEN_AUDIENCE", 'http://localhost:3000') # For local environments
+APP_BASE_URL = 'http://localhost:3000'
+AUDIENCE = os.getenv("TOKEN_AUDIENCE", APP_BASE_URL) # For local environments
 SOFFICE_PATH = os.getenv('SOFFICE_PATH')
 CERTIFICATES_BUCKET = os.getenv('CERTIFICATES_BUCKET')
 APP_SERVICE_NAME = os.getenv('APP_SERVICE_NAME')
@@ -36,11 +37,8 @@ GCP_REGION = os.getenv('GCP_REGION')
 
 if APP_SERVICE_NAME and GCP_PROJECT_NUMBER and GCP_REGION:
     APP_BASE_URL = f"https://{APP_SERVICE_NAME}-{GCP_PROJECT_NUMBER}.{GCP_REGION}.run.app"
-else:
-    APP_BASE_URL = 'http://localhost:3000'
 
 for var_name, var_value in {
-    "APP_BASE_URL": APP_BASE_URL,
     "SOFFICE_PATH": SOFFICE_PATH,
     "CERTIFICATES_BUCKET": CERTIFICATES_BUCKET,
 }.items():
