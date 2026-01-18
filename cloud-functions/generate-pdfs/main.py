@@ -597,14 +597,19 @@ def convert_to_pdf_with_libreoffice(input_bytes: BytesIO, input_ext: str) -> Byt
         with open(input_path, "wb") as f:
             f.write(input_bytes.read())
 
-        subprocess.run([
+        result = subprocess.run([
             SOFFICE_PATH,
             "--headless",
             f"-env:UserInstallation=file://{user_profile}",
-            "--convert-to", "pdf:draw_pdf_Export",
+            "--convert-to", "pdf",
             "--outdir", tmpdir,
             input_path
         ], check=True)
+
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"LibreOffice failed:\nSTDOUT={result.stdout.decode()}\nSTDERR={result.stderr.decode()}"
+            )
 
         with open(output_path, "rb") as pdf_file:
             pdf_bytes = BytesIO(pdf_file.read())
