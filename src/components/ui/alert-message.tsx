@@ -77,6 +77,8 @@ export interface AlertMessageProps
     icon: React.ReactNode
     text: React.ReactNode
     description?: React.ReactNode
+    action?: React.ReactNode
+    actionLayout?: 'between' | 'start'
 }
 
 function AlertMessage({
@@ -85,6 +87,8 @@ function AlertMessage({
     icon,
     text,
     description,
+    action,
+    actionLayout = 'between',
     ...props
 }: AlertMessageProps) {
     return (
@@ -92,24 +96,40 @@ function AlertMessage({
             className={cn(alertMessageVariants({ variant }), className)}
             {...props}
         >
-            <div className="flex gap-3">
-                <div className={cn(alertMessageIconVariants({ variant }))}>
-                    {icon}
-                </div>
-                <div className="text-xs sm:text-sm">
-                    <p className={cn(alertMessageTitleVariants({ variant }))}>
-                        {text}
-                    </p>
-                    {description && (
+            <div
+                className={cn(
+                    'flex gap-3 items-center flex-wrap',
+                    actionLayout === 'between'
+                        ? 'justify-between'
+                        : 'justify-start',
+                )}
+            >
+                <div className="flex gap-3">
+                    <div className={cn(alertMessageIconVariants({ variant }))}>
+                        {icon}
+                    </div>
+                    <div className="text-xs sm:text-sm">
                         <p
                             className={cn(
-                                alertMessageDescriptionVariants({ variant }),
+                                alertMessageTitleVariants({ variant }),
                             )}
                         >
-                            {description}
+                            {text}
                         </p>
-                    )}
+                        {description && (
+                            <p
+                                className={cn(
+                                    alertMessageDescriptionVariants({
+                                        variant,
+                                    }),
+                                )}
+                            >
+                                {description}
+                            </p>
+                        )}
+                    </div>
                 </div>
+                {action && <div className="flex-shrink-0">{action}</div>}
             </div>
         </div>
     )

@@ -142,3 +142,7 @@ export const createWriteBucketSignedUrlSchema = z.object({
 export const retryDataSourceRowSchema = z.object({
     rowId: z.string().min(1),
 })
+
+export const retryCertificatesGenerationSchema = z.object({
+    certificateId: z.string().min(1),
+})

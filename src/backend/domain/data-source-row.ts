@@ -5,6 +5,7 @@ import z from 'zod'
 export enum PROCESSING_STATUS_ENUM {
     PENDING = 'PENDING',
     RUNNING = 'RUNNING',
+    RETRYING = 'RETRYING',
     COMPLETED = 'COMPLETED',
     FAILED = 'FAILED',
 }
@@ -86,6 +87,16 @@ export class DataSourceRow {
 
     startGeneration() {
         this.processingStatus = PROCESSING_STATUS_ENUM.RUNNING
+    }
+
+    startRetry() {
+        if (this.processingStatus !== PROCESSING_STATUS_ENUM.FAILED) {
+            throw new Error(
+                'DataSourceRow can only be retried if it is in FAILED status',
+            )
+        }
+
+        this.processingStatus = PROCESSING_STATUS_ENUM.RETRYING
     }
 
     finishGenerationSuccessfully(fileBytes: number) {

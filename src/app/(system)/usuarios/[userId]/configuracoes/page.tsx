@@ -10,7 +10,7 @@ export default async function UserConfigurationsPage() {
 
     return (
         <>
-            <div className="mb-8">
+            <div className="mb-8 px-2">
                 <GoBackButton />
 
                 <h1 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">

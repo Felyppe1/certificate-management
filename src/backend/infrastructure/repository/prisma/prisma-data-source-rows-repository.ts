@@ -252,10 +252,17 @@ export class PrismaDataSourceRowsRepository
         certificateEmissionId: string,
         limit = GET_MANY_DEFAULT_LIMIT,
         cursor?: string,
+        statuses?: PROCESSING_STATUS_ENUM[],
     ) {
         const rows = await this.prisma.dataSourceRow.findMany({
             where: {
                 data_source_id: certificateEmissionId,
+                ...(statuses &&
+                    statuses.length > 0 && {
+                        processing_status: {
+                            in: statuses,
+                        },
+                    }),
             },
             take: limit + 1, // Get lines + 1 to determine if there's a next page
             ...(cursor && {

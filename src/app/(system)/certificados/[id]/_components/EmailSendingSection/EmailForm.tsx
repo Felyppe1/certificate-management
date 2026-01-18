@@ -147,7 +147,7 @@ export function EmailForm({
             <div className="flex gap-4 items-center justify-between flex-wrap p-6 py-4 border rounded-lg dark:bg-input/30 mt-10">
                 <div className="flex items-center gap-4">
                     <div className="p-3 rounded-full bg-primary/10">
-                        <Mail className="w-5 h-5 text-primary" />
+                        <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                     </div>
                     <div>
                         <p className="font-medium">
@@ -169,7 +169,7 @@ export function EmailForm({
                 >
                     {isSubmitting ? (
                         <>
-                            <Loader2 className="animate-spin mr-2" />
+                            <Loader2 className="animate-spin " />
                             {sendMode === 'now'
                                 ? 'Enviando...'
                                 : 'Agendando...'}
@@ -177,9 +177,9 @@ export function EmailForm({
                     ) : (
                         <>
                             {sendMode === 'now' ? (
-                                <Send className="mr-2" />
+                                <Send className="" />
                             ) : (
-                                <Calendar className="mr-2" />
+                                <Calendar className="" />
                             )}
                             {sendMode === 'now'
                                 ? 'Enviar Agora'

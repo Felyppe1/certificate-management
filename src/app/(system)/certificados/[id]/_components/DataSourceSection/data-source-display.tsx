@@ -277,7 +277,8 @@ export function DataSourceDisplay({
         rows.every(
             row =>
                 row.processingStatus === PROCESSING_STATUS_ENUM.COMPLETED ||
-                row.processingStatus === PROCESSING_STATUS_ENUM.FAILED,
+                row.processingStatus === PROCESSING_STATUS_ENUM.FAILED ||
+                row.processingStatus === PROCESSING_STATUS_ENUM.RETRYING,
         )
     const totalBytes = rows.reduce((acc, row) => acc + (row.fileBytes || 0), 0)
 

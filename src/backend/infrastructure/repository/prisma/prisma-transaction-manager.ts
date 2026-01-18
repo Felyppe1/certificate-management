@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'async_hooks'
 import { ITransactionManager } from '@/backend/application/interfaces/repository/itransaction-manager'
 import { PrismaClient } from './client/client'
 import { TransactionClient } from './client/internal/prismaNamespace'

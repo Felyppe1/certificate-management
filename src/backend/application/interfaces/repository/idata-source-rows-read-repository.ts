@@ -5,6 +5,7 @@ export interface IDataSourceRowsReadRepository {
         certificateEmissionId: string,
         limit?: number,
         cursor?: string,
+        statuses?: PROCESSING_STATUS_ENUM[],
     ): Promise<{
         data: {
             id: string
@@ -16,6 +17,6 @@ export interface IDataSourceRowsReadRepository {
 
     countWithStatuses(
         certificateEmissionId: string,
-        statuses: [PROCESSING_STATUS_ENUM],
+        statuses: PROCESSING_STATUS_ENUM[],
     ): Promise<number>
 }

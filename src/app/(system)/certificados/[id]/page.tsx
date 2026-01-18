@@ -1,7 +1,6 @@
 import { GoBackButton } from '@/components/GoBackButton'
 import { fetchMe } from '@/api-calls/fetch-me'
 import { fetchCertificateEmission } from '@/api-calls/fetch-certificate-emission'
-import { Badge } from '@/components/ui/badge'
 import { TemplateSection } from './_components/TemplateSection'
 import { DataSourceSection } from './_components/DataSourceSection'
 import { VariableMappingSection } from './_components/VariableMappingSection'
@@ -9,12 +8,7 @@ import { EmailSendingSection } from './_components/EmailSendingSection'
 import { GenerateCertificatesSection } from './_components/GenerateCertificatesSection'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
 import { TipsButton } from './_components/TipsButton'
-
-const statusMapping = {
-    DRAFT: 'Rascunho',
-    EMITTED: 'Emitido',
-    SCHEDULED: 'Agendado',
-}
+import { CertificateHeader } from './_components/CertificateHeader'
 
 export default async function CertificatePage({
     params,
@@ -73,47 +67,22 @@ export default async function CertificatePage({
 
     return (
         <>
-            {/* // <div className="container mx-auto pb-8 px-4 max-w-4xl"> */}
-            <div className="flex justify-between">
-                <GoBackButton />
-                <TipsButton />
-            </div>
-            <div className="flex flex-col gap-4 sm:gap-6 md:gap-8 mt-4 xs:mt-6 md:mt-8 mb-12">
-                <div>
-                    <div className="flex items-center gap-4 mb-4 flex-wrap">
-                        <h1 className="text-3xl sm:text-4xl font-bold">
-                            {
-                                certificateEmissionResponse.certificateEmission
-                                    .name
-                            }
-                        </h1>
-                        <Badge
-                            variant={
-                                certificateEmissionResponse.certificateEmission
-                                    .status === 'EMITTED'
-                                    ? 'green'
-                                    : certificateEmissionResponse
-                                            .certificateEmission.status ===
-                                        'DRAFT'
-                                      ? 'orange'
-                                      : 'purple'
-                            }
-                            size="lg"
-                        >
-                            {
-                                statusMapping[
-                                    certificateEmissionResponse
-                                        .certificateEmission
-                                        .status as keyof typeof statusMapping
-                                ]
-                            }
-                        </Badge>
-                    </div>
-                    <p className="text-foreground/90 text-base sm:text-lg font-light">
-                        Configure o template e os dados para gerar certificados
-                    </p>
+            <div className="px-2">
+                <div className="flex justify-between">
+                    <GoBackButton />
+                    <TipsButton />
                 </div>
-
+                <CertificateHeader
+                    certificateId={certificateId}
+                    initialName={
+                        certificateEmissionResponse.certificateEmission.name
+                    }
+                    status={
+                        certificateEmissionResponse.certificateEmission.status
+                    }
+                />
+            </div>
+            <div className="flex flex-col gap-2 sm:gap-5 md:gap-8 mt-4 xs:mt-6 md:mt-8 mb-12">
                 <TemplateSection
                     userEmail={meResponse.user.email}
                     googleOAuthToken={googleAccount?.accessToken || null}
