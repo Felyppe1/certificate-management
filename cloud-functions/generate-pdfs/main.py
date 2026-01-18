@@ -14,11 +14,7 @@ import google.auth.transport.requests
 import google.oauth2.id_token
 import zipfile
 from liquid import Template
-import base64
-import json
-import sys
-from pydantic import BaseModel, Field, ValidationError
-from datetime import datetime
+from pydantic import BaseModel, ValidationError
 from typing import List, Optional, Dict, Any
 from enum import Enum
 
@@ -27,8 +23,7 @@ import subprocess
 
 load_dotenv()
 
-APP_BASE_URL = 'http://localhost:3000'
-AUDIENCE = os.getenv("TOKEN_AUDIENCE", APP_BASE_URL) # For local environments
+APP_BASE_URL = 'http://host.docker.internal:3000'  # For local environments
 SOFFICE_PATH = os.getenv('SOFFICE_PATH')
 CERTIFICATES_BUCKET = os.getenv('CERTIFICATES_BUCKET')
 APP_SERVICE_NAME = os.getenv('APP_SERVICE_NAME')
@@ -37,6 +32,8 @@ GCP_REGION = os.getenv('GCP_REGION')
 
 if APP_SERVICE_NAME and GCP_PROJECT_NUMBER and GCP_REGION:
     APP_BASE_URL = f"https://{APP_SERVICE_NAME}-{GCP_PROJECT_NUMBER}.{GCP_REGION}.run.app"
+
+AUDIENCE = os.getenv("TOKEN_AUDIENCE", APP_BASE_URL) # For prod, it will use the APP_BASE_URL
 
 for var_name, var_value in {
     "SOFFICE_PATH": SOFFICE_PATH,
@@ -268,7 +265,7 @@ def finish_certificates_generation(data_source_row_id, success, total_bytes=None
     auth_req = google.auth.transport.requests.Request()
 
     id_token = google.oauth2.id_token.fetch_id_token(auth_req, AUDIENCE)
-
+    print('url', APP_BASE_URL)
     headers = {
         "Authorization": f"Bearer {id_token}",
         "Content-Type": "application/json",
@@ -755,44 +752,25 @@ class TriggerGenerateCertificatePDFsInput(BaseModel):
 def main(request):
     print('Generate PDFs function invoked via Pub/Sub Push')
     
-    # raw_data = request.get_json(silent=True)
-    # if raw_data is None:
-    #     return {"error": "JSON is required"}, 400
+    raw_data = request.get_json(silent=True)
+    data_source_row_id = raw_data.get('row', {}).get('id')
+
+    if raw_data is None:
+        return {"error": "JSON body is required"}, 400
+
+    # envelop = request.get_json()
+    # data_source_row_id = None
 
     # try:
-    #     input_data = TriggerGenerateCertificatePDFsInput(**raw_data)
-        
-    # except ValidationError as e:
-    #     def format_pydantic_errors(errors):
-    #         formatted_errors = []
+    #     pubsub_message = envelop.get('message', {})
+    #     data_str = base64.b64decode(pubsub_message.get('data', '')).decode('utf-8')
+    #     raw_data = json.loads(data_str)
 
-    #         for error in errors:
-    #             field = ".".join([str(x) for x in error['loc']])
-    #             message = error['msg']
-    #             formatted_errors.append({
-    #                 "field": field,
-    #                 "message": message
-    #             })
+    #     data_source_row_id = raw_data.get('row', {}).get('id')
+    # except Exception as e:
+    #     print(f"Error to decode message: {e}")
 
-    #         return formatted_errors
-
-    #     friendly_errors = format_pydantic_errors(e.errors())
-    #     print("Validation errors:", friendly_errors)
-    #     return {"error": "Invalid fields", "details": friendly_errors}, 400
-
-    envelop = request.get_json()
-    data_source_row_id = None
-
-    try:
-        pubsub_message = envelop.get('message', {})
-        data_str = base64.b64decode(pubsub_message.get('data', '')).decode('utf-8')
-        raw_data = json.loads(data_str)
-
-        data_source_row_id = raw_data.get('row', {}).get('id')
-    except Exception as e:
-        print(f"Error to decode message: {e}")
-
-        return "Invalid Pub/Sub format", 200
+    #     return "Invalid Pub/Sub format", 200
     
     try:
         input_data = TriggerGenerateCertificatePDFsInput(**raw_data)

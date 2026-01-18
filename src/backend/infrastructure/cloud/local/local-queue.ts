@@ -10,28 +10,15 @@ export class LocalQueue implements IQueue {
     ): Promise<void> {
         const generatePdfsUrl = 'http://localhost:8080'
 
-        const dataStr = JSON.stringify(data)
-        const base64Data = Buffer.from(dataStr).toString('base64')
-
-        const pubsubEnvelope = {
-            message: {
-                data: base64Data,
-            },
-        }
-
-        const response = await fetch(generatePdfsUrl, {
+        void fetch(generatePdfsUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(pubsubEnvelope),
+            body: JSON.stringify(data),
+        }).catch(err => {
+            console.error('Failed to enqueue local generate PDF task', err)
         })
-
-        if (!response.ok) {
-            throw new Error(
-                `Failed to enqueue generate certificate PDF: ${response.statusText}`,
-            )
-        }
     }
 
     async enqueueSendCertificateEmails(

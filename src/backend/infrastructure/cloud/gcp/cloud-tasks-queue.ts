@@ -18,12 +18,15 @@ export class CloudTasksQueue implements IQueue {
         const project = process.env.GCP_PROJECT_ID!
         const location = process.env.GCP_REGION!
         const queue = process.env.CERTIFICATE_GENERATIONS_QUEUE_NAME!
-        const suffix = process.env.SUFFIX!
 
         const parent = this.queue.queuePath(project, location, queue)
         const task = {
             httpRequest: {
-                relativeUri: '/generate-pdfs' + suffix,
+                relativeUri: '/',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                httpMethod: 'POST' as const,
                 body: Buffer.from(JSON.stringify(data)).toString('base64'),
             },
         }
