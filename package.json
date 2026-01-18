@@ -23,6 +23,7 @@
   "dependencies": {
     "@google-cloud/pubsub": "^5.2.0",
     "@google-cloud/storage": "^7.17.2",
+    "@google-cloud/tasks": "^6.2.1",
     "@googleworkspace/drive-picker-element": "^0.6.2",
     "@hookform/resolvers": "^5.2.2",
     "@opentelemetry/api-logs": "0.57.2",

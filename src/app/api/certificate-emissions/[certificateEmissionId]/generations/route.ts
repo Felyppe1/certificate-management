@@ -6,7 +6,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
-import { GcpPubSub } from '@/backend/infrastructure/cloud/gcp/gcp-pubsub'
+import { CloudTasksQueue } from '@/backend/infrastructure/cloud/gcp/cloud-tasks-queue'
+import { LocalQueue } from '@/backend/infrastructure/cloud/local/local-queue'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 
 export async function POST(
@@ -26,14 +27,17 @@ export async function POST(
             prisma,
         )
         const googleAuthGateway = new GoogleAuthGateway()
-        const pubSub = new GcpPubSub()
+        const queue =
+            process.env.NODE_ENV === 'development'
+                ? new LocalQueue()
+                : new CloudTasksQueue()
 
         const generateCertificatesUseCase = new GenerateCertificatesUseCase(
             bucket,
             certificateEmissionsRepository,
             dataSourceRowsRepository,
             dataSourceRowsRepository,
-            pubSub,
+            queue,
         )
 
         await generateCertificatesUseCase.execute({

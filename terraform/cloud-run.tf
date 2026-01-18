@@ -40,6 +40,11 @@ resource "google_cloud_run_v2_service" "app" {
       }
 
       env {
+        name = "CERTIFICATE_GENERATIONS_QUEUE_NAME"
+        value = google_cloud_tasks_queue.http_target_oidc.name
+      }
+
+      env {
         name = "SUFFIX"
         value = local.suffix
       }

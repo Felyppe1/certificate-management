@@ -20,6 +20,7 @@ resource "google_project_iam_member" "sa_roles_runner" {
     "roles/iam.serviceAccountOpenIdTokenCreator",
     "roles/iam.serviceAccountTokenCreator",
     "roles/pubsub.publisher",
+    "roles/cloudtasks.enqueuer",
   ])
 
   role    = each.value

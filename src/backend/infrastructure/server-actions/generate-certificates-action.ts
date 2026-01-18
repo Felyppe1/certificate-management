@@ -8,7 +8,8 @@ import { GenerateCertificatesUseCase } from '@/backend/application/generate-cert
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
-import { GcpPubSub } from '../cloud/gcp/gcp-pubsub'
+import { CloudTasksQueue } from '../cloud/gcp/cloud-tasks-queue'
+import { LocalQueue } from '../cloud/local/local-queue'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { generateCertificatesSchema } from './schemas'
@@ -34,14 +35,17 @@ export async function generateCertificatesAction(
             prisma,
         )
         const googleAuthGateway = new GoogleAuthGateway()
-        const pubSub = new GcpPubSub()
+        const queue =
+            process.env.NODE_ENV === 'development'
+                ? new LocalQueue()
+                : new CloudTasksQueue()
 
         const generateCertificatesUseCase = new GenerateCertificatesUseCase(
             bucket,
             certificateEmissionsRepository,
             dataSourceRowsRepository,
             dataSourceRowsRepository,
-            pubSub,
+            queue,
         )
 
         await generateCertificatesUseCase.execute({

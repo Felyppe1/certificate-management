@@ -15,6 +15,7 @@ resource "google_project_service" "gcp_services" {
     "logging.googleapis.com",
     "storage.googleapis.com",
     "pubsub.googleapis.com",
+    "cloudtasks.googleapis.com",
   ])
 
   project  = var.project_id
