@@ -159,8 +159,18 @@ resource "google_cloud_run_v2_service" "generate_pdfs" {
       }
 
       env {
-        name = "APP_BASE_URL"
-        value = "https://${google_cloud_run_v2_service.app.name}-${data.google_project.project.number}.${var.region}.run.app"
+        name = "APP_SERVICE_NAME"
+        value = "certificate-management${local.suffix}"
+      }
+
+      env {
+        name = "GCP_PROJECT_NUMBER"
+        value = data.google_project.project.number
+      }
+
+      env {
+        name = "GCP_REGION"
+        value = var.region
       }
 
       env {

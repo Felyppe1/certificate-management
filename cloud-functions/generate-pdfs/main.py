@@ -27,17 +27,22 @@ import subprocess
 
 load_dotenv()
 
-APP_BASE_URL = os.getenv('APP_BASE_URL')
-AUDIENCE = os.getenv("TOKEN_AUDIENCE", APP_BASE_URL) # For local environments
+AUDIENCE = os.getenv("TOKEN_AUDIENCE", 'http://localhost:3000') # For local environments
 SOFFICE_PATH = os.getenv('SOFFICE_PATH')
 CERTIFICATES_BUCKET = os.getenv('CERTIFICATES_BUCKET')
-GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+APP_SERVICE_NAME = os.getenv('APP_SERVICE_NAME')
+GCP_PROJECT_NUMBER = os.getenv('GCP_PROJECT_NUMBER')
+GCP_REGION = os.getenv('GCP_REGION')
+
+if APP_SERVICE_NAME and GCP_PROJECT_NUMBER and GCP_REGION:
+    APP_BASE_URL = f"https://{APP_SERVICE_NAME}-{GCP_PROJECT_NUMBER}.{GCP_REGION}.run.app"
+else:
+    APP_BASE_URL = 'http://localhost:3000'
 
 for var_name, var_value in {
     "APP_BASE_URL": APP_BASE_URL,
     "SOFFICE_PATH": SOFFICE_PATH,
     "CERTIFICATES_BUCKET": CERTIFICATES_BUCKET,
-    "GOOGLE_API_KEY": GOOGLE_API_KEY,
 }.items():
     if not var_value:
         raise ValueError(f"Environment variable '{var_name}' is not set.")
@@ -323,59 +328,6 @@ def refresh_google_token(user_id):
 #         raise Exception("Falha crítica ao renovar o token: " + response.text)
 #     print(response.json())
 #     return response.json()["access_token"]
-
-def download_from_google_drive_api(
-    drive_file_id: str, 
-    file_mime_type: str, 
-    access_token: Optional[str] = None,
-    user_id: Optional[str] = None,
-) -> BytesIO:
-    print('Downloading from Google Drive API', drive_file_id)
-    print('File drive id: ', drive_file_id)
-    print('Access token: ', access_token)
-    
-    mime_type_mapping = {
-        GOOGLE_DOCS_MIME_TYPE: DOCX_MIME_TYPE,
-        GOOGLE_SLIDES_MIME_TYPE: PPTX_MIME_TYPE,
-    }
-
-    if file_mime_type in [GOOGLE_DOCS_MIME_TYPE, GOOGLE_SLIDES_MIME_TYPE]:
-        url = f"https://www.googleapis.com/drive/v3/files/{drive_file_id}/export?mimeType={mime_type_mapping[file_mime_type]}"
-    else:
-        url = f"https://www.googleapis.com/drive/v3/files/{drive_file_id}?alt=media"
-
-    def make_request(token):
-        headers = {'Accept': 'application/json'}
-        params = {}
-        
-        if token:
-            headers['Authorization'] = f'Bearer {token}'
-        else:
-            params['key'] = GOOGLE_API_KEY
-            
-        return requests.get(url, headers=headers, params=params)
-
-    # First attempt
-    response = make_request(access_token)
-
-    # If it returns 401, we try to refresh the token ONCE
-    if response.status_code == 401:
-        try:
-            new_access_token = refresh_google_token(user_id)
-            # Try again with the new token
-            response = make_request(new_access_token)
-            
-            # Optional: Here you should save the new_token in your database/cache 
-            # so you don't have to refresh on every subsequent call.
-        except Exception as e:
-            print(f"Error trying to refresh: {e}")
-            # If the refresh fails, the status_code will continue to be 401 and fall into raise_for_status below
-
-    if response.status_code != 200:
-        print(f"Erro {response.status_code}: {response.text}")
-        response.raise_for_status()
-
-    return BytesIO(response.content)
 
 def replace_variables_in_docx(template_buffer, variable_mapping):
     pattern = re.compile(r"\{\{\s*(\w+)\s*\}\}")
