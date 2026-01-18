@@ -21,12 +21,20 @@ resource "google_project_iam_member" "sa_roles_runner" {
     "roles/iam.serviceAccountTokenCreator",
     "roles/pubsub.publisher",
     "roles/cloudtasks.enqueuer",
+    "roles/iam.serviceAccountUser",
   ])
 
   role    = each.value
   member  = "serviceAccount:${google_service_account.app_service_account.email}"
   project = var.project_id
 }
+
+# # Allow the service account to act as itself when creating Cloud Tasks
+# resource "google_service_account_iam_member" "app_sa_can_act_as_itself" {
+#   service_account_id = google_service_account.app_service_account.name
+#   role               = "roles/iam.serviceAccountUser"
+#   member             = "serviceAccount:${google_service_account.app_service_account.email}"
+# }
 
 output "service_account_email" {
   value       = google_service_account.app_service_account.email
