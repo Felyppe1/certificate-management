@@ -48,7 +48,7 @@ export class AddTemplateByUrlUseCase {
             IFileContentExtractorFactory,
             'create'
         >,
-        private bucket: Pick<IBucket, 'deleteObject' | 'uploadObject'>,
+        private bucket: Pick<IBucket, 'uploadObject'>,
         private transactionManager: ITransactionManager,
     ) {}
 
@@ -108,8 +108,6 @@ export class AddTemplateByUrlUseCase {
             )
         }
 
-        // const templateStorageFileUrl = certificate.getTemplateStorageFileUrl()
-
         const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
 
         const newTemplateInput = {
@@ -140,12 +138,5 @@ export class AddTemplateByUrlUseCase {
 
             await this.certificateEmissionsRepository.update(certificate)
         })
-
-        // if (templateStorageFileUrl) {
-        //     await this.bucket.deleteObject({
-        //         bucketName: process.env.CERTIFICATES_BUCKET!,
-        //         objectName: templateStorageFileUrl,
-        //     })
-        // }
     }
 }

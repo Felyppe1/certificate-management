@@ -33,7 +33,7 @@ const MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
 
 export class AddTemplateByUploadUseCase {
     constructor(
-        private bucket: IBucket,
+        private bucket: Pick<IBucket, 'uploadObject'>,
         private certificatesRepository: ICertificatesRepository,
         private dataSourceRowsRepository: Pick<
             IDataSourceRowsRepository,
@@ -123,12 +123,5 @@ export class AddTemplateByUploadUseCase {
 
             await this.certificatesRepository.update(certificate)
         })
-
-        // if (previousTemplateStorageFileUrl) {
-        //     await this.bucket.deleteObject({
-        //         bucketName: process.env.CERTIFICATES_BUCKET!,
-        //         objectName: previousTemplateStorageFileUrl,
-        //     })
-        // }
     }
 }
