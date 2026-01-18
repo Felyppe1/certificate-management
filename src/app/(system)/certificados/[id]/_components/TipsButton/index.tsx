@@ -40,7 +40,10 @@ export function TipsButton() {
         if (dismissed) {
             setDontShowAgain(true)
         } else {
-            setOpen(true)
+            const timer = setTimeout(() => {
+                setOpen(true)
+            }, 800)
+            return () => clearTimeout(timer)
         }
     }, [])
 
