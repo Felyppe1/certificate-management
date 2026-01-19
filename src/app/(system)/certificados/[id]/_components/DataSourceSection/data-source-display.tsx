@@ -26,6 +26,7 @@ import {
     ALargeSmall,
     Eye,
     RotateCw,
+    Loader2,
 } from 'lucide-react'
 import { startTransition, useActionState, useEffect, useState } from 'react'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
@@ -116,10 +117,13 @@ export function DataSourceDisplay({
         null,
     )
 
-    const [viewCertificateState, viewCertificateActionHandler] = useActionState(
-        viewCertificateAction,
-        null,
-    )
+    const [
+        viewCertificateState,
+        viewCertificateActionHandler,
+        isViewingCertificate,
+    ] = useActionState(viewCertificateAction, null)
+
+    const [viewingRowId, setViewingRowId] = useState<string | null>(null)
 
     const [
         downloadDataSourceState,
@@ -185,6 +189,7 @@ export function DataSourceDisplay({
     }
 
     const handleViewCertificate = (rowId: string) => {
+        setViewingRowId(rowId)
         const formData = new FormData()
         formData.append('rowId', rowId)
 
@@ -565,8 +570,19 @@ export function DataSourceDisplay({
                                                                                             size="sm"
                                                                                             className="h-8 w-8 p-0"
                                                                                             title="Visualizar certificado"
+                                                                                            disabled={
+                                                                                                isViewingCertificate &&
+                                                                                                viewingRowId ===
+                                                                                                    row.id
+                                                                                            }
                                                                                         >
-                                                                                            <Eye />
+                                                                                            {isViewingCertificate &&
+                                                                                            viewingRowId ===
+                                                                                                row.id ? (
+                                                                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                                                            ) : (
+                                                                                                <Eye />
+                                                                                            )}
                                                                                         </Button>
                                                                                     )}
                                                                                     {/* {row.processingStatus ===
