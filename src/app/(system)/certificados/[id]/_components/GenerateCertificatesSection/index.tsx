@@ -269,7 +269,7 @@ export function GenerateCertificatesSection({
                         />
                     )}
 
-                    {isRetryProcessing && (
+                    {retryingRows > 0 && (
                         <AlertMessage
                             variant="error"
                             icon={<CircleAlert />}

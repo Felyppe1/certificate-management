@@ -150,14 +150,13 @@ export function EmailForm({
                         <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                     </div>
                     <div>
-                        <p className="font-medium">
+                        <p className="font-medium text-base sm:text-lg">
                             {totalRecords}{' '}
                             {totalRecords <= 1
                                 ? 'destinatário'
                                 : 'destinatários'}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                            {totalRecords}{' '}
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                             {totalRecords <= 1
                                 ? 'receberá o certificado'
                                 : 'receberão os certificados'}
