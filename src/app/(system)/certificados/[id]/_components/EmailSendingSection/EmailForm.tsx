@@ -157,7 +157,10 @@ export function EmailForm({
                                 : 'destinatários'}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                            receberá o certificado
+                            {totalRecords}{' '}
+                            {totalRecords <= 1
+                                ? 'receberá o certificado'
+                                : 'receberão os certificados'}
                         </p>
                     </div>
                 </div>

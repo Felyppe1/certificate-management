@@ -239,51 +239,46 @@ export function GenerateCertificatesSection({
                         />
                     )}
 
-                    {failedRows > 0 &&
-                        failedRows !== totalRows &&
-                        !isRetrying && (
-                            <AlertMessage
-                                variant="error"
-                                icon={<CircleAlert />}
-                                text={`${failedRows} ${failedRows !== 1 ? 'gerações de certificados falharam' : 'geração de certificado falhou'}.`}
-                                actionLayout="start"
-                                action={
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={handleRetry}
-                                        disabled={
-                                            isRetryProcessing || isPending
-                                        }
-                                        className="text-red-700 dark:text-red-300 border-red-300 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30"
-                                    >
-                                        {isRetryPending ? (
-                                            <>
-                                                <Loader2 className="scale-90 h-3 w-3 animate-spin" />
-                                                Iniciando...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <RefreshCw className="scale-90 h-3 w-3" />
-                                                Tentar novamente
-                                            </>
-                                        )}
-                                    </Button>
-                                }
-                            />
-                        )}
-
-                    {isRetrying && totalRetryingRows > 0 && (
+                    {failedRows > 0 && failedRows !== totalRows && (
                         <AlertMessage
                             variant="error"
                             icon={<CircleAlert />}
-                            text={`Reprocessando ${totalRetryingRows} ${totalRetryingRows !== 1 ? 'certificados' : 'certificado'}...`}
+                            text={`${failedRows} ${failedRows !== 1 ? 'gerações de certificados falharam' : 'geração de certificado falhou'}.`}
+                            actionLayout="start"
+                            action={
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleRetry}
+                                    disabled={isRetryProcessing || isPending}
+                                    className="text-red-700 dark:text-red-300 border-red-300 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30"
+                                >
+                                    {isRetryPending ? (
+                                        <>
+                                            <Loader2 className="scale-90 h-3 w-3 animate-spin" />
+                                            Iniciando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <RefreshCw className="scale-90 h-3 w-3" />
+                                            Tentar novamente
+                                        </>
+                                    )}
+                                </Button>
+                            }
+                        />
+                    )}
+
+                    {isRetryProcessing && (
+                        <AlertMessage
+                            variant="error"
+                            icon={<CircleAlert />}
+                            text={`Reprocessando ${retryingRows} ${retryingRows !== 1 ? 'certificados' : 'certificado'}...`}
                             actionLayout="start"
                             action={
                                 <div className="flex items-center gap-2 bg-red-200/50 dark:bg-red-900/30 px-3 py-1 rounded-full border border-red-200 dark:border-red-800">
                                     <span className="text-xs font-semibold tabular-nums text-red-800 dark:text-red-200">
-                                        {retryCompletedRows} /{' '}
-                                        {totalRetryingRows}
+                                        {retryCompletedRows} / {retryingRows}
                                     </span>
                                     <Loader2 className="h-3.5 w-3.5 animate-spin text-red-600 dark:text-red-400" />
                                 </div>
@@ -292,7 +287,7 @@ export function GenerateCertificatesSection({
                     )}
                 </div>
 
-                {failedRows > 0 && failedRows === totalRows && !isRetrying && (
+                {failedRows > 0 && failedRows === totalRows && (
                     <AlertMessage
                         variant="error"
                         icon={<CircleAlert />}

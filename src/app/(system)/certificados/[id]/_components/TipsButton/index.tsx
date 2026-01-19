@@ -42,7 +42,7 @@ export function TipsButton() {
         } else {
             const timer = setTimeout(() => {
                 setOpen(true)
-            }, 800)
+            }, 500)
             return () => clearTimeout(timer)
         }
     }, [])
