@@ -130,7 +130,13 @@ export class GenerateCertificatesUseCase {
                 })
             })
 
-            await Promise.all(enqueuePromises)
+            const results = await Promise.allSettled(enqueuePromises)
+
+            const successfulIds = results.filter(
+                result => result.status === 'fulfilled',
+            )
+
+            console.log('Jobs successfully enqueued:', successfulIds.length)
 
             await this.dataSourceRowsRepository.updateManyProcessingStatus(
                 data.map(row => row.id),
