@@ -130,7 +130,7 @@ resource "google_cloud_run_v2_service" "generate_pdfs" {
   template {
     service_account = google_service_account.app_service_account.email
 
-    max_instance_request_concurrency = 2
+    max_instance_request_concurrency = 3
     scaling {
       min_instance_count = 0
       max_instance_count = 10

@@ -267,7 +267,6 @@ export class PrismaDataSourceRowsRepository
             take: limit + 1, // Get lines + 1 to determine if there's a next page
             ...(cursor && {
                 cursor: { id: cursor },
-                skip: 1,
             }),
             orderBy: { id: 'asc' },
             include: {

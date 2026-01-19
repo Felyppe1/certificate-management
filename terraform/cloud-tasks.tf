@@ -8,11 +8,11 @@ resource "google_cloud_tasks_queue" "http_target_oidc" {
   }
 
   retry_config {
-    max_attempts = 20
+    max_attempts = 50
     # max_retry_duration = "0s" // Unlimited
     min_backoff = "1s"
     max_backoff = "3600s"
-    max_doublings = 5
+    max_doublings = 3
   }
 
   http_target {
