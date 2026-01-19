@@ -7,6 +7,7 @@ import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/reposit
 import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { NextRequest, NextResponse } from 'next/server'
+import { Readable } from 'stream'
 
 export async function GET(
     request: NextRequest,
@@ -34,10 +35,14 @@ export async function GET(
             userId,
         })
 
-        return new Response(zipStream as unknown as BodyInit, {
+        // Convert the Node stream (archiver) to Web Stream (Next.js Response)
+        const webStream = Readable.toWeb(zipStream as Readable)
+
+        return new Response(webStream as any, {
             headers: {
                 'Content-Type': 'application/zip',
-                'Content-Disposition': `attachment; filename=certificates-${certificateEmissionId}.zip`,
+                // TODO: Add utf-8 to ensure correct accented file names in the header
+                'Content-Disposition': `attachment; filename="certificates-${certificateEmissionId}.zip"`,
             },
         })
     } catch (error: unknown) {

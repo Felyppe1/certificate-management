@@ -65,17 +65,50 @@ export class DownloadCertificatesUseCase {
             prefix,
         })
 
-        const archive = archiver('zip')
+        const archive = archiver('zip', {
+            // zlib: { level: 9 } // Optional: define compression level
+        })
+
         const stream = new PassThrough()
 
+        // Connect the archiver to the output stream
         archive.pipe(stream)
 
-        for (const file of certificateObjects) {
-            const fileName = file.name.split('/').pop()!
-            archive.append(file.createReadStream(), { name: fileName })
+        // IMPORTANT: Do not use await here in the main flow.
+        // We create an async function to process the filling without blocking the return.
+        const processArchive = async () => {
+            try {
+                for (const file of certificateObjects) {
+                    const fileName = file.name.split('/').pop()!
+                    // The append only queues the stream, the archiver manages the reading
+                    archive.append(file.createReadStream(), { name: fileName })
+                }
+
+                // Finalize the archive when everything is queued
+                await archive.finalize()
+            } catch (error) {
+                // If an error occurs during download/zip, destroy the stream to notify the client that the download failed
+                stream.destroy(error as Error)
+            }
         }
 
-        await archive.finalize()
+        // Launch the process in the "background" and let Node manage it
+        processArchive()
+
+        // Return the stream IMMEDIATELY to the controller
         return stream
+
+        // const archive = archiver('zip')
+        // const stream = new PassThrough()
+
+        // archive.pipe(stream)
+
+        // for (const file of certificateObjects) {
+        //     const fileName = file.name.split('/').pop()!
+        //     archive.append(file.createReadStream(), { name: fileName })
+        // }
+
+        // await archive.finalize()
+        // return stream
     }
 }

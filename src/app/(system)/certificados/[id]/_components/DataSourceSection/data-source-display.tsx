@@ -195,7 +195,9 @@ export function DataSourceDisplay({
 
     const handleDownloadAllCertificates = () => {
         const url = `/api/certificate-emissions/${certificateId}/zip`
-        window.open(url, '_blank', 'noopener,noreferrer')
+
+        // The browser notices the header "attachment" and starts the download in the same pathe without reloading
+        window.location.href = url
     }
 
     const handleRetry = (rowId: string) => {
