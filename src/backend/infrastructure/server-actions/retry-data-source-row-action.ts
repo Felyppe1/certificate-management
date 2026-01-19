@@ -5,7 +5,8 @@ import { logoutAction } from './logout-action'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
-import { GcpPubSub } from '../cloud/gcp/gcp-pubsub'
+import { CloudTasksQueue } from '../cloud/gcp/cloud-tasks-queue'
+import { LocalQueue } from '../cloud/local/local-queue'
 import { RetryDataSourceRowUseCase } from '@/backend/application/generate-certificate-use-case'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { retryDataSourceRowSchema } from './schemas'
@@ -23,12 +24,15 @@ export async function retryDataSourceRowAction(_: unknown, formData: FormData) {
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,
         )
-        const pubSub = new GcpPubSub()
+        const queue =
+            process.env.NODE_ENV === 'development'
+                ? new LocalQueue()
+                : new CloudTasksQueue()
 
         const retryDataSourceRowUseCase = new RetryDataSourceRowUseCase(
             certificatesRepository,
             dataSourceRowsRepository,
-            pubSub,
+            queue,
         )
 
         await retryDataSourceRowUseCase.execute({

@@ -7,7 +7,7 @@ import {
     NotFoundError,
 } from '../domain/error/not-found-error'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IPubSub } from './interfaces/cloud/ipubsub'
+import { IQueue } from './interfaces/cloud/iqueue'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 
 interface RetryDataSourceRowUseCaseInput {
@@ -25,7 +25,7 @@ export class RetryDataSourceRowUseCase {
             IDataSourceRowsRepository,
             'getById' | 'update'
         >,
-        private pubSub: Pick<IPubSub, 'publish'>,
+        private queue: Pick<IQueue, 'enqueueGenerateCertificatePDF'>,
     ) {}
 
     async execute({ rowId, userId }: RetryDataSourceRowUseCaseInput) {
@@ -52,7 +52,7 @@ export class RetryDataSourceRowUseCase {
             certificateEmission.serialize()
         const rowData = row.serialize()
 
-        await this.pubSub.publish('certificates-generation-started', {
+        await this.queue.enqueueGenerateCertificatePDF({
             certificateEmission: {
                 id: certificateEmissionData.id,
                 userId: certificateEmissionData.userId,
@@ -67,7 +67,10 @@ export class RetryDataSourceRowUseCase {
                     columns: dataSource!.columns,
                 },
             },
-            row: { id: rowData.id, data: rowData.data },
+            row: {
+                id: rowData.id,
+                data: rowData.data as Record<string, string>,
+            },
         })
 
         row.startGeneration()

@@ -7,7 +7,8 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { RetryCertificatesGenerationUseCase } from '@/backend/application/retry-certificates-generation-use-case'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
-import { GcpPubSub } from '../cloud/gcp/gcp-pubsub'
+import { CloudTasksQueue } from '../cloud/gcp/cloud-tasks-queue'
+import { LocalQueue } from '../cloud/local/local-queue'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { retryCertificatesGenerationSchema } from './schemas'
 
@@ -30,14 +31,17 @@ export async function retryCertificatesGenerationAction(
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,
         )
-        const pubSub = new GcpPubSub()
+        const queue =
+            process.env.NODE_ENV === 'development'
+                ? new LocalQueue()
+                : new CloudTasksQueue()
 
         const retryCertificatesGenerationUseCase =
             new RetryCertificatesGenerationUseCase(
                 certificateEmissionsRepository,
                 dataSourceRowsRepository,
                 dataSourceRowsRepository,
-                pubSub,
+                queue,
             )
 
         const result = await retryCertificatesGenerationUseCase.execute({

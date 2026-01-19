@@ -11,7 +11,7 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
-import { IPubSub } from './interfaces/cloud/ipubsub'
+import { IQueue } from './interfaces/cloud/iqueue'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
 import { PROCESSING_STATUS_ENUM } from '../domain/data-source-row'
@@ -35,7 +35,7 @@ export class RetryCertificatesGenerationUseCase {
             IDataSourceRowsReadRepository,
             'getManyByCertificateEmissionId' | 'countWithStatuses'
         >,
-        private pubSub: Pick<IPubSub, 'publish'>,
+        private queue: Pick<IQueue, 'enqueueGenerateCertificatePDF'>,
     ) {}
 
     async execute({
@@ -92,8 +92,8 @@ export class RetryCertificatesGenerationUseCase {
 
             if (data.length === 0) break
 
-            const publishPromises = data.map(({ id, data }) => {
-                return this.pubSub.publish('certificates-generation-started', {
+            const enqueuePromises = data.map(({ id, data }) => {
+                return this.queue.enqueueGenerateCertificatePDF({
                     certificateEmission: {
                         id: certificateEmissionData.id,
                         userId: certificateEmissionData.userId,
@@ -112,7 +112,7 @@ export class RetryCertificatesGenerationUseCase {
                 })
             })
 
-            await Promise.all(publishPromises)
+            await Promise.all(enqueuePromises)
 
             await this.dataSourceRowsRepository.updateManyProcessingStatus(
                 data.map(row => row.id),
