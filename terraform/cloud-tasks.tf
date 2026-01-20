@@ -60,7 +60,7 @@ resource "google_cloud_tasks_queue" "send_certificate_emails_queue" {
     uri_override {
       scheme = "HTTPS"
       host   = replace(
-        google_cloudfunctions2_function.send_certificate_emails_function.uri,
+        google_cloudfunctions2_function.send_certificate_emails_function.url,
         "https://",
         ""
       )
@@ -70,7 +70,7 @@ resource "google_cloud_tasks_queue" "send_certificate_emails_queue" {
     }
     oidc_token {
       service_account_email = google_service_account.app_service_account.email
-      audience              = google_cloudfunctions2_function.send_certificate_emails.uri
+      audience              = google_cloudfunctions2_function.send_certificate_emails_function.url
     }
   }
 }
