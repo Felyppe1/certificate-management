@@ -24,6 +24,16 @@ export class LocalQueue implements IQueue {
     async enqueueSendCertificateEmails(
         data: EnqueueSendCertificateEmailsInput,
     ): Promise<void> {
-        throw new Error('Method not implemented.')
+        const sendEmailsUrl = 'http://localhost:8081'
+
+        void fetch(sendEmailsUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        }).catch(err => {
+            console.error('Failed to enqueue local send email task', err)
+        })
     }
 }

@@ -28,7 +28,7 @@ export interface EnqueueSendCertificateEmailsInput {
     sender: string
     subject: string
     body: string
-    recipients: string[]
+    recipients: { rowId: string; email: string }[]
 }
 
 export interface IQueue {

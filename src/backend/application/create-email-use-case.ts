@@ -11,7 +11,7 @@ import {
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
 import { IEmailsRepository } from './interfaces/repository/iemails-repository'
-import { IExternalProcessing } from './interfaces/cloud/iexternal-processing'
+import { IQueue } from './interfaces/cloud/iqueue'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 export interface CreateEmailUseCaseInput {
@@ -34,10 +34,7 @@ export class CreateEmailUseCase {
             'countByCertificateEmissionId' | 'getManyByCertificateEmissionId'
         >,
         private emailsRepository: Pick<IEmailsRepository, 'save'>,
-        private externalProcessing: Pick<
-            IExternalProcessing,
-            'triggerSendCertificateEmails'
-        >,
+        private queue: Pick<IQueue, 'enqueueSendCertificateEmails'>,
         private transactionManager: ITransactionManager,
     ) {}
 
@@ -72,7 +69,7 @@ export class CreateEmailUseCase {
             )
         }
 
-        const rows: { data: Record<string, string> }[] = []
+        const rows: { id: string; data: Record<string, string> }[] = []
         let cursor: string | undefined
 
         do {
@@ -87,13 +84,17 @@ export class CreateEmailUseCase {
             cursor = nextCursor || undefined
         } while (cursor)
 
-        const recipients = rows.map(row => row.data[data.emailColumn])
-        console.log(recipients)
-        if (!Email.validateEmailColumnRecords(recipients)) {
+        const emailValues = rows.map(row => row.data[data.emailColumn])
+        if (!Email.validateEmailColumnRecords(emailValues)) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.INVALID_RECIPIENT_EMAIL,
             )
         }
+
+        const recipients = rows.map(row => ({
+            rowId: row.id,
+            email: row.data[data.emailColumn],
+        }))
 
         const email = Email.create({
             certificateEmissionId: data.certificateEmissionId,
@@ -111,7 +112,7 @@ export class CreateEmailUseCase {
 
             certificateEmission.setStatus(CERTIFICATE_STATUS.SCHEDULED)
         } else {
-            await this.externalProcessing.triggerSendCertificateEmails({
+            await this.queue.enqueueSendCertificateEmails({
                 certificateEmissionId: data.certificateEmissionId,
                 emailId: email.getId(),
                 userId: data.userId,

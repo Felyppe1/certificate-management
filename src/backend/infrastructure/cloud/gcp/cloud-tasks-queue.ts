@@ -38,10 +38,32 @@ export class CloudTasksQueue implements IQueue {
     async enqueueSendCertificateEmails(
         data: EnqueueSendCertificateEmailsInput,
     ): Promise<void> {
-        throw new Error('Method not implemented.')
+        const project = process.env.GCP_PROJECT_ID!
+        const location = process.env.GCP_REGION!
+        const queue = `send-certificate-emails${process.env.SUFFIX || ''}`
+        const url = this.getCloudFunctionUrl('send-certificate-emails', {
+            entryPoint: 'main',
+        })
+
+        const parent = this.queue.queuePath(project, location, queue)
+        const task = {
+            httpRequest: {
+                url,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                httpMethod: 'POST' as const,
+                body: Buffer.from(JSON.stringify(data)).toString('base64'),
+            },
+        }
+
+        await this.queue.createTask({ parent, task })
     }
 
-    private getCloudFunctionUrl(functionName: string): string {
+    private getCloudFunctionUrl(
+        functionName: string,
+        options?: { entryPoint?: string },
+    ): string {
         const projectNumber = process.env.GCP_PROJECT_NUMBER
         const region = process.env.GCP_REGION
         const suffix = process.env.SUFFIX || ''
@@ -52,7 +74,11 @@ export class CloudTasksQueue implements IQueue {
 
         const functionFullName = `${functionName}${suffix}`
 
-        const url = `https://${functionFullName}-${projectNumber}.${region}.run.app`
+        let url = `https://${functionFullName}-${projectNumber}.${region}.run.app`
+
+        if (options?.entryPoint) {
+            url += `/${options.entryPoint}`
+        }
 
         return url
     }

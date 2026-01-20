@@ -74,8 +74,10 @@ def main(request):
     recipients = data.get("recipients")
 
     try:
-        def send_email_to_recipient(index, recipient):
-            path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{index + 1}.pdf"
+        def send_email_to_recipient(recipient_data):
+            row_id = recipient_data.get('rowId')
+            recipient = recipient_data.get('email')
+            path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{row_id}.pdf"
             pdf_bytes = get_from_bucket(path)
 
             logo_path = os.path.join(os.path.dirname(__file__), "assets", "logo.png")
@@ -151,8 +153,8 @@ def main(request):
 
         with ThreadPoolExecutor(max_workers=5) as executor:
             futures = [
-                executor.submit(send_email_to_recipient, index, recipient)
-                for index, recipient in enumerate(recipients)
+                executor.submit(send_email_to_recipient, recipient_data)
+                for recipient_data in recipients
             ]
 
             # Wait for all to complete

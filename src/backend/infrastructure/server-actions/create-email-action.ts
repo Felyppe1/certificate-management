@@ -4,16 +4,15 @@ import { CreateEmailUseCase } from '@/backend/application/create-email-use-case'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { prisma } from '../repository/prisma'
 import { PrismaEmailsRepository } from '../repository/prisma/prisma-emails-repository'
-
-import { CloudFunctionExternalProcessing } from '../cloud/gcp/cloud-function-external-processing'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { logoutAction } from './logout-action'
 import { updateTag } from 'next/cache'
-import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { createEmailSchema } from './schemas'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
+import { CloudTasksQueue } from '../cloud/gcp/cloud-tasks-queue'
+import { LocalQueue } from '../cloud/local/local-queue'
 
 export async function createEmailAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -38,18 +37,17 @@ export async function createEmailAction(_: unknown, formData: FormData) {
             prisma,
         )
         const emailsRepository = new PrismaEmailsRepository(prisma)
-
-        const googleAuthGateway = new GoogleAuthGateway()
-        const externalProcessing = new CloudFunctionExternalProcessing(
-            googleAuthGateway,
-        )
         const transactionManager = new PrismaTransactionManager(prisma)
+        const queue =
+            process.env.NODE_ENV === 'development'
+                ? new LocalQueue()
+                : new CloudTasksQueue()
 
         const createEmailUseCase = new CreateEmailUseCase(
             certificateEmissionsRepository,
             dataSourceRowsRepository,
             emailsRepository,
-            externalProcessing,
+            queue,
             transactionManager,
         )
 
