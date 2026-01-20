@@ -15,7 +15,7 @@ services:
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: /secrets/service-account.json
       SOFFICE_PATH: /usr/bin/soffice
-      # APP_BASE_URL: http://host.docker.internal:3000
+      APP_BASE_URL: http://host.docker.internal:3000
       TOKEN_AUDIENCE: http://localhost:3000
       PYTHONUNBUFFERED: "1" # For real-time logging
     extra_hosts:

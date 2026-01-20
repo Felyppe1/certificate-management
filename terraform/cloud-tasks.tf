@@ -57,17 +57,13 @@ resource "google_cloud_tasks_queue" "send_certificate_emails_queue" {
 
   http_target {
     http_method = "POST"
-    # uri_override {
-    #   scheme = "HTTPS"
-    #   host   = replace(
-    #     google_cloudfunctions2_function.send_certificate_emails_function.url,
-    #     "https://",
-    #     ""
-    #   )
-    #   path_override {
-    #     path = "/main"
-    #   }
-    # }
+    uri_override {
+      scheme = "HTTPS"
+      host   = "${google_cloudfunctions2_function.send_certificate_emails_function.name}-${data.google_project.project.number}.${var.region}.run.app"
+      # path_override {
+      #   path = "/main"
+      # }
+    }
     oidc_token {
       service_account_email = google_service_account.app_service_account.email
       audience              = google_cloudfunctions2_function.send_certificate_emails_function.url

@@ -23,19 +23,13 @@ import subprocess
 
 load_dotenv()
 
-APP_BASE_URL = 'http://host.docker.internal:3000'  # For local environments
+APP_BASE_URL = os.getenv('APP_BASE_URL')
+AUDIENCE = os.getenv("TOKEN_AUDIENCE", APP_BASE_URL) # For prod, it will use the APP_BASE_URL as AUDIENCE
 SOFFICE_PATH = os.getenv('SOFFICE_PATH')
 CERTIFICATES_BUCKET = os.getenv('CERTIFICATES_BUCKET')
-APP_SERVICE_NAME = os.getenv('APP_SERVICE_NAME')
-GCP_PROJECT_NUMBER = os.getenv('GCP_PROJECT_NUMBER')
-GCP_REGION = os.getenv('GCP_REGION')
-
-if APP_SERVICE_NAME and GCP_PROJECT_NUMBER and GCP_REGION:
-    APP_BASE_URL = f"https://{APP_SERVICE_NAME}-{GCP_PROJECT_NUMBER}.{GCP_REGION}.run.app"
-
-AUDIENCE = os.getenv("TOKEN_AUDIENCE", APP_BASE_URL) # For prod, it will use the APP_BASE_URL
 
 for var_name, var_value in {
+    "APP_BASE_URL": APP_BASE_URL,
     "SOFFICE_PATH": SOFFICE_PATH,
     "CERTIFICATES_BUCKET": CERTIFICATES_BUCKET,
 }.items():
