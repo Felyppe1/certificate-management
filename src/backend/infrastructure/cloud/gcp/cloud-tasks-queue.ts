@@ -20,19 +20,24 @@ export class CloudTasksQueue implements IQueue {
         const queue = `generate-pdfs${process.env.SUFFIX || ''}`
         // const url = this.getCloudFunctionUrl('generate-pdfs')
 
-        const parent = this.queue.queuePath(project, location, queue)
-        const task = {
-            httpRequest: {
-                // url,
-                // headers: {
-                //     'Content-Type': 'application/json',
-                // },
-                // httpMethod: 'POST' as const,
-                body: Buffer.from(JSON.stringify(data)).toString('base64'),
-            },
-        }
+        try {
+            const parent = this.queue.queuePath(project, location, queue)
+            const task = {
+                httpRequest: {
+                    url: 'https://mock.com', // It just requires a URL on creation, not used on dispatch
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    httpMethod: 'POST' as const,
+                    body: Buffer.from(JSON.stringify(data)).toString('base64'),
+                },
+            }
 
-        await this.queue.createTask({ parent, task })
+            await this.queue.createTask({ parent, task })
+        } catch (error) {
+            console.error('Error enqueuing GenerateCertificatePDF task:', error)
+            throw error
+        }
     }
 
     async enqueueSendCertificateEmails(
@@ -45,19 +50,24 @@ export class CloudTasksQueue implements IQueue {
         //     entryPoint: 'main',
         // })
 
-        const parent = this.queue.queuePath(project, location, queue)
-        const task = {
-            httpRequest: {
-                // url,
-                // headers: {
-                //     'Content-Type': 'application/json',
-                // },
-                // httpMethod: 'POST' as const,
-                body: Buffer.from(JSON.stringify(data)).toString('base64'),
-            },
-        }
+        try {
+            const parent = this.queue.queuePath(project, location, queue)
+            const task = {
+                httpRequest: {
+                    url: 'https://mock.com',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    httpMethod: 'POST' as const,
+                    body: Buffer.from(JSON.stringify(data)).toString('base64'),
+                },
+            }
 
-        await this.queue.createTask({ parent, task })
+            await this.queue.createTask({ parent, task })
+        } catch (error) {
+            console.error('Error enqueuing SendCertificateEmails task:', error)
+            throw error
+        }
     }
 
     private getCloudFunctionUrl(
