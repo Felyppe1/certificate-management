@@ -25,6 +25,7 @@ export enum CERTIFICATE_STATUS {
     DRAFT = 'DRAFT',
     PUBLISHED = 'EMITTED',
     SCHEDULED = 'SCHEDULED',
+    GENERATED = 'GENERATED',
 }
 
 export interface CertificateInput {
@@ -162,6 +163,10 @@ export class Certificate extends AggregateRoot {
 
     setStatus(status: CERTIFICATE_STATUS) {
         this.status = status
+    }
+
+    markAsGenerated() {
+        this.status = CERTIFICATE_STATUS.GENERATED
     }
 
     update(data: UpdateCertificateInput) {

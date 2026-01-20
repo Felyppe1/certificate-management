@@ -7,6 +7,8 @@ import {
     ValidationError,
 } from '../domain/error/validation-error'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 interface FinishCertificatesGenerationUseCaseInput {
     dataSourceRowId: string
@@ -18,8 +20,13 @@ export class FinishCertificatesGenerationUseCase {
     constructor(
         private dataSourceRowsRepository: Pick<
             IDataSourceRowsRepository,
+            'getById' | 'update' | 'allRowsFinishedProcessing'
+        >,
+        private certificatesRepository: Pick<
+            ICertificatesRepository,
             'getById' | 'update'
         >,
+        private transactionManager: ITransactionManager,
     ) {}
 
     async execute(input: FinishCertificatesGenerationUseCaseInput) {
@@ -43,11 +50,31 @@ export class FinishCertificatesGenerationUseCase {
             dataSourceRow.finishGenerationWithError()
         }
 
-        await this.dataSourceRowsRepository.update(dataSourceRow)
+        const certificateEmissionId =
+            dataSourceRow.serialize().certificateEmissionId
+
+        await this.transactionManager.run(async () => {
+            await this.dataSourceRowsRepository.update(dataSourceRow)
+
+            const allFinished =
+                await this.dataSourceRowsRepository.allRowsFinishedProcessing(
+                    certificateEmissionId,
+                )
+
+            if (allFinished) {
+                const certificate = await this.certificatesRepository.getById(
+                    certificateEmissionId,
+                )
+
+                if (certificate) {
+                    certificate.markAsGenerated()
+                    await this.certificatesRepository.update(certificate)
+                }
+            }
+        })
 
         return {
-            certificateEmissionId:
-                dataSourceRow.serialize().certificateEmissionId,
+            certificateEmissionId,
         }
     }
 }

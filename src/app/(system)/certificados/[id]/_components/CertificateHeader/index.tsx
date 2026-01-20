@@ -1,5 +1,6 @@
 'use client'
 
+import { STATUS_MAPPING } from '@/app/(system)/_components/CertificateEmissionsList/_components/List/ListRenderer'
 import { updateCertificateEmissionAction } from '@/backend/infrastructure/server-actions/update-certificate-emission-action'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -22,11 +23,12 @@ interface CertificateHeaderProps {
     status: string
 }
 
-const statusMapping = {
-    DRAFT: 'Rascunho',
-    EMITTED: 'Emitido',
-    SCHEDULED: 'Agendado',
-}
+// const STATUS_MAPPING = {
+//     DRAFT: 'Rascunho',
+//     EMITTED: 'Emitido',
+//     SCHEDULED: 'Agendado',
+//     GENERATED: 'Gerado',
+// }
 
 const nameSchema = z
     .string()
@@ -155,15 +157,17 @@ export function CertificateHeader({
 
                 <Badge
                     variant={
-                        status === 'EMITTED'
-                            ? 'green'
-                            : status === 'DRAFT'
-                              ? 'orange'
-                              : 'purple'
+                        status === 'DRAFT'
+                            ? 'orange'
+                            : status === 'GENERATED'
+                              ? 'blue'
+                              : status === 'SCHEDULED'
+                                ? 'purple'
+                                : 'green'
                     }
                     size="lg"
                 >
-                    {statusMapping[status as keyof typeof statusMapping]}
+                    {STATUS_MAPPING[status as keyof typeof STATUS_MAPPING]}
                 </Badge>
             </div>
 

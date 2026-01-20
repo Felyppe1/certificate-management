@@ -6,10 +6,11 @@ import { useCertificatesStore } from '@/lib/certificatesStore'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 
-const statusMapping = {
+export const STATUS_MAPPING = {
     DRAFT: 'Rascunho',
     EMITTED: 'Emitido',
     SCHEDULED: 'Agendado',
+    GENERATED: 'Gerado',
 }
 
 interface ListRendererProps extends CertificateEmissionsResponse {}
@@ -86,17 +87,20 @@ export function ListRenderer({ certificateEmissions }: ListRendererProps) {
                             <div className="flex items-center gap-2 sm:gap-4">
                                 <Badge
                                     variant={
-                                        certificate.status === 'EMITTED'
-                                            ? 'green'
-                                            : certificate.status === 'DRAFT'
-                                              ? 'orange'
-                                              : 'purple'
+                                        certificate.status === 'DRAFT'
+                                            ? 'orange'
+                                            : certificate.status === 'GENERATED'
+                                              ? 'blue'
+                                              : certificate.status ===
+                                                  'SCHEDULED'
+                                                ? 'purple'
+                                                : 'green'
                                     }
                                     size="md"
                                 >
                                     {
-                                        statusMapping[
-                                            certificate.status as keyof typeof statusMapping
+                                        STATUS_MAPPING[
+                                            certificate.status as keyof typeof STATUS_MAPPING
                                         ]
                                     }
                                 </Badge>
