@@ -1,5 +1,5 @@
-resource "google_cloud_tasks_queue" "certificate_generations_queue" {
-  name     = "certificate-generations${local.suffix}"
+resource "google_cloud_tasks_queue" "generate_pdfs_queue" {
+  name     = "generate-pdfs${local.suffix}"
   location = var.region
 
   rate_limits {

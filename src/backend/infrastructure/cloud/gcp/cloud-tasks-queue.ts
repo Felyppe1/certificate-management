@@ -17,7 +17,7 @@ export class CloudTasksQueue implements IQueue {
     ): Promise<void> {
         const project = process.env.GCP_PROJECT_ID!
         const location = process.env.GCP_REGION!
-        const queue = `certificate-generations${process.env.SUFFIX || ''}`
+        const queue = `generate-pdfs${process.env.SUFFIX || ''}`
         // const url = this.getCloudFunctionUrl('generate-pdfs')
 
         const parent = this.queue.queuePath(project, location, queue)
