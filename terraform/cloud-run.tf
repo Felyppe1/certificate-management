@@ -168,10 +168,10 @@ resource "google_cloud_run_v2_service" "generate_pdfs" {
         value = "/usr/bin/soffice"
       }
 
-      env {
-        name = "GOOGLE_API_KEY"
-        value = var.google_api_key
-      }
+      # env {
+      #   name = "GOOGLE_API_KEY"
+      #   value = var.google_api_key
+      # }
     }
   }
 

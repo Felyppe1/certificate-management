@@ -55,7 +55,6 @@ jobs:
           echo "TF_VAR_branch=${{ github.ref_name }}" >> $GITHUB_ENV
           echo "TF_VAR_smtp_user=${{ secrets.SMTP_USER }}" >> $GITHUB_ENV
           echo "TF_VAR_smtp_password=${{ secrets.SMTP_PASSWORD }}" >> $GITHUB_ENV
-          echo "TF_VAR_google_api_key=${{ secrets.GOOGLE_API_KEY }}" >> $GITHUB_ENV
           TF_ENV_VARS=$(jq -nc '{
             DB_USER: env.DB_USER,
             DB_PASSWORD: env.DB_PASSWORD,
@@ -171,7 +170,6 @@ jobs:
           echo "TF_VAR_branch=${{ github.ref_name }}" >> $GITHUB_ENV
           echo "TF_VAR_smtp_user=${{ secrets.SMTP_USER }}" >> $GITHUB_ENV
           echo "TF_VAR_smtp_password=${{ secrets.SMTP_PASSWORD }}" >> $GITHUB_ENV
-          echo "TF_VAR_google_api_key=${{ secrets.GOOGLE_API_KEY }}" >> $GITHUB_ENV
           TF_ENV_VARS=$(jq -nc '{
             DB_USER: env.DB_USER,
             DB_PASSWORD: env.DB_PASSWORD,
