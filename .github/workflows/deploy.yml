@@ -6,6 +6,10 @@ on:
       - main
       - develop
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   terraform-plan:
     runs-on: ubuntu-latest
