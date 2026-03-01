@@ -22,7 +22,8 @@ resource "google_project_iam_member" "sa_roles_runner" {
     "roles/pubsub.publisher",
     "roles/cloudtasks.enqueuer",
     "roles/iam.serviceAccountUser",
-    "roles/storage.objectViewer"
+    "roles/storage.objectViewer",
+    "roles/artifactregistry.writer"
   ])
 
   role    = each.value
