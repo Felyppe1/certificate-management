@@ -134,6 +134,8 @@ resource "google_cloudfunctions2_function" "send_certificate_emails_function" {
       }
     }
 
+    service_account = google_service_account.app_service_account.email
+
     # docker_repository = google_artifact_registry_repository.cloud_functions_repository.id
     
     # Variáveis de ambiente durante o build (se necessário)
