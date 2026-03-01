@@ -157,6 +157,8 @@ resource "google_cloudfunctions2_function" "send_certificate_emails_function" {
     
     service_account_email = google_service_account.app_service_account.email
   }
+
+  depends_on = [ google_project_iam_member.sa_roles_runner ]
 }
 
 # They are not public by default, so we need to add this IAM member
