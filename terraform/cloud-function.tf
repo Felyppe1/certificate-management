@@ -120,7 +120,7 @@ resource "google_storage_bucket_object" "send_certificate_emails_object" {
 resource "google_cloudfunctions2_function" "send_certificate_emails_function" {
   name     = "send-certificate-emails${local.suffix}"
   location = var.region
-  
+
   build_config {
     # runtime     = "python311"
     entry_point = "main"
@@ -134,7 +134,7 @@ resource "google_cloudfunctions2_function" "send_certificate_emails_function" {
       }
     }
 
-    service_account = google_service_account.app_service_account.email
+    service_account = google_service_account.app_service_account.id
 
     # docker_repository = google_artifact_registry_repository.cloud_functions_repository.id
     
