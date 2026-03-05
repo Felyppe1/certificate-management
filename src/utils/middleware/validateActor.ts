@@ -18,7 +18,9 @@ export async function validateActor(
     ) {
         try {
             const serviceAccountEmail = await validateServiceAccountToken(req)
-            return { id: serviceAccountEmail, type: 'SYSTEM' }
+            if (serviceAccountEmail) {
+                return { id: serviceAccountEmail, type: 'SYSTEM' }
+            }
         } catch {
             // May be a user Bearer token, try the next method
         }
