@@ -47,12 +47,12 @@ resource "google_cloudfunctions2_function" "generate_certificates_function" {
   }
   
   service_config {
-    max_instance_count = 6
+    max_instance_count = 10
     min_instance_count = 0
     max_instance_request_concurrency = 6
     available_memory   = "512M"
     timeout_seconds    = 240
-    available_cpu = "2"
+    available_cpu = "1"
     
     environment_variables = {
       APP_BASE_URL        = "https://${google_cloud_run_v2_service.app.name}-${data.google_project.project.number}.${google_cloud_run_v2_service.app.location}.run.app"
