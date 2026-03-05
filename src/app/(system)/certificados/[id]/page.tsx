@@ -125,36 +125,44 @@ export default async function CertificatePage({
                     />
                 )}
 
-                {hasTemplate && hasDataSource && variablesMapped && (
-                    <GenerateCertificatesSection
-                        certificateId={certificateId}
-                        allVariablesWereMapped={variablesMapped}
-                        rows={rows}
-                        emailSent={emailSent}
-                        certificatesGenerated={certificatesGenerated}
-                    />
-                )}
+                {hasTemplate &&
+                    hasDataSource &&
+                    (!hasTemplateVariables || variablesMapped) && (
+                        <GenerateCertificatesSection
+                            certificateId={certificateId}
+                            allVariablesWereMapped={
+                                !hasTemplateVariables || variablesMapped
+                            }
+                            rows={rows}
+                            emailSent={emailSent}
+                            certificatesGenerated={certificatesGenerated}
+                        />
+                    )}
 
-                {hasTemplate && hasDataSource && variablesMapped && (
-                    <EmailSendingSection
-                        certificateId={certificateId}
-                        dataSourceColumns={dataSourceColumnNames}
-                        variablesMapped={variablesMapped}
-                        emailSent={emailSent}
-                        totalRecipients={rows.length}
-                        certificatesGenerated={certificatesGenerated}
-                        emailData={
-                            email
-                                ? {
-                                      subject: email.subject,
-                                      body: email.body,
-                                      emailColumn: email.emailColumn,
-                                      scheduledAt: email.scheduledAt,
-                                  }
-                                : null
-                        }
-                    />
-                )}
+                {hasTemplate &&
+                    hasDataSource &&
+                    (!hasTemplateVariables || variablesMapped) && (
+                        <EmailSendingSection
+                            certificateId={certificateId}
+                            dataSourceColumns={dataSourceColumnNames}
+                            variablesMapped={
+                                !hasTemplateVariables || variablesMapped
+                            }
+                            emailSent={emailSent}
+                            totalRecipients={rows.length}
+                            certificatesGenerated={certificatesGenerated}
+                            emailData={
+                                email
+                                    ? {
+                                          subject: email.subject,
+                                          body: email.body,
+                                          emailColumn: email.emailColumn,
+                                          scheduledAt: email.scheduledAt,
+                                      }
+                                    : null
+                            }
+                        />
+                    )}
             </div>
 
             {/* // </div> */}
