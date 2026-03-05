@@ -62,6 +62,8 @@ jobs:
           echo "TF_VAR_branch=${{ github.ref_name }}" >> $GITHUB_ENV
           echo "TF_VAR_smtp_user=${{ secrets.SMTP_USER }}" >> $GITHUB_ENV
           echo "TF_VAR_smtp_password=${{ secrets.SMTP_PASSWORD }}" >> $GITHUB_ENV
+          echo "TF_VAR_google_client_id=${{ secrets.GOOGLE_CLIENT_ID }}" >> $GITHUB_ENV
+          echo "TF_VAR_google_client_secret=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> $GITHUB_ENV
           echo "TF_VAR_google_refresh_token=${{ secrets.GOOGLE_REFRESH_TOKEN }}" >> $GITHUB_ENV
           echo "TF_VAR_google_drive_folder_id=${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}" >> $GITHUB_ENV
           TF_ENV_VARS=$(jq -nc '{
@@ -184,6 +186,8 @@ jobs:
           echo "TF_VAR_smtp_password=${{ secrets.SMTP_PASSWORD }}" >> $GITHUB_ENV
           echo "TF_VAR_google_refresh_token=${{ secrets.GOOGLE_REFRESH_TOKEN }}" >> $GITHUB_ENV
           echo "TF_VAR_google_drive_folder_id=${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}" >> $GITHUB_ENV
+          echo "TF_VAR_google_client_id=${{ secrets.GOOGLE_CLIENT_ID }}" >> $GITHUB_ENV
+          echo "TF_VAR_google_client_secret=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> $GITHUB_ENV
           TF_ENV_VARS=$(jq -nc '{
             DB_USER: env.DB_USER,
             DB_PASSWORD: env.DB_PASSWORD,
