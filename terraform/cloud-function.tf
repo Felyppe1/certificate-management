@@ -47,7 +47,7 @@ resource "google_cloudfunctions2_function" "generate_certificates_function" {
   }
   
   service_config {
-    max_instance_count = 8
+    max_instance_count = 6
     min_instance_count = 0
     max_instance_request_concurrency = 6
     available_memory   = "512M"
