@@ -113,85 +113,85 @@ output "cloud_run_name" {
 
 
 
-resource "google_cloud_run_v2_service" "generate_pdfs" {
-  name     = "generate-pdfs${local.suffix}"
-  location = var.region
-  project  = var.project_id
+# resource "google_cloud_run_v2_service" "generate_pdfs" {
+#   name     = "generate-pdfs${local.suffix}"
+#   location = var.region
+#   project  = var.project_id
 
-  deletion_protection = false
+#   deletion_protection = false
 
-  depends_on = [
-    google_project_service.gcp_services
-  ]
+#   depends_on = [
+#     google_project_service.gcp_services
+#   ]
 
-  # ingress = "INGRESS_TRAFFIC_INTERNAL_ONLY"
-  ingress = "INGRESS_TRAFFIC_ALL"
+#   # ingress = "INGRESS_TRAFFIC_INTERNAL_ONLY"
+#   ingress = "INGRESS_TRAFFIC_ALL"
 
-  template {
-    service_account = google_service_account.app_service_account.email
+#   template {
+#     service_account = google_service_account.app_service_account.email
 
-    max_instance_request_concurrency = 3
-    scaling {
-      min_instance_count = 0
-      max_instance_count = 10
-    }
+#     max_instance_request_concurrency = 3
+#     scaling {
+#       min_instance_count = 0
+#       max_instance_count = 10
+#     }
 
-    timeout = "3600s"
+#     timeout = "3600s"
 
-    containers {
-      image = "us-docker.pkg.dev/cloudrun/container/hello"
+#     containers {
+#       image = "us-docker.pkg.dev/cloudrun/container/hello"
 
-      ports {
-        container_port = 8080
-      }
+#       ports {
+#         container_port = 8080
+#       }
 
-      resources {
-        limits = {
-          cpu    = "2"
-          memory = "2Gi"
-        }
-        # cpu_idle = false
-      }
+#       resources {
+#         limits = {
+#           cpu    = "2"
+#           memory = "2Gi"
+#         }
+#         # cpu_idle = false
+#       }
 
-      env {
-        name = "APP_BASE_URL"
-        value = "https://certificate-management${local.suffix}-${data.google_project.project.number}.${var.region}.run.app"
-      }
+#       env {
+#         name = "APP_BASE_URL"
+#         value = "https://certificate-management${local.suffix}-${data.google_project.project.number}.${var.region}.run.app"
+#       }
 
-      env {
-        name  = "CERTIFICATES_BUCKET"
-        value = google_storage_bucket.certificates.name
-      }
+#       env {
+#         name  = "CERTIFICATES_BUCKET"
+#         value = google_storage_bucket.certificates.name
+#       }
 
-      env {
-        name = "SOFFICE_PATH"
-        value = "/usr/bin/soffice"
-      }
+#       env {
+#         name = "SOFFICE_PATH"
+#         value = "/usr/bin/soffice"
+#       }
 
-      # env {
-      #   name = "GOOGLE_API_KEY"
-      #   value = var.google_api_key
-      # }
-    }
-  }
+#       # env {
+#       #   name = "GOOGLE_API_KEY"
+#       #   value = var.google_api_key
+#       # }
+#     }
+#   }
 
-  lifecycle {
-    ignore_changes = [
-      template[0].containers[0].image
-    ]
-  }
-}
+#   lifecycle {
+#     ignore_changes = [
+#       template[0].containers[0].image
+#     ]
+#   }
+# }
 
 # This is not necessary because the SA already has the permission in the project scope.
 # However, for clarity, we add it here to show that the app service can invoke the generate_pdfs service.
 # This permission is in the service scope.
-resource "google_cloud_run_v2_service_iam_member" "allow_app_to_invoke_generate_pdfs" {
-  project  = var.project_id
-  location = google_cloud_run_v2_service.generate_pdfs.location
-  name     = google_cloud_run_v2_service.generate_pdfs.name
-  role     = "roles/run.invoker"
-  member   = "serviceAccount:${google_service_account.app_service_account.email}"
-}
+# resource "google_cloud_run_v2_service_iam_member" "allow_app_to_invoke_generate_pdfs" {
+#   project  = var.project_id
+#   location = google_cloud_run_v2_service.generate_pdfs.location
+#   name     = google_cloud_run_v2_service.generate_pdfs.name
+#   role     = "roles/run.invoker"
+#   member   = "serviceAccount:${google_service_account.app_service_account.email}"
+# }
 
 # resource "google_cloud_run_v2_service_iam_member" "generate_pdfs_public_access" {
 #   project  = var.project_id
@@ -201,7 +201,7 @@ resource "google_cloud_run_v2_service_iam_member" "allow_app_to_invoke_generate_
 #   member   = "allUsers"
 # }
 
-output "generate_pdfs_cloud_run_name" {
-  value       = google_cloud_run_v2_service.generate_pdfs.name
-  description = "Cloud Run service name for generating PDFs of certificates"
-}
+# output "generate_pdfs_cloud_run_name" {
+#   value       = google_cloud_run_v2_service.generate_pdfs.name
+#   description = "Cloud Run service name for generating PDFs of certificates"
+# }
