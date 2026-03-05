@@ -50,7 +50,7 @@ resource "google_cloudfunctions2_function" "generate_certificates_function" {
     max_instance_count = 10
     min_instance_count = 0
     max_instance_request_concurrency = 6
-    available_memory   = "512M"
+    available_memory   = "2Gi"
     timeout_seconds    = 240
     available_cpu = "4"
     
