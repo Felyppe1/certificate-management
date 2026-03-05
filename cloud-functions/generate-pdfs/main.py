@@ -616,7 +616,7 @@ def convert_to_pdf_with_google_drive(input_bytes: BytesIO, input_ext: str) -> By
         }
         
         input_bytes.seek(0)
-        media = MediaIoBaseUpload(input_bytes, mimetype=mime_type, resumable=True)
+        media = MediaIoBaseUpload(input_bytes, mimetype=mime_type, resumable=False)
         
         uploaded_file = drive_service.files().create(
             body=file_metadata,

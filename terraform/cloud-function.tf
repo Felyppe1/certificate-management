@@ -49,7 +49,8 @@ resource "google_cloudfunctions2_function" "generate_certificates_function" {
   service_config {
     max_instance_count = 10
     min_instance_count = 0
-    available_memory   = "256M"
+    max_instance_request_concurrency = 6
+    available_memory   = "512M"
     timeout_seconds    = 240
     
     environment_variables = {
