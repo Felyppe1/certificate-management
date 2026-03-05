@@ -1,4 +1,4 @@
-data "archive_file" "generate_pdfs_zip" {
+data "archive_file" "generate_certificates_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../cloud-functions/generate-pdfs"
   output_path = "${path.module}/../cloud-functions/builds/generate-pdfs.zip"
@@ -14,15 +14,15 @@ data "archive_file" "generate_pdfs_zip" {
   ]
 }
 
-resource "google_storage_bucket_object" "generate_pdfs_object" {
-  name   = "generate-pdfs${local.suffix}-${data.archive_file.generate_pdfs_zip.output_md5}.zip"
+resource "google_storage_bucket_object" "generate_certificates_object" {
+  name   = "generate-certificates${local.suffix}-${data.archive_file.generate_certificates_zip.output_md5}.zip"
   bucket = google_storage_bucket.cloud_functions.name
   content_type = "application/zip"
-  source = data.archive_file.generate_pdfs_zip.output_path
+  source = data.archive_file.generate_certificates_zip.output_path
 }
 
-resource "google_cloudfunctions2_function" "generate_pdfs_function" {
-  name     = "generate-pdfs${local.suffix}"
+resource "google_cloudfunctions2_function" "generate_certificates_function" {
+  name     = "generate-certificates${local.suffix}"
   location = var.region
   
   build_config {
@@ -32,7 +32,7 @@ resource "google_cloudfunctions2_function" "generate_pdfs_function" {
     source {
       storage_source {
         bucket = google_storage_bucket.cloud_functions.name
-        object = google_storage_bucket_object.generate_pdfs_object.name
+        object = google_storage_bucket_object.generate_certificates_object.name
       }
     }
 
