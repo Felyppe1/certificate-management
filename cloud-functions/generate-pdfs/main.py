@@ -2,6 +2,7 @@ from threading import Event, Lock, current_thread
 import functions_framework
 from dotenv import load_dotenv
 import os
+from google.oauth2.credentials import Credentials
 import requests
 from io import BytesIO
 from docx import Document
@@ -20,18 +21,27 @@ from enum import Enum
 
 import tempfile
 import subprocess
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload
 
 load_dotenv()
 
+ENV = os.getenv('ENV', 'production')
 APP_BASE_URL = os.getenv('APP_BASE_URL')
 AUDIENCE = os.getenv("TOKEN_AUDIENCE", APP_BASE_URL) # For prod, it will use the APP_BASE_URL as AUDIENCE
-SOFFICE_PATH = os.getenv('SOFFICE_PATH')
 CERTIFICATES_BUCKET = os.getenv('CERTIFICATES_BUCKET')
+GOOGLE_DRIVE_FOLDER_ID = os.getenv('GOOGLE_DRIVE_FOLDER_ID')
+GOOGLE_REFRESH_TOKEN = os.getenv('GOOGLE_REFRESH_TOKEN')
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
 
 for var_name, var_value in {
     "APP_BASE_URL": APP_BASE_URL,
-    "SOFFICE_PATH": SOFFICE_PATH,
     "CERTIFICATES_BUCKET": CERTIFICATES_BUCKET,
+    "GOOGLE_DRIVE_FOLDER_ID": GOOGLE_DRIVE_FOLDER_ID,
+    "GOOGLE_REFRESH_TOKEN": GOOGLE_REFRESH_TOKEN,
+    "GOOGLE_CLIENT_ID": GOOGLE_CLIENT_ID,
+    "GOOGLE_CLIENT_SECRET": GOOGLE_CLIENT_SECRET
 }.items():
     if not var_value:
         raise ValueError(f"Environment variable '{var_name}' is not set.")
@@ -236,7 +246,8 @@ def upload_to_bucket(file_buffer, file_path):
 
 def get_from_bucket(file_path) -> Blob:
     bucket = storage_client.bucket(CERTIFICATES_BUCKET)
-    return bucket.blob(file_path)
+    blob = bucket.blob(file_path)
+    return blob
 
 def delete_by_prefix(prefix: str):
     bucket = storage_client.bucket(CERTIFICATES_BUCKET)
@@ -252,18 +263,26 @@ def delete_by_prefix(prefix: str):
 
 
 
+
+
 ################################ Functions to call backend endpoints ################################
 def finish_certificates_generation(data_source_row_id, success, total_bytes=None):
     print('Inside update')
     url = f"{APP_BASE_URL}/api/internal/data-source-rows/{data_source_row_id}/generations"
-    auth_req = google.auth.transport.requests.Request()
 
-    id_token = google.oauth2.id_token.fetch_id_token(auth_req, AUDIENCE)
-    print('url', APP_BASE_URL)
-    headers = {
-        "Authorization": f"Bearer {id_token}",
-        "Content-Type": "application/json",
-    }
+    if ENV != 'local':
+        auth_req = google.auth.transport.requests.Request()
+        # Just works for service accounts or in the cloud. Locally, I need to login impersonating a service account.
+        id_token = google.oauth2.id_token.fetch_id_token(auth_req, AUDIENCE)
+
+        headers = {
+            "Authorization": f"Bearer {id_token}",
+            "Content-Type": "application/json",
+        }
+    else:
+        headers = {
+            "Content-Type": "application/json",
+        }
     
     body = {k: v for k, v in {
         "success": success,
@@ -558,6 +577,73 @@ def convert_to_pdf_with_libreoffice(input_bytes: BytesIO, input_ext: str) -> Byt
     pdf_bytes.seek(0)
     return pdf_bytes
 
+def convert_to_pdf_with_google_drive(input_bytes: BytesIO, input_ext: str) -> BytesIO:
+    """
+    Convert DOCX or PPTX to PDF using Google Drive API:
+    1. Upload the file to the Google Drive
+    2. Export it as PDF
+    3. Delete the original file from Drive
+    """
+    mime_types = {
+        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    }
+    
+    export_mime_types = {
+        'docx': 'application/vnd.google-apps.document',
+        'pptx': 'application/vnd.google-apps.presentation'
+    }
+    
+    mime_type = mime_types.get(input_ext)
+    if not mime_type:
+        raise ValueError(f"Unsupported file extension: {input_ext}")
+    
+    credentials = Credentials(
+        None,
+        refresh_token=GOOGLE_REFRESH_TOKEN,
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=GOOGLE_CLIENT_ID,
+        client_secret=GOOGLE_CLIENT_SECRET,
+        scopes=["https://www.googleapis.com/auth/drive.file", 'https://www.googleapis.com/auth/drive.readonly',],
+    )
+    drive_service = build('drive', 'v3', credentials=credentials)
+    
+    try:
+        file_metadata = {
+            'name': f'temp_convert.{input_ext}',
+            'parents': [GOOGLE_DRIVE_FOLDER_ID],
+            'mimeType': export_mime_types[input_ext]
+        }
+        
+        input_bytes.seek(0)
+        media = MediaIoBaseUpload(input_bytes, mimetype=mime_type, resumable=True)
+        
+        uploaded_file = drive_service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id'
+        ).execute()
+        
+        file_id = uploaded_file.get('id')
+        print(f"File sent to the Drive with ID: {file_id}")
+        
+        pdf_content = drive_service.files().export(
+            fileId=file_id,
+            mimeType='application/pdf'
+        ).execute()
+        
+        pdf_buffer = BytesIO(pdf_content)
+        pdf_buffer.seek(0)
+        
+        drive_service.files().delete(fileId=file_id).execute()
+        print(f"File {file_id} deleted from Drive")
+        
+        return pdf_buffer
+        
+    except Exception as e:
+        print(f"Error converting with Google Drive: {e}")
+        raise
+
 def save_to_local(buffer, file_path):
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, 'wb') as f:
@@ -827,7 +913,7 @@ def main(request):
             else:
                 certificate_buffer = replace_variables_in_pptx_liquid(certificate_buffer, row_variable_mapping)
         
-        pdf_buffer = convert_to_pdf_with_libreoffice(certificate_buffer, file_extension_str)
+        pdf_buffer = convert_to_pdf_with_google_drive(certificate_buffer, file_extension_str)
 
         pdf_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{data_source_row_id}.pdf"
         blob = upload_to_bucket(pdf_buffer, pdf_path)

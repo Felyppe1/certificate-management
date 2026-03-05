@@ -1,70 +1,72 @@
-# data "archive_file" "generate_pdfs_zip" {
-#   type        = "zip"
-#   source_dir  = "${path.module}/../cloud-functions/generate-pdfs"
-#   output_path = "${path.module}/../cloud-functions/builds/generate-pdfs.zip"
+data "archive_file" "generate_pdfs_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/../cloud-functions/generate-pdfs"
+  output_path = "${path.module}/../cloud-functions/builds/generate-pdfs.zip"
 
-#   excludes = [
-#     ".git",
-#     ".gitignore",
-#     "__pycache__",
-#     "*.pyc",
-#     ".pytest_cache",
-#     "venv",
-#     ".venv",
-#   ]
-# }
+  excludes = [
+    ".git",
+    ".gitignore",
+    "__pycache__",
+    "*.pyc",
+    ".pytest_cache",
+    "venv",
+    ".venv",
+  ]
+}
 
-# resource "google_storage_bucket_object" "generate_pdfs_object" {
-#   name   = "generate-pdfs${local.suffix}-${data.archive_file.generate_pdfs_zip.output_md5}.zip"
-#   bucket = google_storage_bucket.cloud_functions.name
-#   content_type = "application/zip"
-#   source = data.archive_file.generate_pdfs_zip.output_path
+resource "google_storage_bucket_object" "generate_pdfs_object" {
+  name   = "generate-pdfs${local.suffix}-${data.archive_file.generate_pdfs_zip.output_md5}.zip"
+  bucket = google_storage_bucket.cloud_functions.name
+  content_type = "application/zip"
+  source = data.archive_file.generate_pdfs_zip.output_path
+}
 
-#   depends_on = [ data.archive_file.generate_pdfs_zip ]
-# }
-
-# resource "google_cloudfunctions2_function" "generate_pdfs_function" {
-#   name     = "generate-pdfs${local.suffix}"
-#   location = var.region
+resource "google_cloudfunctions2_function" "generate_pdfs_function" {
+  name     = "generate-pdfs${local.suffix}"
+  location = var.region
   
-#   build_config {
-#     # runtime     = "python311"
-#     entry_point = "main"
-#     runtime = "custom"
+  build_config {
+    runtime     = "python312"
+    entry_point = "main"
 
-#     # O Terraform vai usar Cloud Build automaticamente para buildar o Docker
-#     source {
-#       storage_source {
-#         bucket = google_storage_bucket.cloud_functions.name
-#         object = google_storage_bucket_object.generate_pdfs_object.name
-#       }
-#     }
+    source {
+      storage_source {
+        bucket = google_storage_bucket.cloud_functions.name
+        object = google_storage_bucket_object.generate_pdfs_object.name
+      }
+    }
 
-#     docker_repository = google_artifact_registry_repository.cloud_functions_repository.id
+    service_account = google_service_account.app_service_account.id
+
+    # docker_repository = google_artifact_registry_repository.cloud_functions_repository.id
     
-#     # Variáveis de ambiente durante o build (se necessário)
-#     # environment_variables = {
-#     #   BUILD_VAR = "value"
-#     # }
-#   }
+    # Variáveis de ambiente durante o build (se necessário)
+    # environment_variables = {
+    #   BUILD_VAR = "value"
+    # }
+  }
   
-#   service_config {
-#     max_instance_count = 10
-#     min_instance_count = 0
-#     available_memory   = "256M"
-#     timeout_seconds    = 240
+  service_config {
+    max_instance_count = 10
+    min_instance_count = 0
+    available_memory   = "256M"
+    timeout_seconds    = 240
     
-#     environment_variables = {
-#       APP_BASE_URL        = "https://${google_cloud_run_v2_service.app.name}-${data.google_project.project.number}.${google_cloud_run_v2_service.app.location}.run.app"
-#       SOFFICE_PATH        = "/usr/bin/soffice"
-#       CERTIFICATES_BUCKET = google_storage_bucket.certificates.name
-#     }
+    environment_variables = {
+      APP_BASE_URL        = "https://${google_cloud_run_v2_service.app.name}-${data.google_project.project.number}.${google_cloud_run_v2_service.app.location}.run.app"
+      # SOFFICE_PATH        = "/usr/bin/soffice"
+      CERTIFICATES_BUCKET = google_storage_bucket.certificates.name
+      GOOGLE_DRIVE_FOLDER_ID = var.google_drive_folder_id
+      GOOGLE_REFRESH_TOKEN = var.google_refresh_token
+      GOOGLE_CLIENT_ID = var.google_client_id
+      GOOGLE_CLIENT_SECRET = var.google_client_secret
+    }
     
-#     service_account_email = google_service_account.app_service_account.email
-#   }
+    service_account_email = google_service_account.app_service_account.email
+  }
 
-#   depends_on = [ google_storage_bucket_object.generate_pdfs_object ]
-# }
+  depends_on = [ google_project_iam_member.sa_roles_runner ]
+}
 
 # resource "google_artifact_registry_repository" "cloud_functions_repository" {
 #   location      = var.region

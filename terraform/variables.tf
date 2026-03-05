@@ -42,3 +42,26 @@ variable "environment_variables" {
   type        = map(string)
   default     = {}
 }
+
+variable "google_drive_folder_id" {
+  description = "Google Drive folder ID for temporary file storage"
+  type        = string
+}
+
+variable "google_refresh_token" {
+  description = "Google API refresh token for authentication"
+  type        = string
+  sensitive   = true
+}
+
+variable "google_client_id" {
+  description = "Google API client ID for authentication"
+  type        = string
+  sensitive   = true
+}
+
+variable "google_client_secret" {
+  description = "Google API client secret for authentication"
+  type        = string
+  sensitive   = true
+}

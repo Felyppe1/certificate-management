@@ -4,6 +4,8 @@ import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-
 import { LoginTicket } from 'google-auth-library'
 
 export async function validateServiceAccountToken(req: NextRequest) {
+    if (process.env.NODE_ENV !== 'production') return
+
     const googleAuthGateway = new GoogleAuthGateway()
     const oAuth2Client = googleAuthGateway.getOAuth2Client()
 

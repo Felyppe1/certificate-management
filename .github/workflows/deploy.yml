@@ -54,12 +54,16 @@ jobs:
           GA_ID: ${{ secrets.GA_ID }}
           SUFFIX: ${{ github.ref_name == 'main' && '' || format('-{0}', github.ref_name) }}
           NEXT_PUBLIC_BASE_URL: ${{ vars.NEXT_PUBLIC_BASE_URL }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
         run: |
           echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "TF_VAR_region=${{ env.REGION }}" >> $GITHUB_ENV
           echo "TF_VAR_branch=${{ github.ref_name }}" >> $GITHUB_ENV
           echo "TF_VAR_smtp_user=${{ secrets.SMTP_USER }}" >> $GITHUB_ENV
           echo "TF_VAR_smtp_password=${{ secrets.SMTP_PASSWORD }}" >> $GITHUB_ENV
+          echo "TF_VAR_google_refresh_token=${{ secrets.GOOGLE_REFRESH_TOKEN }}" >> $GITHUB_ENV
+          echo "TF_VAR_google_drive_folder_id=${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}" >> $GITHUB_ENV
           TF_ENV_VARS=$(jq -nc '{
             DB_USER: env.DB_USER,
             DB_PASSWORD: env.DB_PASSWORD,
@@ -170,12 +174,16 @@ jobs:
           GA_ID: ${{ secrets.GA_ID }}
           SUFFIX: ${{ github.ref_name == 'main' && '' || format('-{0}', github.ref_name) }}
           NEXT_PUBLIC_BASE_URL: ${{ vars.NEXT_PUBLIC_BASE_URL }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
         run: |
           echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "TF_VAR_region=${{ env.REGION }}" >> $GITHUB_ENV
           echo "TF_VAR_branch=${{ github.ref_name }}" >> $GITHUB_ENV
           echo "TF_VAR_smtp_user=${{ secrets.SMTP_USER }}" >> $GITHUB_ENV
           echo "TF_VAR_smtp_password=${{ secrets.SMTP_PASSWORD }}" >> $GITHUB_ENV
+          echo "TF_VAR_google_refresh_token=${{ secrets.GOOGLE_REFRESH_TOKEN }}" >> $GITHUB_ENV
+          echo "TF_VAR_google_drive_folder_id=${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}" >> $GITHUB_ENV
           TF_ENV_VARS=$(jq -nc '{
             DB_USER: env.DB_USER,
             DB_PASSWORD: env.DB_PASSWORD,
@@ -328,56 +336,56 @@ jobs:
     #         --region $REGION \
     #         --update-env-vars=NEXT_PUBLIC_BASE_URL=$CLOUD_RUN_URL
 
-  deploy-generate-pdfs:
-    runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
-    needs: terraform-apply
+  # deploy-generate-pdfs:
+  #   runs-on: ubuntu-latest
+  #   environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
+  #   needs: terraform-apply
 
-    env:
-      REGION: us-central1
-      GENERATE_PDFS_CLOUD_RUN_NAME: ${{ needs.terraform-apply.outputs.generate_pdfs_cloud_run_name }}
+  #   env:
+  #     REGION: us-central1
+  #     GENERATE_PDFS_CLOUD_RUN_NAME: ${{ needs.terraform-apply.outputs.generate_pdfs_cloud_run_name }}
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Authenticate to GCP
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_NAME }}
+  #     - name: Authenticate to GCP
+  #       uses: google-github-actions/auth@v2
+  #       with:
+  #         workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+  #         service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_NAME }}
 
-      - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          export_default_credentials: true
+  #     - name: Setup gcloud
+  #       uses: google-github-actions/setup-gcloud@v2
+  #       with:
+  #         project_id: ${{ secrets.GCP_PROJECT_ID }}
+  #         export_default_credentials: true
 
-      - name: Download Artifact Path
-        uses: actions/download-artifact@v4
-        with:
-          name: artifact-registry-path
+  #     - name: Download Artifact Path
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: artifact-registry-path
 
-      - name: Read Artifact Registry Path
-        id: read_artifact_registry_path
-        run: echo "ARTIFACT_REGISTRY_PATH=$(cat artifact_registry_path.txt)" >> $GITHUB_ENV
+  #     - name: Read Artifact Registry Path
+  #       id: read_artifact_registry_path
+  #       run: echo "ARTIFACT_REGISTRY_PATH=$(cat artifact_registry_path.txt)" >> $GITHUB_ENV
 
-      - name: Build Docker image (generate-pdfs)
-        working-directory: ./cloud-functions/generate-pdfs
-        run: |
-          docker build \
-            -t $ARTIFACT_REGISTRY_PATH/generate-pdfs:$GITHUB_SHA .
+  #     - name: Build Docker image (generate-pdfs)
+  #       working-directory: ./cloud-functions/generate-pdfs
+  #       run: |
+  #         docker build \
+  #           -t $ARTIFACT_REGISTRY_PATH/generate-pdfs:$GITHUB_SHA .
 
-      - name: Push image (generate-pdfs)
-        run: |
-          gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
-          docker push $ARTIFACT_REGISTRY_PATH/generate-pdfs:$GITHUB_SHA
+  #     - name: Push image (generate-pdfs)
+  #       run: |
+  #         gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+  #         docker push $ARTIFACT_REGISTRY_PATH/generate-pdfs:$GITHUB_SHA
 
-      - name: Deploy to Cloud Run (generate-pdfs)
-        run: |
-          gcloud run deploy $GENERATE_PDFS_CLOUD_RUN_NAME \
-            --image $ARTIFACT_REGISTRY_PATH/generate-pdfs:$GITHUB_SHA \
-            --region $REGION \
-            --platform managed \
-            --no-allow-unauthenticated
+  #     - name: Deploy to Cloud Run (generate-pdfs)
+  #       run: |
+  #         gcloud run deploy $GENERATE_PDFS_CLOUD_RUN_NAME \
+  #           --image $ARTIFACT_REGISTRY_PATH/generate-pdfs:$GITHUB_SHA \
+  #           --region $REGION \
+  #           --platform managed \
+  #           --no-allow-unauthenticated
 
