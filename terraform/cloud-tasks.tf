@@ -19,11 +19,11 @@ resource "google_cloud_tasks_queue" "generate_pdfs_queue" {
     http_method = "POST"
     uri_override {
       scheme = "HTTPS"
-      host   = "${google_cloudfunctions2_function.generate_pdfs_function.name}-${data.google_project.project.number}.${var.region}.run.app"
+      host   = "${google_cloudfunctions2_function.generate_certificates_function.name}-${data.google_project.project.number}.${var.region}.run.app"
     }
     oidc_token {
       service_account_email = google_service_account.app_service_account.email
-      audience              = google_cloudfunctions2_function.generate_pdfs_function.url
+      audience              = google_cloudfunctions2_function.generate_certificates_function.url
     }
   }
 }
