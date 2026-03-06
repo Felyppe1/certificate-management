@@ -9,6 +9,7 @@ import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-
 import { CloudTasksQueue } from '@/backend/infrastructure/cloud/gcp/cloud-tasks-queue'
 import { LocalQueue } from '@/backend/infrastructure/cloud/local/local-queue'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
+import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 
 export async function POST(
     request: NextRequest,
@@ -26,6 +27,7 @@ export async function POST(
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,
         )
+        const usersRepository = new PrismaUsersRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
         const queue =
             process.env.NODE_ENV === 'development'
@@ -35,6 +37,7 @@ export async function POST(
         const generateCertificatesUseCase = new GenerateCertificatesUseCase(
             bucket,
             certificateEmissionsRepository,
+            usersRepository,
             dataSourceRowsRepository,
             dataSourceRowsRepository,
             queue,
