@@ -1,6 +1,8 @@
 import z from 'zod'
 import { INPUT_METHOD } from './certificate'
 
+export const MAX_DATA_SOURCE_ROWS = 300
+
 export const FORBIDDEN_TYPE_CHANGE: Record<ColumnType, ColumnType[]> = {
     string: [],
     number: ['boolean'],
@@ -70,6 +72,12 @@ export class DataSource {
     private thumbnailUrl: string | null
 
     static create(data: CreateDataSourceInput): DataSource {
+        if (data.rows.length > MAX_DATA_SOURCE_ROWS) {
+            throw new Error(
+                `DataSource cannot have more than ${MAX_DATA_SOURCE_ROWS} rows`,
+            )
+        }
+
         return new DataSource({
             ...data,
             columns: this.inferTypes(data.rows),

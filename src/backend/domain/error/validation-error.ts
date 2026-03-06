@@ -18,6 +18,7 @@ export enum VALIDATION_ERROR_TYPE {
     TEMPLATE_VARIABLES_PARSING_ERROR = 'template-variables-parsing-error',
     FILE_BYTES_MISSING = 'file-bytes-missing',
     INSUFFICIENT_CREDITS = 'insufficient-credits',
+    DATA_SOURCE_ROWS_EXCEEDED = 'data-source-rows-exceeded',
 }
 
 export class ValidationError extends AppError<VALIDATION_ERROR_TYPE> {
