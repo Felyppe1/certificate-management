@@ -170,6 +170,10 @@ export function GenerateCertificatesSection({
                 toast.error(
                     'Não há linhas na fonte de dados para gerar certificados',
                 )
+            } else if (state.errorType === 'insufficient-credits') {
+                toast.error(
+                    'Créditos insuficientes para gerar os certificados. Aguarde até amanhã para seus créditos renovarem.',
+                )
             } else {
                 toast.error('Ocorreu um erro ao gerar os certificados')
             }

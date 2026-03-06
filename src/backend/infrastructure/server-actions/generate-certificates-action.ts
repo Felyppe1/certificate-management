@@ -7,6 +7,7 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GenerateCertificatesUseCase } from '@/backend/application/generate-certificates-use-case'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
+import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { CloudTasksQueue } from '../cloud/gcp/cloud-tasks-queue'
 import { LocalQueue } from '../cloud/local/local-queue'
@@ -34,6 +35,7 @@ export async function generateCertificatesAction(
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,
         )
+        const usersRepository = new PrismaUsersRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
         const queue =
             process.env.NODE_ENV === 'development'
@@ -43,6 +45,7 @@ export async function generateCertificatesAction(
         const generateCertificatesUseCase = new GenerateCertificatesUseCase(
             bucket,
             certificateEmissionsRepository,
+            usersRepository,
             dataSourceRowsRepository,
             dataSourceRowsRepository,
             queue,
@@ -72,6 +75,7 @@ export async function generateCertificatesAction(
     }
 
     updateTag('certificate')
+    updateTag('me')
 
     return {
         success: true,

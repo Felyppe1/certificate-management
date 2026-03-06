@@ -12,6 +12,7 @@ export interface GetMeControllerResponse {
         id: string
         email: string
         name: string
+        credits: number
         externalAccounts: {
             provider: Provider
             providerUserId: string

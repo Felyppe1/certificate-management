@@ -26,6 +26,7 @@ export class PrismaUsersRepository implements IUsersRepository {
             email: user.email,
             name: user.name,
             passwordHash: user.password_hash,
+            credits: user.credits,
         }
     }
 
@@ -43,6 +44,7 @@ export class PrismaUsersRepository implements IUsersRepository {
             email: user.email,
             name: user.name,
             passwordHash: user.password_hash,
+            credits: user.credits,
         }
     }
 
@@ -62,6 +64,20 @@ export class PrismaUsersRepository implements IUsersRepository {
             where: {
                 id,
             },
+        })
+    }
+
+    async deductCredits(userId: string, amount: number): Promise<boolean> {
+        const result = await this.prisma.user.updateMany({
+            where: { id: userId, credits: { gte: amount } },
+            data: { credits: { decrement: amount } },
+        })
+        return result.count > 0
+    }
+
+    async resetAllDailyCredits(): Promise<void> {
+        await this.prisma.user.updateMany({
+            data: { credits: 300 },
         })
     }
 }

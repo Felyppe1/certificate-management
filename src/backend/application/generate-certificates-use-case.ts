@@ -16,6 +16,7 @@ import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-
 import { IBucket } from './interfaces/cloud/ibucket'
 import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
 import { PROCESSING_STATUS_ENUM } from '../domain/data-source-row'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
 
 interface GenerateCertificatesUseCaseInput {
     certificateEmissionId: string
@@ -29,6 +30,7 @@ export class GenerateCertificatesUseCase {
             ICertificatesRepository,
             'getById'
         >,
+        private usersRepository: Pick<IUsersRepository, 'deductCredits'>,
         private dataSourceRowsRepository: Pick<
             IDataSourceRowsRepository,
             'updateManyProcessingStatus'
@@ -85,6 +87,17 @@ export class GenerateCertificatesUseCase {
         if (totalPendingRows !== totalRows) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.DATA_SOURCE_ROWS_NOT_READY,
+            )
+        }
+
+        const credited = await this.usersRepository.deductCredits(
+            userId,
+            totalRows,
+        )
+
+        if (!credited) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.INSUFFICIENT_CREDITS,
             )
         }
 

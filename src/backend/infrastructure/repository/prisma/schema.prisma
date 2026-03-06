@@ -20,6 +20,7 @@ model User {
     email         String  @unique
     name          String
     password_hash String?
+    credits       Int     @default(300)
 
     Session             Session[]
     ExternalUserAccount ExternalUserAccount[]

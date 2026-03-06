@@ -17,6 +17,7 @@ export enum VALIDATION_ERROR_TYPE {
     CERTIFICATE_NOT_GENERATED = 'certificate-not-generated',
     TEMPLATE_VARIABLES_PARSING_ERROR = 'template-variables-parsing-error',
     FILE_BYTES_MISSING = 'file-bytes-missing',
+    INSUFFICIENT_CREDITS = 'insufficient-credits',
 }
 
 export class ValidationError extends AppError<VALIDATION_ERROR_TYPE> {

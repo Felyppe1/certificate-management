@@ -12,7 +12,11 @@ export default async function Layout({ children }: SystemLayoutProps) {
     return (
         <>
             <Toast />
-            <Header userName={data.user.email} userId={data.user.id} />
+            <Header
+                userName={data.user.email}
+                userId={data.user.id}
+                credits={data.user.credits}
+            />
 
             <div className="flex flex-col justify-center min-h-screen bg-background pt-25 sm:pt-30 px-3 xs:px-10 pb-20 relative z-10">
                 <div className="w-full max-w-7xl mx-auto">{children}</div>

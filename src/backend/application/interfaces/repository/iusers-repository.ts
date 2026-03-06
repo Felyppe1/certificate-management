@@ -3,6 +3,7 @@ export interface User {
     email: string
     name: string
     passwordHash: string | null
+    credits: number
 }
 
 export interface IUsersRepository {
@@ -10,4 +11,6 @@ export interface IUsersRepository {
     getByEmail(email: string): Promise<User | null>
     save(user: User): Promise<void>
     delete(id: string): Promise<void>
+    deductCredits(userId: string, amount: number): Promise<boolean>
+    resetAllDailyCredits(): Promise<void>
 }

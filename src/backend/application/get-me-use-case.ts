@@ -26,6 +26,7 @@ export class GetMeUseCase {
             id: user.id,
             email: user.email,
             name: user.name,
+            credits: user.credits,
             externalAccounts: externalAccounts.map(account => ({
                 provider: account.provider,
                 providerUserId: account.providerUserId,
