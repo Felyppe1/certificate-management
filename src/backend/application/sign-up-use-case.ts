@@ -2,7 +2,10 @@ import {
     CONFLICT_ERROR_TYPE,
     ConflictError,
 } from '../domain/error/conflict-error'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import {
+    IUsersRepository,
+    USER_CREDITS,
+} from './interfaces/repository/iusers-repository'
 import bcrypt from 'bcrypt'
 
 interface SignUpInput {
@@ -30,6 +33,7 @@ export class SignUpUseCase {
             name: data.name,
             email: data.email,
             passwordHash,
+            credits: USER_CREDITS,
         })
 
         return { userId }

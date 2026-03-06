@@ -1,6 +1,7 @@
 import {
     User,
     IUsersRepository,
+    USER_CREDITS,
 } from '@/backend/application/interfaces/repository/iusers-repository'
 import { PrismaExecutor } from '.'
 import { transactionStorage } from './prisma-transaction-manager'
@@ -77,7 +78,7 @@ export class PrismaUsersRepository implements IUsersRepository {
 
     async resetAllDailyCredits(): Promise<void> {
         await this.prisma.user.updateMany({
-            data: { credits: 300 },
+            data: { credits: USER_CREDITS },
         })
     }
 }

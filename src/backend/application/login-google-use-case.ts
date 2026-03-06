@@ -6,6 +6,7 @@ import { ISessionsRepository } from './interfaces/repository/isessions-repositor
 import {
     User,
     IUsersRepository,
+    USER_CREDITS,
 } from './interfaces/repository/iusers-repository'
 import crypto from 'crypto'
 import { AuthenticationError } from '../domain/error/authentication-error'
@@ -63,6 +64,7 @@ export class LoginGoogleUseCase {
                 email: userInfo.email,
                 name: userInfo.name,
                 passwordHash: null,
+                credits: USER_CREDITS,
             }
         }
 

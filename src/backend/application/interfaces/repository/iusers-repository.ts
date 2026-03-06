@@ -1,3 +1,5 @@
+export const USER_CREDITS = 300
+
 export interface User {
     id: string
     email: string

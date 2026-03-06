@@ -15,6 +15,7 @@ import { INPUT_METHOD } from '@/backend/domain/certificate'
 import {
     DATA_SOURCE_FILE_EXTENSION,
     ColumnType,
+    MAX_DATA_SOURCE_ROWS,
 } from '@/backend/domain/data-source'
 import { addDataSourceByDrivePickerAction } from '@/backend/infrastructure/server-actions/add-data-source-by-drive-picker-action'
 import { addDataSourceByUploadAction } from '@/backend/infrastructure/server-actions/add-data-source-by-upload-action'
@@ -93,6 +94,10 @@ export function DataSourceSection({
                 toast.error(
                     'Tipo de arquivo não suportado. Apenas Google Planilhas, .csv ou .xlsx são permitidos',
                 )
+            } else if (result.errorType === 'data-source-rows-exceeded') {
+                toast.error(
+                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_ROWS} linhas`,
+                )
             } else {
                 toast.error(
                     'Ocorreu um erro ao tentar adicionar fonte de dados',
@@ -169,6 +174,12 @@ export function DataSourceSection({
                 toast.error(
                     'Tipo de arquivo não suportado. Apenas Google Planilhas, .csv ou .xlsx são permitidos',
                 )
+            } else if (
+                driverPickerState.errorType === 'data-source-rows-exceeded'
+            ) {
+                toast.error(
+                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_ROWS} linhas`,
+                )
             } else {
                 toast.error(
                     'Ocorreu um erro ao tentar adicionar fonte de dados',
@@ -186,6 +197,10 @@ export function DataSourceSection({
             if (uploadState.errorType === 'unsupported-data-source-mimetype') {
                 toast.error(
                     'Tipo de arquivo não suportado. Apenas .csv ou .xlsx são permitidos',
+                )
+            } else if (uploadState.errorType === 'data-source-rows-exceeded') {
+                toast.error(
+                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_ROWS} linhas`,
                 )
             } else {
                 toast.error('Ocorreu um erro ao fazer upload da fonte de dados')
