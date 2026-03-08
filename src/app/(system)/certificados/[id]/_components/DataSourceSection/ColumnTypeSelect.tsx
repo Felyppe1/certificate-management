@@ -6,8 +6,13 @@ import {
     SelectItem,
     SelectTrigger,
 } from '@/components/ui/select'
-import { Type, Calendar, Hash, ToggleLeft, List } from 'lucide-react'
+import { Type, Calendar, Hash, ToggleLeft, List, Info } from 'lucide-react'
 import { ColumnType, FORBIDDEN_TYPE_CHANGE } from '@/backend/domain/data-source'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover'
 
 interface ColumnTypeSelectProps {
     columnName: string
@@ -67,7 +72,6 @@ export function ColumnTypeSelect({
     const availableTypes = Object.entries(columnTypeConfig).filter(
         ([key]) => !forbiddenTypes.includes(key as ColumnType),
     )
-
     return (
         <div className="flex items-center gap-1">
             <Select
@@ -103,6 +107,68 @@ export function ColumnTypeSelect({
                     })}
                 </SelectContent>
             </Select>
+
+            {(type === 'boolean' || type === 'date') && (
+                <Popover>
+                    <PopoverTrigger className="flex items-center ml-1 text-muted-foreground/60 hover:text-muted-foreground cursor-pointer shrink-0 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 rounded-sm">
+                        <Info className="size-3.5" />
+                    </PopoverTrigger>
+                    <PopoverContent
+                        side="bottom"
+                        align="start"
+                        className="bg-blue-800 text-zinc-100 border-none shadow-xl w-56"
+                    >
+                        {type === 'boolean' ? (
+                            <>
+                                <p className="font-semibold text-sm mb-2">
+                                    Valores reconhecidos como booleano:
+                                </p>
+                                <ul className="text-xs text-zinc-300 space-y-1">
+                                    <li>
+                                        <code className="font-mono">
+                                            VERDADEIRO
+                                        </code>{' '}
+                                        /{' '}
+                                        <code className="font-mono">FALSO</code>
+                                    </li>
+                                    <li>
+                                        <code className="font-mono">TRUE</code>{' '}
+                                        /{' '}
+                                        <code className="font-mono">FALSE</code>
+                                    </li>
+                                    <li>
+                                        <code className="font-mono">1</code> /{' '}
+                                        <code className="font-mono">0</code>
+                                    </li>
+                                </ul>
+                            </>
+                        ) : (
+                            <>
+                                <p className="font-semibold text-sm mb-2">
+                                    Formatos de data reconhecidos:
+                                </p>
+                                <ul className="text-xs text-zinc-300 space-y-1">
+                                    <li>
+                                        <code className="font-mono">
+                                            dd/mm/yyyy [HH:mm[:ss]]
+                                        </code>
+                                    </li>
+                                    <li>
+                                        <code className="font-mono">
+                                            mm/dd/yyyy [HH:mm[:ss]]
+                                        </code>
+                                    </li>
+                                    <li>
+                                        <code className="font-mono">
+                                            yyyy-mm-dd [HH:mm[:ss]]
+                                        </code>
+                                    </li>
+                                </ul>
+                            </>
+                        )}
+                    </PopoverContent>
+                </Popover>
+            )}
 
             {type === 'array' && onSeparatorChange && (
                 <div className="flex items-center rounded-md bg-secondary/50 h-9 overflow-hidden">

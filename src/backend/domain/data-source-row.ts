@@ -155,6 +155,7 @@ export class DataSourceRow {
         return result
     }
 
+    // TODO: no need to do this...?
     static coerceValue(
         value: string,
         type: ColumnType,
@@ -172,8 +173,7 @@ export class DataSourceRow {
             case 'number':
                 if (!DataSource.isNumber(value))
                     throw new Error(`Column "${columnName}" must be number`)
-
-                return Number(value)
+                return value
 
             case 'boolean':
                 if (!DataSource.isBoolean(value))

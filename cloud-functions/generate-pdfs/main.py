@@ -18,7 +18,9 @@ from liquid import Template
 from pydantic import BaseModel, ValidationError
 from typing import List, Optional, Dict, Any
 from enum import Enum
-
+from datetime import datetime
+import re
+import inspect
 import tempfile
 import subprocess
 from googleapiclient.discovery import build
@@ -772,6 +774,48 @@ def get_template_cached(storage_file_url: str) -> bytes:
 
     return template_bytes
 
+class LiquidDate(datetime):
+    # The __new__ intercepts the creation. We receive a string (display) and the datetime object
+    def __new__(cls, display, dt_obj):
+        # We feed the super class (datetime) with the integer numbers she needs
+        obj = datetime.__new__(
+            cls, 
+            dt_obj.year, 
+            dt_obj.month, 
+            dt_obj.day, 
+            dt_obj.hour, 
+            dt_obj.minute, 
+            dt_obj.second
+        )
+        # Now, we set the custom string in the object created.
+        obj.display = display
+        return obj
+
+    def __str__(self):
+        return self.display
+
+class LiquidFloat(float):
+    def __new__(cls, display_value):
+        math_value = float(display_value.replace(',', '.'))
+        obj = float.__new__(cls, math_value)
+        obj.display = display_value
+        return obj
+
+    def __str__(self):
+        try:
+            caller_frame = inspect.currentframe().f_back
+            caller_filename = caller_frame.f_code.co_filename
+            
+            # If the request came from the 'filters' folder of Liquid (like math.py in your error)
+            if 'liquid' in caller_filename and 'filters' in caller_filename:
+                # We return the version with a dot ("150.5") so the Decimal doesn't break
+                return str(float(self))
+        except Exception:
+            pass # If something fails in the inspection, continue as normal
+            
+        # If the request came from the standard output of the screen (that is, just {{ number }}),
+        # we deliver the format with the nice comma.
+        return self.display
 
 class InputMethod(str, Enum):
     UPLOAD = "UPLOAD"
@@ -893,21 +937,62 @@ def main(request):
                 if column_name and column_name in row.data:
                     for column in data_source.columns:
                         if column.name == column_name:
-                            row_value = row.data[column_name]
+                            row_value = row.data[column_name].strip()
 
-                            if column.type == ColumnType.ARRAY:
-                                row_variable_mapping[template_var] = row_value.split(column.arrayMetadata.separator)
-                            elif column.type == ColumnType.BOOLEAN:
-                                normalizedValue = row_value.lower().strip()
+                            match column.type:
+                                case ColumnType.ARRAY:
+                                    row_variable_mapping[template_var] = row_value.split(
+                                        column.arrayMetadata.separator
+                                    )
 
-                                row_variable_mapping[template_var] = True if normalizedValue == 'true' or normalizedValue == '1' else False
-                            elif column.type == ColumnType.NUMBER:
-                                row_variable_mapping[template_var] = float(row_value)
-                            else:
-                                row_variable_mapping[template_var] = row_value
-                            
+                                case ColumnType.BOOLEAN:
+                                    normalized = row_value.lower()
+
+                                    row_variable_mapping[template_var] = normalized in (
+                                        "true",
+                                        "verdadeiro",
+                                        "1"
+                                    )
+
+                                case ColumnType.NUMBER:
+                                    row_variable_mapping[template_var] = LiquidFloat(row_value)
+
+                                case ColumnType.DATE:
+                                    BR_REGEX = re.compile(
+                                        r'^(\d{1,2})/(\d{1,2})/(\d{4})(?: (\d{2}):(\d{2})(?::(\d{2}))?)?$'
+                                    )
+
+                                    match = BR_REGEX.match(row_value)
+
+                                    if match:
+                                        day = int(match.group(1))
+                                        month = int(match.group(2))
+                                        year = int(match.group(3))
+                                        hour = int(match.group(4)) if match.group(4) else None
+                                        minute = int(match.group(5)) if match.group(5) else None
+                                        second = int(match.group(6)) if match.group(6) else None
+
+                                        if month > 12:
+                                            aux = day
+                                            day = month
+                                            month = aux
+
+                                        if second != None:
+                                            dt = datetime(year, month, day, hour, minute, second)
+                                            row_value = LiquidDate(dt.strftime("%d/%m/%Y %H:%M:%S"), dt)
+                                        elif hour != None or minute != None:
+                                            dt = datetime(year, month, day, hour, minute)
+                                            row_value = LiquidDate(dt.strftime("%d/%m/%Y %H:%M"), dt)
+                                        else:
+                                            dt = datetime(year, month, day)
+                                            row_value = LiquidDate(dt.strftime("%d/%m/%Y"), dt)
+
+                                    row_variable_mapping[template_var] = row_value
+
+                                case _:
+                                    row_variable_mapping[template_var] = row_value
                             break
-            print('Row variable mapping: ', row_variable_mapping)
+
             if is_docx:
                 certificate_buffer = replace_variables_in_docx_liquid(certificate_buffer, row_variable_mapping)
             else:

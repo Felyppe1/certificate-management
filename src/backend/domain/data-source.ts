@@ -229,6 +229,13 @@ export class DataSource {
             return { type: 'string', arrayMetadata: null }
         }
 
+        if (nonEmpty.every(this.isBoolean))
+            return { type: 'boolean', arrayMetadata: null }
+        if (nonEmpty.every(this.isNumber))
+            return { type: 'number', arrayMetadata: null }
+        if (nonEmpty.every(this.isDate))
+            return { type: 'date', arrayMetadata: null }
+
         const separator = this.detectArraySeparator(nonEmpty)
         if (separator) {
             return {
@@ -236,13 +243,6 @@ export class DataSource {
                 arrayMetadata: { separator },
             }
         }
-
-        if (nonEmpty.every(this.isBoolean))
-            return { type: 'boolean', arrayMetadata: null }
-        if (nonEmpty.every(this.isDate))
-            return { type: 'date', arrayMetadata: null }
-        if (nonEmpty.every(this.isNumber))
-            return { type: 'number', arrayMetadata: null }
 
         return { type: 'string', arrayMetadata: null }
     }
@@ -272,37 +272,71 @@ export class DataSource {
         return (
             normalizedValue === 'true' ||
             normalizedValue === 'false' ||
+            normalizedValue === 'verdadeiro' ||
+            normalizedValue === 'falso' ||
             normalizedValue === '1' ||
             normalizedValue === '0'
         )
     }
 
     static isNumber(value: string): boolean {
-        const parsed = z.coerce.number().safeParse(value)
+        const replacedValue = value.replace(',', '.')
+        const parsed = z.coerce.number().safeParse(replacedValue)
 
         return parsed.success
     }
 
     static isDate(value: string): boolean {
-        const parsed = z.coerce.date().safeParse(value)
+        const brDateTime =
+            /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?: (\d{2}):(\d{2})(?::(\d{2}))?)?$/
 
-        return parsed.success
+        const match = value.match(brDateTime)
 
-        // validate format YYYY-MM-DD
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        if (match) {
+            let day = Number(match[1])
+            let month = Number(match[2])
+            const year = Number(match[3])
+            const hour = Number(match[4] ?? 0)
+            const minute = Number(match[5] ?? 0)
+            const second = Number(match[6] ?? 0)
+
+            if (day <= 12 && month > 12) {
+                ;[day, month] = [month, day]
+            }
+
+            let date: Date
+
+            try {
+                date = new Date(year, month - 1, day, hour, minute, second)
+            } catch (_) {
+                return false
+            }
+
+            return (
+                date.getFullYear() === year &&
+                date.getMonth() === month - 1 &&
+                date.getDate() === day &&
+                date.getHours() === hour &&
+                date.getMinutes() === minute &&
+                date.getSeconds() === second
+            )
+        }
+
+        const blockedFormats = [
+            /^\d+$/, // "2024", "1"
+            /^\d+\.\d+$/, // "8.9"
+            /^\d+-\d+$/, // "8-9"
+            /^\d+\/\d+$/, // "8/9"
+            // /[a-zA-Z]/, // any letter
+        ]
+
+        if (blockedFormats.some(r => r.test(value))) {
             return false
         }
 
-        // validate real date
-        const [year, month, day] = value.split('-').map(Number)
+        const parsed = z.coerce.date().safeParse(value)
 
-        const date = new Date(Date.UTC(year, month - 1, day))
-
-        return (
-            date.getUTCFullYear() === year &&
-            date.getUTCMonth() === month - 1 &&
-            date.getUTCDate() === day
-        )
+        return parsed.success
     }
 
     // update(data: Partial<Omit<DataSourceInput, 'id'>>) {
