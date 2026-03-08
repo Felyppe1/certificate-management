@@ -2,6 +2,11 @@
 import { UserDropdown } from './UserDropdown'
 import Link from 'next/link'
 import { Zap } from 'lucide-react'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover'
 
 interface HeaderProps {
     userName: string
@@ -44,11 +49,28 @@ export function Header({ userName, userId, credits }: HeaderProps) {
 
                 <div className="flex items-center gap-x-4 flex-wrap justify-end">
                     {/* <ThemeToggle /> */}
-                    <div className="flex items-center gap-1.5 text-xs sm:text-sm px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                        <Zap className="size-3 sm:size-3.5" />
-                        <span className="font-medium">{credits}</span>
-                        <span className="text-amber-400/70">créditos</span>
-                    </div>
+                    <Popover>
+                        <PopoverTrigger className="flex items-center gap-1.5 text-xs sm:text-sm px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 cursor-pointer">
+                            <Zap className="size-3 sm:size-3.5" />
+                            <span className="font-medium">{credits}</span>
+                            <span className="text-amber-400/70">créditos</span>
+                        </PopoverTrigger>
+                        <PopoverContent
+                            align="end"
+                            className="z-52 bg-blue-800 text-zinc-100 border-none w-[13rem] sm:w-72 shadow-xl"
+                        >
+                            <p className="font-semibold text-base sm:text-lg mb-2">
+                                O que são créditos?
+                            </p>
+                            <p className="text-zinc-200 text-xs sm:text-sm text-white/90 leading-relaxed">
+                                Créditos são consumidos na geração de
+                                certificados. <strong>1 crédito</strong> é
+                                descontado por linha da fonte de dados. Os
+                                créditos são renovados{' '}
+                                <strong>todos os dias</strong>.
+                            </p>
+                        </PopoverContent>
+                    </Popover>
                     <UserDropdown name={userName} userId={userId} />
 
                     {/* <button className="md:hidden text-slate-300">

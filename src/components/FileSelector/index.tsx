@@ -355,6 +355,11 @@ export function FileSelector({
                 </div>
             </RadioGroup>
 
+            <p className="text-xs text-muted-foreground mt-3 text-center">
+                Tamanho máximo: 5MB
+                {type === 'data-source' && ' · Máximo de 300 linhas'}
+            </p>
+
             {selectedOption === 'drive' &&
                 googleOAuthToken &&
                 pickerIsReady && (

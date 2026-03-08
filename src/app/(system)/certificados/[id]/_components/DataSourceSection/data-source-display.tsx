@@ -33,6 +33,7 @@ import { INPUT_METHOD } from '@/backend/domain/certificate'
 import {
     DATA_SOURCE_FILE_EXTENSION,
     ColumnType,
+    MAX_DATA_SOURCE_ROWS,
 } from '@/backend/domain/data-source'
 import { deleteDataSourceAction } from '@/backend/infrastructure/server-actions/delete-data-source-action'
 import { refreshDataSourceAction } from '@/backend/infrastructure/server-actions/refresh-data-source-action'
@@ -236,6 +237,10 @@ export function DataSourceDisplay({
                 )
             } else if (refreshState.errorType === 'google-session-expired') {
                 toast.error('Sua conta da Google precisa ser reconectada')
+            } else if (refreshState.errorType === 'data-source-rows-exceeded') {
+                toast.error(
+                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_ROWS} linhas`,
+                )
             } else {
                 toast.error(
                     'Ocorreu um erro ao tentar atualizar a fonte de dados',
