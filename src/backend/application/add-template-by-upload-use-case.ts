@@ -87,6 +87,26 @@ export class AddTemplateByUploadUseCase {
 
         try {
             uniqueVariables = engine.variablesSync(cleanedContent)
+
+            const localVariables = new Set<string>()
+
+            // \{% - searches for the opening of a Liquid tag
+            // \s* - allows for any amount of whitespace (including line breaks and tabs) after the opening tag
+            // (?:assign|capture) - non-capturing group that finds it but doesn't include it in the results
+            // \s+ - requires at least one whitespace character after the non-capturing group
+            // ([a-zA-Z0-9_\-]+) - captures the variable name, which can include letters, numbers, underscores, and hyphens
+            // Ex: {% assign nomeVariavel = ... %} or {% capture nomeVariavel %}
+            const localVarsRegex =
+                /\{%\s*(?:assign|capture)\s+([a-zA-Z0-9_\-]+)/g
+            let match: RegExpExecArray | null
+
+            while ((match = localVarsRegex.exec(cleanedContent)) !== null) {
+                localVariables.add(match[1]) // match[1] contém apenas o nome da variável
+            }
+
+            uniqueVariables = uniqueVariables.filter(
+                variable => !localVariables.has(variable),
+            )
         } catch {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.TEMPLATE_VARIABLES_PARSING_ERROR,

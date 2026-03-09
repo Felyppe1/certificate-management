@@ -121,7 +121,7 @@ export function ColumnTypeSelect({
                         {type === 'boolean' ? (
                             <>
                                 <p className="font-semibold text-sm mb-2">
-                                    Valores reconhecidos como booleano:
+                                    Valores booleanos válidos:
                                 </p>
                                 <ul className="text-xs text-zinc-300 space-y-1">
                                     <li>
@@ -145,7 +145,7 @@ export function ColumnTypeSelect({
                         ) : (
                             <>
                                 <p className="font-semibold text-sm mb-2">
-                                    Formatos de data reconhecidos:
+                                    Valores de datas válidos:
                                 </p>
                                 <ul className="text-xs text-zinc-300 space-y-1">
                                     <li>
