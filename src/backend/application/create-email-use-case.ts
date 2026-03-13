@@ -110,7 +110,7 @@ export class CreateEmailUseCase {
         if (email.getScheduledAt()) {
             // TODO: implement scheduling logic
 
-            certificateEmission.setStatus(CERTIFICATE_STATUS.SCHEDULED)
+            certificateEmission.markAsScheduled()
         } else {
             await this.queue.enqueueSendCertificateEmails({
                 certificateEmissionId: data.certificateEmissionId,
@@ -122,7 +122,7 @@ export class CreateEmailUseCase {
                 recipients,
             })
 
-            certificateEmission.setStatus(CERTIFICATE_STATUS.PUBLISHED)
+            certificateEmission.markAsEmitted()
         }
 
         email.setProcessingStatus(PROCESSING_STATUS_ENUM.RUNNING)

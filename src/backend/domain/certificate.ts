@@ -23,9 +23,9 @@ export enum INPUT_METHOD {
 
 export enum CERTIFICATE_STATUS {
     DRAFT = 'DRAFT',
-    PUBLISHED = 'EMITTED',
     SCHEDULED = 'SCHEDULED',
     GENERATED = 'GENERATED',
+    EMITTED = 'EMITTED',
 }
 
 export interface CertificateInput {
@@ -161,12 +161,24 @@ export class Certificate extends AggregateRoot {
         return this.userId
     }
 
-    setStatus(status: CERTIFICATE_STATUS) {
-        this.status = status
+    // setStatus(status: CERTIFICATE_STATUS) {
+    //     this.status = status
+    // }
+
+    markAsDraft() {
+        this.status = CERTIFICATE_STATUS.DRAFT
+    }
+
+    markAsScheduled() {
+        this.status = CERTIFICATE_STATUS.SCHEDULED
     }
 
     markAsGenerated() {
         this.status = CERTIFICATE_STATUS.GENERATED
+    }
+
+    markAsEmitted() {
+        this.status = CERTIFICATE_STATUS.EMITTED
     }
 
     update(data: UpdateCertificateInput) {
@@ -223,6 +235,8 @@ export class Certificate extends AggregateRoot {
             this.dataSource,
             this.variableColumnMapping,
         )
+
+        this.markAsDraft()
 
         const domainEvent = new TemplateSetDomainEvent(this.id)
 
@@ -284,6 +298,8 @@ export class Certificate extends AggregateRoot {
             dataSource,
             this.variableColumnMapping,
         )
+
+        this.markAsDraft()
 
         const domainEvent = new DataSourceSetDomainEvent(this.id)
 

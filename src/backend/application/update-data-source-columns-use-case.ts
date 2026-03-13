@@ -9,6 +9,7 @@ import {
 } from '../domain/error/not-found-error'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 interface UpdateDataSourceColumnsUseCaseInput {
     userId: string
@@ -29,8 +30,10 @@ export class UpdateDataSourceColumnsUseCase {
         >,
         private dataSourceRowsRepository: Pick<
             IDataSourceRowsRepository,
-            'getColumnValuesByCertificateEmissionId'
+            | 'getColumnValuesByCertificateEmissionId'
+            | 'resetProcessingStatusByCertificateEmissionId'
         >,
+        private transactionManager: ITransactionManager,
     ) {}
 
     async execute(
@@ -57,7 +60,15 @@ export class UpdateDataSourceColumnsUseCase {
         )
 
         if (columnsToValidate.length === 0) {
-            await this.certificatesRepository.update(certificate)
+            certificate.markAsDraft()
+
+            await this.transactionManager.run(async () => {
+                await this.dataSourceRowsRepository.resetProcessingStatusByCertificateEmissionId(
+                    certificate.getId(),
+                )
+                await this.certificatesRepository.update(certificate)
+            })
+
             return { invalidColumns: [] }
         }
 
@@ -98,7 +109,14 @@ export class UpdateDataSourceColumnsUseCase {
             return { invalidColumns }
         }
 
-        await this.certificatesRepository.update(certificate)
+        certificate.markAsDraft()
+
+        await this.transactionManager.run(async () => {
+            await this.dataSourceRowsRepository.resetProcessingStatusByCertificateEmissionId(
+                certificate.getId(),
+            )
+            await this.certificatesRepository.update(certificate)
+        })
 
         return { invalidColumns: [] }
     }

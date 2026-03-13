@@ -54,10 +54,9 @@ export class FinishCertificateEmailSendingProcessUseCase {
         email.setProcessingStatus(status, rowsCount)
 
         if (status === PROCESSING_STATUS_ENUM.COMPLETED) {
-            certificateEmission.setStatus(CERTIFICATE_STATUS.PUBLISHED)
+            certificateEmission.markAsEmitted()
         } else {
             email.setEmailErrorType(EMAIL_ERROR_TYPE_ENUM.INTERNAL_ERROR)
-            certificateEmission.setStatus(CERTIFICATE_STATUS.DRAFT)
         }
 
         await this.transactionManager.run(async () => {

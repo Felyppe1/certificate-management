@@ -9,6 +9,7 @@ import { updateTag } from 'next/cache'
 import { logoutAction } from './logout-action'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { updateDataSourceColumnsSchema } from './schemas'
+import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 
 export async function updateDataSourceColumnsAction(
     _: unknown,
@@ -30,10 +31,12 @@ export async function updateDataSourceColumnsAction(
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,
         )
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const updateDataSourceUseCase = new UpdateDataSourceColumnsUseCase(
             certificatesRepository,
             dataSourceRowsRepository,
+            transactionManager,
         )
 
         const columns = parsedData.columns.map(col => ({

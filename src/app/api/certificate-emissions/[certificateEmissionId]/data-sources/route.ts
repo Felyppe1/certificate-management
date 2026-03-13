@@ -118,10 +118,12 @@ export async function PUT(
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,
         )
+        const transactionManager = new PrismaTransactionManager(prisma)
 
         const useCase = new UpdateDataSourceColumnsUseCase(
             certificatesRepository,
             dataSourceRowsRepository,
+            transactionManager,
         )
 
         const columns = parsedData.columns.map(col => ({

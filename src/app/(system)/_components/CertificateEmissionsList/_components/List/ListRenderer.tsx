@@ -8,9 +8,9 @@ import Link from 'next/link'
 
 export const STATUS_MAPPING = {
     DRAFT: 'Rascunho',
-    EMITTED: 'Emitido',
     SCHEDULED: 'Agendado',
     GENERATED: 'Gerado',
+    EMITTED: 'Emitido',
 }
 
 interface ListRendererProps extends CertificateEmissionsResponse {}

@@ -135,7 +135,10 @@ export default async function CertificatePage({
                             }
                             rows={rows}
                             emailSent={emailSent}
-                            certificatesGenerated={certificatesGenerated}
+                            certificatesGenerated={
+                                certificateEmissionResponse.certificateEmission
+                                    .status === 'EMITTED'
+                            }
                         />
                     )}
 

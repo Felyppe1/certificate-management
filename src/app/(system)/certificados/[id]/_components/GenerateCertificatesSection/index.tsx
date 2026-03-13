@@ -48,6 +48,7 @@ export function GenerateCertificatesSection({
     allVariablesWereMapped,
     rows,
     emailSent,
+    // certificatesGenerated
 }: GenerateCertificatesSectionProps) {
     const [state, action, isGeneratePending] = useActionState(
         generateCertificatesAction,
