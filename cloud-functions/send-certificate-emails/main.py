@@ -18,6 +18,7 @@ SMTP_PORT = 587
 SMTP_USER = os.getenv("SMTP_USER")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 
+ENV = os.getenv('ENV', 'production')
 APP_BASE_URL = os.getenv('APP_BASE_URL')
 AUDIENCE = os.getenv("TOKEN_AUDIENCE", APP_BASE_URL) # For local environments
 CERTIFICATES_BUCKET = os.getenv('CERTIFICATES_BUCKET')
@@ -43,14 +44,20 @@ def update_email_status(email_id, status):
     print('Inside update')
     url = f"{APP_BASE_URL}/api/internal/emails/{email_id}"
 
-    auth_req = Request()
 
-    id_token = fetch_id_token(auth_req, AUDIENCE)
+    if ENV != 'local':
+        auth_req = Request()
 
-    headers = {
-        "Authorization": f"Bearer {id_token}",
-        "Content-Type": "application/json",
-    }
+        id_token = fetch_id_token(auth_req, AUDIENCE)
+
+        headers = {
+            "Authorization": f"Bearer {id_token}",
+            "Content-Type": "application/json",
+        }
+    else:
+        headers = {
+            "Content-Type": "application/json",
+        }
     
     body = {
         "status": status

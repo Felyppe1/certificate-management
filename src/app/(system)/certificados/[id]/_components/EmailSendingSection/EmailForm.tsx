@@ -1,10 +1,9 @@
 'use client'
 
-import { FormEvent } from 'react'
 import { Mail, Send, Calendar, Loader2 } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+import { RichTextEditor } from './RichTextEditor'
 import {
     Select,
     SelectContent,
@@ -13,7 +12,7 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { UseFormReturn, useWatch } from 'react-hook-form'
+import { Controller, UseFormReturn, useWatch } from 'react-hook-form'
 import { EmailForm as EmailFormType } from './useEmailForm'
 
 interface EmailFormProps {
@@ -126,15 +125,19 @@ export function EmailForm({
             </div>
 
             <div className="space-y-3">
-                <Label htmlFor={`email-message-${sendMode}`}>Mensagem</Label>
+                <Label>Mensagem</Label>
                 <div>
-                    <Textarea
-                        {...register('body')}
-                        className="resize-none min-h-24"
-                        id={`email-message-${sendMode}`}
-                        placeholder="Digite o corpo do email..."
-                        disabled={isDisabled}
-                        aria-invalid={!!errors?.body}
+                    <Controller
+                        control={form.control}
+                        name="body"
+                        render={({ field }) => (
+                            <RichTextEditor
+                                value={field.value}
+                                onChange={field.onChange}
+                                disabled={isDisabled}
+                                hasError={!!errors?.body}
+                            />
+                        )}
                     />
                     {errors?.body && (
                         <span className="text-sm text-destructive">
