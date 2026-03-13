@@ -46,6 +46,7 @@ import { viewCertificateAction } from '@/backend/infrastructure/server-actions/v
 import { downloadDataSourceAction } from '@/backend/infrastructure/server-actions/download-data-source-action'
 import { ColumnsConfigurationSection } from './ColumnsConfigurationSection'
 import { columnTypeConfig } from './ColumnTypeSelect'
+import { useGoogleRelogin } from '@/components/useGoogleRelogin'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -96,6 +97,7 @@ interface DataSourceDisplayProps {
     certificateId: string
     onEdit: () => void
     isDisabled: boolean
+    userEmail: string
 }
 
 export function DataSourceDisplay({
@@ -103,6 +105,7 @@ export function DataSourceDisplay({
     certificateId,
     onEdit,
     isDisabled,
+    userEmail,
 }: DataSourceDisplayProps) {
     const [showAllRows, setShowAllRows] = useState(false)
     const [showRefreshWarning, setShowRefreshWarning] = useState(false)
@@ -136,6 +139,15 @@ export function DataSourceDisplay({
         retryDataSourceRowAction,
         null,
     )
+
+    const { login, isLoading: loginIsLoading } = useGoogleRelogin({
+        userEmail,
+        onFinished: () => {
+            toast.success(
+                'Reautenticação bem-sucedida. Por favor, tente atualizar o template novamente.',
+            )
+        },
+    })
 
     const handleRefresh = () => {
         const formData = new FormData()
@@ -236,7 +248,10 @@ export function DataSourceDisplay({
                     'Arquivo não encontrado. Verifique se ele ainda existe no Drive e se está público',
                 )
             } else if (refreshState.errorType === 'google-session-expired') {
-                toast.error('Sua conta da Google precisa ser reconectada')
+                toast.error(
+                    'Sessão do Google expirada. Entre novamente com a sua conta.',
+                )
+                login()
             } else if (refreshState.errorType === 'data-source-rows-exceeded') {
                 toast.error(
                     `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_ROWS} linhas`,
@@ -317,7 +332,10 @@ export function DataSourceDisplay({
                                     variant="outline"
                                     onClick={handleRefreshClick}
                                     disabled={
-                                        isRefreshing || isDeleting || isDisabled
+                                        isRefreshing ||
+                                        isDeleting ||
+                                        isDisabled ||
+                                        loginIsLoading
                                     }
                                 >
                                     <RefreshCw
@@ -340,7 +358,10 @@ export function DataSourceDisplay({
                                 variant="outline"
                                 onClick={handleEditClick}
                                 disabled={
-                                    isRefreshing || isDeleting || isDisabled
+                                    isRefreshing ||
+                                    isDeleting ||
+                                    isDisabled ||
+                                    loginIsLoading
                                 }
                             >
                                 <Edit3 className="scale-80" />
@@ -350,7 +371,12 @@ export function DataSourceDisplay({
                         <Button
                             variant="outline"
                             onClick={handleRemoveDataSource}
-                            disabled={isDeleting || isRefreshing || isDisabled}
+                            disabled={
+                                isDeleting ||
+                                isRefreshing ||
+                                isDisabled ||
+                                loginIsLoading
+                            }
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
                             <Trash2 className="scale-80" />

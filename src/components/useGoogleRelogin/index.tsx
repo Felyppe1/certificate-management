@@ -60,7 +60,7 @@ export function useGoogleRelogin({
                 }
 
                 if (customOnFinished) {
-                    await customOnFinished(result?.success === true)
+                    customOnFinished(result?.success === true)
                 }
             } finally {
                 setIsLoading(false)

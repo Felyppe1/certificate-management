@@ -242,6 +242,7 @@ export function TemplateSection({
                 onEdit={handleEdit}
                 isDisabled={emailSent}
                 certificatesGenerated={certificatesGenerated}
+                userEmail={userEmail}
             />
         )
     }

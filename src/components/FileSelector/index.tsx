@@ -153,7 +153,7 @@ export function FileSelector({
                   },
     })
 
-    const { login } = useGoogleRelogin({
+    const { login, isLoading: googleReloginIsLoading } = useGoogleRelogin({
         userEmail,
         onError: error => {
             setSelectedOption(null)
@@ -311,7 +311,9 @@ export function FileSelector({
                                 </p>
                             </div>
                         </Card>
-                        {(isDriveLoading || isRefreshTokenLoading) && (
+                        {(isDriveLoading ||
+                            isRefreshTokenLoading ||
+                            googleReloginIsLoading) && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 <div className="bg-background/80 rounded-full p-2">
                                     <Loader2 className="w-10 h-10 animate-spin text-foreground" />

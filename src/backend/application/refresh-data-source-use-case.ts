@@ -143,7 +143,7 @@ export class RefreshDataSourceUseCase {
                 storageFileUrl: null,
                 fileName: name,
                 fileExtension,
-                inputMethod: INPUT_METHOD.URL,
+                inputMethod: certificate.getDataSourceInputMethod()!,
                 thumbnailUrl,
                 columnsRow: 1,
                 dataRowStart: 2,

@@ -48,14 +48,14 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
         refreshToken,
         accessTokenExpiryDateTime,
     }: CheckOrRefreshAccessTokenInput) {
-        const now = new Date()
+        // const now = new Date()
 
-        const tenMinutesInMs = 10 * 60 * 1000
-        const threshold = new Date(now.getTime() + tenMinutesInMs)
+        // const tenMinutesInMs = 10 * 60 * 1000
+        // const threshold = new Date(now.getTime() + tenMinutesInMs)
 
-        if (accessTokenExpiryDateTime > threshold) {
-            return null
-        }
+        // if (accessTokenExpiryDateTime > threshold) {
+        //     return null
+        // }
 
         this.oauth2Client.setCredentials({
             access_token: accessToken,

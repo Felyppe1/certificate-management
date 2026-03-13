@@ -19,6 +19,7 @@ import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
 import { SourceIcon } from '@/components/svg/SourceIcon'
 import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
 import { toast } from 'sonner'
+import { useGoogleRelogin } from '@/components/useGoogleRelogin'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -47,6 +48,7 @@ interface TemplateDisplayProps {
     onEdit: () => void
     isDisabled: boolean
     certificatesGenerated: boolean
+    userEmail: string
 }
 
 export function TemplateDisplay({
@@ -55,6 +57,7 @@ export function TemplateDisplay({
     onEdit,
     isDisabled,
     certificatesGenerated,
+    userEmail,
 }: TemplateDisplayProps) {
     const [showRefreshWarning, setShowRefreshWarning] = useState(false)
     const [showEditWarning, setShowEditWarning] = useState(false)
@@ -74,6 +77,15 @@ export function TemplateDisplay({
         downloadTemplateActionHandler,
         isDownloadingTemplate,
     ] = useActionState(downloadTemplateAction, null)
+
+    const { login, isLoading: loginIsLoading } = useGoogleRelogin({
+        userEmail,
+        onFinished: () => {
+            toast.success(
+                'Reautenticação bem-sucedida. Por favor, tente atualizar o template novamente.',
+            )
+        },
+    })
 
     const handleRefresh = () => {
         const formData = new FormData()
@@ -138,7 +150,10 @@ export function TemplateDisplay({
                     'Arquivo não encontrado. Verifique se ele ainda existe no Drive e se está público',
                 )
             } else if (refreshState.errorType === 'google-session-expired') {
-                toast.error('Sua conta da Google precisa ser reconectada')
+                toast.error(
+                    'Sessão do Google expirada. Entre novamente com a sua conta.',
+                )
+                login()
             } else {
                 toast.error('Ocorreu um erro ao tentar atualizar o template')
             }
@@ -194,7 +209,8 @@ export function TemplateDisplay({
                                         disabled={
                                             isRefreshing ||
                                             isDeleting ||
-                                            isDisabled
+                                            isDisabled ||
+                                            loginIsLoading
                                         }
                                     >
                                         <RefreshCw
@@ -217,7 +233,10 @@ export function TemplateDisplay({
                                     variant="outline"
                                     onClick={handleEditClick}
                                     disabled={
-                                        isRefreshing || isDeleting || isDisabled
+                                        isRefreshing ||
+                                        isDeleting ||
+                                        isDisabled ||
+                                        loginIsLoading
                                     }
                                 >
                                     <Edit3 className="scale-80" />
@@ -228,7 +247,10 @@ export function TemplateDisplay({
                                 variant="outline"
                                 onClick={handleRemoveTemplate}
                                 disabled={
-                                    isDeleting || isRefreshing || isDisabled
+                                    isDeleting ||
+                                    isRefreshing ||
+                                    isDisabled ||
+                                    loginIsLoading
                                 }
                                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             >
