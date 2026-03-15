@@ -83,6 +83,10 @@ export function TemplateSection({
                 toast.error(
                     'Foi encontrado um erro de sintaxe do Liquid no template.',
                 )
+            } else if (result.errorType === 'template-file-size-too-large') {
+                toast.error(
+                    `O arquivo do template é muito grande. O tamanho máximo é 5MB`,
+                )
             } else {
                 toast.error('Ocorreu um erro ao tentar adicionar template')
             }
@@ -162,6 +166,12 @@ export function TemplateSection({
             ) {
                 toast.error(
                     'Foi encontrado um erro de sintaxe do Liquid no template.',
+                )
+            } else if (
+                driverPickerState.errorType === 'template-file-size-too-large'
+            ) {
+                toast.error(
+                    `O arquivo do template é muito grande. O tamanho máximo é 5MB`,
                 )
             } else {
                 toast.error('Ocorreu um erro ao tentar adicionar template')

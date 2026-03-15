@@ -402,7 +402,7 @@ export class Certificate extends AggregateRoot {
 
             // If it was mapped before, check if the column still exists in the new data source
             if (previousColumn) {
-                const previousColumnStillExists = columns.some(
+                const existingColumn = columns.find(
                     column =>
                         normalizeString(column.name) ===
                         normalizeString(previousColumn),
@@ -413,11 +413,11 @@ export class Certificate extends AggregateRoot {
                 ).some(
                     column =>
                         normalizeString(column || '') ===
-                        normalizeString(previousColumn),
+                        normalizeString(existingColumn?.name || previousColumn),
                 )
 
-                if (previousColumnStillExists && !hasAlreadyMapped) {
-                    variableColumnMapping[variable] = previousColumn
+                if (existingColumn && !hasAlreadyMapped) {
+                    variableColumnMapping[variable] = existingColumn.name
                     continue
                 }
             }

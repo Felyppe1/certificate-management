@@ -19,6 +19,8 @@ export enum VALIDATION_ERROR_TYPE {
     FILE_BYTES_MISSING = 'file-bytes-missing',
     INSUFFICIENT_CREDITS = 'insufficient-credits',
     DATA_SOURCE_ROWS_EXCEEDED = 'data-source-rows-exceeded',
+    DATA_SOURCE_FILE_SIZE_TOO_LARGE = 'data-source-file-size-too-large',
+    TEMPLATE_FILE_SIZE_TOO_LARGE = 'template-file-size-too-large',
 }
 
 export class ValidationError extends AppError<VALIDATION_ERROR_TYPE> {

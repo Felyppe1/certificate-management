@@ -439,7 +439,6 @@ export function DataSourceDisplay({
                                                 }
                                             >
                                                 <svg
-                                                    className=" mr-2"
                                                     viewBox="0 0 24 24"
                                                     fill="none"
                                                     stroke="currentColor"

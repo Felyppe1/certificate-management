@@ -132,7 +132,7 @@ export class RefreshDataSourceUseCase {
         const contentExtractor =
             this.spreadsheetContentExtractorFactory.create(fileExtension)
 
-        const { columns, rows } = contentExtractor.extractColumns(buffer)
+        const { columns, rows } = await contentExtractor.extractColumns(buffer)
 
         const dataSourceDomainService = new DataSourceDomainService()
 
@@ -153,10 +153,6 @@ export class RefreshDataSourceUseCase {
 
         await this.transactionManager.run(async () => {
             await this.certificateEmissionsRepository.update(certificate)
-
-            await this.dataSourceRowsRepository.deleteManyByCertificateEmissionId(
-                certificate.getId(),
-            )
 
             await this.dataSourceRowsRepository.saveMany(dataSourceRows)
         })

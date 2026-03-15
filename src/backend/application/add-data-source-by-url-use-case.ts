@@ -79,7 +79,7 @@ export class AddDataSourceByUrlUseCase {
         const contentExtractor =
             this.spreadsheetContentExtractorFactory.create(fileExtension)
 
-        const { columns, rows } = contentExtractor.extractColumns(buffer)
+        const { rows } = await contentExtractor.extractColumns(buffer)
 
         // In case it had files in storage, delete them
         const dataSourceStorageFileUrl =
@@ -135,10 +135,6 @@ export class AddDataSourceByUrlUseCase {
 
         await this.transactionManager.run(async () => {
             await this.certificateEmissionsRepository.update(certificate)
-
-            await this.dataSourceRowsRepository.deleteManyByCertificateEmissionId(
-                certificate.getId(),
-            )
 
             await this.dataSourceRowsRepository.saveMany(dataSourceRows)
         })

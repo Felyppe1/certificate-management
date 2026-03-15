@@ -1,12 +1,12 @@
 import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
 
-interface ExtractColumns {
+export interface ExtractColumns {
     columns: string[]
     rows: Record<string, any>[]
 }
 
 export interface ISpreadsheetContentExtractorStrategy {
-    extractColumns(buffer: Buffer): ExtractColumns
+    extractColumns(buffer: Buffer): Promise<ExtractColumns>
 }
 
 export interface ISpreadsheetContentExtractorFactory {

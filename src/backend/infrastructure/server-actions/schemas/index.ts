@@ -1,5 +1,9 @@
 import z from 'zod'
-import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
+import {
+    MAX_TEMPLATE_BYTES_SIZE,
+    TEMPLATE_FILE_EXTENSION,
+} from '@/backend/domain/template'
+import { MAX_DATA_SOURCE_BYTES_SIZE } from '@/backend/domain/data-source'
 
 // Certificate Emission
 export const createCertificateEmissionSchema = z.object({
@@ -26,13 +30,13 @@ export const addDataSourceByUrlSchema = z.object({
     fileUrl: z.url(),
 })
 
-const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
-
 export const addDataSourceByUploadSchema = z.object({
     certificateId: z.string().min(1),
-    file: z.instanceof(File).refine(file => file.size <= MAXIMUM_FILE_SIZE, {
-        message: 'File size must be less than 5MB',
-    }),
+    file: z
+        .instanceof(File)
+        .refine(file => file.size <= MAX_DATA_SOURCE_BYTES_SIZE, {
+            message: 'File size must be less than 2MB',
+        }),
 })
 
 export const deleteDataSourceSchema = z.object({
@@ -71,9 +75,11 @@ export const addTemplateByDrivePickerSchema = z.object({
 
 export const addTemplateByUploadSchema = z.object({
     certificateId: z.string().min(1),
-    file: z.instanceof(File).refine(file => file.size <= MAXIMUM_FILE_SIZE, {
-        message: 'File size must be less than 5MB',
-    }),
+    file: z
+        .instanceof(File)
+        .refine(file => file.size <= MAX_TEMPLATE_BYTES_SIZE, {
+            message: 'File size must be less than 5MB',
+        }),
 })
 
 export const deleteTemplateSchema = z.object({

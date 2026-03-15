@@ -69,7 +69,7 @@ export class AddDataSourceByUploadUseCase {
         const contentExtractor =
             this.spreadsheetContentExtractorFactory.create(fileExtension)
 
-        const { rows } = contentExtractor.extractColumns(buffer)
+        const { rows } = await contentExtractor.extractColumns(buffer)
 
         const previousDataSourceStorageFileUrl =
             certificate.getDataSourceStorageFileUrl()
@@ -102,10 +102,6 @@ export class AddDataSourceByUploadUseCase {
 
         await this.transactionManager.run(async () => {
             await this.certificatesRepository.update(certificate)
-
-            await this.dataSourceRowsRepository.deleteManyByCertificateEmissionId(
-                certificate.getId(),
-            )
 
             await this.dataSourceRowsRepository.saveMany(dataSourceRows)
         })

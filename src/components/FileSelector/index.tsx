@@ -105,7 +105,9 @@ export function FileSelector({
             file.type != TEMPLATE_FILE_EXTENSION.DOCX &&
             file.type != TEMPLATE_FILE_EXTENSION.PPTX &&
             file.type != DATA_SOURCE_FILE_EXTENSION.CSV &&
-            file.type != DATA_SOURCE_FILE_EXTENSION.XLSX
+            file.type != DATA_SOURCE_FILE_EXTENSION.XLSX &&
+            file.type != DATA_SOURCE_FILE_EXTENSION.PNG &&
+            file.type != DATA_SOURCE_FILE_EXTENSION.JPEG
         ) {
             toast.error('Formato de arquivo não suportado')
             return
@@ -150,6 +152,8 @@ export function FileSelector({
                 : {
                       [DATA_SOURCE_FILE_EXTENSION.CSV]: ['.csv'],
                       [DATA_SOURCE_FILE_EXTENSION.XLSX]: ['.xlsx'],
+                      [DATA_SOURCE_FILE_EXTENSION.PNG]: ['.png'],
+                      [DATA_SOURCE_FILE_EXTENSION.JPEG]: ['.jpeg', '.jpg'],
                   },
     })
 
@@ -357,10 +361,24 @@ export function FileSelector({
                 </div>
             </RadioGroup>
 
-            <p className="text-xs text-muted-foreground mt-3 text-center">
-                Tamanho máximo: 5MB
-                {type === 'data-source' && ' · Máximo de 300 linhas'}
-            </p>
+            <div className="flex flex-wrap gap-x-2.5 justify-center items-center text-muted-foreground mt-3">
+                <p className="text-xs">
+                    Arquivos aceitos:{' '}
+                    {type === 'data-source'
+                        ? 'Google Planilhas, .csv, .xlsx, .png ou .jpeg'
+                        : 'Google Slides, Google Docs, .pptx ou .docx'}
+                </p>
+                <p>·</p>
+                <p className="text-xs">
+                    Tamanho máximo: {type === 'data-source' ? '2MB' : '5MB'}
+                </p>
+                {type === 'data-source' && (
+                    <>
+                        <p>·</p>
+                        <p className="text-xs">Máximo de 300 linhas</p>
+                    </>
+                )}
+            </div>
 
             {selectedOption === 'drive' &&
                 googleOAuthToken &&
@@ -383,6 +401,8 @@ export function FileSelector({
                                       DATA_SOURCE_FILE_EXTENSION.CSV,
                                       DATA_SOURCE_FILE_EXTENSION.XLSX,
                                       DATA_SOURCE_FILE_EXTENSION.GOOGLE_SHEETS,
+                                      DATA_SOURCE_FILE_EXTENSION.PNG,
+                                      DATA_SOURCE_FILE_EXTENSION.JPEG,
                                   ]
                             ).join(',')}
                         ></drive-picker-docs-view>
@@ -396,10 +416,7 @@ export function FileSelector({
                         <CardHeader>
                             <CardTitle>Link do arquivo</CardTitle>
                             <CardDescription>
-                                Cole o link de compartilhamento do{' '}
-                                {type === 'template'
-                                    ? 'Google Slides, Google Docs, .pptx ou .docx'
-                                    : 'Google Planilhas, .csv ou .xlsx'}
+                                Cole o link de compartilhamento do arquivo
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -416,7 +433,7 @@ export function FileSelector({
                     <Card
                         {...getRootProps()}
                         className={cn(
-                            'relative border-2 border-dashed h-[10rem]',
+                            'relative border-2 border-dashed h-[7rem] sm:h-[10rem]',
                             isDragActive &&
                                 'border-primary bg-primary/5 border-solid',
                             isUploadLoading
@@ -431,22 +448,19 @@ export function FileSelector({
                                 })}
                             />
                             {isDragActive ? (
-                                <h4 className="text-base sm:text-lg text-center font-semibold">
+                                <h4 className="text-base sm:text-lg text-center font-medium">
                                     Solte o arquivo aqui...
                                 </h4>
                             ) : (
                                 <>
-                                    <h4 className="text-base sm:text-lg text-center font-semibold max-xs:max-w-[17rem]">
-                                        Clique para enviar ou arraste o arquivo
-                                        aqui
+                                    <h4 className="text-base sm:text-lg text-center font-medium text-foreground/70 hover:text-foreground max-xs:max-w-[17rem]">
+                                        Clique para enviar
+                                        <br />
+                                        ou
+                                        <br />
+                                        Arraste o arquivo aqui
                                     </h4>
-                                    <p className="text-sm sm:text-base text-center text-muted-foreground">
-                                        Formatos suportados:{' '}
-                                        {type === 'template'
-                                            ? '.docx, .pptx'
-                                            : '.csv, .xlsx, .png, .jpeg'}{' '}
-                                        (máx. 5MB)
-                                    </p>
+                                    <h4></h4>
                                 </>
                             )}
                         </CardContent>

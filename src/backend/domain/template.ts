@@ -1,5 +1,7 @@
 import { INPUT_METHOD } from './certificate'
 
+export const MAX_TEMPLATE_BYTES_SIZE = 5 * 1024 * 1024 // 5MB
+
 export enum TEMPLATE_FILE_EXTENSION {
     PPTX = 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     GOOGLE_SLIDES = 'application/vnd.google-apps.presentation',

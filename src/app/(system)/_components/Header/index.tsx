@@ -20,10 +20,10 @@ export function Header({ userName, userId, credits }: HeaderProps) {
             <nav className="max-w-7xl mx-auto px-[6vw] xs:px-10 py-4 flex items-center justify-between gap-8">
                 <Link
                     href="/"
-                    className="flex items-center gap-2 p-1 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md"
+                    className="flex items-center gap-1 sm:gap-2 p-1 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md"
                 >
                     <img
-                        src="/logo.png"
+                        src="/logo-2.png"
                         alt="Certifica"
                         className="w-8 sm:w-10"
                     />

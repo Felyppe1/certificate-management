@@ -4,7 +4,7 @@ import { parse } from 'csv-parse/sync'
 export class CsvSpreadsheetContentExtractorStrategy
     implements ISpreadsheetContentExtractorStrategy
 {
-    extractColumns(buffer: Buffer) {
+    async extractColumns(buffer: Buffer) {
         const content = buffer.toString('utf8')
 
         const records = parse(content, {

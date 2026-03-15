@@ -9,6 +9,7 @@ import {
     ValidationError,
 } from '@/backend/domain/error/validation-error'
 import { ExcelSpreadsheetContentExtractorStrategy } from './strategy/excel-spreadsheet-content-extractor-strategy'
+import { ImageContentExtractorStrategy } from './strategy/image-content-extractor-strategy'
 
 export class SpreadsheetContentExtractorFactory
     implements ISpreadsheetContentExtractorFactory
@@ -23,6 +24,10 @@ export class SpreadsheetContentExtractorFactory
             case DATA_SOURCE_FILE_EXTENSION.CSV:
             case DATA_SOURCE_FILE_EXTENSION.GOOGLE_SHEETS:
                 return new CsvSpreadsheetContentExtractorStrategy()
+
+            case DATA_SOURCE_FILE_EXTENSION.PNG:
+            case DATA_SOURCE_FILE_EXTENSION.JPEG:
+                return new ImageContentExtractorStrategy()
 
             default:
                 throw new ValidationError(

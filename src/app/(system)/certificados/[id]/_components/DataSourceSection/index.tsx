@@ -98,6 +98,10 @@ export function DataSourceSection({
                 toast.error(
                     `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_ROWS} linhas`,
                 )
+            } else if (result.errorType === 'data-source-file-size-too-large') {
+                toast.error(
+                    `O arquivo da fonte de dados é muito grande. O tamanho máximo é 2MB`,
+                )
             } else {
                 toast.error(
                     'Ocorreu um erro ao tentar adicionar fonte de dados',
@@ -179,6 +183,13 @@ export function DataSourceSection({
             ) {
                 toast.error(
                     `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_ROWS} linhas`,
+                )
+            } else if (
+                driverPickerState.errorType ===
+                'data-source-file-size-too-large'
+            ) {
+                toast.error(
+                    `O arquivo da fonte de dados é muito grande. O tamanho máximo é 2MB`,
                 )
             } else {
                 toast.error(

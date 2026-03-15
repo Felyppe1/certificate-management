@@ -2,6 +2,7 @@ import z from 'zod'
 import { INPUT_METHOD } from './certificate'
 
 export const MAX_DATA_SOURCE_ROWS = 300
+export const MAX_DATA_SOURCE_BYTES_SIZE = 2 * 1024 * 1024 // 2MB
 
 export const FORBIDDEN_TYPE_CHANGE: Record<ColumnType, ColumnType[]> = {
     string: [],
@@ -24,6 +25,8 @@ export enum DATA_SOURCE_FILE_EXTENSION {
     XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     ODS = 'application/vnd.oasis.opendocument.spreadsheet',
     GOOGLE_SHEETS = 'application/vnd.google-apps.spreadsheet',
+    PNG = 'image/png',
+    JPEG = 'image/jpeg',
 }
 
 export type ColumnType = 'string' | 'number' | 'boolean' | 'date' | 'array'

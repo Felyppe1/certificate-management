@@ -369,7 +369,11 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                 where: { id },
                 include: {
                     Template: true,
-                    DataSource: true,
+                    DataSource: {
+                        include: {
+                            DataSourceColumn: true,
+                        },
+                    },
                 },
             })
 
@@ -389,6 +393,15 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
             // First, update/create DataSource and DataSourceColumns
             // This must happen BEFORE creating TemplateVariables that reference them
             if (dataSource) {
+                const columnsToDelete = previousCertificate?.DataSource
+                    ? previousCertificate.DataSource.DataSourceColumn.filter(
+                          column =>
+                              !dataSource.columns.some(
+                                  c => c.name === column.name,
+                              ),
+                      )
+                    : []
+
                 await tx.dataSource.upsert({
                     where: { certificate_emission_id: id },
                     create: {
@@ -399,6 +412,18 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                         file_name: dataSource.fileName,
                         file_extension: dataSource.fileExtension,
                         thumbnail_url: dataSource.thumbnailUrl,
+                        DataSourceColumn: {
+                            createMany: {
+                                data: dataSource.columns.map(column => ({
+                                    name: column.name,
+                                    type: COLUMN_TYPE_TO_SQL_MAPPER[
+                                        column.type
+                                    ],
+                                    array_separator:
+                                        column.arrayMetadata?.separator ?? null,
+                                })),
+                            },
+                        },
                     },
                     update: {
                         drive_file_id: dataSource.driveFileId,
@@ -407,34 +432,41 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                         input_method: dataSource.inputMethod,
                         file_extension: dataSource.fileExtension,
                         thumbnail_url: dataSource.thumbnailUrl,
-                    },
-                })
-
-                // Now upsert the DataSourceColumns before creating TemplateVariables
-                await Promise.all(
-                    dataSource.columns.map(column => {
-                        return tx.dataSourceColumn.upsert({
-                            where: {
-                                name_data_source_id: {
-                                    data_source_id: id,
+                        DataSourceColumn: {
+                            upsert: dataSource.columns.map(column => ({
+                                where: {
+                                    name_data_source_id: {
+                                        data_source_id: id,
+                                        name: column.name,
+                                    },
+                                },
+                                update: {
+                                    type: COLUMN_TYPE_TO_SQL_MAPPER[
+                                        column.type
+                                    ],
+                                    array_separator:
+                                        column.arrayMetadata?.separator ?? null,
+                                },
+                                create: {
+                                    // data_source_id: id,
                                     name: column.name,
+                                    type: COLUMN_TYPE_TO_SQL_MAPPER[
+                                        column.type
+                                    ],
+                                    array_separator:
+                                        column.arrayMetadata?.separator ?? null,
+                                },
+                            })),
+                            deleteMany: {
+                                name: {
+                                    in: columnsToDelete.map(
+                                        column => column.name,
+                                    ),
                                 },
                             },
-                            update: {
-                                type: COLUMN_TYPE_TO_SQL_MAPPER[column.type],
-                                array_separator:
-                                    column.arrayMetadata?.separator ?? null,
-                            },
-                            create: {
-                                data_source_id: id,
-                                name: column.name,
-                                type: COLUMN_TYPE_TO_SQL_MAPPER[column.type],
-                                array_separator:
-                                    column.arrayMetadata?.separator ?? null,
-                            },
-                        })
-                    }),
-                )
+                        },
+                    },
+                })
             }
 
             // Now update the certificate emission with Template and TemplateVariables
