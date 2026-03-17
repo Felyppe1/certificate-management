@@ -61,7 +61,7 @@ export class AddTemplateByUploadUseCase {
 
         const fileMimeType = input.file.type
 
-        if (!Template.isValidFileExtension(fileMimeType)) {
+        if (!Template.isValidFileMimeType(fileMimeType)) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE,
             )

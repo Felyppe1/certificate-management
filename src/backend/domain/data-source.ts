@@ -425,7 +425,7 @@ export class DataSource {
     //     return uniqueVariables
     // }
 
-    static isValidFileExtension(
+    static isValidFileMimeType(
         fileMimeType: string,
     ): fileMimeType is DATA_SOURCE_MIME_TYPE {
         return Object.values(DATA_SOURCE_MIME_TYPE).includes(

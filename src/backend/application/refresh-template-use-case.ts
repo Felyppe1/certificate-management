@@ -123,7 +123,7 @@ export class RefreshTemplateUseCase {
                 }),
             })
 
-        if (!Template.isValidFileExtension(fileMimeType)) {
+        if (!Template.isValidFileMimeType(fileMimeType)) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE,
             )

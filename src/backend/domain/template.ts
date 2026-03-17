@@ -137,7 +137,7 @@ export class Template {
         return uniqueVariables
     }
 
-    static isValidFileExtension(
+    static isValidFileMimeType(
         fileMimeType: string,
     ): fileMimeType is TEMPLATE_FILE_MIME_TYPE {
         return Object.values(TEMPLATE_FILE_MIME_TYPE).includes(

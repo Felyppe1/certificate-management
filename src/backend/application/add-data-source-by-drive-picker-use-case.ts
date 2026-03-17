@@ -89,7 +89,7 @@ export class AddDataSourceByDrivePickerUseCase {
                 userRefreshToken: externalAccount.refreshToken || undefined,
             })
 
-        if (!DataSource.isValidFileExtension(fileMimeType)) {
+        if (!DataSource.isValidFileMimeType(fileMimeType)) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
             )
