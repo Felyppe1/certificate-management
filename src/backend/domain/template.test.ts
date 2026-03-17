@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { INPUT_METHOD } from './certificate'
-import { Template, TEMPLATE_FILE_EXTENSION, TemplateInput } from './template'
+import { Template, TEMPLATE_FILE_MIME_TYPE, TemplateInput } from './template'
 
 const createTemplateData = (
     overrides?: Partial<TemplateInput>,
 ): TemplateInput => ({
     id: '1',
-    fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
+    fileMimeType: TEMPLATE_FILE_MIME_TYPE.DOCX,
     inputMethod: INPUT_METHOD.URL,
     driveFileId: '1',
     storageFileUrl: null,
@@ -28,7 +28,7 @@ describe('Template', () => {
 
         expect(serialized).toEqual({
             id: expect.any(String),
-            fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
+            fileMimeType: TEMPLATE_FILE_MIME_TYPE.DOCX,
             inputMethod: INPUT_METHOD.URL,
             driveFileId: '1',
             storageFileUrl: null,

@@ -11,7 +11,7 @@ import {
     ValidationError,
 } from '../domain/error/validation-error'
 import { INPUT_METHOD } from '../domain/certificate'
-import { Template, TEMPLATE_FILE_EXTENSION } from '../domain/template'
+import { Template, TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor-factory'
@@ -27,8 +27,8 @@ interface AddTemplateByUploadUseCaseInput {
 
 // TODO: melhorar isso
 const MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
-    [TEMPLATE_FILE_EXTENSION.DOCX]: 'docx',
-    [TEMPLATE_FILE_EXTENSION.PPTX]: 'pptx',
+    [TEMPLATE_FILE_MIME_TYPE.DOCX]: 'docx',
+    [TEMPLATE_FILE_MIME_TYPE.PPTX]: 'pptx',
 }
 
 export class AddTemplateByUploadUseCase {
@@ -59,9 +59,9 @@ export class AddTemplateByUploadUseCase {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
-        const fileExtension = input.file.type
+        const fileMimeType = input.file.type
 
-        if (!Template.isValidFileExtension(fileExtension)) {
+        if (!Template.isValidFileExtension(fileMimeType)) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE,
             )
@@ -71,7 +71,7 @@ export class AddTemplateByUploadUseCase {
         const buffer = Buffer.from(bytes)
 
         const contentExtractor =
-            this.fileContentExtractorFactory.create(fileExtension)
+            this.fileContentExtractorFactory.create(fileMimeType)
 
         const content = await contentExtractor.extractText(buffer)
 
@@ -113,14 +113,14 @@ export class AddTemplateByUploadUseCase {
             )
         }
 
-        const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
+        const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
 
         const newTemplateInput = {
             inputMethod: INPUT_METHOD.UPLOAD,
             driveFileId: null,
             storageFileUrl: path,
             fileName: input.file.name,
-            fileExtension,
+            fileMimeType,
             variables: uniqueVariables,
             thumbnailUrl: null,
         }
@@ -131,7 +131,7 @@ export class AddTemplateByUploadUseCase {
             buffer,
             bucketName: process.env.CERTIFICATES_BUCKET!,
             objectName: path,
-            mimeType: fileExtension,
+            mimeType: fileMimeType,
         })
 
         await this.transactionManager.run(async () => {

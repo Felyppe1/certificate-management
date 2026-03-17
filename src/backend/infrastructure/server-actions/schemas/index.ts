@@ -1,7 +1,7 @@
 import z from 'zod'
 import {
     MAX_TEMPLATE_BYTES_SIZE,
-    TEMPLATE_FILE_EXTENSION,
+    TEMPLATE_FILE_MIME_TYPE,
 } from '@/backend/domain/template'
 import { MAX_DATA_SOURCE_BYTES_SIZE } from '@/backend/domain/data-source'
 
@@ -139,8 +139,8 @@ export const createWriteBucketSignedUrlSchema = z.object({
     certificateId: z.string().min(1),
     fileName: z.string().min(1),
     mimeType: z.enum([
-        TEMPLATE_FILE_EXTENSION.PPTX,
-        TEMPLATE_FILE_EXTENSION.DOCX,
+        TEMPLATE_FILE_MIME_TYPE.PPTX,
+        TEMPLATE_FILE_MIME_TYPE.DOCX,
     ]),
     type: z.enum(['TEMPLATE']),
 })

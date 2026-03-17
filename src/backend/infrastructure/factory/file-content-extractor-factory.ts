@@ -6,24 +6,24 @@ import {
 import { DocxContentExtractorStrategy } from './strategy/docx-content-extractor-strategy'
 import { PptxContentExtractorStrategy } from './strategy/pptx-content-extractor-strategy'
 import { IFileContentExtractorFactory } from '../../application/interfaces/ifile-content-extractor-factory'
-import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
+import { TEMPLATE_FILE_MIME_TYPE } from '@/backend/domain/template'
 
 export class FileContentExtractorFactory
     implements IFileContentExtractorFactory
 {
     create(
-        fileExtension: TEMPLATE_FILE_EXTENSION,
+        fileMimeType: TEMPLATE_FILE_MIME_TYPE,
     ): IFileContentExtractorStrategy {
         if (
-            fileExtension === TEMPLATE_FILE_EXTENSION.PPTX ||
-            fileExtension === TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES
+            fileMimeType === TEMPLATE_FILE_MIME_TYPE.PPTX ||
+            fileMimeType === TEMPLATE_FILE_MIME_TYPE.GOOGLE_SLIDES
         ) {
             return new PptxContentExtractorStrategy()
         }
 
         if (
-            fileExtension === TEMPLATE_FILE_EXTENSION.DOCX ||
-            fileExtension === TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS
+            fileMimeType === TEMPLATE_FILE_MIME_TYPE.DOCX ||
+            fileMimeType === TEMPLATE_FILE_MIME_TYPE.GOOGLE_DOCS
         ) {
             return new DocxContentExtractorStrategy()
         }

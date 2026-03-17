@@ -1,5 +1,5 @@
 import { INPUT_METHOD } from '../domain/certificate'
-import { Template, TEMPLATE_FILE_EXTENSION } from '../domain/template'
+import { Template, TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
 import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
@@ -17,10 +17,10 @@ import { ITransactionManager } from './interfaces/repository/itransaction-manage
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 
 const MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
-    [TEMPLATE_FILE_EXTENSION.DOCX]: 'docx',
-    [TEMPLATE_FILE_EXTENSION.PPTX]: 'pptx',
-    [TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS]: 'docx',
-    [TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES]: 'pptx',
+    [TEMPLATE_FILE_MIME_TYPE.DOCX]: 'docx',
+    [TEMPLATE_FILE_MIME_TYPE.PPTX]: 'pptx',
+    [TEMPLATE_FILE_MIME_TYPE.GOOGLE_DOCS]: 'docx',
+    [TEMPLATE_FILE_MIME_TYPE.GOOGLE_SLIDES]: 'pptx',
 }
 
 interface AddTemplateByUrlUseCaseInput {
@@ -69,12 +69,12 @@ export class AddTemplateByUrlUseCase {
             )
         }
 
-        const { name, fileExtension, thumbnailUrl } =
+        const { name, fileMimeType, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
             })
 
-        if (!Template.isValidFileExtension(fileExtension)) {
+        if (!Template.isValidFileExtension(fileMimeType)) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE,
             )
@@ -82,11 +82,11 @@ export class AddTemplateByUrlUseCase {
 
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
-            fileExtension: fileExtension,
+            fileMimeType: fileMimeType,
         })
 
         const contentExtractor =
-            this.fileContentExtractorFactory.create(fileExtension)
+            this.fileContentExtractorFactory.create(fileMimeType)
 
         const content = await contentExtractor.extractText(buffer)
 
@@ -128,7 +128,7 @@ export class AddTemplateByUrlUseCase {
             )
         }
 
-        const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
+        const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
 
         const newTemplateInput = {
             driveFileId,
@@ -136,7 +136,7 @@ export class AddTemplateByUrlUseCase {
             inputMethod: INPUT_METHOD.URL,
             fileName: name,
             variables: uniqueVariables,
-            fileExtension,
+            fileMimeType,
             thumbnailUrl,
         }
 
@@ -146,7 +146,7 @@ export class AddTemplateByUrlUseCase {
             buffer,
             bucketName: process.env.CERTIFICATES_BUCKET!,
             objectName: path,
-            mimeType: fileExtension,
+            mimeType: fileMimeType,
         })
 
         await this.transactionManager.run(async () => {

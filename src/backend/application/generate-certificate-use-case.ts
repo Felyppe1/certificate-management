@@ -60,7 +60,7 @@ export class RetryDataSourceRowUseCase {
                     certificateEmissionData.variableColumnMapping,
                 template: {
                     storageFileUrl: template!.storageFileUrl,
-                    fileExtension: template!.fileExtension,
+                    fileMimeType: template!.fileMimeType,
                     variables: template!.variables,
                 },
                 dataSource: {

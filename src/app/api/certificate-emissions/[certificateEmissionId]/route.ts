@@ -1,12 +1,9 @@
 import { GetCertificateEmissionUseCase } from '@/backend/application/get-certificate-emission-use-case'
 import { UpdateCertificateEmissionUseCase } from '@/backend/application/update-certificate-emission-use-case'
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
-import {
-    ColumnType,
-    DATA_SOURCE_FILE_EXTENSION,
-} from '@/backend/domain/data-source'
+import { ColumnType, DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
-import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
+import { TEMPLATE_FILE_MIME_TYPE } from '@/backend/domain/template'
 
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
@@ -38,7 +35,7 @@ export interface GetCertificateEmissionControllerResponse {
             storageFileUrl: string | null
             inputMethod: INPUT_METHOD
             fileName: string
-            fileExtension: TEMPLATE_FILE_EXTENSION
+            fileMimeType: TEMPLATE_FILE_MIME_TYPE
             variables: string[]
             thumbnailUrl: string | null
         } | null
@@ -47,7 +44,7 @@ export interface GetCertificateEmissionControllerResponse {
             storageFileUrl: string | null
             inputMethod: INPUT_METHOD
             fileName: string
-            fileExtension: DATA_SOURCE_FILE_EXTENSION
+            fileMimeType: DATA_SOURCE_MIME_TYPE
             columns: {
                 name: string
                 type: ColumnType

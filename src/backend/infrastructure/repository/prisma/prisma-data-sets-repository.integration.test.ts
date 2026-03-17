@@ -10,10 +10,7 @@ import {
     CERTIFICATE_STATUS,
     INPUT_METHOD,
 } from '@/backend/domain/certificate'
-import {
-    DATA_SOURCE_FILE_EXTENSION,
-    DataSource,
-} from '@/backend/domain/data-source'
+import { DATA_SOURCE_MIME_TYPE, DataSource } from '@/backend/domain/data-source'
 import { PrismaCertificatesRepository } from './prisma-certificates-repository'
 import { PrismaUsersRepository } from './prisma-users-repository'
 
@@ -58,7 +55,7 @@ describe('PrismaDataSetsRepository Integration Tests', () => {
             template: null,
             dataSource: new DataSource({
                 fileName: 'filename.csv',
-                fileExtension: DATA_SOURCE_FILE_EXTENSION.CSV,
+                fileMimeType: DATA_SOURCE_MIME_TYPE.CSV,
                 thumbnailUrl: null,
                 driveFileId: '1',
                 storageFileUrl: null,

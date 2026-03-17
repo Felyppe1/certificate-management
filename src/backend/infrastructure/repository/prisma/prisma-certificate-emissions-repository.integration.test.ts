@@ -7,7 +7,7 @@ import {
     INPUT_METHOD,
 } from '@/backend/domain/certificate'
 import {
-    DATA_SOURCE_FILE_EXTENSION,
+    DATA_SOURCE_MIME_TYPE,
     DataSource,
     DataSourceInput,
 } from '@/backend/domain/data-source'
@@ -15,14 +15,14 @@ import { PrismaCertificatesRepository } from './prisma-certificates-repository'
 import { PrismaUsersRepository } from './prisma-users-repository'
 import {
     Template,
-    TEMPLATE_FILE_EXTENSION,
+    TEMPLATE_FILE_MIME_TYPE,
     TemplateInput,
 } from '@/backend/domain/template'
 
 const createTemplateData = (
     overrides?: Partial<TemplateInput>,
 ): TemplateInput => ({
-    fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
+    fileMimeType: TEMPLATE_FILE_MIME_TYPE.DOCX,
     inputMethod: INPUT_METHOD.URL,
     driveFileId: '1',
     storageFileUrl: null,
@@ -35,7 +35,7 @@ const createTemplateData = (
 const createDataSourceData = (
     overrides?: Partial<DataSourceInput>,
 ): DataSourceInput => ({
-    fileExtension: DATA_SOURCE_FILE_EXTENSION.CSV,
+    fileMimeType: DATA_SOURCE_MIME_TYPE.CSV,
     inputMethod: INPUT_METHOD.URL,
     driveFileId: '1',
     storageFileUrl: null,
@@ -118,7 +118,7 @@ describe('PrismaCertificateEmissionsRepository Integration Tests', () => {
 
         expect(createdTemplate).toEqual({
             certificate_emission_id: '1',
-            file_extension: TEMPLATE_FILE_EXTENSION.DOCX,
+            file_extension: TEMPLATE_FILE_MIME_TYPE.DOCX,
             input_method: INPUT_METHOD.URL,
             drive_file_id: '1',
             storage_file_url: null,
@@ -166,7 +166,7 @@ describe('PrismaCertificateEmissionsRepository Integration Tests', () => {
 
         expect(createdDataSource).toEqual({
             certificate_emission_id: '1',
-            file_extension: DATA_SOURCE_FILE_EXTENSION.CSV,
+            file_extension: DATA_SOURCE_MIME_TYPE.CSV,
             input_method: INPUT_METHOD.URL,
             drive_file_id: '1',
             storage_file_url: null,

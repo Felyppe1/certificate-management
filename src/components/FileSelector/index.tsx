@@ -21,8 +21,8 @@ import { refreshGoogleAccessTokenAction } from '@/backend/infrastructure/server-
 // import { createWriteBucketSignedUrlAction } from '@/backend/infrastructure/server-actions/create-write-bucket-signed-url-action'
 import { FileRejection, useDropzone } from 'react-dropzone'
 import { cn } from '@/lib/utils'
-import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
-import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
+import { DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
+import { TEMPLATE_FILE_MIME_TYPE } from '@/backend/domain/template'
 import { GoogleDriveIcon } from '../svg/GoogleDriveIcon'
 import { toast } from 'sonner'
 import { useGoogleRelogin } from '../useGoogleRelogin'
@@ -102,12 +102,12 @@ export function FileSelector({
         const file = acceptedFiles[0]
 
         if (
-            file.type != TEMPLATE_FILE_EXTENSION.DOCX &&
-            file.type != TEMPLATE_FILE_EXTENSION.PPTX &&
-            file.type != DATA_SOURCE_FILE_EXTENSION.CSV &&
-            file.type != DATA_SOURCE_FILE_EXTENSION.XLSX &&
-            file.type != DATA_SOURCE_FILE_EXTENSION.PNG &&
-            file.type != DATA_SOURCE_FILE_EXTENSION.JPEG
+            file.type != TEMPLATE_FILE_MIME_TYPE.DOCX &&
+            file.type != TEMPLATE_FILE_MIME_TYPE.PPTX &&
+            file.type != DATA_SOURCE_MIME_TYPE.CSV &&
+            file.type != DATA_SOURCE_MIME_TYPE.XLSX &&
+            file.type != DATA_SOURCE_MIME_TYPE.PNG &&
+            file.type != DATA_SOURCE_MIME_TYPE.JPEG
         ) {
             toast.error('Formato de arquivo não suportado')
             return
@@ -146,14 +146,14 @@ export function FileSelector({
         accept:
             type === 'template'
                 ? {
-                      [TEMPLATE_FILE_EXTENSION.PPTX]: ['.pptx'],
-                      [TEMPLATE_FILE_EXTENSION.DOCX]: ['.docx'],
+                      [TEMPLATE_FILE_MIME_TYPE.PPTX]: ['.pptx'],
+                      [TEMPLATE_FILE_MIME_TYPE.DOCX]: ['.docx'],
                   }
                 : {
-                      [DATA_SOURCE_FILE_EXTENSION.CSV]: ['.csv'],
-                      [DATA_SOURCE_FILE_EXTENSION.XLSX]: ['.xlsx'],
-                      [DATA_SOURCE_FILE_EXTENSION.PNG]: ['.png'],
-                      [DATA_SOURCE_FILE_EXTENSION.JPEG]: ['.jpeg', '.jpg'],
+                      [DATA_SOURCE_MIME_TYPE.CSV]: ['.csv'],
+                      [DATA_SOURCE_MIME_TYPE.XLSX]: ['.xlsx'],
+                      [DATA_SOURCE_MIME_TYPE.PNG]: ['.png'],
+                      [DATA_SOURCE_MIME_TYPE.JPEG]: ['.jpeg', '.jpg'],
                   },
     })
 
@@ -392,17 +392,17 @@ export function FileSelector({
                         <drive-picker-docs-view
                             mime-types={(type === 'template'
                                 ? [
-                                      TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS,
-                                      TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES,
-                                      TEMPLATE_FILE_EXTENSION.DOCX,
-                                      TEMPLATE_FILE_EXTENSION.PPTX,
+                                      TEMPLATE_FILE_MIME_TYPE.GOOGLE_DOCS,
+                                      TEMPLATE_FILE_MIME_TYPE.GOOGLE_SLIDES,
+                                      TEMPLATE_FILE_MIME_TYPE.DOCX,
+                                      TEMPLATE_FILE_MIME_TYPE.PPTX,
                                   ]
                                 : [
-                                      DATA_SOURCE_FILE_EXTENSION.CSV,
-                                      DATA_SOURCE_FILE_EXTENSION.XLSX,
-                                      DATA_SOURCE_FILE_EXTENSION.GOOGLE_SHEETS,
-                                      DATA_SOURCE_FILE_EXTENSION.PNG,
-                                      DATA_SOURCE_FILE_EXTENSION.JPEG,
+                                      DATA_SOURCE_MIME_TYPE.CSV,
+                                      DATA_SOURCE_MIME_TYPE.XLSX,
+                                      DATA_SOURCE_MIME_TYPE.GOOGLE_SHEETS,
+                                      DATA_SOURCE_MIME_TYPE.PNG,
+                                      DATA_SOURCE_MIME_TYPE.JPEG,
                                   ]
                             ).join(',')}
                         ></drive-picker-docs-view>

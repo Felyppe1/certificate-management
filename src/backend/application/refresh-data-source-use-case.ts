@@ -103,7 +103,7 @@ export class RefreshDataSourceUseCase {
         }
 
         // TODO: should it be a domain service?
-        const { name, fileExtension, thumbnailUrl } =
+        const { name, fileMimeType, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
                 ...(certificate.getDataSourceInputMethod() ===
@@ -114,7 +114,7 @@ export class RefreshDataSourceUseCase {
                 }),
             })
 
-        if (!DataSource.isValidFileExtension(fileExtension)) {
+        if (!DataSource.isValidFileExtension(fileMimeType)) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
             )
@@ -122,7 +122,7 @@ export class RefreshDataSourceUseCase {
 
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
-            fileExtension: fileExtension,
+            fileMimeType: fileMimeType,
             ...(certificate.getDataSourceInputMethod() ===
                 INPUT_METHOD.GOOGLE_DRIVE && {
                 accessToken: externalAccount?.accessToken,
@@ -130,7 +130,7 @@ export class RefreshDataSourceUseCase {
         })
 
         const contentExtractor =
-            this.spreadsheetContentExtractorFactory.create(fileExtension)
+            this.spreadsheetContentExtractorFactory.create(fileMimeType)
 
         const { columns, rows } = await contentExtractor.extractColumns(buffer)
 
@@ -142,7 +142,7 @@ export class RefreshDataSourceUseCase {
                 driveFileId,
                 storageFileUrl: null,
                 fileName: name,
-                fileExtension,
+                fileMimeType,
                 inputMethod: certificate.getDataSourceInputMethod()!,
                 thumbnailUrl,
                 columnsRow: 1,

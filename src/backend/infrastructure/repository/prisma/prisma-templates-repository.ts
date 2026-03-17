@@ -2,7 +2,7 @@
 // import {
 //     INPUT_METHOD,
 //     Template,
-//     TEMPLATE_FILE_EXTENSION,
+//     TEMPLATE_FILE_MIME_TYPE,
 // } from '@/backend/domain/template'
 // import { prisma } from '.'
 
@@ -17,7 +17,7 @@
 //                 storage_file_url: serialized.storageFileUrl,
 //                 input_method: serialized.inputMethod,
 //                 file_name: serialized.fileName,
-//                 file_extension: serialized.fileExtension,
+//                 file_extension: serialized.fileMimeType,
 //                 TemplateVariable: {
 //                     createMany: {
 //                         data: serialized.variables.map(variable => ({
@@ -46,7 +46,7 @@
 //             storageFileUrl: template.storage_file_url,
 //             inputMethod: template.input_method as INPUT_METHOD,
 //             fileName: template.file_name,
-//             fileExtension: template.file_extension as TEMPLATE_FILE_EXTENSION,
+//             fileMimeType: template.file_extension as TEMPLATE_FILE_MIME_TYPE,
 //             variables: template.TemplateVariable.map(variable => variable.name),
 //         })
 //     }
@@ -67,7 +67,7 @@
 //                 storage_file_url: serialized.storageFileUrl,
 //                 input_method: serialized.inputMethod,
 //                 file_name: serialized.fileName,
-//                 file_extension: serialized.fileExtension,
+//                 file_extension: serialized.fileMimeType,
 //                 TemplateVariable: {
 //                     deleteMany: {},
 //                     createMany: {

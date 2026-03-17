@@ -16,7 +16,7 @@ import { GoBackButton } from '@/components/GoBackButton'
 interface Template {
     id: string
     fileName: string
-    fileExtension: 'DOCX' | 'GOOGLE_DOCS' | 'PPTX' | 'GOOGLE_SLIDES'
+    fileMimeType: 'DOCX' | 'GOOGLE_DOCS' | 'PPTX' | 'GOOGLE_SLIDES'
     variables: string[]
     driveFileId: string | null
     storageFileUrl: string | null
@@ -120,11 +120,11 @@ export default async function TemplateDetailsPage({
                             />
                             {/* <div className="w-24 h-32 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-lg flex items-center justify-center flex-shrink-0">
                                 <div className="text-center">
-                                    {getFileTypeIcon(template.fileExtension)}
+                                    {getFileTypeIcon(template.fileMimeType)}
                                     <div className="text-xs text-blue-600 mt-1 font-medium">
-                                        {template.fileExtension === 'GOOGLE_DOCS' ? 'DOCS' : 
-                                         template.fileExtension === 'GOOGLE_SLIDES' ? 'SLIDES' :
-                                         template.fileExtension}
+                                        {template.fileMimeType === 'GOOGLE_DOCS' ? 'DOCS' : 
+                                         template.fileMimeType === 'GOOGLE_SLIDES' ? 'SLIDES' :
+                                         template.fileMimeType}
                                     </div>
                                 </div>
                             </div> */}
@@ -141,16 +141,15 @@ export default async function TemplateDetailsPage({
                                     <Badge
                                         variant="secondary"
                                         className={getFileExtensionColor(
-                                            template.fileExtension,
+                                            template.fileMimeType,
                                         )}
                                     >
-                                        {template.fileExtension ===
-                                        'GOOGLE_DOCS'
+                                        {template.fileMimeType === 'GOOGLE_DOCS'
                                             ? 'Google Docs'
-                                            : template.fileExtension ===
+                                            : template.fileMimeType ===
                                                 'GOOGLE_SLIDES'
                                               ? 'Google Slides'
-                                              : template.fileExtension}
+                                              : template.fileMimeType}
                                     </Badge>
                                     <Badge variant="outline">
                                         {getInputMethodLabel(

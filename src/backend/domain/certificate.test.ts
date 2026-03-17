@@ -5,9 +5,9 @@ import {
     CertificateInput,
     INPUT_METHOD,
 } from './certificate'
-import { Template, TEMPLATE_FILE_EXTENSION, TemplateInput } from './template'
+import { Template, TEMPLATE_FILE_MIME_TYPE, TemplateInput } from './template'
 import {
-    DATA_SOURCE_FILE_EXTENSION,
+    DATA_SOURCE_MIME_TYPE,
     DataSource,
     DataSourceInput,
 } from './data-source'
@@ -16,7 +16,7 @@ const createTemplateData = (
     overrides?: Partial<TemplateInput>,
 ): TemplateInput => ({
     id: '1',
-    fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
+    fileMimeType: TEMPLATE_FILE_MIME_TYPE.DOCX,
     inputMethod: INPUT_METHOD.URL,
     driveFileId: '1',
     storageFileUrl: null,
@@ -30,7 +30,7 @@ const createDataSourceData = (
     overrides?: Partial<DataSourceInput>,
 ): DataSourceInput => ({
     id: '1',
-    fileExtension: DATA_SOURCE_FILE_EXTENSION.CSV,
+    fileMimeType: DATA_SOURCE_MIME_TYPE.CSV,
     inputMethod: INPUT_METHOD.URL,
     driveFileId: '1',
     storageFileUrl: null,

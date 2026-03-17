@@ -11,7 +11,7 @@ import {
     ValidationError,
 } from '../domain/error/validation-error'
 import { INPUT_METHOD } from '../domain/certificate'
-import { Template, TEMPLATE_FILE_EXTENSION } from '../domain/template'
+import { Template, TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor-factory'
@@ -23,10 +23,10 @@ import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-
 import { IBucket } from './interfaces/cloud/ibucket'
 
 const MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
-    [TEMPLATE_FILE_EXTENSION.DOCX]: 'docx',
-    [TEMPLATE_FILE_EXTENSION.PPTX]: 'pptx',
-    [TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS]: 'docx',
-    [TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES]: 'pptx',
+    [TEMPLATE_FILE_MIME_TYPE.DOCX]: 'docx',
+    [TEMPLATE_FILE_MIME_TYPE.PPTX]: 'pptx',
+    [TEMPLATE_FILE_MIME_TYPE.GOOGLE_DOCS]: 'docx',
+    [TEMPLATE_FILE_MIME_TYPE.GOOGLE_SLIDES]: 'pptx',
 }
 
 interface RefreshTemplateUseCaseInput {
@@ -112,7 +112,7 @@ export class RefreshTemplateUseCase {
         }
 
         // TODO: should it be a domain service?
-        const { name, fileExtension, thumbnailUrl } =
+        const { name, fileMimeType, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
                 ...(certificate.getTemplateInputMethod() ===
@@ -123,7 +123,7 @@ export class RefreshTemplateUseCase {
                 }),
             })
 
-        if (!Template.isValidFileExtension(fileExtension)) {
+        if (!Template.isValidFileExtension(fileMimeType)) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE,
             )
@@ -131,7 +131,7 @@ export class RefreshTemplateUseCase {
 
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
-            fileExtension: fileExtension,
+            fileMimeType: fileMimeType,
             ...(certificate.getTemplateInputMethod() ===
                 INPUT_METHOD.GOOGLE_DRIVE && {
                 accessToken: externalAccount?.accessToken,
@@ -139,7 +139,7 @@ export class RefreshTemplateUseCase {
         })
 
         const contentExtractor =
-            this.fileContentExtractorFactory.create(fileExtension)
+            this.fileContentExtractorFactory.create(fileMimeType)
 
         const content = await contentExtractor.extractText(buffer)
 
@@ -181,12 +181,12 @@ export class RefreshTemplateUseCase {
             )
         }
 
-        const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
+        const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
 
         const newTemplateInput = {
             driveFileId,
             storageFileUrl: path,
-            fileExtension: fileExtension,
+            fileMimeType: fileMimeType,
             inputMethod: certificate.getTemplateInputMethod()!,
             fileName: name,
             variables: uniqueVariables,
@@ -199,7 +199,7 @@ export class RefreshTemplateUseCase {
             buffer,
             bucketName: process.env.CERTIFICATES_BUCKET!,
             objectName: path,
-            mimeType: fileExtension,
+            mimeType: fileMimeType,
         })
 
         await this.transactionManager.run(async () => {

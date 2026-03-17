@@ -1,5 +1,5 @@
 import { CERTIFICATE_STATUS } from '../domain/certificate'
-import { ColumnType, DATA_SOURCE_FILE_EXTENSION } from '../domain/data-source'
+import { ColumnType, DATA_SOURCE_MIME_TYPE } from '../domain/data-source'
 import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
@@ -9,7 +9,7 @@ import {
     NotFoundError,
 } from '../domain/error/not-found-error'
 import { INPUT_METHOD } from '../domain/certificate'
-import { TEMPLATE_FILE_EXTENSION } from '../domain/template'
+import { TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
 import { prisma } from '../infrastructure/repository/prisma'
 import { EMAIL_ERROR_TYPE_ENUM, PROCESSING_STATUS_ENUM } from '../domain/email'
 import {
@@ -132,8 +132,8 @@ export class GetCertificateEmissionUseCase {
                       inputMethod: certificateEmission.Template
                           .input_method as INPUT_METHOD,
                       fileName: certificateEmission.Template.file_name,
-                      fileExtension: certificateEmission.Template
-                          .file_extension as TEMPLATE_FILE_EXTENSION,
+                      fileMimeType: certificateEmission.Template
+                          .file_extension as TEMPLATE_FILE_MIME_TYPE,
                       variables:
                           certificateEmission.Template.TemplateVariable.map(
                               variable => variable.name,
@@ -149,8 +149,8 @@ export class GetCertificateEmissionUseCase {
                       inputMethod: certificateEmission.DataSource
                           .input_method as INPUT_METHOD,
                       fileName: certificateEmission.DataSource.file_name,
-                      fileExtension: certificateEmission.DataSource
-                          .file_extension as DATA_SOURCE_FILE_EXTENSION,
+                      fileMimeType: certificateEmission.DataSource
+                          .file_extension as DATA_SOURCE_MIME_TYPE,
                       columns:
                           certificateEmission.DataSource.DataSourceColumn.map(
                               column => ({

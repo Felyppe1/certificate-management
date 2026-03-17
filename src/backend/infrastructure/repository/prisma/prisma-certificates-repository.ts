@@ -5,11 +5,8 @@ import {
     INPUT_METHOD,
 } from '@/backend/domain/certificate'
 import { COLUMN_TYPE, Prisma } from './client/client'
-import { Template, TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
-import {
-    DATA_SOURCE_FILE_EXTENSION,
-    DataSource,
-} from '@/backend/domain/data-source'
+import { Template, TEMPLATE_FILE_MIME_TYPE } from '@/backend/domain/template'
+import { DATA_SOURCE_MIME_TYPE, DataSource } from '@/backend/domain/data-source'
 import { TransactionClient } from './client/internal/prismaNamespace'
 import { isPrismaClient, PrismaExecutor } from '.'
 import { transactionStorage } from './prisma-transaction-manager'
@@ -210,7 +207,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                 storage_file_url: dataSource.storageFileUrl,
                                 input_method: dataSource.inputMethod,
                                 file_name: dataSource.fileName,
-                                file_extension: dataSource.fileExtension,
+                                file_extension: dataSource.fileMimeType,
                                 thumbnail_url: dataSource.thumbnailUrl,
                                 DataSourceColumn: {
                                     createMany: {
@@ -237,7 +234,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                 storage_file_url: template.storageFileUrl,
                                 input_method: template.inputMethod,
                                 file_name: template.fileName,
-                                file_extension: template.fileExtension,
+                                file_extension: template.fileMimeType,
                                 thumbnail_url: template.thumbnailUrl,
                                 TemplateVariable: {
                                     createMany: {
@@ -294,7 +291,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         //                         storage_file_url: dataSource.storageFileUrl,
         //                         input_method: dataSource.inputMethod,
         //                         file_name: dataSource.fileName,
-        //                         file_extension: dataSource.fileExtension,
+        //                         file_extension: dataSource.fileMimeType,
         //                         thumbnail_url: dataSource.thumbnailUrl,
         //                         DataSourceColumn: {
         //                             createMany: {
@@ -315,7 +312,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         //                         storage_file_url: template.storageFileUrl,
         //                         input_method: template.inputMethod,
         //                         file_name: template.fileName,
-        //                         file_extension: template.fileExtension,
+        //                         file_extension: template.fileMimeType,
         //                         thumbnail_url: template.thumbnailUrl,
         //                         TemplateVariable: {
         //                             createMany: {
@@ -410,7 +407,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                         storage_file_url: dataSource.storageFileUrl,
                         input_method: dataSource.inputMethod,
                         file_name: dataSource.fileName,
-                        file_extension: dataSource.fileExtension,
+                        file_extension: dataSource.fileMimeType,
                         thumbnail_url: dataSource.thumbnailUrl,
                         DataSourceColumn: {
                             createMany: {
@@ -430,7 +427,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                         storage_file_url: dataSource.storageFileUrl,
                         file_name: dataSource.fileName,
                         input_method: dataSource.inputMethod,
-                        file_extension: dataSource.fileExtension,
+                        file_extension: dataSource.fileMimeType,
                         thumbnail_url: dataSource.thumbnailUrl,
                         DataSourceColumn: {
                             upsert: dataSource.columns.map(column => ({
@@ -484,7 +481,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                     storage_file_url: template.storageFileUrl,
                                     input_method: template.inputMethod,
                                     file_name: template.fileName,
-                                    file_extension: template.fileExtension,
+                                    file_extension: template.fileMimeType,
                                     thumbnail_url: template.thumbnailUrl,
                                     TemplateVariable: {
                                         createMany: {
@@ -511,7 +508,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                     storage_file_url: template.storageFileUrl,
                                     file_name: template.fileName,
                                     input_method: template.inputMethod,
-                                    file_extension: template.fileExtension,
+                                    file_extension: template.fileMimeType,
                                     thumbnail_url: template.thumbnailUrl,
                                     TemplateVariable: {
                                         deleteMany: {},
@@ -582,7 +579,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         //                             storage_file_url: dataSource.storageFileUrl,
         //                             input_method: dataSource.inputMethod,
         //                             file_name: dataSource.fileName,
-        //                             file_extension: dataSource.fileExtension,
+        //                             file_extension: dataSource.fileMimeType,
         //                             thumbnail_url: dataSource.thumbnailUrl,
         //                             DataSourceColumn: {
         //                                 createMany: {
@@ -599,7 +596,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         //                             storage_file_url: dataSource.storageFileUrl,
         //                             file_name: dataSource.fileName,
         //                             input_method: dataSource.inputMethod,
-        //                             file_extension: dataSource.fileExtension,
+        //                             file_extension: dataSource.fileMimeType,
         //                             thumbnail_url: dataSource.thumbnailUrl,
         //                             DataSourceColumn: {
         //                                 deleteMany: {},
@@ -624,7 +621,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         //                             storage_file_url: template.storageFileUrl,
         //                             input_method: template.inputMethod,
         //                             file_name: template.fileName,
-        //                             file_extension: template.fileExtension,
+        //                             file_extension: template.fileMimeType,
         //                             thumbnail_url: template.thumbnailUrl,
         //                             TemplateVariable: {
         //                                 createMany: {
@@ -651,7 +648,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         //                             storage_file_url: template.storageFileUrl,
         //                             file_name: template.fileName,
         //                             input_method: template.inputMethod,
-        //                             file_extension: template.fileExtension,
+        //                             file_extension: template.fileMimeType,
         //                             thumbnail_url: template.thumbnailUrl,
         //                             TemplateVariable: {
         //                                 deleteMany: {},
@@ -721,8 +718,8 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                   inputMethod: certificate.Template
                       .input_method as INPUT_METHOD,
                   fileName: certificate.Template.file_name,
-                  fileExtension: certificate.Template
-                      .file_extension as TEMPLATE_FILE_EXTENSION,
+                  fileMimeType: certificate.Template
+                      .file_extension as TEMPLATE_FILE_MIME_TYPE,
                   variables: certificate.Template.TemplateVariable.map(
                       variable => variable.name,
                   ),
@@ -737,8 +734,8 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                   inputMethod: certificate.DataSource
                       .input_method as INPUT_METHOD,
                   fileName: certificate.DataSource.file_name,
-                  fileExtension: certificate.DataSource
-                      .file_extension as DATA_SOURCE_FILE_EXTENSION,
+                  fileMimeType: certificate.DataSource
+                      .file_extension as DATA_SOURCE_MIME_TYPE,
                   columns: certificate.DataSource.DataSourceColumn.map(
                       column => ({
                           name: column.name,

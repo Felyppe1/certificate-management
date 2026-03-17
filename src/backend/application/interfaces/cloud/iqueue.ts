@@ -1,5 +1,5 @@
 import { DataSourceColumn } from '@/backend/domain/data-source'
-import { TEMPLATE_FILE_EXTENSION } from '../../../domain/template'
+import { TEMPLATE_FILE_MIME_TYPE } from '../../../domain/template'
 
 export interface EnqueueGenerateCertificatePDFInput {
     certificateEmission: {
@@ -8,7 +8,7 @@ export interface EnqueueGenerateCertificatePDFInput {
         variableColumnMapping: Record<string, string | null> | null
         template: {
             storageFileUrl: string
-            fileExtension: TEMPLATE_FILE_EXTENSION
+            fileMimeType: TEMPLATE_FILE_MIME_TYPE
             variables: string[]
         }
         dataSource: {

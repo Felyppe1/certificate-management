@@ -1,6 +1,6 @@
 export interface DownloadFileInput {
     driveFileId: string
-    fileExtension: string
+    fileMimeType: string
     accessToken?: string
 }
 
@@ -12,7 +12,7 @@ export interface GetFileMetadataInput {
 
 export interface GetFileMetadataOutput {
     name: string
-    fileExtension: string
+    fileMimeType: string
     thumbnailUrl: string | null
 }
 

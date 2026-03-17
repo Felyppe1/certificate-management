@@ -1,4 +1,4 @@
-import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
+import { DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
 
 export interface ExtractColumns {
     columns: string[]
@@ -11,6 +11,6 @@ export interface ISpreadsheetContentExtractorStrategy {
 
 export interface ISpreadsheetContentExtractorFactory {
     create(
-        mimeType: DATA_SOURCE_FILE_EXTENSION,
+        mimeType: DATA_SOURCE_MIME_TYPE,
     ): ISpreadsheetContentExtractorStrategy
 }

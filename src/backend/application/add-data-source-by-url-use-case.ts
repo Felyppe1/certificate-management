@@ -60,12 +60,12 @@ export class AddDataSourceByUrlUseCase {
             )
         }
 
-        const { name, fileExtension, thumbnailUrl } =
+        const { name, fileMimeType, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
             })
 
-        if (!DataSource.isValidFileExtension(fileExtension)) {
+        if (!DataSource.isValidFileExtension(fileMimeType)) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
             )
@@ -73,11 +73,11 @@ export class AddDataSourceByUrlUseCase {
 
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
-            fileExtension: fileExtension,
+            fileMimeType: fileMimeType,
         })
 
         const contentExtractor =
-            this.spreadsheetContentExtractorFactory.create(fileExtension)
+            this.spreadsheetContentExtractorFactory.create(fileMimeType)
 
         const { rows } = await contentExtractor.extractColumns(buffer)
 
@@ -93,7 +93,7 @@ export class AddDataSourceByUrlUseCase {
                 driveFileId,
                 storageFileUrl: null,
                 fileName: name,
-                fileExtension,
+                fileMimeType,
                 inputMethod: INPUT_METHOD.URL,
                 thumbnailUrl,
                 columnsRow: 1,
@@ -107,7 +107,7 @@ export class AddDataSourceByUrlUseCase {
         //     storageFileUrl: null,
         //     inputMethod: INPUT_METHOD.URL,
         //     fileName: name,
-        //     fileExtension,
+        //     fileMimeType,
         //     thumbnailUrl,
         //     rows,
         //     columnsRow: 1,

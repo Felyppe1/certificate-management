@@ -8,13 +8,13 @@ import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
 } from '../domain/error/forbidden-error'
-import { TEMPLATE_FILE_EXTENSION } from '../domain/template'
+import { TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
 
 interface CreateWriteBucketSignedUrlUseCaseInput {
     userId: string
     certificateId: string
     fileName: string
-    mimeType: TEMPLATE_FILE_EXTENSION.PPTX | TEMPLATE_FILE_EXTENSION.DOCX
+    mimeType: TEMPLATE_FILE_MIME_TYPE.PPTX | TEMPLATE_FILE_MIME_TYPE.DOCX
     type: 'TEMPLATE'
 }
 
@@ -38,7 +38,7 @@ export class CreateWriteBucketSignedUrlUseCase {
         }
 
         const extension =
-            input.mimeType === TEMPLATE_FILE_EXTENSION.PPTX ? 'pptx' : 'docx'
+            input.mimeType === TEMPLATE_FILE_MIME_TYPE.PPTX ? 'pptx' : 'docx'
 
         // TODO: it's not this path
         const path = `users/${input.userId}/certificates/${certificate.getId()}/original.${extension}`

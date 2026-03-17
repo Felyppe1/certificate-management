@@ -1,8 +1,8 @@
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 import { GENERATION_STATUS } from '@/backend/domain/data-set'
-import { DATA_SOURCE_FILE_EXTENSION } from '@/backend/domain/data-source'
+import { DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
 import { INPUT_METHOD } from '../../../domain/certificate'
-import { TEMPLATE_FILE_EXTENSION } from '../../../domain/template'
+import { TEMPLATE_FILE_MIME_TYPE } from '../../../domain/template'
 
 export interface TriggerGenerateCertificatePDFsInput {
     certificateEmission: {
@@ -18,7 +18,7 @@ export interface TriggerGenerateCertificatePDFsInput {
             storageFileUrl: string | null
             inputMethod: INPUT_METHOD
             fileName: string
-            fileExtension: TEMPLATE_FILE_EXTENSION
+            fileMimeType: TEMPLATE_FILE_MIME_TYPE
             variables: string[]
             thumbnailUrl: string | null
         }
@@ -27,7 +27,7 @@ export interface TriggerGenerateCertificatePDFsInput {
             storageFileUrl: string | null
             inputMethod: INPUT_METHOD
             fileName: string
-            fileExtension: DATA_SOURCE_FILE_EXTENSION
+            fileMimeType: DATA_SOURCE_MIME_TYPE
             columns: string[]
             thumbnailUrl: string | null
             dataSet: {

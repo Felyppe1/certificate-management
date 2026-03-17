@@ -20,7 +20,7 @@ const UNSAFE_TYPE_CHANGE: Record<ColumnType, ColumnType[]> = {
     array: ['number', 'boolean', 'date'],
 }
 
-export enum DATA_SOURCE_FILE_EXTENSION {
+export enum DATA_SOURCE_MIME_TYPE {
     CSV = 'text/csv',
     XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     ODS = 'application/vnd.oasis.opendocument.spreadsheet',
@@ -46,7 +46,7 @@ export interface DataSourceInput {
     storageFileUrl: string | null
     inputMethod: INPUT_METHOD
     fileName: string
-    fileExtension: DATA_SOURCE_FILE_EXTENSION
+    fileMimeType: DATA_SOURCE_MIME_TYPE
     thumbnailUrl: string | null
     columnsRow: number
     dataRowStart: number
@@ -68,7 +68,7 @@ export class DataSource {
     private storageFileUrl: string | null
     private inputMethod: INPUT_METHOD
     private fileName: string
-    private fileExtension: DATA_SOURCE_FILE_EXTENSION
+    private fileMimeType: DATA_SOURCE_MIME_TYPE
     private columns: DataSourceColumn[]
     private columnsRow: number
     private dataRowStart: number
@@ -97,8 +97,8 @@ export class DataSource {
             throw new Error('DataSource file name is required')
         }
 
-        if (!data.fileExtension) {
-            throw new Error('DataSource file extension is required')
+        if (!data.fileMimeType) {
+            throw new Error('DataSource mimetype is required')
         }
 
         if (!data.columnsRow) {
@@ -130,7 +130,7 @@ export class DataSource {
         this.storageFileUrl = data.storageFileUrl
         this.inputMethod = data.inputMethod
         this.fileName = data.fileName
-        this.fileExtension = data.fileExtension
+        this.fileMimeType = data.fileMimeType
         this.thumbnailUrl = data.thumbnailUrl
         this.columnsRow = data.columnsRow ?? 1
         this.dataRowStart = data.dataRowStart ?? 2
@@ -356,7 +356,7 @@ export class DataSource {
     //     }
 
     //     if (data.fileName) this.fileName = data.fileName
-    //     if (data.fileExtension) this.fileExtension = data.fileExtension
+    //     if (data.fileMimeType) this.fileMimeType = data.fileMimeType
     //     if (data.columns) this.columns = data.columns
     //     if (data.thumbnailUrl !== undefined)
     //         this.thumbnailUrl = data.thumbnailUrl
@@ -426,10 +426,10 @@ export class DataSource {
     // }
 
     static isValidFileExtension(
-        fileExtension: string,
-    ): fileExtension is DATA_SOURCE_FILE_EXTENSION {
-        return Object.values(DATA_SOURCE_FILE_EXTENSION).includes(
-            fileExtension as DATA_SOURCE_FILE_EXTENSION,
+        fileMimeType: string,
+    ): fileMimeType is DATA_SOURCE_MIME_TYPE {
+        return Object.values(DATA_SOURCE_MIME_TYPE).includes(
+            fileMimeType as DATA_SOURCE_MIME_TYPE,
         )
     }
 
@@ -439,7 +439,7 @@ export class DataSource {
             storageFileUrl: this.storageFileUrl,
             inputMethod: this.inputMethod,
             fileName: this.fileName,
-            fileExtension: this.fileExtension,
+            fileMimeType: this.fileMimeType,
             columns: this.columns,
             thumbnailUrl: this.thumbnailUrl,
             columnsRow: this.columnsRow,

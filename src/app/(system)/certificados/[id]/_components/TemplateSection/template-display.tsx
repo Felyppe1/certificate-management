@@ -15,7 +15,7 @@ import { refreshTemplateAction } from '@/backend/infrastructure/server-actions/r
 import { deleteTemplateAction } from '@/backend/infrastructure/server-actions/delete-template-action'
 import { downloadTemplateAction } from '@/backend/infrastructure/server-actions/download-template-action'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
-import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
+import { TEMPLATE_FILE_MIME_TYPE } from '@/backend/domain/template'
 import { SourceIcon } from '@/components/svg/SourceIcon'
 import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
 import { toast } from 'sonner'
@@ -40,7 +40,7 @@ interface TemplateDisplayProps {
         storageFileUrl: string | null
         inputMethod: INPUT_METHOD
         fileName: string
-        fileExtension: TEMPLATE_FILE_EXTENSION
+        fileMimeType: TEMPLATE_FILE_MIME_TYPE
         variables: string[]
         thumbnailUrl: string | null
     }

@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import {
-    DATA_SOURCE_FILE_EXTENSION,
+    DATA_SOURCE_MIME_TYPE,
     ColumnType,
     MAX_DATA_SOURCE_ROWS,
 } from '@/backend/domain/data-source'
@@ -36,7 +36,7 @@ interface DataSourceSectionProps {
         storageFileUrl: string | null
         inputMethod: INPUT_METHOD
         fileName: string
-        fileExtension: DATA_SOURCE_FILE_EXTENSION
+        fileMimeType: DATA_SOURCE_MIME_TYPE
         columns: {
             name: string
             type: ColumnType

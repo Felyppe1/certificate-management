@@ -1,5 +1,5 @@
 import { INPUT_METHOD } from '../domain/certificate'
-import { DATA_SOURCE_FILE_EXTENSION, DataSource } from '../domain/data-source'
+import { DATA_SOURCE_MIME_TYPE, DataSource } from '../domain/data-source'
 import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
@@ -26,8 +26,8 @@ interface AddDataSourceByUploadUseCaseInput {
 }
 
 const MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
-    [DATA_SOURCE_FILE_EXTENSION.CSV]: 'csv',
-    [DATA_SOURCE_FILE_EXTENSION.XLSX]: 'xlsx',
+    [DATA_SOURCE_MIME_TYPE.CSV]: 'csv',
+    [DATA_SOURCE_MIME_TYPE.XLSX]: 'xlsx',
 }
 
 export class AddDataSourceByUploadUseCase {
@@ -55,9 +55,9 @@ export class AddDataSourceByUploadUseCase {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
-        const fileExtension = input.file.type
+        const fileMimeType = input.file.type
 
-        if (!DataSource.isValidFileExtension(fileExtension)) {
+        if (!DataSource.isValidFileExtension(fileMimeType)) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
             )
@@ -67,20 +67,20 @@ export class AddDataSourceByUploadUseCase {
         const buffer = Buffer.from(bytes)
 
         const contentExtractor =
-            this.spreadsheetContentExtractorFactory.create(fileExtension)
+            this.spreadsheetContentExtractorFactory.create(fileMimeType)
 
         const { rows } = await contentExtractor.extractColumns(buffer)
 
         const previousDataSourceStorageFileUrl =
             certificate.getDataSourceStorageFileUrl()
 
-        const path = `users/${input.userId}/certificates/${certificate.getId()}/data-source.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
+        const path = `users/${input.userId}/certificates/${certificate.getId()}/data-source.${MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
 
         await this.bucket.uploadObject({
             buffer,
             bucketName: process.env.CERTIFICATES_BUCKET!,
             objectName: path,
-            mimeType: fileExtension,
+            mimeType: fileMimeType,
         })
 
         const dataSourceDomainService = new DataSourceDomainService()
@@ -92,7 +92,7 @@ export class AddDataSourceByUploadUseCase {
                 driveFileId: null,
                 storageFileUrl: path,
                 fileName: input.file.name,
-                fileExtension,
+                fileMimeType,
                 thumbnailUrl: null,
                 columnsRow: 1,
                 dataRowStart: 2,

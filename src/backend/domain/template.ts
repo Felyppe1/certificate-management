@@ -2,7 +2,7 @@ import { INPUT_METHOD } from './certificate'
 
 export const MAX_TEMPLATE_BYTES_SIZE = 5 * 1024 * 1024 // 5MB
 
-export enum TEMPLATE_FILE_EXTENSION {
+export enum TEMPLATE_FILE_MIME_TYPE {
     PPTX = 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     GOOGLE_SLIDES = 'application/vnd.google-apps.presentation',
     GOOGLE_DOCS = 'application/vnd.google-apps.document',
@@ -14,7 +14,7 @@ export interface TemplateInput {
     storageFileUrl: string
     inputMethod: INPUT_METHOD
     fileName: string
-    fileExtension: TEMPLATE_FILE_EXTENSION
+    fileMimeType: TEMPLATE_FILE_MIME_TYPE
     thumbnailUrl: string | null
     variables: string[]
 }
@@ -31,7 +31,7 @@ export class Template {
     private storageFileUrl: string
     private inputMethod: INPUT_METHOD
     private fileName: string
-    private fileExtension: TEMPLATE_FILE_EXTENSION
+    private fileMimeType: TEMPLATE_FILE_MIME_TYPE
     private variables: string[]
     private thumbnailUrl: string | null
 
@@ -49,8 +49,8 @@ export class Template {
             throw new Error('Template file name is required')
         }
 
-        if (!data.fileExtension) {
-            throw new Error('Template file extension is required')
+        if (!data.fileMimeType) {
+            throw new Error('Template file mimetype is required')
         }
 
         if (data.driveFileId) {
@@ -65,7 +65,7 @@ export class Template {
         this.storageFileUrl = data.storageFileUrl
         this.inputMethod = data.inputMethod
         this.fileName = data.fileName
-        this.fileExtension = data.fileExtension
+        this.fileMimeType = data.fileMimeType
         this.variables = data.variables
         this.thumbnailUrl = data.thumbnailUrl
     }
@@ -107,7 +107,7 @@ export class Template {
         }
 
         if (data.fileName) this.fileName = data.fileName
-        if (data.fileExtension) this.fileExtension = data.fileExtension
+        if (data.fileMimeType) this.fileMimeType = data.fileMimeType
         if (data.variables) this.variables = data.variables
         if (data.thumbnailUrl !== undefined)
             this.thumbnailUrl = data.thumbnailUrl
@@ -138,10 +138,10 @@ export class Template {
     }
 
     static isValidFileExtension(
-        fileExtension: string,
-    ): fileExtension is TEMPLATE_FILE_EXTENSION {
-        return Object.values(TEMPLATE_FILE_EXTENSION).includes(
-            fileExtension as TEMPLATE_FILE_EXTENSION,
+        fileMimeType: string,
+    ): fileMimeType is TEMPLATE_FILE_MIME_TYPE {
+        return Object.values(TEMPLATE_FILE_MIME_TYPE).includes(
+            fileMimeType as TEMPLATE_FILE_MIME_TYPE,
         )
     }
 
@@ -151,7 +151,7 @@ export class Template {
             storageFileUrl: this.storageFileUrl,
             inputMethod: this.inputMethod,
             fileName: this.fileName,
-            fileExtension: this.fileExtension,
+            fileMimeType: this.fileMimeType,
             variables: this.variables,
             thumbnailUrl: this.thumbnailUrl,
         }

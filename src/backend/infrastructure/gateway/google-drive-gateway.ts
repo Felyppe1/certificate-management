@@ -10,11 +10,11 @@ import {
 } from '@/backend/domain/error/validation-error'
 import {
     MAX_TEMPLATE_BYTES_SIZE,
-    TEMPLATE_FILE_EXTENSION,
+    TEMPLATE_FILE_MIME_TYPE,
 } from '@/backend/domain/template'
 import { google } from 'googleapis'
 import {
-    DATA_SOURCE_FILE_EXTENSION,
+    DATA_SOURCE_MIME_TYPE,
     MAX_DATA_SOURCE_BYTES_SIZE,
 } from '@/backend/domain/data-source'
 import {
@@ -63,7 +63,7 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
 
             return {
                 name: file.data.name!,
-                fileExtension: mimeType,
+                fileMimeType: mimeType,
                 thumbnailUrl,
             }
         } catch (error: any) {
@@ -79,33 +79,33 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
 
     async downloadFile({
         driveFileId,
-        fileExtension,
+        fileMimeType,
         accessToken,
     }: DownloadFileInput) {
         let url = ''
         let isTemplateFile = false
 
         // TODO: deveria exigir a tipagem dos dois ENUMS?
-        switch (fileExtension) {
-            case TEMPLATE_FILE_EXTENSION.DOCX:
-            case TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS:
+        switch (fileMimeType) {
+            case TEMPLATE_FILE_MIME_TYPE.DOCX:
+            case TEMPLATE_FILE_MIME_TYPE.GOOGLE_DOCS:
                 isTemplateFile = true
                 url = `https://docs.google.com/document/d/${driveFileId}/export?format=docx`
                 break
-            case TEMPLATE_FILE_EXTENSION.PPTX:
-            case TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES:
+            case TEMPLATE_FILE_MIME_TYPE.PPTX:
+            case TEMPLATE_FILE_MIME_TYPE.GOOGLE_SLIDES:
                 isTemplateFile = true
                 url = `https://docs.google.com/presentation/d/${driveFileId}/export?format=pptx`
                 break
-            case DATA_SOURCE_FILE_EXTENSION.XLSX:
+            case DATA_SOURCE_MIME_TYPE.XLSX:
                 url = `https://docs.google.com/spreadsheets/d/${driveFileId}/export?format=xlsx`
                 break
-            case DATA_SOURCE_FILE_EXTENSION.CSV:
-            case DATA_SOURCE_FILE_EXTENSION.GOOGLE_SHEETS:
+            case DATA_SOURCE_MIME_TYPE.CSV:
+            case DATA_SOURCE_MIME_TYPE.GOOGLE_SHEETS:
                 url = `https://docs.google.com/spreadsheets/d/${driveFileId}/export?format=csv`
                 break
-            case DATA_SOURCE_FILE_EXTENSION.PNG:
-            case DATA_SOURCE_FILE_EXTENSION.JPEG:
+            case DATA_SOURCE_MIME_TYPE.PNG:
+            case DATA_SOURCE_MIME_TYPE.JPEG:
                 url = accessToken
                     ? `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`
                     : `https://drive.google.com/uc?export=download&id=${driveFileId}`

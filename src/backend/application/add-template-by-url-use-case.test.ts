@@ -10,7 +10,7 @@ import {
     GetFileMetadataOutput,
     IGoogleDriveGateway,
 } from './interfaces/igoogle-drive-gateway'
-import { TEMPLATE_FILE_EXTENSION } from '../domain/template'
+import { TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
 import {
     IFileContentExtractorStrategy,
     IFileContentExtractorFactory,
@@ -72,7 +72,7 @@ describe('AddTemplateByUrlUseCase', () => {
             async getFileMetadata(): Promise<GetFileMetadataOutput> {
                 return {
                     name: 'filename',
-                    fileExtension: TEMPLATE_FILE_EXTENSION.DOCX,
+                    fileMimeType: TEMPLATE_FILE_MIME_TYPE.DOCX,
                     thumbnailUrl: null,
                 }
             }

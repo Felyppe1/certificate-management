@@ -1,5 +1,5 @@
 import { INPUT_METHOD } from '../domain/certificate'
-import { Template, TEMPLATE_FILE_EXTENSION } from '../domain/template'
+import { Template, TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor-factory'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
@@ -23,10 +23,10 @@ import {
 } from '../domain/error/forbidden-error'
 
 const MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
-    [TEMPLATE_FILE_EXTENSION.DOCX]: 'docx',
-    [TEMPLATE_FILE_EXTENSION.PPTX]: 'pptx',
-    [TEMPLATE_FILE_EXTENSION.GOOGLE_DOCS]: 'docx',
-    [TEMPLATE_FILE_EXTENSION.GOOGLE_SLIDES]: 'pptx',
+    [TEMPLATE_FILE_MIME_TYPE.DOCX]: 'docx',
+    [TEMPLATE_FILE_MIME_TYPE.PPTX]: 'pptx',
+    [TEMPLATE_FILE_MIME_TYPE.GOOGLE_DOCS]: 'docx',
+    [TEMPLATE_FILE_MIME_TYPE.GOOGLE_SLIDES]: 'pptx',
 }
 
 interface AddTemplateByDrivePickerUseCaseInput {
@@ -89,14 +89,14 @@ export class AddTemplateByDrivePickerUseCase {
             await this.externalUserAccountsRepository.update(externalAccount)
         }
 
-        const { name, fileExtension, thumbnailUrl } =
+        const { name, fileMimeType, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: input.fileId,
                 userAccessToken: externalAccount.accessToken,
                 userRefreshToken: externalAccount.refreshToken || undefined,
             })
 
-        if (!Template.isValidFileExtension(fileExtension)) {
+        if (!Template.isValidFileExtension(fileMimeType)) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE,
             )
@@ -104,12 +104,12 @@ export class AddTemplateByDrivePickerUseCase {
 
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId: input.fileId,
-            fileExtension: fileExtension,
+            fileMimeType: fileMimeType,
             accessToken: externalAccount.accessToken,
         })
 
         const contentExtractor =
-            this.fileContentExtractorFactory.create(fileExtension)
+            this.fileContentExtractorFactory.create(fileMimeType)
 
         const content = await contentExtractor.extractText(buffer)
 
@@ -151,7 +151,7 @@ export class AddTemplateByDrivePickerUseCase {
             )
         }
 
-        const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${MIME_TYPE_TO_FILE_EXTENSION[fileExtension]}`
+        const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
 
         const newTemplateInput = {
             driveFileId: input.fileId,
@@ -159,7 +159,7 @@ export class AddTemplateByDrivePickerUseCase {
             inputMethod: INPUT_METHOD.GOOGLE_DRIVE,
             fileName: name,
             variables: uniqueVariables,
-            fileExtension,
+            fileMimeType,
             thumbnailUrl,
         }
 
@@ -169,7 +169,7 @@ export class AddTemplateByDrivePickerUseCase {
             buffer,
             bucketName: process.env.CERTIFICATES_BUCKET!,
             objectName: path,
-            mimeType: fileExtension,
+            mimeType: fileMimeType,
         })
 
         await this.transactionManager.run(async () => {

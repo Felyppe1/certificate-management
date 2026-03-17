@@ -13,7 +13,7 @@ import {
 import { addTemplateByDrivePickerAction } from '@/backend/infrastructure/server-actions/add-template-by-drive-picker-action'
 import { Button } from '@/components/ui/button'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
-import { TEMPLATE_FILE_EXTENSION } from '@/backend/domain/template'
+import { TEMPLATE_FILE_MIME_TYPE } from '@/backend/domain/template'
 import { addTemplateByUploadAction } from '@/backend/infrastructure/server-actions/add-template-by-upload-action'
 import { toast } from 'sonner'
 import { useGoogleRelogin } from '@/components/useGoogleRelogin'
@@ -29,7 +29,7 @@ interface TemplateSectionProps {
         storageFileUrl: string | null
         inputMethod: INPUT_METHOD
         fileName: string
-        fileExtension: TEMPLATE_FILE_EXTENSION
+        fileMimeType: TEMPLATE_FILE_MIME_TYPE
         variables: string[]
         thumbnailUrl: string | null
     } | null
