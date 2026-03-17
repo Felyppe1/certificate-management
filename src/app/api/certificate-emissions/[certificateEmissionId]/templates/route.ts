@@ -8,13 +8,13 @@ import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { LiquidStringVariableExtractor } from '@/backend/infrastructure/string-variable-extractor/liquidjs'
 
 export async function DELETE(
     request: NextRequest,
@@ -73,6 +73,7 @@ export async function PATCH(
         const transactionManager = new PrismaTransactionManager(prisma)
 
         const bucket = new GcpBucket()
+        const stringVariableExtractor = new LiquidStringVariableExtractor()
 
         const refreshTemplateUseCase = new RefreshTemplateUseCase(
             certificatesRepository,
@@ -83,6 +84,7 @@ export async function PATCH(
             externalUserAccountsRepository,
             transactionManager,
             bucket,
+            stringVariableExtractor,
         )
 
         await refreshTemplateUseCase.execute({

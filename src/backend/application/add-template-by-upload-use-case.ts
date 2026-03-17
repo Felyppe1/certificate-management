@@ -11,24 +11,21 @@ import {
     ValidationError,
 } from '../domain/error/validation-error'
 import { INPUT_METHOD } from '../domain/certificate'
-import { Template, TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
+import {
+    TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION,
+    Template,
+} from '../domain/template'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor-factory'
-import { Liquid } from 'liquidjs'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { IStringVariableExtractor } from './interfaces/istring-variable-extractor'
 
 interface AddTemplateByUploadUseCaseInput {
     file: File
     certificateId: string
     userId: string
-}
-
-// TODO: melhorar isso
-const MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
-    [TEMPLATE_FILE_MIME_TYPE.DOCX]: 'docx',
-    [TEMPLATE_FILE_MIME_TYPE.PPTX]: 'pptx',
 }
 
 export class AddTemplateByUploadUseCase {
@@ -44,6 +41,10 @@ export class AddTemplateByUploadUseCase {
             'create'
         >,
         private transactionManager: ITransactionManager,
+        private stringVariableExtractor: Pick<
+            IStringVariableExtractor,
+            'extractVariables'
+        >,
     ) {}
 
     async execute(input: AddTemplateByUploadUseCaseInput) {
@@ -75,45 +76,10 @@ export class AddTemplateByUploadUseCase {
 
         const content = await contentExtractor.extractText(buffer)
 
-        const cleanedContent = content
-            .replaceAll('“', '"')
-            .replaceAll('”', '"')
-            .replaceAll('’', "'")
-            .replaceAll('‘', "'")
+        const uniqueVariables =
+            this.stringVariableExtractor.extractVariables(content)
 
-        const engine = new Liquid()
-
-        let uniqueVariables: string[]
-
-        try {
-            uniqueVariables = engine.variablesSync(cleanedContent)
-
-            const localVariables = new Set<string>()
-
-            // \{% - searches for the opening of a Liquid tag
-            // \s* - allows for any amount of whitespace (including line breaks and tabs) after the opening tag
-            // (?:assign|capture) - non-capturing group that finds it but doesn't include it in the results
-            // \s+ - requires at least one whitespace character after the non-capturing group
-            // ([a-zA-Z0-9_\-]+) - captures the variable name, which can include letters, numbers, underscores, and hyphens
-            // Ex: {% assign nomeVariavel = ... %} or {% capture nomeVariavel %}
-            const localVarsRegex =
-                /\{%\s*(?:assign|capture)\s+([a-zA-Z0-9_\-]+)/g
-            let match: RegExpExecArray | null
-
-            while ((match = localVarsRegex.exec(cleanedContent)) !== null) {
-                localVariables.add(match[1]) // match[1] contém apenas o nome da variável
-            }
-
-            uniqueVariables = uniqueVariables.filter(
-                variable => !localVariables.has(variable),
-            )
-        } catch {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.TEMPLATE_VARIABLES_PARSING_ERROR,
-            )
-        }
-
-        const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
+        const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
 
         const newTemplateInput = {
             inputMethod: INPUT_METHOD.UPLOAD,

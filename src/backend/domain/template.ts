@@ -9,6 +9,13 @@ export enum TEMPLATE_FILE_MIME_TYPE {
     DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 }
 
+export const TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
+    [TEMPLATE_FILE_MIME_TYPE.DOCX]: 'docx',
+    [TEMPLATE_FILE_MIME_TYPE.PPTX]: 'pptx',
+    [TEMPLATE_FILE_MIME_TYPE.GOOGLE_DOCS]: 'docx',
+    [TEMPLATE_FILE_MIME_TYPE.GOOGLE_SLIDES]: 'pptx',
+}
+
 export interface TemplateInput {
     driveFileId: string | null
     storageFileUrl: string

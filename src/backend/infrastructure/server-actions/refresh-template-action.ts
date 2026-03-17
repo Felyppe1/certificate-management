@@ -16,6 +16,7 @@ import { PrismaTransactionManager } from '../repository/prisma/prisma-transactio
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { refreshTemplateSchema } from './schemas'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
+import { LiquidStringVariableExtractor } from '../string-variable-extractor/liquidjs'
 
 export async function refreshTemplateAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -38,6 +39,7 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
             new PrismaExternalUserAccountsRepository(prisma)
         const transactionManager = new PrismaTransactionManager(prisma)
         const bucket = new GcpBucket()
+        const stringVariableExtractor = new LiquidStringVariableExtractor()
 
         const refreshTemplateUseCase = new RefreshTemplateUseCase(
             certificatesRepository,
@@ -48,6 +50,7 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
             externalUserAccountsRepository,
             transactionManager,
             bucket,
+            stringVariableExtractor,
         )
 
         await refreshTemplateUseCase.execute({

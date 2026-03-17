@@ -14,6 +14,7 @@ import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { LiquidStringVariableExtractor } from '@/backend/infrastructure/string-variable-extractor/liquidjs'
 
 const addTemplateByDrivePickerBodySchema = z.object({
     fileId: z.string().min(1, 'File ID is required'),
@@ -44,6 +45,7 @@ export async function PUT(
             new PrismaExternalUserAccountsRepository(prisma)
         const bucket = new GcpBucket()
         const transactionManager = new PrismaTransactionManager(prisma)
+        const stringVariableExtractor = new LiquidStringVariableExtractor()
 
         const addTemplateByDrivePickerUseCase =
             new AddTemplateByDrivePickerUseCase(
@@ -55,6 +57,7 @@ export async function PUT(
                 googleAuthGateway,
                 bucket,
                 transactionManager,
+                stringVariableExtractor,
             )
 
         await addTemplateByDrivePickerUseCase.execute({

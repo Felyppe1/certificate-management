@@ -1,5 +1,8 @@
 import { INPUT_METHOD } from '../domain/certificate'
-import { DATA_SOURCE_MIME_TYPE, DataSource } from '../domain/data-source'
+import {
+    DATA_SOURCE_MIME_TYPE_TO_FILE_EXTENSION,
+    DataSource,
+} from '../domain/data-source'
 import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
@@ -23,11 +26,6 @@ interface AddDataSourceByUploadUseCaseInput {
     file: File
     certificateId: string
     userId: string
-}
-
-const MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
-    [DATA_SOURCE_MIME_TYPE.CSV]: 'csv',
-    [DATA_SOURCE_MIME_TYPE.XLSX]: 'xlsx',
 }
 
 export class AddDataSourceByUploadUseCase {
@@ -74,7 +72,7 @@ export class AddDataSourceByUploadUseCase {
         const previousDataSourceStorageFileUrl =
             certificate.getDataSourceStorageFileUrl()
 
-        const path = `users/${input.userId}/certificates/${certificate.getId()}/data-source.${MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
+        const path = `users/${input.userId}/certificates/${certificate.getId()}/data-source.${DATA_SOURCE_MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
 
         await this.bucket.uploadObject({
             buffer,

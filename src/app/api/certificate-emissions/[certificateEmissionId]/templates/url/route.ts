@@ -14,6 +14,7 @@ import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
+import { LiquidStringVariableExtractor } from '@/backend/infrastructure/string-variable-extractor/liquidjs'
 
 const addTemplateByUrlBodySchema = z.object({
     fileUrl: z.url('File URL is invalid'),
@@ -42,6 +43,7 @@ export async function PUT(
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const bucket = new GcpBucket()
         const transactionManager = new PrismaTransactionManager(prisma)
+        const stringVariableExtractor = new LiquidStringVariableExtractor()
 
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificateEmissionsRepository,
@@ -50,6 +52,7 @@ export async function PUT(
             fileContentExtractorFactory,
             bucket,
             transactionManager,
+            stringVariableExtractor,
         )
 
         await addTemplateByUrlUseCase.execute({

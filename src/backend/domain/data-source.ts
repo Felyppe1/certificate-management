@@ -29,6 +29,11 @@ export enum DATA_SOURCE_MIME_TYPE {
     JPEG = 'image/jpeg',
 }
 
+export const DATA_SOURCE_MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
+    [DATA_SOURCE_MIME_TYPE.CSV]: 'csv',
+    [DATA_SOURCE_MIME_TYPE.XLSX]: 'xlsx',
+}
+
 export type ColumnType = 'string' | 'number' | 'boolean' | 'date' | 'array'
 
 type ArrayMetadata = {

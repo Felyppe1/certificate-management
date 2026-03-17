@@ -15,6 +15,7 @@ import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { addTemplateByDrivePickerSchema } from './schemas'
+import { LiquidStringVariableExtractor } from '../string-variable-extractor/liquidjs'
 
 export async function addTemplateByDrivePickerAction(
     _: unknown,
@@ -43,6 +44,7 @@ export async function addTemplateByDrivePickerAction(
             new PrismaExternalUserAccountsRepository(prisma)
         const bucket = new GcpBucket()
         const transactionManager = new PrismaTransactionManager(prisma)
+        const stringVariableExtractor = new LiquidStringVariableExtractor()
 
         const addTemplateByDrivePickerUseCase =
             new AddTemplateByDrivePickerUseCase(
@@ -54,6 +56,7 @@ export async function addTemplateByDrivePickerAction(
                 googleAuthGateway,
                 bucket,
                 transactionManager,
+                stringVariableExtractor,
             )
 
         await addTemplateByDrivePickerUseCase.execute({
