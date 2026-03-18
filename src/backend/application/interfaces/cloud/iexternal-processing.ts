@@ -1,5 +1,4 @@
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
-import { GENERATION_STATUS } from '@/backend/domain/data-set'
 import { DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
 import { INPUT_METHOD } from '../../../domain/certificate'
 import { TEMPLATE_FILE_MIME_TYPE } from '../../../domain/template'
@@ -32,7 +31,7 @@ export interface TriggerGenerateCertificatePDFsInput {
             thumbnailUrl: string | null
             dataSet: {
                 id: string
-                generationStatus: GENERATION_STATUS | null
+                // generationStatus: GENERATION_STATUS | null
                 totalBytes: number
                 rows: Record<string, any>[]
             }
