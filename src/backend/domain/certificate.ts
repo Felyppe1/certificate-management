@@ -265,6 +265,18 @@ export class Certificate extends AggregateRoot {
         return this.template?.getInputMethod() ?? null
     }
 
+    isTemplateFromUpload() {
+        return this.template?.getInputMethod() === INPUT_METHOD.UPLOAD
+    }
+
+    isTemplateFromGoogleDrive() {
+        return this.template?.getInputMethod() === INPUT_METHOD.GOOGLE_DRIVE
+    }
+
+    isTemplateFromUrl() {
+        return this.template?.getInputMethod() === INPUT_METHOD.URL
+    }
+
     getDriveTemplateFileId() {
         return this.template?.getDriveFileId() ?? null
     }
@@ -332,6 +344,18 @@ export class Certificate extends AggregateRoot {
 
     getDataSourceInputMethod() {
         return this.dataSource?.getInputMethod() ?? null
+    }
+
+    isDataSourceFromUpload() {
+        return this.dataSource?.getInputMethod() === INPUT_METHOD.UPLOAD
+    }
+
+    isDataSourceFromGoogleDrive() {
+        return this.dataSource?.getInputMethod() === INPUT_METHOD.GOOGLE_DRIVE
+    }
+
+    isDataSourceFromUrl() {
+        return this.dataSource?.getInputMethod() === INPUT_METHOD.URL
     }
 
     getDataSourceColumns() {

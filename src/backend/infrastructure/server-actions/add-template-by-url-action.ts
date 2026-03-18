@@ -16,6 +16,7 @@ import { addTemplateByUrlSchema } from './schemas'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { LiquidStringVariableExtractor } from '../string-variable-extractor/liquidjs'
+import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
 
 export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
     // add delay
@@ -42,6 +43,8 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
         const bucket = new GcpBucket()
         const transactionManager = new PrismaTransactionManager(prisma)
         const stringVariableExtractor = new LiquidStringVariableExtractor()
+        const externalUserAccountsRepository =
+            new PrismaExternalUserAccountsRepository(prisma)
 
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificateEmissionsRepository,
@@ -51,6 +54,7 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
             bucket,
             transactionManager,
             stringVariableExtractor,
+            externalUserAccountsRepository,
         )
 
         await addTemplateByUrlUseCase.execute({

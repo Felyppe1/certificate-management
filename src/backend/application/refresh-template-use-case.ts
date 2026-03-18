@@ -84,7 +84,8 @@ export class RefreshTemplateUseCase {
             )
 
         if (
-            certificate.getTemplateInputMethod() === INPUT_METHOD.GOOGLE_DRIVE
+            certificate.isTemplateFromGoogleDrive() ||
+            certificate.isTemplateFromUrl()
         ) {
             if (!externalAccount) {
                 throw new ForbiddenError(
@@ -115,8 +116,8 @@ export class RefreshTemplateUseCase {
         const { name, fileMimeType, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
-                ...(certificate.getTemplateInputMethod() ===
-                    INPUT_METHOD.GOOGLE_DRIVE && {
+                ...((certificate.isTemplateFromGoogleDrive() ||
+                    certificate.isTemplateFromUrl()) && {
                     userAccessToken: externalAccount?.accessToken,
                     userRefreshToken:
                         externalAccount?.refreshToken ?? undefined,
@@ -132,8 +133,8 @@ export class RefreshTemplateUseCase {
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
             fileMimeType: fileMimeType,
-            ...(certificate.getTemplateInputMethod() ===
-                INPUT_METHOD.GOOGLE_DRIVE && {
+            ...((certificate.isTemplateFromGoogleDrive() ||
+                certificate.isTemplateFromUrl()) && {
                 accessToken: externalAccount?.accessToken,
             }),
         })

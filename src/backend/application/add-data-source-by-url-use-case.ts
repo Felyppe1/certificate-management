@@ -17,6 +17,7 @@ import { DataSource } from '../domain/data-source'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { DataSourceDomainService } from '../domain/domain-service/data-source-domain-service'
+import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
 
 interface AddDataSourceByUrlUseCaseInput {
     certificateId: string
@@ -41,6 +42,10 @@ export class AddDataSourceByUrlUseCase {
         private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
         private bucket: Pick<IBucket, 'deleteObject'>,
         private transactionManager: ITransactionManager,
+        private externalUserAccountsRepository: Pick<
+            IExternalUserAccountsRepository,
+            'getById'
+        >,
     ) {}
 
     async execute(input: AddDataSourceByUrlUseCaseInput) {
@@ -60,9 +65,17 @@ export class AddDataSourceByUrlUseCase {
             )
         }
 
+        const externalAccount =
+            await this.externalUserAccountsRepository.getById(
+                input.userId,
+                'GOOGLE',
+            )
+
         const { name, fileMimeType, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
+                userAccessToken: externalAccount?.accessToken,
+                userRefreshToken: externalAccount?.refreshToken || undefined,
             })
 
         if (!DataSource.isValidFileMimeType(fileMimeType)) {
@@ -74,6 +87,7 @@ export class AddDataSourceByUrlUseCase {
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
             fileMimeType: fileMimeType,
+            accessToken: externalAccount?.accessToken,
         })
 
         const contentExtractor =

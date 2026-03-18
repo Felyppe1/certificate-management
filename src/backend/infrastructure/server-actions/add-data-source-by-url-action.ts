@@ -15,6 +15,7 @@ import { PrismaTransactionManager } from '../repository/prisma/prisma-transactio
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { addDataSourceByUrlSchema } from './schemas'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
+import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
 
 export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -39,6 +40,8 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
             new SpreadsheetContentExtractorFactory()
         const bucket = new GcpBucket()
         const transactionManager = new PrismaTransactionManager(prisma)
+        const externalUserAccountsRepository =
+            new PrismaExternalUserAccountsRepository(prisma)
 
         const addDataSourceByUrlUseCase = new AddDataSourceByUrlUseCase(
             certificateEmissionsRepository,
@@ -47,6 +50,7 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
             spreadsheetContentExtractorFactory,
             bucket,
             transactionManager,
+            externalUserAccountsRepository,
         )
 
         await addDataSourceByUrlUseCase.execute({

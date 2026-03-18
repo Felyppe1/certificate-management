@@ -86,7 +86,7 @@ export function DataSourceSection({
         if (!result?.success) {
             if (result.errorType === 'drive-file-not-found') {
                 toast.error(
-                    'Arquivo não encontrado. Verifique se a URL está correta e se o arquivo no Drive está público',
+                    'Arquivo não encontrado. Verifique se ele se existe no Drive, se você tem permissão para acessá-lo ou se ele está público',
                 )
             } else if (
                 result.errorType === 'unsupported-data-source-mimetype'

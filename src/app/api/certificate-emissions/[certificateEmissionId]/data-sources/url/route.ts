@@ -14,6 +14,7 @@ import z from 'zod'
 import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 
 const addDataSourceByUrlBodySchema = z.object({
     fileUrl: z.url('Invalid file URL'),
@@ -43,6 +44,8 @@ export async function PUT(
             new SpreadsheetContentExtractorFactory()
         const bucket = new GcpBucket()
         const transactionManager = new PrismaTransactionManager(prisma)
+        const externalUserAccountsRepository =
+            new PrismaExternalUserAccountsRepository(prisma)
 
         const addDataSourceByUrlUseCase = new AddDataSourceByUrlUseCase(
             certificateEmissionsRepository,
@@ -51,6 +54,7 @@ export async function PUT(
             spreadsheetContentExtractorFactory,
             bucket,
             transactionManager,
+            externalUserAccountsRepository,
         )
 
         await addDataSourceByUrlUseCase.execute({

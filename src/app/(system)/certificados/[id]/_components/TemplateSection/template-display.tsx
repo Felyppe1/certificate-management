@@ -147,7 +147,7 @@ export function TemplateDisplay({
         } else {
             if (refreshState.errorType === 'drive-file-not-found') {
                 toast.error(
-                    'Arquivo não encontrado. Verifique se ele ainda existe no Drive e se está público',
+                    'Arquivo não encontrado. Verifique se ele se existe no Drive, se você tem permissão para acessá-lo ou se ele está público',
                 )
             } else if (refreshState.errorType === 'google-session-expired') {
                 toast.error(

@@ -18,6 +18,7 @@ import { IBucket } from './interfaces/cloud/ibucket'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { IStringVariableExtractor } from './interfaces/istring-variable-extractor'
+import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
 
 interface AddTemplateByUrlUseCaseInput {
     certificateId: string
@@ -50,6 +51,10 @@ export class AddTemplateByUrlUseCase {
             IStringVariableExtractor,
             'extractVariables'
         >,
+        private externalUserAccountsRepository: Pick<
+            IExternalUserAccountsRepository,
+            'getById'
+        >,
     ) {}
 
     async execute(input: AddTemplateByUrlUseCaseInput) {
@@ -69,9 +74,17 @@ export class AddTemplateByUrlUseCase {
             )
         }
 
+        const externalAccount =
+            await this.externalUserAccountsRepository.getById(
+                input.userId,
+                'GOOGLE',
+            )
+
         const { name, fileMimeType, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
+                userAccessToken: externalAccount?.accessToken,
+                userRefreshToken: externalAccount?.refreshToken || undefined,
             })
 
         if (!Template.isValidFileMimeType(fileMimeType)) {
@@ -83,6 +96,7 @@ export class AddTemplateByUrlUseCase {
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
             fileMimeType: fileMimeType,
+            accessToken: externalAccount?.accessToken,
         })
 
         const contentExtractor =
