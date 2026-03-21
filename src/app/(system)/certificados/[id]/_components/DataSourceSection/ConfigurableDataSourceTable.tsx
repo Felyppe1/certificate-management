@@ -1,6 +1,12 @@
 'use client'
 
-import { useState, useEffect, useActionState, startTransition } from 'react'
+import {
+    useState,
+    useEffect,
+    useActionState,
+    startTransition,
+    useCallback,
+} from 'react'
 import {
     Table,
     TableBody,
@@ -11,6 +17,7 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Eye, Loader2, Download, Undo2, Save, X, Check } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
 import { ColumnType, FORBIDDEN_TYPE_CHANGE } from '@/backend/domain/data-source'
 import { ColumnHeaderMenu, columnTypeConfig } from './ColumnHeaderMenu'
@@ -80,6 +87,39 @@ export function ConfigurableDataSourceTable({
     const [selectedColumnIndex, setSelectedColumnIndex] = useState<
         number | null
     >(null)
+
+    // Checkbox selection state
+    const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set())
+
+    const completedRows = rows.filter(
+        r => r.processingStatus === PROCESSING_STATUS_ENUM.COMPLETED,
+    )
+    const allCompleteSelected =
+        completedRows.length > 0 &&
+        completedRows.every(r => selectedRowIds.has(r.id))
+    const someSelected = selectedRowIds.size > 0 && !allCompleteSelected
+
+    const handleSelectAll = useCallback(() => {
+        if (allCompleteSelected) {
+            setSelectedRowIds(new Set())
+        } else {
+            setSelectedRowIds(new Set(completedRows.map(r => r.id)))
+        }
+    }, [allCompleteSelected, completedRows])
+
+    const handleToggleRow = useCallback((rowId: string) => {
+        setSelectedRowIds(prev => {
+            const next = new Set(prev)
+            if (next.has(rowId)) {
+                next.delete(rowId)
+            } else {
+                next.add(rowId)
+            }
+            return next
+        })
+    }, [])
+
+    const selectedCount = selectedRowIds.size
 
     useEffect(() => {
         setColumns(initialColumns)
@@ -182,7 +222,7 @@ export function ConfigurableDataSourceTable({
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-x-8 gap-y-2 flex-wrap">
                 <div className="flex items-center gap-4">
                     <div className="text-sm text-muted-foreground">
                         Linhas:{' '}
@@ -220,7 +260,7 @@ export function ConfigurableDataSourceTable({
                                 ) : (
                                     <Save className="size-4" />
                                 )}
-                                Salvar Configuração
+                                Salvar
                             </Button>
                         </RegenerateWarningPopover>
                     </div>
@@ -233,8 +273,27 @@ export function ConfigurableDataSourceTable({
                         <TableHeader className="bg-muted/30">
                             <TableRow className="hover:bg-transparent">
                                 {certificatesGenerated && (
-                                    <TableHead className="w-[80px] bg-muted/30 border-r border-border/50 sticky left-0 z-10 backdrop-blur">
-                                        Ação
+                                    <TableHead className="w-[5.3rem] bg-muted/30 border-r border-border/50 sticky -left-1 z-10 backdrop-blur">
+                                        <div className="flex justify-center items-center px-2">
+                                            <Checkbox
+                                                checked={allCompleteSelected}
+                                                onCheckedChange={
+                                                    handleSelectAll
+                                                }
+                                                aria-label="Selecionar todos"
+                                                disabled={
+                                                    completedRows.length === 0
+                                                }
+                                                className="data-[state=indeterminate]:bg-primary"
+                                                data-state={
+                                                    allCompleteSelected
+                                                        ? 'checked'
+                                                        : someSelected
+                                                          ? 'indeterminate'
+                                                          : 'unchecked'
+                                                }
+                                            />
+                                        </div>
                                     </TableHead>
                                 )}
                                 {columns.map((column, index) => {
@@ -505,34 +564,28 @@ export function ConfigurableDataSourceTable({
                                         }
                                     >
                                         {certificatesGenerated && (
-                                            <TableCell className="border-r border-border/50 bg-background/95 sticky left-0 z-10 w-[80px]">
-                                                <div className="flex gap-1">
+                                            <TableCell
+                                                className={`border-r border-border/50 sticky -left-1 z-10 w-[5.3rem] ${row.processingStatus === PROCESSING_STATUS_ENUM.FAILED ? 'bg-destructive/10' : 'bg-card'}`}
+                                            >
+                                                <div className="flex justify-center items-center">
                                                     {row.processingStatus ===
-                                                        PROCESSING_STATUS_ENUM.COMPLETED && (
-                                                        <Button
-                                                            onClick={() =>
-                                                                handleViewCertificate(
+                                                    PROCESSING_STATUS_ENUM.COMPLETED ? (
+                                                        <Checkbox
+                                                            checked={selectedRowIds.has(
+                                                                row.id,
+                                                            )}
+                                                            onCheckedChange={() =>
+                                                                handleToggleRow(
                                                                     row.id,
                                                                 )
                                                             }
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="h-8 w-8 p-0"
-                                                            title="Visualizar certificado"
-                                                            disabled={
-                                                                isViewingCertificate &&
-                                                                viewingRowId ===
-                                                                    row.id
-                                                            }
-                                                        >
-                                                            {isViewingCertificate &&
-                                                            viewingRowId ===
-                                                                row.id ? (
-                                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                            ) : (
-                                                                <Eye className="size-4" />
-                                                            )}
-                                                        </Button>
+                                                            aria-label="Selecionar linha"
+                                                        />
+                                                    ) : (
+                                                        <Checkbox
+                                                            disabled
+                                                            aria-label="Não disponível"
+                                                        />
                                                     )}
                                                 </div>
                                             </TableCell>
@@ -586,13 +639,51 @@ export function ConfigurableDataSourceTable({
             <div className="flex gap-x-4 gap-y-2 items-center flex-wrap mt-4">
                 {certificatesGenerated && (
                     <>
-                        <Button
-                            size="sm"
-                            onClick={handleDownloadAllCertificates}
-                        >
-                            <Download className="size-4" />
-                            Baixar Todos
-                        </Button>
+                        {selectedCount > 0 && (
+                            <div className="flex items-center gap-2 flex-wrap animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                <span className="text-sm text-muted-foreground">
+                                    {selectedCount}{' '}
+                                    {selectedCount === 1
+                                        ? 'selecionado'
+                                        : 'selecionados'}
+                                </span>
+                                <div className="flex gap-2">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                            // TODO: implement download for selected rows
+                                            handleDownloadAllCertificates()
+                                        }}
+                                    >
+                                        <Download className="size-4" />
+                                        Baixar
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                            const firstSelected = rows.find(r =>
+                                                selectedRowIds.has(r.id),
+                                            )
+                                            if (firstSelected) {
+                                                handleViewCertificate(
+                                                    firstSelected.id,
+                                                )
+                                            }
+                                        }}
+                                        disabled={isViewingCertificate}
+                                    >
+                                        {isViewingCertificate ? (
+                                            <Loader2 className="size-4 animate-spin" />
+                                        ) : (
+                                            <Eye className="size-4" />
+                                        )}
+                                        Visualizar
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
                         <p className="text-sm text-muted-foreground">
                             Tamanho total:{' '}
                             <span className="font-medium text-foreground">
