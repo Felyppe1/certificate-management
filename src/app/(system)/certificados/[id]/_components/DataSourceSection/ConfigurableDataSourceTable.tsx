@@ -23,6 +23,7 @@ import { ColumnType, FORBIDDEN_TYPE_CHANGE } from '@/backend/domain/data-source'
 import { ColumnHeaderMenu, columnTypeConfig } from './ColumnHeaderMenu'
 import { toast } from 'sonner'
 import { updateDataSourceColumnsAction } from '@/backend/infrastructure/server-actions/update-data-source-columns-action'
+import { viewCertificatesAction } from '@/backend/infrastructure/server-actions/view-certificates-action'
 import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -49,9 +50,6 @@ interface ConfigurableDataSourceTableProps {
         arrayItemType?: ColumnType | null
     }[]
     certificatesGenerated: boolean
-    handleViewCertificate: (rowId: string) => void
-    isViewingCertificate: boolean
-    viewingRowId: string | null
     handleDownloadAllCertificates: () => void
     totalBytes: number
 }
@@ -71,9 +69,6 @@ export function ConfigurableDataSourceTable({
     rows,
     columns: initialColumns,
     certificatesGenerated,
-    handleViewCertificate,
-    isViewingCertificate,
-    viewingRowId,
     handleDownloadAllCertificates,
     totalBytes,
 }: ConfigurableDataSourceTableProps) {
@@ -90,6 +85,13 @@ export function ConfigurableDataSourceTable({
 
     // Checkbox selection state
     const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set())
+    const [isDownloadingSelected, setIsDownloadingSelected] = useState(false)
+
+    const [
+        viewCertificatesState,
+        viewCertificatesActionHandler,
+        isViewingCertificates,
+    ] = useActionState(viewCertificatesAction, null)
 
     const completedRows = rows.filter(
         r => r.processingStatus === PROCESSING_STATUS_ENUM.COMPLETED,
@@ -121,10 +123,64 @@ export function ConfigurableDataSourceTable({
 
     const selectedCount = selectedRowIds.size
 
+    const handleViewSelected = () => {
+        if (selectedRowIds.size === 0) return
+        const formData = new FormData()
+        formData.append('rowIds', JSON.stringify([...selectedRowIds]))
+        startTransition(() => {
+            viewCertificatesActionHandler(formData)
+        })
+    }
+
+    const handleDownloadSelected = async () => {
+        setIsDownloadingSelected(true)
+        try {
+            const response = await fetch(
+                `/api/certificate-emissions/${certificateId}/zip/selected`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rowIds: [...selectedRowIds] }),
+                },
+            )
+            if (!response.ok) throw new Error('Download failed')
+            const blob = await response.blob()
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `certificates-selected-${certificateId}.zip`
+            a.click()
+            URL.revokeObjectURL(url)
+        } catch {
+            toast.error(
+                'Ocorreu um erro ao baixar os certificados selecionados',
+            )
+        } finally {
+            setIsDownloadingSelected(false)
+        }
+    }
+
     useEffect(() => {
         setColumns(initialColumns)
         setSelectedColumnIndex(null)
     }, [initialColumns])
+
+    useEffect(() => {
+        if (!viewCertificatesState) return
+        if (viewCertificatesState.success) {
+            const results = viewCertificatesState.data as {
+                rowId: string
+                signedUrl: string
+            }[]
+            results.forEach(({ signedUrl }) => {
+                window.open(signedUrl, '_blank', 'noopener,noreferrer')
+            })
+        } else {
+            toast.error(
+                'Ocorreu um erro ao visualizar os certificados selecionados',
+            )
+        }
+    }, [viewCertificatesState])
 
     useEffect(() => {
         if (!columnsState) return
@@ -651,30 +707,23 @@ export function ConfigurableDataSourceTable({
                                     <Button
                                         size="sm"
                                         variant="outline"
-                                        onClick={() => {
-                                            // TODO: implement download for selected rows
-                                            handleDownloadAllCertificates()
-                                        }}
+                                        onClick={handleDownloadSelected}
+                                        disabled={isDownloadingSelected}
                                     >
-                                        <Download className="size-4" />
+                                        {isDownloadingSelected ? (
+                                            <Loader2 className="size-4 animate-spin" />
+                                        ) : (
+                                            <Download className="size-4" />
+                                        )}
                                         Baixar
                                     </Button>
                                     <Button
                                         size="sm"
                                         variant="outline"
-                                        onClick={() => {
-                                            const firstSelected = rows.find(r =>
-                                                selectedRowIds.has(r.id),
-                                            )
-                                            if (firstSelected) {
-                                                handleViewCertificate(
-                                                    firstSelected.id,
-                                                )
-                                            }
-                                        }}
-                                        disabled={isViewingCertificate}
+                                        onClick={handleViewSelected}
+                                        disabled={isViewingCertificates}
                                     >
-                                        {isViewingCertificate ? (
+                                        {isViewingCertificates ? (
                                             <Loader2 className="size-4 animate-spin" />
                                         ) : (
                                             <Eye className="size-4" />

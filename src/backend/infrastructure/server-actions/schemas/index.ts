@@ -106,6 +106,14 @@ export const viewCertificateSchema = z.object({
     rowId: z.string().min(1),
 })
 
+export const viewCertificatesSchema = z.object({
+    rowIds: z.array(z.string().min(1)).min(1),
+})
+
+export const downloadSelectedCertificatesSchema = z.object({
+    rowIds: z.array(z.string().min(1)).min(1),
+})
+
 export const downloadCertificateUrlSchema = z.object({
     rowId: z.string().min(1),
 })

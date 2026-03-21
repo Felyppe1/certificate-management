@@ -5,6 +5,7 @@ import {
 
 export interface IDataSourceRowsRepository {
     getById(id: string): Promise<DataSourceRow | null>
+    getByIds(ids: string[]): Promise<DataSourceRow[]>
     update(dataSourceRow: DataSourceRow): Promise<void>
     saveMany(dataSourceRows: DataSourceRow[]): Promise<void>
 

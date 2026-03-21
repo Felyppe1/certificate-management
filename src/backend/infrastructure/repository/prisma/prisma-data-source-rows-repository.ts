@@ -121,6 +121,48 @@ export class PrismaDataSourceRowsRepository
         })
     }
 
+    async getByIds(ids: string[]): Promise<DataSourceRow[]> {
+        if (ids.length === 0) return []
+
+        const rows = await this.prisma.dataSourceRow.findMany({
+            where: { id: { in: ids } },
+            include: {
+                DataSourceValue: {
+                    include: {
+                        DataSourceColumn: true,
+                    },
+                },
+            },
+        })
+
+        if (rows.length === 0) return []
+
+        // All rows in a cert emission share the same columns — fetch once
+        const certificateEmissionId = rows[0].data_source_id
+        const dataSourceColumns = await this.prisma.dataSourceColumn.findMany({
+            where: { data_source_id: certificateEmissionId },
+        })
+        const columns = dataSourceColumns.map(col => ({
+            name: col.name,
+            type: col.type.toLowerCase() as ColumnType,
+        }))
+
+        return rows.map(row => {
+            const data: Record<string, string> = {}
+            for (const value of row.DataSourceValue) {
+                data[value.column_name] = value.value
+            }
+            return new DataSourceRow({
+                id: row.id,
+                certificateEmissionId: row.data_source_id,
+                fileBytes: row.file_bytes,
+                data,
+                dataSourceColumns: columns,
+                processingStatus: row.processing_status as any,
+            })
+        })
+    }
+
     async update(dataSourceRow: DataSourceRow): Promise<void> {
         const { id, fileBytes, processingStatus, certificateEmissionId } =
             dataSourceRow.serialize()

@@ -1,0 +1,86 @@
+import { IBucket } from './interfaces/cloud/ibucket'
+import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import {
+    NOT_FOUND_ERROR_TYPE,
+    NotFoundError,
+} from '../domain/error/not-found-error'
+import {
+    FORBIDDEN_ERROR_TYPE,
+    ForbiddenError,
+} from '../domain/error/forbidden-error'
+
+import archiver from 'archiver' // TODO: dependency inversion
+import { PassThrough } from 'stream'
+import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+
+interface DownloadSelectedCertificatesUseCaseInput {
+    userId: string
+    certificateEmissionId: string
+    rowIds: string[]
+}
+
+export class DownloadSelectedCertificatesUseCase {
+    constructor(
+        private bucket: Pick<IBucket, 'getObjectsWithPrefix'>,
+        private certificateRepository: Pick<ICertificatesRepository, 'getById'>,
+        private dataSourceRowsRepository: Pick<
+            IDataSourceRowsRepository,
+            'getById'
+        >,
+    ) {}
+
+    async execute(input: DownloadSelectedCertificatesUseCaseInput) {
+        const certificate = await this.certificateRepository.getById(
+            input.certificateEmissionId,
+        )
+
+        if (!certificate) {
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+        }
+
+        if (certificate.getUserId() !== input.userId) {
+            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+        }
+
+        // Build the list of specific file paths for the selected rows
+        const filePaths = input.rowIds.map(
+            rowId =>
+                `users/${input.userId}/certificates/${certificate.getId()}/certificate-${rowId}.pdf`,
+        )
+
+        const bucketName = process.env.CERTIFICATES_BUCKET!
+
+        // Fetch all objects that match each specific file path by using their exact prefix
+        const fileObjects = (
+            await Promise.all(
+                filePaths.map(filePath =>
+                    this.bucket.getObjectsWithPrefix({
+                        bucketName,
+                        prefix: filePath,
+                    }),
+                ),
+            )
+        ).flat()
+
+        const archive = archiver('zip')
+        const stream = new PassThrough()
+
+        archive.pipe(stream)
+
+        const processArchive = async () => {
+            try {
+                for (const file of fileObjects) {
+                    const fileName = file.name.split('/').pop()!
+                    archive.append(file.createReadStream(), { name: fileName })
+                }
+                await archive.finalize()
+            } catch (error) {
+                stream.destroy(error as Error)
+            }
+        }
+
+        processArchive()
+
+        return stream
+    }
+}

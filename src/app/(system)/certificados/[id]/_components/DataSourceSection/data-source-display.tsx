@@ -42,7 +42,7 @@ import { SourceIcon } from '@/components/svg/SourceIcon'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
 import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
 import { toast } from 'sonner'
-import { viewCertificateAction } from '@/backend/infrastructure/server-actions/view-certificate-action'
+
 import { downloadDataSourceAction } from '@/backend/infrastructure/server-actions/download-data-source-action'
 import { ConfigurableDataSourceTable } from './ConfigurableDataSourceTable'
 import { useGoogleRelogin } from '@/components/useGoogleRelogin'
@@ -121,14 +121,6 @@ export function DataSourceDisplay({
     )
 
     const [
-        viewCertificateState,
-        viewCertificateActionHandler,
-        isViewingCertificate,
-    ] = useActionState(viewCertificateAction, null)
-
-    const [viewingRowId, setViewingRowId] = useState<string | null>(null)
-
-    const [
         downloadDataSourceState,
         downloadDataSourceActionHandler,
         isDownloadingDataSource,
@@ -200,16 +192,6 @@ export function DataSourceDisplay({
         }
     }
 
-    const handleViewCertificate = (rowId: string) => {
-        setViewingRowId(rowId)
-        const formData = new FormData()
-        formData.append('rowId', rowId)
-
-        startTransition(() => {
-            viewCertificateActionHandler(formData)
-        })
-    }
-
     const handleDownloadAllCertificates = () => {
         const url = `/api/certificate-emissions/${certificateId}/zip`
 
@@ -272,18 +254,6 @@ export function DataSourceDisplay({
             toast.error('Ocorreu um erro ao deletar a fonte de dados')
         }
     }, [deleteState])
-
-    useEffect(() => {
-        if (!viewCertificateState) return
-
-        if (viewCertificateState.success) {
-            const signedUrl = viewCertificateState.data!
-
-            window.open(signedUrl, '_blank', 'noopener,noreferrer')
-        } else {
-            toast.error('Ocorreu um erro ao tentar visualizar o certificado')
-        }
-    }, [viewCertificateState])
 
     useEffect(() => {
         if (!downloadDataSourceState) return
@@ -490,13 +460,6 @@ export function DataSourceDisplay({
                                                 certificatesGenerated={
                                                     certificatesGenerated
                                                 }
-                                                handleViewCertificate={
-                                                    handleViewCertificate
-                                                }
-                                                isViewingCertificate={
-                                                    isViewingCertificate
-                                                }
-                                                viewingRowId={viewingRowId}
                                                 handleDownloadAllCertificates={
                                                     handleDownloadAllCertificates
                                                 }
