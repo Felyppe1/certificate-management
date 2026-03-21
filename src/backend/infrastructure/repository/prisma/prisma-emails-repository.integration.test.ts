@@ -1,7 +1,7 @@
 import { prisma } from '@/tests/setup.integration'
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
-    Certificate,
+    CertificateEmission,
     CERTIFICATE_STATUS,
     CertificateInput,
     INPUT_METHOD,
@@ -122,7 +122,7 @@ describe('PrismaEmailsRepository Integration Tests', () => {
     })
 
     it('should create an email successfully', async () => {
-        const certificate = new Certificate(
+        const certificate = new CertificateEmission(
             createCertificateData({
                 template: new Template(createTemplateData()),
                 dataSource: new DataSource(
@@ -173,7 +173,7 @@ describe('PrismaEmailsRepository Integration Tests', () => {
     })
 
     it('should be able to delete a column that has an email related to it successfully', async () => {
-        const certificate = new Certificate(
+        const certificate = new CertificateEmission(
             createCertificateData({
                 template: new Template(createTemplateData()),
                 dataSource: new DataSource(

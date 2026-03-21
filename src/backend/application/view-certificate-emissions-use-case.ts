@@ -10,12 +10,12 @@ import {
 } from '../domain/error/forbidden-error'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 
-interface ViewCertificatesUseCaseInput {
+interface ViewCertificateEmissionsUseCaseInput {
     userId: string
     rowIds: string[]
 }
 
-export class ViewCertificatesUseCase {
+export class ViewCertificateEmissionsUseCase {
     constructor(
         private bucket: Pick<IBucket, 'generateSignedUrl'>,
         private certificateRepository: Pick<ICertificatesRepository, 'getById'>,
@@ -26,7 +26,7 @@ export class ViewCertificatesUseCase {
     ) {}
 
     async execute(
-        input: ViewCertificatesUseCaseInput,
+        input: ViewCertificateEmissionsUseCaseInput,
     ): Promise<{ rowId: string; signedUrl: string }[]> {
         const dataSourceRows = await this.dataSourceRowsRepository.getByIds(
             input.rowIds,

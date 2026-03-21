@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { AddTemplateByUrlUseCase } from './add-template-by-url-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { Certificate, CERTIFICATE_STATUS } from '../domain/certificate'
+import { CertificateEmission, CERTIFICATE_STATUS } from '../domain/certificate'
 import {
     Session,
     ISessionsRepository,
@@ -32,7 +32,7 @@ describe('AddTemplateByUrlUseCase', () => {
     }
 
     function createCertificateEmission(id: string) {
-        return new Certificate({
+        return new CertificateEmission({
             id,
             name: 'Name',
             userId: '1',
@@ -129,7 +129,7 @@ describe('AddTemplateByUrlUseCase', () => {
             certificateEmissionsRepositoryMock.update as ReturnType<
                 typeof vi.fn
             >
-        const updateCallArg = updateMock.mock.calls[0][0] as Certificate
+        const updateCallArg = updateMock.mock.calls[0][0] as CertificateEmission
         expect(updateCallArg.hasTemplate()).toBe(true)
     })
 

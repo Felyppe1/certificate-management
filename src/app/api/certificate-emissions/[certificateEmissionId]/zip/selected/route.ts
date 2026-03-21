@@ -1,4 +1,4 @@
-import { DownloadSelectedCertificatesUseCase } from '@/backend/application/download-selected-certificates-use-case'
+import { DownloadCertificateEmissionsUseCase } from '@/backend/application/download-certificate-emissions-use-case'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
@@ -29,7 +29,7 @@ export async function POST(
         const bucket = new GcpBucket()
 
         const downloadSelectedCertificatesUseCase =
-            new DownloadSelectedCertificatesUseCase(
+            new DownloadCertificateEmissionsUseCase(
                 bucket,
                 certificatesRepository,
                 dataSourceRowsRepository,

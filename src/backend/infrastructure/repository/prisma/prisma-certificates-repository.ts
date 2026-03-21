@@ -1,6 +1,6 @@
 import { ICertificatesRepository } from '@/backend/application/interfaces/repository/icertificates-repository'
 import {
-    Certificate,
+    CertificateEmission,
     CERTIFICATE_STATUS,
     INPUT_METHOD,
 } from '@/backend/domain/certificate'
@@ -179,7 +179,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         }
     }
 
-    async save(certificate: Certificate) {
+    async save(certificate: CertificateEmission) {
         const {
             id,
             name,
@@ -357,7 +357,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         // ])
     }
 
-    async update(certificate: Certificate) {
+    async update(certificate: CertificateEmission) {
         const {
             id,
             name,
@@ -714,7 +714,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         // })
     }
 
-    async getById(id: string): Promise<Certificate | null> {
+    async getById(id: string): Promise<CertificateEmission | null> {
         const certificate = await this.prisma.certificateEmission.findUnique({
             where: { id },
             include: {
@@ -783,7 +783,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
               })
             : null
 
-        return new Certificate({
+        return new CertificateEmission({
             id: certificate.id,
             name: certificate.title,
             userId: certificate.user_id,

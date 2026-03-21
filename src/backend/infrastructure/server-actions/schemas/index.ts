@@ -5,7 +5,7 @@ import {
 } from '@/backend/domain/template'
 import { MAX_DATA_SOURCE_BYTES_SIZE } from '@/backend/domain/data-source'
 
-// Certificate Emission
+// CertificateEmission Emission
 export const createCertificateEmissionSchema = z.object({
     name: z.string().min(1).max(100),
 })
@@ -97,7 +97,7 @@ export const downloadTemplateSchema = z.object({
     certificateEmissionId: z.string().min(1),
 })
 
-// Certificate
+// CertificateEmission
 export const generateCertificatesSchema = z.object({
     certificateId: z.string().min(1),
 })

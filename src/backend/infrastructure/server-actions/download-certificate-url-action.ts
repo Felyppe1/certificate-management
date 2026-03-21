@@ -5,7 +5,7 @@ import { logoutAction } from './logout-action'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
-import { DownloadCertificateUseCase } from '@/backend/application/download-certificate-use-case'
+import { DownloadCertificateEmissionUseCase } from '@/backend/application/download-certificate-emission-use-case'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { downloadCertificateUrlSchema } from './schemas'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
@@ -29,11 +29,12 @@ export async function downloadCertificateUrlAction(
         )
         const bucket = new GcpBucket()
 
-        const downloadCertificateUseCase = new DownloadCertificateUseCase(
-            bucket,
-            certificatesRepository,
-            dataSourceRowsRepository,
-        )
+        const downloadCertificateUseCase =
+            new DownloadCertificateEmissionUseCase(
+                bucket,
+                certificatesRepository,
+                dataSourceRowsRepository,
+            )
 
         const signedUrl = await downloadCertificateUseCase.execute({
             userId,

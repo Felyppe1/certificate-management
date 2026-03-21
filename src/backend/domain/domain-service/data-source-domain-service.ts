@@ -1,4 +1,4 @@
-import { Certificate } from '../certificate'
+import { CertificateEmission } from '../certificate'
 import { CreateDataSourceInput, MAX_DATA_SOURCE_ROWS } from '../data-source'
 import { DataSourceRow } from '../data-source-row'
 import {
@@ -7,7 +7,7 @@ import {
 } from '../error/validation-error'
 
 interface CreateDataSourceDomainServiceInput {
-    certificate: Certificate
+    certificate: CertificateEmission
     newDataSourceData: CreateDataSourceInput
 }
 

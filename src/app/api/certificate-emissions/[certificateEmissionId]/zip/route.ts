@@ -1,4 +1,4 @@
-import { DownloadCertificatesUseCase } from '@/backend/application/download-certificates-use-case'
+import { DownloadAllCertificateEmissionsUseCase } from '@/backend/application/download-all-certificate-emissions-use-case'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
@@ -24,11 +24,12 @@ export async function GET(
         )
         const bucket = new GcpBucket()
 
-        const downloadCertificatesUseCase = new DownloadCertificatesUseCase(
-            bucket,
-            certificatesRepository,
-            dataSourceRowsRepository,
-        )
+        const downloadCertificatesUseCase =
+            new DownloadAllCertificateEmissionsUseCase(
+                bucket,
+                certificatesRepository,
+                dataSourceRowsRepository,
+            )
 
         const zipStream = await downloadCertificatesUseCase.execute({
             certificateEmissionId,

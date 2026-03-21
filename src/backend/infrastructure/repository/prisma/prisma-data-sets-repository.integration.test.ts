@@ -6,7 +6,7 @@ import {
     GENERATION_STATUS,
 } from '@/backend/domain/data-set'
 import {
-    Certificate,
+    CertificateEmission,
     CERTIFICATE_STATUS,
     INPUT_METHOD,
 } from '@/backend/domain/certificate'
@@ -45,7 +45,7 @@ describe('PrismaDataSetsRepository Integration Tests', () => {
             passwordHash: 'hashed-password',
         }
 
-        const certificate = new Certificate({
+        const certificate = new CertificateEmission({
             id: '1',
             name: 'Certificate Name',
             userId: '1',

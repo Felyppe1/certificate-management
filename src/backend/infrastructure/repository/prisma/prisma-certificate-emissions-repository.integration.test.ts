@@ -1,7 +1,7 @@
 import { prisma } from '@/tests/setup.integration'
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
-    Certificate,
+    CertificateEmission,
     CERTIFICATE_STATUS,
     CertificateInput,
     INPUT_METHOD,
@@ -82,7 +82,7 @@ describe('PrismaCertificateEmissionsRepository Integration Tests', () => {
     })
 
     it('should create a certificate emission successfully', async () => {
-        const certificate = new Certificate(createCertificateData())
+        const certificate = new CertificateEmission(createCertificateData())
 
         await expect(
             certificateEmissionsRepository.save(certificate),
@@ -102,7 +102,7 @@ describe('PrismaCertificateEmissionsRepository Integration Tests', () => {
     })
 
     it('should add a template successfully', async () => {
-        const certificate = new Certificate(createCertificateData())
+        const certificate = new CertificateEmission(createCertificateData())
 
         await certificateEmissionsRepository.save(certificate)
 
@@ -128,7 +128,7 @@ describe('PrismaCertificateEmissionsRepository Integration Tests', () => {
     })
 
     it('should remove a template successfully', async () => {
-        const certificate = new Certificate(
+        const certificate = new CertificateEmission(
             createCertificateData({
                 template: new Template(createTemplateData()),
             }),
@@ -150,7 +150,7 @@ describe('PrismaCertificateEmissionsRepository Integration Tests', () => {
     })
 
     it('should add a data source successfully', async () => {
-        const certificate = new Certificate(createCertificateData())
+        const certificate = new CertificateEmission(createCertificateData())
 
         await certificateEmissionsRepository.save(certificate)
 
@@ -176,7 +176,7 @@ describe('PrismaCertificateEmissionsRepository Integration Tests', () => {
     })
 
     it('should remove a data source successfully', async () => {
-        const certificate = new Certificate(
+        const certificate = new CertificateEmission(
             createCertificateData({
                 dataSource: new DataSource(createDataSourceData()),
             }),
@@ -199,7 +199,7 @@ describe('PrismaCertificateEmissionsRepository Integration Tests', () => {
 
     describe('should preserve existing mapping and try to auto-map new variables with columns that are not being used when updating the', () => {
         it('template', async () => {
-            const certificate = new Certificate(
+            const certificate = new CertificateEmission(
                 createCertificateData({
                     template: new Template(
                         createTemplateData({ variables: ['variable1'] }),
@@ -264,7 +264,7 @@ describe('PrismaCertificateEmissionsRepository Integration Tests', () => {
         })
 
         it('data source', async () => {
-            const certificate = new Certificate(
+            const certificate = new CertificateEmission(
                 createCertificateData({
                     template: new Template(
                         createTemplateData({

@@ -17,12 +17,12 @@ import archiver from 'archiver' // TODO: dependency inversion
 import { PassThrough } from 'stream'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 
-interface DownloadCertificateUseCaseInput {
+interface DownloadAllCertificateEmissionsUseCaseInput {
     userId: string
     certificateEmissionId: string
 }
 
-export class DownloadCertificatesUseCase {
+export class DownloadAllCertificateEmissionsUseCase {
     constructor(
         private bucket: Pick<IBucket, 'getObjectsWithPrefix'>,
         private certificateRepository: Pick<ICertificatesRepository, 'getById'>,
@@ -32,7 +32,7 @@ export class DownloadCertificatesUseCase {
         >,
     ) {}
 
-    async execute(input: DownloadCertificateUseCaseInput) {
+    async execute(input: DownloadAllCertificateEmissionsUseCaseInput) {
         const certificate = await this.certificateRepository.getById(
             input.certificateEmissionId,
         )

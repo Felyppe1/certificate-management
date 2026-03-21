@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-    Certificate,
+    CertificateEmission,
     CERTIFICATE_STATUS,
     CertificateInput,
     INPUT_METHOD,
@@ -54,13 +54,13 @@ const createCertificateData = (
     ...overrides,
 })
 
-describe('Certificate', () => {
+describe('CertificateEmission', () => {
     it('should create a certificate emission successfully only with necessary data', () => {
-        let certificate!: Certificate
+        let certificate!: CertificateEmission
 
         expect(
             () =>
-                (certificate = Certificate.create({
+                (certificate = CertificateEmission.create({
                     name: 'Title',
                     userId: '1',
                     template: null,
@@ -86,7 +86,7 @@ describe('Certificate', () => {
     })
 
     it('should add a template successfully', () => {
-        const certificate = new Certificate(createCertificateData())
+        const certificate = new CertificateEmission(createCertificateData())
 
         expect(() => {
             certificate.setTemplate(createTemplateData())
@@ -97,7 +97,7 @@ describe('Certificate', () => {
     })
 
     it('should remove a template successfully', () => {
-        const certificate = new Certificate(
+        const certificate = new CertificateEmission(
             createCertificateData({
                 template: new Template(createTemplateData()),
             }),
@@ -111,7 +111,7 @@ describe('Certificate', () => {
     })
 
     it('should add a data source successfully', () => {
-        const certificate = new Certificate(createCertificateData())
+        const certificate = new CertificateEmission(createCertificateData())
 
         expect(() => {
             certificate.setDataSource(
@@ -126,7 +126,7 @@ describe('Certificate', () => {
     })
 
     it('should remove a data source successfully', () => {
-        const certificate = new Certificate(
+        const certificate = new CertificateEmission(
             createCertificateData({
                 dataSource: new DataSource(createDataSourceData()),
             }),
@@ -141,7 +141,7 @@ describe('Certificate', () => {
 
     describe('should preserve existing mapping and try to auto-map new variables with columns that are not being used when updating the', () => {
         it('template', () => {
-            const certificate = new Certificate(
+            const certificate = new CertificateEmission(
                 createCertificateData({
                     template: new Template(
                         createTemplateData({ variables: ['variable1'] }),
@@ -171,7 +171,7 @@ describe('Certificate', () => {
         })
 
         it('data source', () => {
-            const certificate = new Certificate(
+            const certificate = new CertificateEmission(
                 createCertificateData({
                     template: new Template(
                         createTemplateData({
@@ -203,7 +203,7 @@ describe('Certificate', () => {
 
     describe('should automatically map variables to columns with matching normalized names when adding a new', () => {
         it('template', () => {
-            const certificate = new Certificate(
+            const certificate = new CertificateEmission(
                 createCertificateData({
                     dataSource: new DataSource(
                         createDataSourceData({ columns: ['Name', 'E-mail'] }),
@@ -227,7 +227,7 @@ describe('Certificate', () => {
         })
 
         it('data source', () => {
-            const certificate = new Certificate(
+            const certificate = new CertificateEmission(
                 createCertificateData({
                     template: new Template(
                         createTemplateData({

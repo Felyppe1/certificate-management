@@ -5,7 +5,7 @@ import { logoutAction } from './logout-action'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
-import { ViewCertificatesUseCase } from '@/backend/application/view-certificates-use-case'
+import { ViewCertificateEmissionsUseCase } from '@/backend/application/view-certificate-emissions-use-case'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { viewCertificatesSchema } from './schemas'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
@@ -26,7 +26,7 @@ export async function viewCertificatesAction(_: unknown, formData: FormData) {
             prisma,
         )
 
-        const viewCertificatesUseCase = new ViewCertificatesUseCase(
+        const viewCertificatesUseCase = new ViewCertificateEmissionsUseCase(
             bucket,
             certificatesRepository,
             dataSourceRowsRepository,

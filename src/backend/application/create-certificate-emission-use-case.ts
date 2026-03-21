@@ -1,4 +1,4 @@
-import { Certificate } from '../domain/certificate'
+import { CertificateEmission } from '../domain/certificate'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 
 interface CreateUseCaseEmissionUseCaseInput {
@@ -12,7 +12,7 @@ export class CreateCertificateEmissionUseCase {
     ) {}
 
     async execute({ name, userId }: CreateUseCaseEmissionUseCaseInput) {
-        const newCertificate = Certificate.create({
+        const newCertificate = CertificateEmission.create({
             name,
             userId,
             template: null,

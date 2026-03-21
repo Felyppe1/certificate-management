@@ -9,18 +9,13 @@ import {
     ForbiddenError,
 } from '../domain/error/forbidden-error'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
-import { PROCESSING_STATUS_ENUM } from '../domain/data-source-row'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
 
-interface DownloadCertificateUseCaseInput {
+interface ViewCertificateEmissionUseCaseInput {
     userId: string
     rowId: string
 }
 
-export class DownloadCertificateUseCase {
+export class ViewCertificateEmissionUseCase {
     constructor(
         private bucket: Pick<IBucket, 'generateSignedUrl'>,
         private certificateRepository: Pick<ICertificatesRepository, 'getById'>,
@@ -30,15 +25,17 @@ export class DownloadCertificateUseCase {
         >,
     ) {}
 
-    async execute(input: DownloadCertificateUseCaseInput) {
-        const row = await this.dataSourceRowsRepository.getById(input.rowId)
+    async execute(input: ViewCertificateEmissionUseCaseInput) {
+        const dataSourceRow = await this.dataSourceRowsRepository.getById(
+            input.rowId,
+        )
 
-        if (!row) {
+        if (!dataSourceRow) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE_ROW)
         }
 
         const certificate = await this.certificateRepository.getById(
-            row.getCertificateEmissionId(),
+            dataSourceRow.getCertificateEmissionId(),
         )
 
         if (!certificate) {
@@ -48,16 +45,11 @@ export class DownloadCertificateUseCase {
         if (certificate.getUserId() !== input.userId) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
-
-        if (row.getProcessingStatus() !== PROCESSING_STATUS_ENUM.COMPLETED) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.CERTIFICATE_NOT_GENERATED,
-            )
-        }
+        // TODO: handle error
 
         const bucketName = process.env.CERTIFICATES_BUCKET!
 
-        const filePath = `users/${input.userId}/certificates/${certificate.getId()}/certificate-${input.rowId}.pdf`
+        const filePath = `users/${input.userId}/certificates/${certificate.getId()}/certificate-${dataSourceRow.getId()}.pdf`
 
         const signedUrl = await this.bucket.generateSignedUrl({
             bucketName,

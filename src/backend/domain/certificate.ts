@@ -64,7 +64,7 @@ interface CertificateOutput
     domainEvents: DomainEvent[]
 }
 
-export class Certificate extends AggregateRoot {
+export class CertificateEmission extends AggregateRoot {
     private id: string
     private name: string
     private template: Template | null
@@ -75,7 +75,7 @@ export class Certificate extends AggregateRoot {
     private createdAt: Date
     private variableColumnMapping: Record<string, string | null> | null
 
-    static create(data: CreateCertificateInput): Certificate {
+    static create(data: CreateCertificateInput): CertificateEmission {
         const template = data.template ? new Template(data.template) : null
         const dataSource = data.dataSource
             ? DataSource.create(data.dataSource)
@@ -97,7 +97,7 @@ export class Certificate extends AggregateRoot {
         //     emailErrorType: null,
         // })
 
-        const certificate = new Certificate({
+        const certificate = new CertificateEmission({
             id: certificateEmissionId,
             name: data.name,
             userId: data.userId,
@@ -230,7 +230,7 @@ export class Certificate extends AggregateRoot {
         const template = new Template(data)
         this.template = template
 
-        this.variableColumnMapping = Certificate.mapVariablesToColumns(
+        this.variableColumnMapping = CertificateEmission.mapVariablesToColumns(
             template,
             this.dataSource,
             this.variableColumnMapping,
@@ -305,7 +305,7 @@ export class Certificate extends AggregateRoot {
         const dataSource = DataSource.create(data)
         this.dataSource = dataSource
 
-        this.variableColumnMapping = Certificate.mapVariablesToColumns(
+        this.variableColumnMapping = CertificateEmission.mapVariablesToColumns(
             this.template,
             dataSource,
             this.variableColumnMapping,
@@ -381,7 +381,7 @@ export class Certificate extends AggregateRoot {
 
         this.dataSource = null
 
-        this.variableColumnMapping = Certificate.mapVariablesToColumns(
+        this.variableColumnMapping = CertificateEmission.mapVariablesToColumns(
             this.template,
             this.dataSource,
         )
@@ -394,7 +394,7 @@ export class Certificate extends AggregateRoot {
 
     //     this.template.update(data)
 
-    //     this.variableColumnMapping = Certificate.mapVariablesToColumns(
+    //     this.variableColumnMapping = CertificateEmission.mapVariablesToColumns(
     //         this.template,
     //         this.dataSource,
     //         this.variableColumnMapping,

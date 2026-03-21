@@ -1,4 +1,4 @@
-import { Certificate } from '@/backend/domain/certificate'
+import { CertificateEmission } from '@/backend/domain/certificate'
 
 interface GetCertificateEmissionsMetricsByUserIdOutput {
     totalCertificatesGenerated: number
@@ -10,9 +10,9 @@ interface GetCertificateEmissionsMetricsByUserIdOutput {
 }
 
 export interface ICertificatesRepository {
-    save(certificate: Certificate): Promise<void>
-    update(certificate: Certificate): Promise<void>
-    getById(id: string): Promise<Certificate | null>
+    save(certificate: CertificateEmission): Promise<void>
+    update(certificate: CertificateEmission): Promise<void>
+    getById(id: string): Promise<CertificateEmission | null>
     getCertificateEmissionsMetricsByUserId(
         userId: string,
     ): Promise<GetCertificateEmissionsMetricsByUserIdOutput>
