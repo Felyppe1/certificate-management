@@ -58,6 +58,9 @@ export const updateDataSourceColumnsSchema = z.object({
             name: z.string().min(1),
             type: z.enum(['string', 'number', 'boolean', 'date', 'array']),
             arraySeparator: z.string().min(1).max(3).nullable(),
+            arrayItemType: z
+                .enum(['string', 'number', 'boolean', 'date'])
+                .nullable(),
         }),
     ),
 })

@@ -21,6 +21,10 @@ export enum VALIDATION_ERROR_TYPE {
     DATA_SOURCE_ROWS_EXCEEDED = 'data-source-rows-exceeded',
     DATA_SOURCE_FILE_SIZE_TOO_LARGE = 'data-source-file-size-too-large',
     TEMPLATE_FILE_SIZE_TOO_LARGE = 'template-file-size-too-large',
+    DATA_SOURCE_COLUMNS_NOT_FOUND = 'data-source-columns-not-found',
+    DATA_SOURCE_INVALID_COLUMN_TYPES = 'data-source-invalid-column-types',
+    DATA_SOURCE_INVALID_COLUMN_METADATA = 'data-source-invalid-column-metadata',
+    DATA_SOURCE_COLUMN_TYPE_CHANGE_NOT_ALLOWED = 'data-source-column-type-change-not-allowed',
 }
 
 export class ValidationError extends AppError<VALIDATION_ERROR_TYPE> {

@@ -1,4 +1,9 @@
-import { DataSource, DataSourceColumn } from '../domain/data-source'
+import {
+    ArrayMetadata,
+    ColumnType,
+    DataSource,
+    DataSourceColumn,
+} from '../domain/data-source'
 import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
@@ -59,24 +64,9 @@ export class UpdateDataSourceColumnsUseCase {
             data.columns,
         )
 
-        if (columnsToValidate.length === 0) {
-            certificate.markAsDraft()
-
-            await this.transactionManager.run(async () => {
-                await this.dataSourceRowsRepository.resetProcessingStatusByCertificateEmissionId(
-                    certificate.getId(),
-                )
-                await this.certificatesRepository.update(certificate)
-            })
-
-            return { invalidColumns: [] }
-        }
-
         const validationResults = await Promise.all(
             columnsToValidate.map(async columnName => {
-                const newColumn = data.columns.find(c => c.name === columnName)
-
-                if (!newColumn) return null
+                const newColumn = data.columns.find(c => c.name === columnName)!
 
                 const values =
                     await this.dataSourceRowsRepository.getColumnValuesByCertificateEmissionId(
@@ -84,11 +74,11 @@ export class UpdateDataSourceColumnsUseCase {
                         columnName,
                     )
 
-                const hasInvalidValue = values.some(value => {
-                    if (value === null || value.trim() === '') return false
-
-                    return !this.canConvertValue(value, newColumn.type)
-                })
+                const hasInvalidValue = !this.canConvertValues(
+                    values,
+                    newColumn.type,
+                    newColumn.arrayMetadata ?? undefined,
+                )
 
                 if (hasInvalidValue) {
                     return {
@@ -121,25 +111,63 @@ export class UpdateDataSourceColumnsUseCase {
         return { invalidColumns: [] }
     }
 
-    private canConvertValue(value: string, toType: string): boolean {
-        switch (toType) {
-            case 'string':
+    private canConvertValues(
+        values: string[],
+        toType: ColumnType,
+        arrayMetadata?: ArrayMetadata,
+    ): boolean {
+        if (toType === 'string') return true // TODO: não precisa porque nenhum vai dizer que é perigoso trocar para string
+
+        const nonEmpty = values
+            .filter(Boolean)
+            .map(v => v.trim())
+            .filter(Boolean)
+
+        if (nonEmpty.length === 0) return true
+
+        if (toType === 'array') {
+            if (!arrayMetadata) return false
+
+            const items: string[] = []
+            for (const value of nonEmpty) {
+                if (!value) continue
+
+                const split = value
+                    .split(arrayMetadata.separator)
+                    .map(v => v.trim())
+                    .filter(Boolean)
+
+                items.push(...split)
+            }
+
+            if (arrayMetadata.itemType === 'string') return true
+            if (
+                arrayMetadata.itemType === 'boolean' &&
+                items.every(DataSource.isBoolean)
+            )
+                return true
+            if (
+                arrayMetadata.itemType === 'number' &&
+                items.every(DataSource.isNumber)
+            )
+                return true
+            if (
+                arrayMetadata.itemType === 'date' &&
+                items.every(DataSource.isDate)
+            )
                 return true
 
-            case 'number':
-                return DataSource.isNumber(value)
-
-            case 'boolean':
-                return DataSource.isBoolean(value)
-
-            case 'date':
-                return DataSource.isDate(value)
-
-            case 'array':
-                return true
-
-            default:
-                return false
+            return false
+        } else {
+            return nonEmpty.every(value => {
+                if (toType === 'number') {
+                    return DataSource.isNumber(value)
+                } else if (toType === 'boolean') {
+                    return DataSource.isBoolean(value)
+                } else if (toType === 'date') {
+                    return DataSource.isDate(value)
+                }
+            })
         }
     }
 }

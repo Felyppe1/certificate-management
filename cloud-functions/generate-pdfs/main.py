@@ -822,7 +822,7 @@ class InputMethod(str, Enum):
     URL = "URL"
     GOOGLE_DRIVE = "GOOGLE_DRIVE"
 
-class TemplateFileExtension(str, Enum):
+class TemplateFileMimeType(str, Enum):
     PPTX = 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     GOOGLE_SLIDES = 'application/vnd.google-apps.presentation',
     GOOGLE_DOCS = 'application/vnd.google-apps.document',
@@ -840,7 +840,7 @@ class DataSourceRowModel(BaseModel):
 
 class TemplateModel(BaseModel):
     storageFileUrl: Optional[str] = None
-    fileExtension: TemplateFileExtension
+    fileMimeType: TemplateFileMimeType
     variables: List[str]
 
 class ColumnType(str, Enum):
@@ -850,8 +850,15 @@ class ColumnType(str, Enum):
     DATE = "date"
     ARRAY = "array"
 
+class ArrayItemType(str, Enum):
+    STRING = "string"
+    NUMBER = "number"
+    BOOLEAN = "boolean"
+    DATE = "date"
+
 class ArrayMetadata(BaseModel):
     separator: str
+    itemType: ArrayItemType
 
 class Column(BaseModel):
     name: str
@@ -908,7 +915,7 @@ def main(request):
         data_source_row_id = row.id
         user_id = certificate_emission.userId
         # input_method = template.inputMethod.value
-        file_mime_type = template.fileExtension.value
+        file_mime_type = template.fileMimeType.value
 
         template_buffer = None
         is_docx = None
@@ -937,60 +944,60 @@ def main(request):
                 if column_name and column_name in row.data:
                     for column in data_source.columns:
                         if column.name == column_name:
+                            def convert_item(item: str, item_type: str):
+                                match item_type:
+                                    case 'boolean':
+                                        return item.lower() in ("true", "verdadeiro", "1")
+                                    case 'number':
+                                        return LiquidFloat(item)
+                                    case 'date':
+                                        BR_REGEX = re.compile(
+                                            r'^(\d{1,2})/(\d{1,2})/(\d{4})(?: (\d{2}):(\d{2})(?::(\d{2}))?)?$'
+                                        )
+
+                                        regex_match = BR_REGEX.match(item)
+
+                                        if regex_match:
+                                            day = int(regex_match.group(1))
+                                            month = int(regex_match.group(2))
+                                            year = int(regex_match.group(3))
+                                            hour = int(regex_match.group(4)) if regex_match.group(4) else None
+                                            minute = int(regex_match.group(5)) if regex_match.group(5) else None
+                                            second = int(regex_match.group(6)) if regex_match.group(6) else None
+
+                                            if month > 12:
+                                                aux = day
+                                                day = month
+                                                month = aux
+
+                                            if second != None:
+                                                dt = datetime(year, month, day, hour, minute, second)
+                                                return LiquidDate(dt.strftime("%d/%m/%Y %H:%M:%S"), dt)
+                                            elif hour != None or minute != None:
+                                                dt = datetime(year, month, day, hour, minute)
+                                                return LiquidDate(dt.strftime("%d/%m/%Y %H:%M"), dt)
+                                            else:
+                                                dt = datetime(year, month, day)
+                                                return LiquidDate(dt.strftime("%d/%m/%Y"), dt)
+
+                                        return item
+                                    case _:
+                                        return item
+
                             row_value = row.data[column_name].strip()
+                            
+                            if column.type == ColumnType.ARRAY:
+                                raw_items = [
+                                    item.strip()
+                                    for item in row_value.split(column.arrayMetadata.separator)
+                                    if item.strip()
+                                ]
+                                item_type = column.arrayMetadata.itemType
 
-                            match column.type:
-                                case ColumnType.ARRAY:
-                                    row_variable_mapping[template_var] = row_value.split(
-                                        column.arrayMetadata.separator
-                                    )
+                                row_variable_mapping[template_var] = [convert_item(i, item_type) for i in raw_items]
+                            else:
+                                row_variable_mapping[template_var] = convert_item(row_value, column.type)
 
-                                case ColumnType.BOOLEAN:
-                                    normalized = row_value.lower()
-
-                                    row_variable_mapping[template_var] = normalized in (
-                                        "true",
-                                        "verdadeiro",
-                                        "1"
-                                    )
-
-                                case ColumnType.NUMBER:
-                                    row_variable_mapping[template_var] = LiquidFloat(row_value)
-
-                                case ColumnType.DATE:
-                                    BR_REGEX = re.compile(
-                                        r'^(\d{1,2})/(\d{1,2})/(\d{4})(?: (\d{2}):(\d{2})(?::(\d{2}))?)?$'
-                                    )
-
-                                    match = BR_REGEX.match(row_value)
-
-                                    if match:
-                                        day = int(match.group(1))
-                                        month = int(match.group(2))
-                                        year = int(match.group(3))
-                                        hour = int(match.group(4)) if match.group(4) else None
-                                        minute = int(match.group(5)) if match.group(5) else None
-                                        second = int(match.group(6)) if match.group(6) else None
-
-                                        if month > 12:
-                                            aux = day
-                                            day = month
-                                            month = aux
-
-                                        if second != None:
-                                            dt = datetime(year, month, day, hour, minute, second)
-                                            row_value = LiquidDate(dt.strftime("%d/%m/%Y %H:%M:%S"), dt)
-                                        elif hour != None or minute != None:
-                                            dt = datetime(year, month, day, hour, minute)
-                                            row_value = LiquidDate(dt.strftime("%d/%m/%Y %H:%M"), dt)
-                                        else:
-                                            dt = datetime(year, month, day)
-                                            row_value = LiquidDate(dt.strftime("%d/%m/%Y"), dt)
-
-                                    row_variable_mapping[template_var] = row_value
-
-                                case _:
-                                    row_variable_mapping[template_var] = row_value
                             break
 
             if is_docx:

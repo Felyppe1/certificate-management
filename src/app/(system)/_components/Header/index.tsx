@@ -23,7 +23,7 @@ export function Header({ userName, userId, credits }: HeaderProps) {
                     className="flex items-center gap-1 sm:gap-2 p-1 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md"
                 >
                     <img
-                        src="/logo-2.png"
+                        src="/logo.png"
                         alt="Certifica"
                         className="w-8 sm:w-10"
                     />

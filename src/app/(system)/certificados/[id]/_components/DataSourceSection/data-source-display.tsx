@@ -44,8 +44,7 @@ import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
 import { toast } from 'sonner'
 import { viewCertificateAction } from '@/backend/infrastructure/server-actions/view-certificate-action'
 import { downloadDataSourceAction } from '@/backend/infrastructure/server-actions/download-data-source-action'
-import { ColumnsConfigurationSection } from './ColumnsConfigurationSection'
-import { columnTypeConfig } from './ColumnTypeSelect'
+import { ConfigurableDataSourceTable } from './ConfigurableDataSourceTable'
 import { useGoogleRelogin } from '@/components/useGoogleRelogin'
 
 function getInputMethodLabel(method: string) {
@@ -474,29 +473,6 @@ export function DataSourceDisplay({
 
                             <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0 mt-0.5">
-                                    <Columns2 className="size-4 sm:size-5 text-muted-foreground" />
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-muted-foreground mb-1">
-                                        Colunas e tipagem
-                                    </p>
-                                    <p className="text-sm text-muted-foreground mb-3">
-                                        Selecione o tipo de dado correto para
-                                        cada coluna para garantir a formatação
-                                        adequada.
-                                    </p>
-                                    <ColumnsConfigurationSection
-                                        certificateId={certificateId}
-                                        columns={dataSource.columns}
-                                        certificatesGenerated={
-                                            certificatesGenerated
-                                        }
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-3">
-                                <div className="flex-shrink-0 mt-0.5">
                                     <Table2 className="size-4 sm:size-5 text-muted-foreground" />
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -507,231 +483,25 @@ export function DataSourceDisplay({
                                         {dataSource.columns.length === 0 ? (
                                             <p>Nenhuma coluna encontrada</p>
                                         ) : (
-                                            <div className="space-y-4">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="text-sm text-muted-foreground">
-                                                            Linhas:{' '}
-                                                            <span className="font-medium text-foreground">
-                                                                {rows.length}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="border rounded-lg">
-                                                    <Table>
-                                                        <TableHeader>
-                                                            <TableRow>
-                                                                {certificatesGenerated && (
-                                                                    <TableHead className="">
-                                                                        Ação
-                                                                    </TableHead>
-                                                                )}
-                                                                {dataSource.columns.map(
-                                                                    column => {
-                                                                        const config =
-                                                                            columnTypeConfig[
-                                                                                column
-                                                                                    .type
-                                                                            ]
-                                                                        const Icon =
-                                                                            config?.icon
-
-                                                                        return (
-                                                                            <TableHead
-                                                                                key={
-                                                                                    column.name
-                                                                                }
-                                                                            >
-                                                                                <div className="flex items-center gap-2">
-                                                                                    {Icon && (
-                                                                                        <Icon
-                                                                                            className={`size-3.5 ${config.iconColor}`}
-                                                                                        />
-                                                                                    )}
-                                                                                    <span className="whitespace-nowrap">
-                                                                                        {
-                                                                                            column.name
-                                                                                        }
-                                                                                    </span>
-                                                                                </div>
-                                                                            </TableHead>
-                                                                        )
-                                                                    },
-                                                                )}
-                                                            </TableRow>
-                                                        </TableHeader>
-                                                        <TableBody>
-                                                            {(showAllRows
-                                                                ? rows
-                                                                : rows.slice(
-                                                                      0,
-                                                                      10,
-                                                                  )
-                                                            ).map(
-                                                                (
-                                                                    row,
-                                                                    index,
-                                                                ) => (
-                                                                    <TableRow
-                                                                        key={
-                                                                            index
-                                                                        }
-                                                                        className={
-                                                                            row.processingStatus ===
-                                                                            PROCESSING_STATUS_ENUM.FAILED
-                                                                                ? 'bg-destructive/10 hover:bg-destructive/20'
-                                                                                : ''
-                                                                        }
-                                                                    >
-                                                                        {certificatesGenerated && (
-                                                                            <TableCell>
-                                                                                <div className="flex gap-1">
-                                                                                    {row.processingStatus ===
-                                                                                        PROCESSING_STATUS_ENUM.COMPLETED && (
-                                                                                        <Button
-                                                                                            onClick={() => {
-                                                                                                handleViewCertificate(
-                                                                                                    row.id,
-                                                                                                )
-                                                                                            }}
-                                                                                            variant="ghost"
-                                                                                            size="sm"
-                                                                                            className="h-8 w-8 p-0"
-                                                                                            title="Visualizar certificado"
-                                                                                            disabled={
-                                                                                                isViewingCertificate &&
-                                                                                                viewingRowId ===
-                                                                                                    row.id
-                                                                                            }
-                                                                                        >
-                                                                                            {isViewingCertificate &&
-                                                                                            viewingRowId ===
-                                                                                                row.id ? (
-                                                                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                                                            ) : (
-                                                                                                <Eye />
-                                                                                            )}
-                                                                                        </Button>
-                                                                                    )}
-                                                                                    {/* {row.processingStatus ===
-                                                                                        PROCESSING_STATUS_ENUM.FAILED && (
-                                                                                        <Button
-                                                                                            onClick={() =>
-                                                                                                handleRetry(
-                                                                                                    row.id,
-                                                                                                )
-                                                                                            }
-                                                                                            variant="ghost"
-                                                                                            size="sm"
-                                                                                            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                                                            title="Tentar novamente"
-                                                                                            disabled={
-                                                                                                isRetrying
-                                                                                            }
-                                                                                        >
-                                                                                            <RotateCw className="h-4 w-4" />
-                                                                                        </Button>
-                                                                                    )} */}
-                                                                                </div>
-                                                                            </TableCell>
-                                                                        )}
-                                                                        {dataSource.columns.map(
-                                                                            column => (
-                                                                                <TableCell
-                                                                                    key={
-                                                                                        column.name
-                                                                                    }
-                                                                                >
-                                                                                    {row
-                                                                                        .data[
-                                                                                        column
-                                                                                            .name
-                                                                                    ] ||
-                                                                                        '-'}
-                                                                                </TableCell>
-                                                                            ),
-                                                                        )}
-                                                                    </TableRow>
-                                                                ),
-                                                            )}
-                                                        </TableBody>
-                                                    </Table>
-                                                </div>
-
-                                                {rows.length > 10 &&
-                                                    !showAllRows && (
-                                                        <div className="flex justify-center">
-                                                            <Button
-                                                                variant="outline"
-                                                                onClick={() =>
-                                                                    setShowAllRows(
-                                                                        true,
-                                                                    )
-                                                                }
-                                                                size="sm"
-                                                            >
-                                                                Mostrar todos os{' '}
-                                                                {rows.length}{' '}
-                                                                registros
-                                                            </Button>
-                                                        </div>
-                                                    )}
-
-                                                {rows.length > 10 &&
-                                                    showAllRows && (
-                                                        <div className="flex justify-center">
-                                                            <Button
-                                                                variant="outline"
-                                                                onClick={() =>
-                                                                    setShowAllRows(
-                                                                        false,
-                                                                    )
-                                                                }
-                                                                size="sm"
-                                                            >
-                                                                Mostrar apenas
-                                                                10 registros
-                                                            </Button>
-                                                        </div>
-                                                    )}
-
-                                                <div className="flex gap-x-4 gap-y-2 items-center flex-wrap">
-                                                    {certificatesGenerated && (
-                                                        <>
-                                                            <Button
-                                                                size="sm"
-                                                                onClick={
-                                                                    handleDownloadAllCertificates
-                                                                }
-                                                            >
-                                                                <Download />
-                                                                Baixar Todos
-                                                            </Button>
-
-                                                            <p className="text-sm text-muted-foreground">
-                                                                Tamanho total:{' '}
-                                                                <span className="font-medium text-foreground">
-                                                                    {formatBytes(
-                                                                        totalBytes,
-                                                                    )}
-                                                                </span>
-                                                            </p>
-                                                        </>
-                                                    )}
-
-                                                    {/* <p className="text-sm text-muted-foreground">
-                                                        Formato:{' '}
-                                                        <Badge
-                                                            variant='blue'
-                                                            // size={'sm'}
-                                                        >
-                                                            PDF
-                                                        </Badge>
-                                                    </p> */}
-                                                </div>
-                                            </div>
+                                            <ConfigurableDataSourceTable
+                                                certificateId={certificateId}
+                                                rows={rows}
+                                                columns={dataSource.columns}
+                                                certificatesGenerated={
+                                                    certificatesGenerated
+                                                }
+                                                handleViewCertificate={
+                                                    handleViewCertificate
+                                                }
+                                                isViewingCertificate={
+                                                    isViewingCertificate
+                                                }
+                                                viewingRowId={viewingRowId}
+                                                handleDownloadAllCertificates={
+                                                    handleDownloadAllCertificates
+                                                }
+                                                totalBytes={totalBytes}
+                                            />
                                         )}
                                     </div>
                                 </div>

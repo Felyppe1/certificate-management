@@ -43,8 +43,11 @@ export async function updateDataSourceColumnsAction(
             name: col.name,
             type: col.type,
             arrayMetadata:
-                col.type === 'array' && col.arraySeparator
-                    ? { separator: col.arraySeparator }
+                col.type === 'array' && col.arraySeparator && col.arrayItemType
+                    ? {
+                          separator: col.arraySeparator,
+                          itemType: col.arrayItemType,
+                      }
                     : null,
         }))
 

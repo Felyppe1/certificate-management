@@ -15,6 +15,13 @@ enum COLUMN_TYPE {
     ARRAY
 }
 
+enum ARRAY_ITEM_TYPE {
+    STRING
+    NUMBER
+    BOOLEAN
+    DATE
+}
+
 model User {
     id            String  @id @default(cuid())
     email         String  @unique
@@ -126,6 +133,7 @@ model DataSourceColumn {
     name            String
     type            COLUMN_TYPE
     array_separator String?
+    array_item_type ARRAY_ITEM_TYPE?
 
     DataSource       DataSource        @relation(fields: [data_source_id], references: [certificate_emission_id], onDelete: Cascade)
     TemplateVariable TemplateVariable?

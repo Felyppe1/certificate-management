@@ -98,6 +98,7 @@ interface UpdateDataSourceColumnsBody {
     }[]
 }
 
+// TODO: it must be a PATCH
 export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ certificateEmissionId: string }> },
@@ -130,8 +131,11 @@ export async function PUT(
             name: col.name,
             type: col.type,
             arrayMetadata:
-                col.type === 'array' && col.arraySeparator
-                    ? { separator: col.arraySeparator }
+                col.type === 'array' && col.arraySeparator && col.arrayItemType
+                    ? {
+                          separator: col.arraySeparator,
+                          itemType: col.arrayItemType,
+                      }
                     : null,
         }))
 

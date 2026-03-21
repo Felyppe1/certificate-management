@@ -1,23 +1,27 @@
 import z from 'zod'
 import { INPUT_METHOD } from './certificate'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from './error/validation-error'
 
 export const MAX_DATA_SOURCE_ROWS = 300
 export const MAX_DATA_SOURCE_BYTES_SIZE = 2 * 1024 * 1024 // 2MB
 
 export const FORBIDDEN_TYPE_CHANGE: Record<ColumnType, ColumnType[]> = {
     string: [],
-    number: ['boolean'],
+    number: ['boolean', 'date'],
     boolean: ['date', 'number'],
-    date: ['boolean'],
+    date: ['boolean', 'number'],
     array: [],
 }
 
 const UNSAFE_TYPE_CHANGE: Record<ColumnType, ColumnType[]> = {
-    string: ['number', 'boolean', 'date'],
-    number: ['date'],
-    boolean: [],
-    date: ['number'],
-    array: ['number', 'boolean', 'date'],
+    string: ['number', 'boolean', 'date', 'array'],
+    number: ['array'],
+    boolean: ['array'],
+    date: ['array'],
+    array: ['number', 'boolean', 'date', 'array'],
 }
 
 export enum DATA_SOURCE_MIME_TYPE {
@@ -36,8 +40,11 @@ export const DATA_SOURCE_MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
 
 export type ColumnType = 'string' | 'number' | 'boolean' | 'date' | 'array'
 
-type ArrayMetadata = {
+export type ArrayItemType = Exclude<ColumnType, 'array'>
+
+export type ArrayMetadata = {
     separator: string
+    itemType: ArrayItemType
 }
 
 export type DataSourceColumn = {
@@ -143,58 +150,99 @@ export class DataSource {
     }
 
     setColumns(columns: DataSourceColumn[]) {
-        const allColumnsExist = columns.every(column =>
+        const allColumnsFound = columns.every(column =>
             this.columns.find(c => c.name === column.name),
         )
 
-        if (!allColumnsExist) {
-            throw new Error(
-                'All existing columns must be present when updating columns',
+        if (!allColumnsFound) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.DATA_SOURCE_COLUMNS_NOT_FOUND,
             )
         }
 
-        const allColumnsValid = columns.every(column => {
+        const validColumnTypes: ColumnType[] = [
+            'string',
+            'number',
+            'boolean',
+            'date',
+            'array',
+        ]
+        const areColumnTypesValid = columns.every(column =>
+            validColumnTypes.includes(column.type),
+        )
+
+        if (!areColumnTypesValid) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.DATA_SOURCE_INVALID_COLUMN_TYPES,
+            )
+        }
+
+        const areColumnMetadataValid = columns.every(column => {
             if (column.type === 'array') {
                 const separator = column.arrayMetadata?.separator
+                const itemType = column.arrayMetadata?.itemType
 
-                return (
+                const isSeparatorValid =
                     typeof separator === 'string' &&
                     separator.length >= 1 &&
                     separator.length <= 3
-                )
+
+                const validItemTypes: ArrayItemType[] = [
+                    'string',
+                    'number',
+                    'boolean',
+                    'date',
+                ]
+                const isItemTypeValid =
+                    !!itemType && validItemTypes.includes(itemType)
+
+                return isSeparatorValid && isItemTypeValid
             }
 
             return column.arrayMetadata === null
         })
 
-        if (!allColumnsValid) {
-            throw new Error('All columns must have valid types and metadata')
+        if (!areColumnMetadataValid) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.DATA_SOURCE_INVALID_COLUMN_METADATA,
+            )
         }
 
-        // 3. Verificação de Transições de Tipo (NOVA LÓGICA)
+        // Type changes verification
         const unsafeColumnNames: string[] = []
+        const forbiddenColumns: {
+            name: string
+            fromType: ColumnType
+            toType: ColumnType
+        }[] = []
 
-        for (const newCol of columns) {
-            // Encontramos a coluna antiga correspondente
-            // (o find aqui é seguro pois já validamos allColumnsExist acima)
-            const oldCol = this.columns.find(c => c.name === newCol.name)!
+        columns.forEach(newColumn => {
+            const oldColumn = this.columns.find(c => c.name === newColumn.name)!
 
-            // Se o tipo não mudou, pula para a próxima
-            if (oldCol.type === newCol.type) {
-                continue
+            // TODO: removed it just because an easier logic for the array type is to always check it if it changes
+            // if (oldColumn.type === newColumn.type) {
+            //     continue
+            // }
+
+            const forbiddenTargets = FORBIDDEN_TYPE_CHANGE[oldColumn.type]
+            if (forbiddenTargets.includes(newColumn.type)) {
+                forbiddenColumns.push({
+                    name: newColumn.name,
+                    fromType: oldColumn.type,
+                    toType: newColumn.type,
+                })
             }
 
-            const forbiddenTargets = FORBIDDEN_TYPE_CHANGE[oldCol.type]
-            if (forbiddenTargets.includes(newCol.type)) {
-                throw new Error(
-                    `Forbidden transition: Cannot change column '${newCol.name}' from '${oldCol.type}' to '${newCol.type}'.`,
-                )
+            const unsafeTargets = UNSAFE_TYPE_CHANGE[oldColumn.type]
+            if (unsafeTargets?.includes(newColumn.type)) {
+                unsafeColumnNames.push(newColumn.name)
             }
+        })
 
-            const unsafeTargets = UNSAFE_TYPE_CHANGE[oldCol.type]
-            if (unsafeTargets?.includes(newCol.type)) {
-                unsafeColumnNames.push(newCol.name)
-            }
+        if (forbiddenColumns.length > 0) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.DATA_SOURCE_COLUMN_TYPE_CHANGE_NOT_ALLOWED,
+            )
         }
 
         this.columns = columns
@@ -244,18 +292,18 @@ export class DataSource {
         if (nonEmpty.every(this.isDate))
             return { type: 'date', arrayMetadata: null }
 
-        const separator = this.detectArraySeparator(nonEmpty)
-        if (separator) {
+        const arrayMetadata = this.detectArray(nonEmpty)
+        if (arrayMetadata) {
             return {
                 type: 'array',
-                arrayMetadata: { separator },
+                arrayMetadata,
             }
         }
 
         return { type: 'string', arrayMetadata: null }
     }
 
-    private static detectArraySeparator(values: string[]): ',' | ';' | null {
+    static detectArray(values: string[]): ArrayMetadata | null {
         let commaCount = 0
         let semicolonCount = 0
 
@@ -264,14 +312,32 @@ export class DataSource {
             commaCount += (value.match(/,/g) || []).length
             semicolonCount += (value.match(/;/g) || []).length
         }
-
-        // TODO: validate values of the array if it is an array
-
+        console.log({ commaCount, semicolonCount })
         if (commaCount === 0 && semicolonCount === 0) return null
-        if (commaCount > semicolonCount) return ','
-        if (semicolonCount > commaCount) return ';'
 
-        return null
+        const separator = commaCount >= semicolonCount ? ',' : ';'
+
+        const items: string[] = []
+
+        for (const value of values) {
+            if (!value) continue
+
+            const split = value
+                .split(separator)
+                .map(v => v.trim())
+                .filter(Boolean)
+
+            items.push(...split)
+        }
+        console.log({ items })
+
+        let itemType: ArrayItemType = 'string'
+        if (items.every(this.isBoolean)) itemType = 'boolean'
+        if (items.every(this.isNumber)) itemType = 'number'
+        if (items.every(this.isDate)) itemType = 'date'
+
+        console.log({ itemType })
+        return { separator, itemType }
     }
 
     static isBoolean(value: string): boolean {
@@ -333,6 +399,7 @@ export class DataSource {
         const blockedFormats = [
             /^\d+$/, // "2024", "1"
             /^\d+\.\d+$/, // "8.9"
+            /^\d+\,\d+$/, // "8,9"
             /^\d+-\d+$/, // "8-9"
             /^\d+\/\d+$/, // "8/9"
             // /[a-zA-Z]/, // any letter

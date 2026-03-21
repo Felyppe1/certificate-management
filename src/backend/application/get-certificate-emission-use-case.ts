@@ -157,6 +157,9 @@ export class GetCertificateEmissionUseCase {
                                   name: column.name,
                                   type: column.type.toLowerCase() as ColumnType,
                                   arraySeparator: column.array_separator,
+                                  arrayItemType: column.array_item_type
+                                      ? column.array_item_type.toLowerCase()
+                                      : null,
                               }),
                           ),
                       thumbnailUrl:

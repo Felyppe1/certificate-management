@@ -220,6 +220,13 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                                 array_separator:
                                                     column.arrayMetadata
                                                         ?.separator ?? null,
+                                                array_item_type: column
+                                                    .arrayMetadata?.itemType
+                                                    ? COLUMN_TYPE_TO_SQL_MAPPER[
+                                                          column.arrayMetadata
+                                                              .itemType
+                                                      ]
+                                                    : null,
                                             }),
                                         ),
                                     },
@@ -418,6 +425,12 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                     ],
                                     array_separator:
                                         column.arrayMetadata?.separator ?? null,
+                                    array_item_type: column.arrayMetadata
+                                        ?.itemType
+                                        ? COLUMN_TYPE_TO_SQL_MAPPER[
+                                              column.arrayMetadata.itemType
+                                          ]
+                                        : null,
                                 })),
                             },
                         },
@@ -443,6 +456,12 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                     ],
                                     array_separator:
                                         column.arrayMetadata?.separator ?? null,
+                                    array_item_type: column.arrayMetadata
+                                        ?.itemType
+                                        ? COLUMN_TYPE_TO_SQL_MAPPER[
+                                              column.arrayMetadata.itemType
+                                          ]
+                                        : null,
                                 },
                                 create: {
                                     // data_source_id: id,
@@ -452,6 +471,12 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                     ],
                                     array_separator:
                                         column.arrayMetadata?.separator ?? null,
+                                    array_item_type: column.arrayMetadata
+                                        ?.itemType
+                                        ? COLUMN_TYPE_TO_SQL_MAPPER[
+                                              column.arrayMetadata.itemType
+                                          ]
+                                        : null,
                                 },
                             })),
                             deleteMany: {
@@ -740,11 +765,16 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                       column => ({
                           name: column.name,
                           type: COLUMN_TYPE_TO_OBJECT_MAPPER[column.type],
-                          arrayMetadata: column.array_separator
-                              ? {
-                                    separator: column.array_separator,
-                                }
-                              : null,
+                          arrayMetadata:
+                              column.type === 'ARRAY'
+                                  ? {
+                                        separator: column.array_separator!,
+                                        itemType:
+                                            COLUMN_TYPE_TO_OBJECT_MAPPER[
+                                                column.array_item_type!
+                                            ],
+                                    }
+                                  : null,
                       }),
                   ),
                   columnsRow: 1,
