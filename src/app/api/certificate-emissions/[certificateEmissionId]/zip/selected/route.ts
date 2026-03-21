@@ -8,7 +8,7 @@ import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { NextRequest, NextResponse } from 'next/server'
 import { Readable } from 'stream'
-import { downloadSelectedCertificatesSchema } from '@/backend/infrastructure/server-actions/schemas'
+import { downloadCertificateEmissionsSchema } from '@/backend/infrastructure/server-actions/schemas'
 
 export async function POST(
     request: NextRequest,
@@ -20,7 +20,7 @@ export async function POST(
         const { userId } = await validateSessionToken()
 
         const body = await request.json()
-        const parsed = downloadSelectedCertificatesSchema.parse(body)
+        const parsed = downloadCertificateEmissionsSchema.parse(body)
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
@@ -28,14 +28,14 @@ export async function POST(
         )
         const bucket = new GcpBucket()
 
-        const downloadSelectedCertificatesUseCase =
+        const downloadCertificateEmissionsUseCase =
             new DownloadCertificateEmissionsUseCase(
                 bucket,
                 certificatesRepository,
                 dataSourceRowsRepository,
             )
 
-        const zipStream = await downloadSelectedCertificatesUseCase.execute({
+        const zipStream = await downloadCertificateEmissionsUseCase.execute({
             certificateEmissionId,
             userId,
             rowIds: parsed.rowIds,

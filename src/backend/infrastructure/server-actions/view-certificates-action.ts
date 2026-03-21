@@ -7,7 +7,7 @@ import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certif
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { ViewCertificateEmissionsUseCase } from '@/backend/application/view-certificate-emissions-use-case'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-import { viewCertificatesSchema } from './schemas'
+import { viewCertificateEmissionsSchema } from './schemas'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 
 export async function viewCertificatesAction(_: unknown, formData: FormData) {
@@ -18,7 +18,7 @@ export async function viewCertificatesAction(_: unknown, formData: FormData) {
     try {
         const { userId } = await validateSessionToken()
 
-        const parsedData = viewCertificatesSchema.parse(rawData)
+        const parsedData = viewCertificateEmissionsSchema.parse(rawData)
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const bucket = new GcpBucket()
@@ -26,13 +26,14 @@ export async function viewCertificatesAction(_: unknown, formData: FormData) {
             prisma,
         )
 
-        const viewCertificatesUseCase = new ViewCertificateEmissionsUseCase(
-            bucket,
-            certificatesRepository,
-            dataSourceRowsRepository,
-        )
+        const viewCertificateEmissionsUseCase =
+            new ViewCertificateEmissionsUseCase(
+                bucket,
+                certificatesRepository,
+                dataSourceRowsRepository,
+            )
 
-        const results = await viewCertificatesUseCase.execute({
+        const results = await viewCertificateEmissionsUseCase.execute({
             userId,
             rowIds: parsedData.rowIds,
         })

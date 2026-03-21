@@ -51,7 +51,6 @@ interface ConfigurableDataSourceTableProps {
     }[]
     certificatesGenerated: boolean
     handleDownloadAllCertificates: () => void
-    totalBytes: number
 }
 
 function formatBytes(bytes: number, decimals = 2) {
@@ -70,7 +69,6 @@ export function ConfigurableDataSourceTable({
     columns: initialColumns,
     certificatesGenerated,
     handleDownloadAllCertificates,
-    totalBytes,
 }: ConfigurableDataSourceTableProps) {
     const [showAllRows, setShowAllRows] = useState(false)
     const [columns, setColumns] = useState(initialColumns)
@@ -276,6 +274,8 @@ export function ConfigurableDataSourceTable({
         setSelectedColumnIndex(null)
     }
 
+    const totalBytes = rows.reduce((acc, row) => acc + (row.fileBytes || 0), 0)
+
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between gap-x-8 gap-y-2 flex-wrap">
@@ -286,6 +286,14 @@ export function ConfigurableDataSourceTable({
                             {rows.length}
                         </span>
                     </div>
+                    {certificatesGenerated && (
+                        <p className="text-sm text-muted-foreground">
+                            Tamanho total:{' '}
+                            <span className="font-medium text-foreground">
+                                {formatBytes(totalBytes)}
+                            </span>
+                        </p>
+                    )}
                 </div>
 
                 {hasChanges && (
@@ -491,20 +499,6 @@ export function ConfigurableDataSourceTable({
                                                                     },
                                                                 )}
                                                             </div>
-                                                            {/* {column.type === 'boolean' && (
-                                                                <div className="mt-4 p-3 bg-orange-500/10 border border-orange-500/20 rounded-md">
-                                                                    <p className="text-xs text-orange-600 dark:text-orange-400">
-                                                                        Valores válidos na tabela: verdadeiro/falso, sim/não, true/false, 0/1.
-                                                                    </p>
-                                                                </div>
-                                                            )}
-                                                            {column.type === 'date' && (
-                                                                <div className="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-md">
-                                                                    <p className="text-xs text-green-600 dark:text-green-400">
-                                                                        Formatos aceitos: DD/MM/AAAA, AAAA-MM-DD e similares.
-                                                                    </p>
-                                                                </div>
-                                                            )} */}
                                                         </div>
 
                                                         {column.type ===
@@ -597,6 +591,81 @@ export function ConfigurableDataSourceTable({
                                                                         </Select>
                                                                     </div>
                                                                 </div>
+                                                            </div>
+                                                        )}
+
+                                                        {(column.type ===
+                                                            'boolean' ||
+                                                            column.arrayItemType ===
+                                                                'boolean') && (
+                                                            <div className="mt-3 px-4 py-2 bg-blue-800 text-zinc-100 rounded-md space-y-1">
+                                                                <p className="font-semibold text-sm">
+                                                                    Valores
+                                                                    booleanos
+                                                                    válidos:
+                                                                </p>
+                                                                <ul className="text-xs text-zinc-300 space-y-1">
+                                                                    <li>
+                                                                        <code className="font-mono">
+                                                                            verdadeiro
+                                                                        </code>{' '}
+                                                                        /{' '}
+                                                                        <code className="font-mono">
+                                                                            falso
+                                                                        </code>
+                                                                    </li>
+                                                                    <li>
+                                                                        <code className="font-mono">
+                                                                            true
+                                                                        </code>{' '}
+                                                                        /{' '}
+                                                                        <code className="font-mono">
+                                                                            false
+                                                                        </code>
+                                                                    </li>
+                                                                    <li>
+                                                                        <code className="font-mono">
+                                                                            1
+                                                                        </code>{' '}
+                                                                        /{' '}
+                                                                        <code className="font-mono">
+                                                                            0
+                                                                        </code>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        )}
+
+                                                        {(column.type ===
+                                                            'date' ||
+                                                            column.arrayItemType ===
+                                                                'date') && (
+                                                            <div className="mt-3 px-4 py-2 bg-blue-800 text-zinc-100 rounded-md space-y-1">
+                                                                <p className="font-semibold text-sm">
+                                                                    Valores de
+                                                                    datas
+                                                                    válidos:
+                                                                </p>
+                                                                <ul className="text-xs text-zinc-300 space-y-1">
+                                                                    <li>
+                                                                        <code className="font-mono">
+                                                                            dd/mm/yyyy
+                                                                            [HH:mm[:ss]]
+                                                                        </code>
+                                                                    </li>
+                                                                    <li>
+                                                                        <code className="font-mono">
+                                                                            mm/dd/yyyy
+                                                                            [HH:mm[:ss]]
+                                                                        </code>
+                                                                    </li>
+                                                                    <li>
+                                                                        <code className="font-mono">
+                                                                            yyyy-mm-dd
+                                                                            [HH:mm[:ss]]
+                                                                        </code>
+                                                                    </li>
+                                                                </ul>
                                                             </div>
                                                         )}
                                                     </div>
@@ -703,6 +772,7 @@ export function ConfigurableDataSourceTable({
                                         ? 'selecionado'
                                         : 'selecionados'}
                                 </span>
+
                                 <div className="flex gap-2">
                                     <Button
                                         size="sm"
@@ -733,12 +803,6 @@ export function ConfigurableDataSourceTable({
                                 </div>
                             </div>
                         )}
-                        <p className="text-sm text-muted-foreground">
-                            Tamanho total:{' '}
-                            <span className="font-medium text-foreground">
-                                {formatBytes(totalBytes)}
-                            </span>
-                        </p>
                     </>
                 )}
             </div>

@@ -50,7 +50,7 @@ export function Header({ userName, userId, credits }: HeaderProps) {
                 <div className="flex items-center gap-x-4 flex-wrap justify-end">
                     {/* <ThemeToggle /> */}
                     <Popover>
-                        <PopoverTrigger className="flex items-center gap-1.5 text-xs sm:text-sm px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 cursor-pointer">
+                        <PopoverTrigger className="flex items-center gap-1.5 text-xs sm:text-sm px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 cursor-pointer hover:bg-amber-500/20">
                             <Zap className="size-3 sm:size-3.5" />
                             <span className="font-medium">{credits}</span>
                             <span className="text-amber-400/70">créditos</span>
