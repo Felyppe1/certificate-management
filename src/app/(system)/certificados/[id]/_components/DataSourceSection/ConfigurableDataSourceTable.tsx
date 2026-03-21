@@ -35,10 +35,12 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover'
+    Sheet,
+    SheetContent,
+    SheetTrigger,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet'
 
 interface ConfigurableDataSourceTableProps {
     certificateId: string
@@ -404,7 +406,7 @@ export function ConfigurableDataSourceTable({
                                             key={column.name}
                                             className="p-0 border-r border-border/50 last:border-r-0"
                                         >
-                                            <Popover
+                                            <Sheet
                                                 open={isSelected}
                                                 onOpenChange={open =>
                                                     setSelectedColumnIndex(
@@ -412,7 +414,7 @@ export function ConfigurableDataSourceTable({
                                                     )
                                                 }
                                             >
-                                                <PopoverTrigger asChild>
+                                                <SheetTrigger asChild>
                                                     <ColumnHeaderMenu
                                                         columnName={column.name}
                                                         type={column.type}
@@ -423,15 +425,16 @@ export function ConfigurableDataSourceTable({
                                                         isSelected={isSelected}
                                                         disabled={isPending}
                                                     />
-                                                </PopoverTrigger>
-                                                <PopoverContent
-                                                    className="w-[16rem] sm:w-[18rem] md:w-[20rem]"
-                                                    avoidCollisions={false}
+                                                </SheetTrigger>
+                                                <SheetContent
+                                                    showCloseButton={false}
+                                                    className="w-[80vw] sm:max-w-md overflow-y-auto px-6 py-6 bg-popover border-l-border/50 z-53"
                                                 >
-                                                    <div className="flex items-center justify-between pr-4 py-3 rounded-t-xl">
-                                                        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                                            Tipo de dado
-                                                        </Label>
+                                                    <SheetHeader className="pb-4 mb-4 border-b flex flex-row items-center justify-between space-y-0">
+                                                        <SheetTitle className="text-left text-lg text-foreground">
+                                                            Coluna:{' '}
+                                                            {column.name}
+                                                        </SheetTitle>
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
@@ -440,15 +443,18 @@ export function ConfigurableDataSourceTable({
                                                                     null,
                                                                 )
                                                             }
-                                                            className="h-7 w-7 p-0 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
+                                                            className="h-8 w-8 p-0 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                                         >
                                                             <X className="size-4" />
                                                         </Button>
-                                                    </div>
+                                                    </SheetHeader>
 
-                                                    <div className="space-y-6">
-                                                        <div className="space-y-3">
-                                                            <div className="flex flex-col gap-1">
+                                                    <div className="space-y-8">
+                                                        <div className="space-y-4">
+                                                            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                                                Tipo de dado
+                                                            </Label>
+                                                            <div className="flex flex-col gap-2">
                                                                 {availableTypes.map(
                                                                     ([
                                                                         key,
@@ -510,7 +516,7 @@ export function ConfigurableDataSourceTable({
                                                                     Configurações
                                                                     da lista
                                                                 </Label>
-                                                                <div className="flex gap-4">
+                                                                <div className="flex flex-col gap-4">
                                                                     <div className="space-y-2">
                                                                         <Label className="text-xs text-muted-foreground">
                                                                             Separador
@@ -530,8 +536,14 @@ export function ConfigurableDataSourceTable({
                                                                                         .value,
                                                                                 )
                                                                             }
-                                                                            placeholder="Ex: ,"
-                                                                            className="h-9 w-16 font-mono bg-muted/50"
+                                                                            placeholder="Ex: , ou ;"
+                                                                            className="h-9 font-mono bg-muted/50"
+                                                                            minLength={
+                                                                                1
+                                                                            }
+                                                                            maxLength={
+                                                                                3
+                                                                            }
                                                                         />
                                                                     </div>
 
@@ -557,7 +569,7 @@ export function ConfigurableDataSourceTable({
                                                                             <SelectTrigger className="h-9 bg-muted/50">
                                                                                 <SelectValue placeholder="Selecione o tipo" />
                                                                             </SelectTrigger>
-                                                                            <SelectContent>
+                                                                            <SelectContent className="z-55">
                                                                                 {availableArrayItemTypes.map(
                                                                                     ([
                                                                                         key,
@@ -671,8 +683,8 @@ export function ConfigurableDataSourceTable({
                                                             </div>
                                                         )}
                                                     </div>
-                                                </PopoverContent>
-                                            </Popover>
+                                                </SheetContent>
+                                            </Sheet>
                                         </TableHead>
                                     )
                                 })}
