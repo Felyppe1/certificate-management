@@ -40,7 +40,7 @@ import { refreshDataSourceAction } from '@/backend/infrastructure/server-actions
 import { retryDataSourceRowAction } from '@/backend/infrastructure/server-actions/retry-data-source-row-action'
 import { SourceIcon } from '@/components/svg/SourceIcon'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
-import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
+import { WarningPopover } from '../../../../../../components/WarningPopover'
 import { toast } from 'sonner'
 
 import { downloadDataSourceAction } from '@/backend/infrastructure/server-actions/download-data-source-action'
@@ -290,10 +290,11 @@ export function DataSourceDisplay({
 
                     <div className="flex flex-wrap justify-start sm:justify-end gap-2 min-w-[15rem]">
                         {dataSource.inputMethod !== 'UPLOAD' && (
-                            <RegenerateWarningPopover
+                            <WarningPopover
                                 open={showRefreshWarning}
                                 onOpenChange={setShowRefreshWarning}
                                 onConfirm={handleRefresh}
+                                description="Você precisará gerar os certificados novamente após esta ação."
                                 title="Atualizar fonte de dados?"
                             >
                                 <Button
@@ -313,13 +314,14 @@ export function DataSourceDisplay({
                                         ? 'Atualizando...'
                                         : 'Atualizar'}
                                 </Button>
-                            </RegenerateWarningPopover>
+                            </WarningPopover>
                         )}
 
-                        <RegenerateWarningPopover
+                        <WarningPopover
                             open={showEditWarning}
                             onOpenChange={setShowEditWarning}
                             onConfirm={onEdit}
+                            description="Você precisará gerar os certificados novamente após esta ação."
                             title="Editar fonte de dados?"
                         >
                             <Button
@@ -335,7 +337,7 @@ export function DataSourceDisplay({
                                 <Edit3 className="scale-80" />
                                 Editar
                             </Button>
-                        </RegenerateWarningPopover>
+                        </WarningPopover>
                         <Button
                             variant="outline"
                             onClick={handleRemoveDataSource}

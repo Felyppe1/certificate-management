@@ -35,7 +35,7 @@ import {
 } from 'lucide-react'
 import { startTransition, useActionState, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
+import { WarningPopover } from '../../../../../../components/WarningPopover'
 
 interface VariableMappingSectionProps {
     certificateId: string
@@ -295,11 +295,12 @@ export function VariableMappingSection({
                 </Table>
 
                 <div className="flex flex-wrap gap-4 pt-8 border-t">
-                    <RegenerateWarningPopover
+                    <WarningPopover
                         open={showMappingWarning}
                         onOpenChange={setShowMappingWarning}
                         onConfirm={handleSave}
                         title="Alterar mapeamento de variáveis?"
+                        description="Você precisará gerar os certificados novamente após esta ação."
                     >
                         <Button
                             onClick={handleSaveClick}
@@ -317,7 +318,7 @@ export function VariableMappingSection({
                                 'Salvar Mapeamento'
                             )}
                         </Button>
-                    </RegenerateWarningPopover>
+                    </WarningPopover>
 
                     {hasChanges && (
                         <Button

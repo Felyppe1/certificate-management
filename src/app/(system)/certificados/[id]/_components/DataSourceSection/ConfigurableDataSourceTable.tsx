@@ -24,7 +24,7 @@ import { ColumnHeaderMenu, columnTypeConfig } from './ColumnHeaderMenu'
 import { toast } from 'sonner'
 import { updateDataSourceColumnsAction } from '@/backend/infrastructure/server-actions/update-data-source-columns-action'
 import { viewCertificatesAction } from '@/backend/infrastructure/server-actions/view-certificates-action'
-import { RegenerateWarningPopover } from '../RegenerateWarningDialog'
+import { WarningPopover } from '../../../../../../components/WarningPopover'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import {
@@ -77,6 +77,7 @@ export function ConfigurableDataSourceTable({
         null,
     )
     const [showSaveWarning, setShowSaveWarning] = useState(false)
+    const [showViewWarning, setShowViewWarning] = useState(false)
     const [selectedColumnIndex, setSelectedColumnIndex] = useState<
         number | null
     >(null)
@@ -307,11 +308,12 @@ export function ConfigurableDataSourceTable({
                             <Undo2 className="size-4" />
                             Desfazer
                         </Button>
-                        <RegenerateWarningPopover
+                        <WarningPopover
                             open={showSaveWarning}
                             onOpenChange={setShowSaveWarning}
                             onConfirm={handleSave}
                             title="Salvar alterações nas colunas?"
+                            description="Você precisará gerar os certificados novamente após esta ação."
                         >
                             <Button
                                 variant="default"
@@ -326,7 +328,7 @@ export function ConfigurableDataSourceTable({
                                 )}
                                 Salvar
                             </Button>
-                        </RegenerateWarningPopover>
+                        </WarningPopover>
                     </div>
                 )}
             </div>
@@ -787,19 +789,45 @@ export function ConfigurableDataSourceTable({
                                         )}
                                         Baixar
                                     </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={handleViewSelected}
-                                        disabled={isViewingCertificates}
-                                    >
-                                        {isViewingCertificates ? (
-                                            <Loader2 className="size-4 animate-spin" />
-                                        ) : (
-                                            <Eye className="size-4" />
-                                        )}
-                                        Visualizar
-                                    </Button>
+                                    {selectedCount > 5 ? (
+                                        <WarningPopover
+                                            open={showViewWarning}
+                                            onOpenChange={setShowViewWarning}
+                                            onConfirm={handleViewSelected}
+                                            title={`Abrir ${selectedCount} abas?`}
+                                            description="Cada certificado selecionado será aberto em uma aba separada."
+                                        >
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() =>
+                                                    setShowViewWarning(true)
+                                                }
+                                                disabled={isViewingCertificates}
+                                            >
+                                                {isViewingCertificates ? (
+                                                    <Loader2 className="size-4 animate-spin" />
+                                                ) : (
+                                                    <Eye className="size-4" />
+                                                )}
+                                                Visualizar
+                                            </Button>
+                                        </WarningPopover>
+                                    ) : (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={handleViewSelected}
+                                            disabled={isViewingCertificates}
+                                        >
+                                            {isViewingCertificates ? (
+                                                <Loader2 className="size-4 animate-spin" />
+                                            ) : (
+                                                <Eye className="size-4" />
+                                            )}
+                                            Visualizar
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         )}

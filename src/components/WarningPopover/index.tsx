@@ -9,21 +9,23 @@ import { Button } from '@/components/ui/button'
 import { AlertTriangle } from 'lucide-react'
 import { ReactNode } from 'react'
 
-interface RegenerateWarningPopoverProps {
+interface WarningPopoverProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     onConfirm: () => void
     title: string
+    description: string
     children: ReactNode
 }
 
-export function RegenerateWarningPopover({
+export function WarningPopover({
     open,
     onOpenChange,
     onConfirm,
     title,
+    description,
     children,
-}: RegenerateWarningPopoverProps) {
+}: WarningPopoverProps) {
     const handleConfirm = () => {
         onConfirm()
         onOpenChange(false)
@@ -56,10 +58,7 @@ export function RegenerateWarningPopover({
                             </h4>
                         </div>
                         <div className="flex-1 space-y-1">
-                            <p className="text-xs sm:text-sm">
-                                Você precisará gerar os certificados novamente
-                                após esta ação.
-                            </p>
+                            <p className="text-xs sm:text-sm">{description}</p>
                         </div>
                     </div>
                     <div className="flex gap-2 justify-end">
