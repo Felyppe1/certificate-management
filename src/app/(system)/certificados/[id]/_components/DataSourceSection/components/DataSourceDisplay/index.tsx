@@ -94,6 +94,7 @@ interface DataSourceDisplayProps {
         }[]
     }
     certificateId: string
+    certificatesEmitted: boolean
     onEdit: () => void
     isDisabled: boolean
     emailSent?: boolean
@@ -103,6 +104,7 @@ interface DataSourceDisplayProps {
 export function DataSourceDisplay({
     dataSource,
     certificateId,
+    certificatesEmitted,
     onEdit,
     isDisabled,
     emailSent = false,
@@ -460,6 +462,12 @@ export function DataSourceDisplay({
                                                 certificateId={certificateId}
                                                 rows={rows}
                                                 columns={dataSource.columns}
+                                                inputMethod={
+                                                    dataSource.inputMethod
+                                                }
+                                                certificatesEmitted={
+                                                    certificatesEmitted
+                                                }
                                                 certificatesGenerated={
                                                     certificatesGenerated
                                                 }

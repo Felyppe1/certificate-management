@@ -40,7 +40,6 @@ interface GenerateCertificatesSectionProps {
         processingStatus: PROCESSING_STATUS_ENUM
     }[]
     emailSent: boolean
-    certificatesGenerated: boolean
 }
 
 export function GenerateCertificatesSection({

@@ -40,6 +40,7 @@ export interface ColumnSettingsSheetProps {
     isModified: boolean
     isPending: boolean
     emailSent: boolean
+    isEditingCells: boolean
     availableTypes: [ColumnType, (typeof columnTypeConfig)[ColumnType]][]
     availableArrayItemTypes: [
         ColumnType,
@@ -59,6 +60,7 @@ export function ColumnSettingsSheet({
     isModified,
     isPending,
     emailSent,
+    isEditingCells,
     availableTypes,
     availableArrayItemTypes,
     setSelectedColumnIndex,
@@ -66,7 +68,7 @@ export function ColumnSettingsSheet({
     handleSeparatorChange,
     handleArrayItemTypeChange,
 }: ColumnSettingsSheetProps) {
-    const isDisabled = isPending || emailSent
+    const isDisabled = isPending || emailSent || isEditingCells
 
     return (
         <Sheet

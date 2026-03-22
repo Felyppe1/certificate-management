@@ -18,7 +18,9 @@ import {
 import { Button } from '@/components/ui/button'
 import { Eye, Loader2, Download, Undo2, Save, Mail } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
+import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 import { ColumnType, FORBIDDEN_TYPE_CHANGE } from '@/backend/domain/data-source'
 import { columnTypeConfig } from './components/ColumnSettingsSheet/components/ColumnHeaderMenu'
 import { toast } from 'sonner'
@@ -27,6 +29,7 @@ import { viewCertificatesAction } from '@/backend/infrastructure/server-actions/
 import { resendEmailsAction } from '@/backend/infrastructure/server-actions/resend-emails-action'
 import { WarningPopover } from '../../../../../../../../../../components/WarningPopover'
 import { ColumnSettingsSheet } from './components/ColumnSettingsSheet'
+import { EditableCell } from './components/EditableCell'
 
 interface ConfigurableDataSourceTableProps {
     certificateId: string
@@ -37,6 +40,8 @@ interface ConfigurableDataSourceTableProps {
         arraySeparator: string | null
         arrayItemType?: ColumnType | null
     }[]
+    inputMethod: string
+    certificatesEmitted: boolean
     certificatesGenerated: boolean
     handleDownloadAllCertificates: () => void
     emailSent?: boolean
@@ -56,6 +61,8 @@ export function ConfigurableDataSourceTable({
     certificateId,
     rows,
     columns: initialColumns,
+    inputMethod,
+    certificatesEmitted,
     certificatesGenerated,
     handleDownloadAllCertificates,
     emailSent = false,
@@ -71,6 +78,12 @@ export function ConfigurableDataSourceTable({
     const [selectedColumnIndex, setSelectedColumnIndex] = useState<
         number | null
     >(null)
+
+    // Edit data state
+    const [isEditingRows, setIsEditingRows] = useState(false)
+    const [editedRows, setEditedRows] = useState<
+        Record<string, Record<string, string>>
+    >({})
 
     // Checkbox selection state
     const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set())
@@ -290,7 +303,27 @@ export function ConfigurableDataSourceTable({
         setSelectedColumnIndex(null)
     }
 
+    const handleEditData = () => {
+        setIsEditingRows(true)
+        setEditedRows({})
+    }
+
+    const handleCancelEditData = () => {
+        setIsEditingRows(false)
+        setEditedRows({})
+    }
+
+    const handleSaveEditData = () => {
+        // MOCK: will implement server action later
+        console.log('Sending to action:', editedRows)
+        setIsEditingRows(false)
+        setEditedRows({})
+        toast.success('Alterações não foram persistidas ainda (Apenas UI).')
+    }
+
     const totalBytes = rows.reduce((acc, row) => acc + (row.fileBytes || 0), 0)
+
+    const canEditData = /* inputMethod === 'UPLOAD' &&  */ !certificatesEmitted
 
     return (
         <div className="space-y-4">
@@ -312,40 +345,91 @@ export function ConfigurableDataSourceTable({
                     )}
                 </div>
 
-                {hasChanges && (
-                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-300">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleUndo}
-                            disabled={isPending}
-                        >
-                            <Undo2 className="size-4" />
-                            Desfazer
-                        </Button>
-                        <WarningPopover
-                            open={showSaveWarning}
-                            onOpenChange={setShowSaveWarning}
-                            onConfirm={handleSave}
-                            title="Salvar alterações nas colunas?"
-                            description="Você precisará gerar os certificados novamente após esta ação."
-                        >
+                <div className="flex items-center gap-2">
+                    {canEditData && !isEditingRows && (
+                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-300">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleEditData}
+                                disabled={isPending || hasChanges}
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="size-4 mr-2"
+                                >
+                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                                    <path d="m15 5 4 4" />
+                                </svg>
+                                Editar dados
+                            </Button>
+                        </div>
+                    )}
+
+                    {isEditingRows && (
+                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-300">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleCancelEditData}
+                                disabled={isPending}
+                            >
+                                Cancelar
+                            </Button>
                             <Button
                                 variant="default"
                                 size="sm"
-                                onClick={handleSaveClick}
+                                onClick={handleSaveEditData}
                                 disabled={isPending}
                             >
-                                {isPending ? (
-                                    <Loader2 className="size-4 animate-spin" />
-                                ) : (
-                                    <Save className="size-4" />
-                                )}
-                                Salvar
+                                Salvar alterações
                             </Button>
-                        </WarningPopover>
-                    </div>
-                )}
+                        </div>
+                    )}
+
+                    {!isEditingRows && hasChanges && (
+                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-300">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleUndo}
+                                disabled={isPending}
+                            >
+                                <Undo2 className="size-4" />
+                                Desfazer
+                            </Button>
+                            <WarningPopover
+                                open={showSaveWarning}
+                                onOpenChange={setShowSaveWarning}
+                                onConfirm={handleSave}
+                                title="Salvar alterações nas colunas?"
+                                description="Você precisará gerar os certificados novamente após esta ação."
+                            >
+                                <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={handleSaveClick}
+                                    disabled={isPending}
+                                >
+                                    {isPending ? (
+                                        <Loader2 className="size-4 animate-spin" />
+                                    ) : (
+                                        <Save className="size-4" />
+                                    )}
+                                    Salvar
+                                </Button>
+                            </WarningPopover>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="flex flex-col xl:flex-row gap-4 relative items-start">
@@ -427,6 +511,7 @@ export function ConfigurableDataSourceTable({
                                                 isModified={isModified}
                                                 isPending={isPending}
                                                 emailSent={emailSent}
+                                                isEditingCells={isEditingRows}
                                                 availableTypes={availableTypes}
                                                 availableArrayItemTypes={
                                                     availableArrayItemTypes
@@ -492,13 +577,56 @@ export function ConfigurableDataSourceTable({
                                             const isSelected =
                                                 selectedColumnIndex === colIndex
 
+                                            const cellValue =
+                                                editedRows[row.id]?.[
+                                                    column.name
+                                                ] ??
+                                                row.data[column.name] ??
+                                                ''
+
                                             return (
                                                 <TableCell
                                                     key={column.name}
-                                                    className={`whitespace-nowrap border-r border-border/50 last:border-r-0 transition-colors ${isSelected ? 'bg-muted/30' : ''}`}
+                                                    className={`whitespace-nowrap border-r border-border/50 last:border-r-0 transition-colors ${isSelected ? 'bg-muted/30' : ''} ${isEditingRows ? 'p-0' : ''}`}
                                                 >
-                                                    {row.data[column.name] ||
-                                                        '-'}
+                                                    {isEditingRows ? (
+                                                        <EditableCell
+                                                            initialValue={
+                                                                cellValue as string
+                                                            }
+                                                            originalValue={
+                                                                (row.data[
+                                                                    column.name
+                                                                ] ??
+                                                                    '') as string
+                                                            }
+                                                            rowId={row.id}
+                                                            columnName={
+                                                                column.name
+                                                            }
+                                                            onChange={(
+                                                                rId,
+                                                                colName,
+                                                                val,
+                                                            ) => {
+                                                                setEditedRows(
+                                                                    prev => ({
+                                                                        ...prev,
+                                                                        [rId]: {
+                                                                            ...(prev[
+                                                                                rId
+                                                                            ] ||
+                                                                                {}),
+                                                                            [colName]:
+                                                                                val,
+                                                                        },
+                                                                    }),
+                                                                )
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        cellValue || '-'
+                                                    )}
                                                 </TableCell>
                                             )
                                         })}

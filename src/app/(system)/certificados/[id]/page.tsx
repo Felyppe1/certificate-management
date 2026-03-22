@@ -104,6 +104,7 @@ export default async function CertificatePage({
                         googleAccount?.accessTokenExpiryDateTime || null
                     }
                     certificateId={certificateId}
+                    certificatesEmitted={emailSent}
                     dataSource={
                         certificateEmissionResponse.certificateEmission
                             .dataSource
@@ -135,10 +136,6 @@ export default async function CertificatePage({
                             }
                             rows={rows}
                             emailSent={emailSent}
-                            certificatesGenerated={
-                                certificateEmissionResponse.certificateEmission
-                                    .status === 'EMITTED'
-                            }
                         />
                     )}
 

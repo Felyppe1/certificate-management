@@ -75,8 +75,8 @@ export class RefreshDataSourceUseCase {
             )
 
         if (
-            certificate.isTemplateFromGoogleDrive() ||
-            certificate.isTemplateFromUrl()
+            certificate.isDataSourceFromGoogleDrive() ||
+            certificate.isDataSourceFromUrl()
         ) {
             if (!externalAccount) {
                 throw new ForbiddenError(
@@ -107,14 +107,13 @@ export class RefreshDataSourceUseCase {
         const { name, fileMimeType, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
-                ...((certificate.isTemplateFromGoogleDrive() ||
-                    certificate.isTemplateFromUrl()) && {
+                ...((certificate.isDataSourceFromGoogleDrive() ||
+                    certificate.isDataSourceFromUrl()) && {
                     userAccessToken: externalAccount?.accessToken,
                     userRefreshToken:
                         externalAccount?.refreshToken ?? undefined,
                 }),
             })
-
         if (!DataSource.isValidFileMimeType(fileMimeType)) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
@@ -124,8 +123,8 @@ export class RefreshDataSourceUseCase {
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
             fileMimeType: fileMimeType,
-            ...((certificate.isTemplateFromGoogleDrive() ||
-                certificate.isTemplateFromUrl()) && {
+            ...((certificate.isDataSourceFromGoogleDrive() ||
+                certificate.isDataSourceFromUrl()) && {
                 accessToken: externalAccount?.accessToken,
             }),
         })

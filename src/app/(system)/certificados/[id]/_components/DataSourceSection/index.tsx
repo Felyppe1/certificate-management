@@ -31,6 +31,7 @@ import { addDataSourceByUrlAction } from '@/backend/infrastructure/server-action
 
 interface DataSourceSectionProps {
     certificateId: string
+    certificatesEmitted: boolean
     dataSource: {
         driveFileId: string | null
         storageFileUrl: string | null
@@ -58,6 +59,7 @@ interface DataSourceSectionProps {
 
 export function DataSourceSection({
     certificateId,
+    certificatesEmitted,
     dataSource,
     userEmail,
     googleOAuthToken,
@@ -275,6 +277,7 @@ export function DataSourceSection({
             <DataSourceDisplay
                 dataSource={dataSource}
                 certificateId={certificateId}
+                certificatesEmitted={certificatesEmitted}
                 onEdit={handleEdit}
                 isDisabled={emailSent}
                 emailSent={emailSent}
