@@ -20,11 +20,14 @@ import { Eye, Loader2, Download, Undo2, Save, X, Check } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
 import { ColumnType, FORBIDDEN_TYPE_CHANGE } from '@/backend/domain/data-source'
-import { ColumnHeaderMenu, columnTypeConfig } from './ColumnHeaderMenu'
+import {
+    ColumnHeaderMenu,
+    columnTypeConfig,
+} from './components/ColumnHeaderMenu'
 import { toast } from 'sonner'
 import { updateDataSourceColumnsAction } from '@/backend/infrastructure/server-actions/update-data-source-columns-action'
 import { viewCertificatesAction } from '@/backend/infrastructure/server-actions/view-certificates-action'
-import { WarningPopover } from '../../../../../../components/WarningPopover'
+import { WarningPopover } from '../../../../../../../../../../components/WarningPopover'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import {

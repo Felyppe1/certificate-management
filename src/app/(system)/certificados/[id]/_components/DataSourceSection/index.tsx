@@ -2,7 +2,7 @@
 
 import { FileSelector, SelectOption } from '@/components/FileSelector'
 import { startTransition, useActionState, useState, useEffect } from 'react'
-import { DataSourceDisplay } from './data-source-display'
+import { DataSourceDisplay } from './components/DataSourceDisplay'
 import {
     Card,
     CardContent,
