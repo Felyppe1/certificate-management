@@ -97,4 +97,30 @@ export class PrismaEmailsRepository implements IEmailsRepository {
                 emailRecord.email_error_type as EMAIL_ERROR_TYPE_ENUM | null,
         })
     }
+
+    async getByCertificateEmissionId(
+        certificateEmissionId: string,
+    ): Promise<Email | null> {
+        const emailRecord = await this.prisma.email.findUnique({
+            where: {
+                certificate_emission_id: certificateEmissionId,
+            },
+        })
+
+        if (!emailRecord) {
+            return null
+        }
+
+        return new Email({
+            id: emailRecord.id,
+            certificateEmissionId: emailRecord.certificate_emission_id,
+            subject: emailRecord.subject,
+            body: emailRecord.body,
+            emailColumn: emailRecord.email_column,
+            scheduledAt: emailRecord.scheduled_at,
+            status: emailRecord.status as PROCESSING_STATUS_ENUM,
+            emailErrorType:
+                emailRecord.email_error_type as EMAIL_ERROR_TYPE_ENUM | null,
+        })
+    }
 }

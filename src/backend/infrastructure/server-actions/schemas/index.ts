@@ -163,3 +163,8 @@ export const retryDataSourceRowSchema = z.object({
 export const retryCertificatesGenerationSchema = z.object({
     certificateId: z.string().min(1),
 })
+
+export const resendEmailsSchema = z.object({
+    certificateId: z.string().min(1),
+    rowIds: z.array(z.string().min(1)).min(1),
+})

@@ -4,4 +4,7 @@ export interface IEmailsRepository {
     save(email: Email): Promise<void>
     update(email: Email): Promise<void>
     getById(id: string): Promise<Email | null>
+    getByCertificateEmissionId(
+        certificateEmissionId: string,
+    ): Promise<Email | null>
 }

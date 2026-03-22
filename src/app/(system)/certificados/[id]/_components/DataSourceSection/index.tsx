@@ -277,6 +277,7 @@ export function DataSourceSection({
                 certificateId={certificateId}
                 onEdit={handleEdit}
                 isDisabled={emailSent}
+                emailSent={emailSent}
                 userEmail={userEmail}
             />
         )

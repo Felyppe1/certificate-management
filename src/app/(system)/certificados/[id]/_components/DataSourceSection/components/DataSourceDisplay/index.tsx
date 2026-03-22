@@ -96,6 +96,7 @@ interface DataSourceDisplayProps {
     certificateId: string
     onEdit: () => void
     isDisabled: boolean
+    emailSent?: boolean
     userEmail: string
 }
 
@@ -104,6 +105,7 @@ export function DataSourceDisplay({
     certificateId,
     onEdit,
     isDisabled,
+    emailSent = false,
     userEmail,
 }: DataSourceDisplayProps) {
     const [showAllRows, setShowAllRows] = useState(false)
@@ -464,6 +466,7 @@ export function DataSourceDisplay({
                                                 handleDownloadAllCertificates={
                                                     handleDownloadAllCertificates
                                                 }
+                                                emailSent={emailSent}
                                             />
                                         )}
                                     </div>

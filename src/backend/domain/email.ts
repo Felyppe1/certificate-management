@@ -147,6 +147,10 @@ export class Email extends AggregateRoot {
         this.emailErrorType = errorType
     }
 
+    getEmailColumn() {
+        return this.emailColumn!
+    }
+
     getScheduledAt() {
         return this.scheduledAt
     }

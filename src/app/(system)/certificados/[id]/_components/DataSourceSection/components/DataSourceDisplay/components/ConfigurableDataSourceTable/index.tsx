@@ -16,7 +16,16 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Eye, Loader2, Download, Undo2, Save, X, Check } from 'lucide-react'
+import {
+    Eye,
+    Loader2,
+    Download,
+    Undo2,
+    Save,
+    X,
+    Check,
+    Mail,
+} from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
 import { ColumnType, FORBIDDEN_TYPE_CHANGE } from '@/backend/domain/data-source'
@@ -27,6 +36,7 @@ import {
 import { toast } from 'sonner'
 import { updateDataSourceColumnsAction } from '@/backend/infrastructure/server-actions/update-data-source-columns-action'
 import { viewCertificatesAction } from '@/backend/infrastructure/server-actions/view-certificates-action'
+import { resendEmailsAction } from '@/backend/infrastructure/server-actions/resend-emails-action'
 import { WarningPopover } from '../../../../../../../../../../components/WarningPopover'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -56,6 +66,7 @@ interface ConfigurableDataSourceTableProps {
     }[]
     certificatesGenerated: boolean
     handleDownloadAllCertificates: () => void
+    emailSent?: boolean
 }
 
 function formatBytes(bytes: number, decimals = 2) {
@@ -74,6 +85,7 @@ export function ConfigurableDataSourceTable({
     columns: initialColumns,
     certificatesGenerated,
     handleDownloadAllCertificates,
+    emailSent = false,
 }: ConfigurableDataSourceTableProps) {
     const [showAllRows, setShowAllRows] = useState(false)
     const [columns, setColumns] = useState(initialColumns)
@@ -96,6 +108,9 @@ export function ConfigurableDataSourceTable({
         viewCertificatesActionHandler,
         isViewingCertificates,
     ] = useActionState(viewCertificatesAction, null)
+
+    const [resendEmailsState, resendEmailsActionHandler, isResendingEmails] =
+        useActionState(resendEmailsAction, null)
 
     const completedRows = rows.filter(
         r => r.processingStatus === PROCESSING_STATUS_ENUM.COMPLETED,
@@ -164,6 +179,16 @@ export function ConfigurableDataSourceTable({
         }
     }
 
+    const handleResendSelected = () => {
+        if (selectedRowIds.size === 0) return
+        const formData = new FormData()
+        formData.append('certificateId', certificateId)
+        formData.append('rowIds', JSON.stringify([...selectedRowIds]))
+        startTransition(() => {
+            resendEmailsActionHandler(formData)
+        })
+    }
+
     useEffect(() => {
         setColumns(initialColumns)
         setSelectedColumnIndex(null)
@@ -185,6 +210,18 @@ export function ConfigurableDataSourceTable({
             )
         }
     }, [viewCertificatesState])
+
+    useEffect(() => {
+        if (!resendEmailsState) return
+        if (resendEmailsState.success) {
+            toast.success(
+                'Envio de e-mails agendado com sucesso para as linhas selecionadas.',
+            )
+            setSelectedRowIds(new Set())
+        } else {
+            toast.error('Ocorreu um erro ao reenviar os e-mails.')
+        }
+    }, [resendEmailsState])
 
     useEffect(() => {
         if (!columnsState) return
@@ -841,6 +878,21 @@ export function ConfigurableDataSourceTable({
                                                 <Eye className="size-4" />
                                             )}
                                             Visualizar
+                                        </Button>
+                                    )}
+                                    {emailSent && (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={handleResendSelected}
+                                            disabled={isResendingEmails}
+                                        >
+                                            {isResendingEmails ? (
+                                                <Loader2 className="size-4 animate-spin" />
+                                            ) : (
+                                                <Mail className="size-4" />
+                                            )}
+                                            Reenviar E-mail
                                         </Button>
                                     )}
                                 </div>
