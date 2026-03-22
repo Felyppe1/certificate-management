@@ -26,6 +26,7 @@ export enum VALIDATION_ERROR_TYPE {
     DATA_SOURCE_INVALID_COLUMN_TYPES = 'data-source-invalid-column-types',
     DATA_SOURCE_INVALID_COLUMN_METADATA = 'data-source-invalid-column-metadata',
     DATA_SOURCE_COLUMN_TYPE_CHANGE_NOT_ALLOWED = 'data-source-column-type-change-not-allowed',
+    CERTIFICATE_NOT_EMITTED = 'certificate-not-emitted',
 }
 
 export class ValidationError extends AppError<VALIDATION_ERROR_TYPE> {

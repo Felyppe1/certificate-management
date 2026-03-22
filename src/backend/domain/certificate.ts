@@ -165,6 +165,10 @@ export class CertificateEmission extends AggregateRoot {
     //     this.status = status
     // }
 
+    isEmitted() {
+        return this.status === CERTIFICATE_STATUS.EMITTED
+    }
+
     markAsDraft() {
         this.status = CERTIFICATE_STATUS.DRAFT
     }

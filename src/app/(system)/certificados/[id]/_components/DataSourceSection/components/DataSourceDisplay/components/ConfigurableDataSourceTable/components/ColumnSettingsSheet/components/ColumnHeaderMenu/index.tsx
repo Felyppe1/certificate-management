@@ -73,7 +73,7 @@ export const ColumnHeaderMenu = forwardRef<
                 type="button"
                 disabled={disabled}
                 onClick={onClick}
-                className={`flex items-center w-full min-w-[120px] sm:min-w-[150px] h-full min-h-[40px] justify-between gap-2 px-3 py-2 transition-all cursor-pointer outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:ring-inset border-x border-transparent hover:border-border/50
+                className={`flex items-center w-full min-w-[120px] sm:min-w-[150px] h-full min-h-[40px] justify-between gap-2 px-3 py-2 transition-all cursor-pointer outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:ring-inset border-x border-transparent hover:border-border/50 disabled:cursor-default 
                     ${
                         isSelected
                             ? 'bg-muted/80 ring-1 ring-border shadow-sm'

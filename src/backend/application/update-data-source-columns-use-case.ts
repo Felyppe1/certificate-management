@@ -12,6 +12,10 @@ import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '../domain/error/validation-error'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
@@ -58,6 +62,12 @@ export class UpdateDataSourceColumnsUseCase {
 
         if (!certificate.hasDataSource()) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
+        }
+
+        if (certificate.isEmitted()) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.CERTIFICATE_NOT_EMITTED,
+            )
         }
 
         const columnsToValidate = certificate.updateDataSourceColumns(
