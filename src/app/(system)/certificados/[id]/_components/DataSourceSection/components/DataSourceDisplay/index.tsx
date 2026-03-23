@@ -471,9 +471,6 @@ export function DataSourceDisplay({
                                                 certificatesGenerated={
                                                     certificatesGenerated
                                                 }
-                                                handleDownloadAllCertificates={
-                                                    handleDownloadAllCertificates
-                                                }
                                                 emailSent={emailSent}
                                             />
                                         )}
