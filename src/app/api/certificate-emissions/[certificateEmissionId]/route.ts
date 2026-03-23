@@ -17,10 +17,7 @@ import {
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { updateCertificateEmissionSchema } from '@/backend/infrastructure/server-actions/schemas'
-import {
-    PROCESSING_STATUS_ENUM as DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM,
-    RowType,
-} from '@/backend/domain/data-source-row'
+import { PROCESSING_STATUS_ENUM as DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
 
 export interface GetCertificateEmissionControllerResponse {
     certificateEmission: {
@@ -55,7 +52,7 @@ export interface GetCertificateEmissionControllerResponse {
                 id: string
                 processingStatus: DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM
                 fileBytes: number | null
-                data: Record<string, RowType>
+                data: Record<string, string>
             }[]
         } | null
         email: {

@@ -94,18 +94,6 @@ export class PrismaDataSourceRowsRepository
 
         const certificateEmissionId = row.data_source_id
 
-        // Get the data source columns
-        const dataSourceColumns = await this.prisma.dataSourceColumn.findMany({
-            where: {
-                data_source_id: certificateEmissionId,
-            },
-        })
-
-        const columns = dataSourceColumns.map(col => ({
-            name: col.name,
-            type: col.type.toLowerCase() as ColumnType,
-        }))
-
         const data: Record<string, string> = {}
         for (const value of row.DataSourceValue) {
             data[value.column_name] = value.value
@@ -116,7 +104,6 @@ export class PrismaDataSourceRowsRepository
             certificateEmissionId,
             fileBytes: row.file_bytes,
             data,
-            dataSourceColumns: columns,
             processingStatus: row.processing_status as any,
         })
     }
@@ -137,16 +124,6 @@ export class PrismaDataSourceRowsRepository
 
         if (rows.length === 0) return []
 
-        // All rows in a cert emission share the same columns — fetch once
-        const certificateEmissionId = rows[0].data_source_id
-        const dataSourceColumns = await this.prisma.dataSourceColumn.findMany({
-            where: { data_source_id: certificateEmissionId },
-        })
-        const columns = dataSourceColumns.map(col => ({
-            name: col.name,
-            type: col.type.toLowerCase() as ColumnType,
-        }))
-
         return rows.map(row => {
             const data: Record<string, string> = {}
             for (const value of row.DataSourceValue) {
@@ -157,23 +134,90 @@ export class PrismaDataSourceRowsRepository
                 certificateEmissionId: row.data_source_id,
                 fileBytes: row.file_bytes,
                 data,
-                dataSourceColumns: columns,
                 processingStatus: row.processing_status as any,
             })
         })
     }
 
     async update(dataSourceRow: DataSourceRow): Promise<void> {
-        const { id, fileBytes, processingStatus, certificateEmissionId } =
+        const { id, fileBytes, processingStatus, certificateEmissionId, data } =
             dataSourceRow.serialize()
 
-        await this.prisma.dataSourceRow.update({
-            where: { id },
-            data: {
-                file_bytes: fileBytes,
-                processing_status: processingStatus,
-            },
-        })
+        const execute = async (tx: TransactionClient) => {
+            await tx.dataSourceRow.update({
+                where: { id },
+                data: {
+                    file_bytes: fileBytes,
+                    processing_status: processingStatus,
+                },
+            })
+
+            for (const [columnName, value] of Object.entries(data)) {
+                await tx.dataSourceValue.update({
+                    where: {
+                        data_source_id_column_name_data_source_row_id: {
+                            data_source_id: certificateEmissionId,
+                            column_name: columnName,
+                            data_source_row_id: id,
+                        },
+                    },
+                    data: {
+                        value: String(value),
+                    },
+                })
+            }
+        }
+
+        if (isPrismaClient(this.prisma)) {
+            await this.prisma.$transaction(execute)
+        } else {
+            await execute(this.prisma)
+        }
+    }
+
+    async updateMany(dataSourceRows: DataSourceRow[]): Promise<void> {
+        if (dataSourceRows.length === 0) return
+
+        const execute = async (tx: TransactionClient) => {
+            for (const row of dataSourceRows) {
+                const {
+                    id,
+                    fileBytes,
+                    processingStatus,
+                    certificateEmissionId,
+                    data,
+                } = row.serialize()
+
+                await tx.dataSourceRow.update({
+                    where: { id },
+                    data: {
+                        file_bytes: fileBytes,
+                        processing_status: processingStatus,
+                    },
+                })
+
+                for (const [columnName, value] of Object.entries(data)) {
+                    await tx.dataSourceValue.update({
+                        where: {
+                            data_source_id_column_name_data_source_row_id: {
+                                data_source_id: certificateEmissionId,
+                                column_name: columnName,
+                                data_source_row_id: id,
+                            },
+                        },
+                        data: {
+                            value,
+                        },
+                    })
+                }
+            }
+        }
+
+        if (isPrismaClient(this.prisma)) {
+            await this.prisma.$transaction(execute)
+        } else {
+            await execute(this.prisma)
+        }
     }
 
     // async getManyByCertificateEmissionId(

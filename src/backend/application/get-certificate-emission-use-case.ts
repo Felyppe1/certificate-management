@@ -12,10 +12,7 @@ import { INPUT_METHOD } from '../domain/certificate'
 import { TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
 import { prisma } from '../infrastructure/repository/prisma'
 import { EMAIL_ERROR_TYPE_ENUM, PROCESSING_STATUS_ENUM } from '../domain/email'
-import {
-    PROCESSING_STATUS_ENUM as DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM,
-    RowType,
-} from '../domain/data-source-row'
+import { PROCESSING_STATUS_ENUM as DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM } from '../domain/data-source-row'
 
 interface GetCertificateEmissionUseCaseInput {
     certificateId: string
@@ -69,7 +66,7 @@ export class GetCertificateEmissionUseCase {
             id: string
             processingStatus: DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM
             fileBytes: number | null
-            data: Record<string, RowType>
+            data: Record<string, string>
         }[] = []
 
         if (certificateEmission.DataSource) {

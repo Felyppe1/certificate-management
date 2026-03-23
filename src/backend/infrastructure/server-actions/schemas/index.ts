@@ -168,3 +168,18 @@ export const resendEmailsSchema = z.object({
     certificateId: z.string().min(1),
     rowIds: z.array(z.string().min(1)).min(1),
 })
+
+export const updateDataSourceRowsSchema = z.object({
+    certificateId: z.string(),
+    editedRows: z.array(
+        z.object({
+            rowId: z.string(),
+            data: z.array(
+                z.object({
+                    column: z.string(),
+                    newValue: z.string(),
+                }),
+            ),
+        }),
+    ),
+})

@@ -26,14 +26,24 @@ export enum VALIDATION_ERROR_TYPE {
     DATA_SOURCE_INVALID_COLUMN_TYPES = 'data-source-invalid-column-types',
     DATA_SOURCE_INVALID_COLUMN_METADATA = 'data-source-invalid-column-metadata',
     DATA_SOURCE_COLUMN_TYPE_CHANGE_NOT_ALLOWED = 'data-source-column-type-change-not-allowed',
+    DATA_SOURCE_INVALID_INPUT_METHOD = 'data-source-invalid-input-method',
     CERTIFICATE_NOT_EMITTED = 'certificate-not-emitted',
+    CERTIFICATE_EMITTED = 'certificate-emitted',
+    INVALID_ROW_DATA = 'invalid-row-data',
 }
 
 export class ValidationError extends AppError<VALIDATION_ERROR_TYPE> {
-    constructor(type: VALIDATION_ERROR_TYPE, detail?: string) {
+    public message?: string
+
+    constructor(
+        type: VALIDATION_ERROR_TYPE,
+        detail?: string,
+        message?: string,
+    ) {
         const title =
             'The server could not process the request because it would break a business rule'
 
         super(title, type, detail)
+        this.message = message
     }
 }

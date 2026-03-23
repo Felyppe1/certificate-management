@@ -16,15 +16,14 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Eye, Loader2, Download, Undo2, Save, Mail } from 'lucide-react'
+import { Eye, Loader2, Download, Save, Mail, Pencil } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
-import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 import { ColumnType, FORBIDDEN_TYPE_CHANGE } from '@/backend/domain/data-source'
 import { columnTypeConfig } from './components/ColumnSettingsSheet/components/ColumnHeaderMenu'
 import { toast } from 'sonner'
 import { updateDataSourceColumnsAction } from '@/backend/infrastructure/server-actions/update-data-source-columns-action'
+import { updateDataSourceRowsAction } from '@/backend/infrastructure/server-actions/update-data-source-rows-action'
 import { viewCertificatesAction } from '@/backend/infrastructure/server-actions/view-certificates-action'
 import { resendEmailsAction } from '@/backend/infrastructure/server-actions/resend-emails-action'
 import { WarningPopover } from '../../../../../../../../../../components/WarningPopover'
@@ -43,7 +42,6 @@ interface ConfigurableDataSourceTableProps {
     inputMethod: string
     certificatesEmitted: boolean
     certificatesGenerated: boolean
-    handleDownloadAllCertificates: () => void
     emailSent?: boolean
 }
 
@@ -64,16 +62,21 @@ export function ConfigurableDataSourceTable({
     inputMethod,
     certificatesEmitted,
     certificatesGenerated,
-    handleDownloadAllCertificates,
     emailSent = false,
 }: ConfigurableDataSourceTableProps) {
     const [showAllRows, setShowAllRows] = useState(false)
     const [columns, setColumns] = useState(initialColumns)
-    const [columnsState, columnsAction, isPending] = useActionState(
+    const [columnsState, columnsAction, isColumnsPending] = useActionState(
         updateDataSourceColumnsAction,
         null,
     )
+    const [rowsState, rowsAction, rowsIsPending] = useActionState(
+        updateDataSourceRowsAction,
+        null,
+    )
+    const isPending = isColumnsPending || rowsIsPending
     const [showSaveWarning, setShowSaveWarning] = useState(false)
+    const [showSaveRowsWarning, setShowSaveRowsWarning] = useState(false)
     const [showViewWarning, setShowViewWarning] = useState(false)
     const [selectedColumnIndex, setSelectedColumnIndex] = useState<
         number | null
@@ -235,7 +238,19 @@ export function ConfigurableDataSourceTable({
         }
     }, [columnsState])
 
-    const hasChanges =
+    useEffect(() => {
+        if (!rowsState) return
+
+        if (rowsState.success) {
+            toast.success('Dados salvos com sucesso')
+            setIsEditingRows(false)
+            setEditedRows({})
+        } else {
+            toast.error('Ocorreu um erro ao salvar os dados')
+        }
+    }, [rowsState])
+
+    const hasColumnChanges =
         JSON.stringify(columns) !== JSON.stringify(initialColumns)
 
     const handleTypeChange = (index: number, type: ColumnType) => {
@@ -314,16 +329,37 @@ export function ConfigurableDataSourceTable({
     }
 
     const handleSaveEditData = () => {
-        // MOCK: will implement server action later
-        console.log('Sending to action:', editedRows)
-        setIsEditingRows(false)
-        setEditedRows({})
-        toast.success('Alterações não foram persistidas ainda (Apenas UI).')
+        const formData = new FormData()
+        formData.append('certificateId', certificateId)
+
+        const formattedEditedRows = Object.entries(editedRows).map(
+            ([rowId, colData]) => ({
+                rowId,
+                data: Object.entries(colData).map(([column, newValue]) => ({
+                    column,
+                    newValue: String(newValue),
+                })),
+            }),
+        )
+
+        formData.append('editedRows', JSON.stringify(formattedEditedRows))
+
+        startTransition(() => {
+            rowsAction(formData)
+        })
+    }
+
+    const handleSaveRowsClick = () => {
+        if (certificatesGenerated) {
+            setShowSaveRowsWarning(true)
+        } else {
+            handleSaveEditData()
+        }
     }
 
     const totalBytes = rows.reduce((acc, row) => acc + (row.fileBytes || 0), 0)
 
-    const canEditData = /* inputMethod === 'UPLOAD' &&  */ !certificatesEmitted
+    const canEditData = inputMethod === 'UPLOAD' && !certificatesEmitted
 
     return (
         <div className="space-y-4">
@@ -346,29 +382,15 @@ export function ConfigurableDataSourceTable({
                 </div>
 
                 <div className="flex items-center gap-2">
-                    {canEditData && !isEditingRows && (
+                    {canEditData && !isEditingRows && !hasColumnChanges && (
                         <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-300">
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={handleEditData}
-                                disabled={isPending || hasChanges}
+                                disabled={isPending}
                             >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="size-4 mr-2"
-                                >
-                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                                    <path d="m15 5 4 4" />
-                                </svg>
+                                <Pencil />
                                 Editar dados
                             </Button>
                         </div>
@@ -384,18 +406,34 @@ export function ConfigurableDataSourceTable({
                             >
                                 Cancelar
                             </Button>
-                            <Button
-                                variant="default"
-                                size="sm"
-                                onClick={handleSaveEditData}
-                                disabled={isPending}
+                            <WarningPopover
+                                open={showSaveRowsWarning}
+                                onOpenChange={setShowSaveRowsWarning}
+                                onConfirm={handleSaveEditData}
+                                title="Salvar alterações nas linhas?"
+                                description="Você precisará gerar os certificados novamente após esta ação."
                             >
-                                Salvar alterações
-                            </Button>
+                                <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={handleSaveRowsClick}
+                                    disabled={
+                                        isPending ||
+                                        Object.keys(editedRows).length === 0
+                                    }
+                                >
+                                    {isPending ? (
+                                        <Loader2 className="animate-spin" />
+                                    ) : (
+                                        <Save />
+                                    )}
+                                    Salvar Linhas
+                                </Button>
+                            </WarningPopover>
                         </div>
                     )}
 
-                    {!isEditingRows && hasChanges && (
+                    {!isEditingRows && hasColumnChanges && (
                         <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-300">
                             <Button
                                 variant="outline"
@@ -403,8 +441,7 @@ export function ConfigurableDataSourceTable({
                                 onClick={handleUndo}
                                 disabled={isPending}
                             >
-                                <Undo2 className="size-4" />
-                                Desfazer
+                                Cancelar
                             </Button>
                             <WarningPopover
                                 open={showSaveWarning}
@@ -420,11 +457,11 @@ export function ConfigurableDataSourceTable({
                                     disabled={isPending}
                                 >
                                     {isPending ? (
-                                        <Loader2 className="size-4 animate-spin" />
+                                        <Loader2 className="animate-spin" />
                                     ) : (
-                                        <Save className="size-4" />
+                                        <Save />
                                     )}
-                                    Salvar
+                                    Salvar Colunas
                                 </Button>
                             </WarningPopover>
                         </div>
