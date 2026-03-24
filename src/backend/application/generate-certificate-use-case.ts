@@ -9,6 +9,10 @@ import {
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IQueue } from './interfaces/cloud/iqueue'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '../domain/error/validation-error'
 
 interface RetryDataSourceRowUseCaseInput {
     rowId: string
@@ -46,6 +50,10 @@ export class RetryDataSourceRowUseCase {
 
         if (certificateEmission.getUserId() !== userId) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+        }
+
+        if (certificateEmission.isEmitted()) {
+            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
         }
 
         const { dataSource, template, ...certificateEmissionData } =

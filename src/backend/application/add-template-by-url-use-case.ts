@@ -66,6 +66,10 @@ export class AddTemplateByUrlUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
+        if (certificate.isEmitted()) {
+            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
+        }
+
         const driveFileId = Template.getFileIdFromUrl(input.fileUrl)
 
         if (!driveFileId) {

@@ -49,6 +49,12 @@ export class ResendEmailsUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
+        if (!certificateEmission.isEmitted()) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.CERTIFICATE_NOT_EMITTED,
+            )
+        }
+
         if (!certificateEmission.hasDataSource()) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }

@@ -48,6 +48,10 @@ export class CreateEmailUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
+        if (certificateEmission.isEmitted()) {
+            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
+        }
+
         const rowsCount =
             await this.dataSourceRowsReadRepository.countByCertificateEmissionId(
                 data.certificateEmissionId,

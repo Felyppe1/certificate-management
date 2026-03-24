@@ -65,6 +65,10 @@ export class RefreshTemplateUseCase {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
+        if (certificate.isEmitted()) {
+            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
+        }
+
         if (!certificate.hasTemplate()) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
         }

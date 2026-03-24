@@ -6,6 +6,10 @@ import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '../domain/error/validation-error'
 
 interface DeleteTemplateUseCaseInput {
     certificateId: string
@@ -32,6 +36,10 @@ export class DeleteTemplateUseCase {
 
         if (!certificate) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+        }
+
+        if (certificate.isEmitted()) {
+            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
         }
 
         if (!certificate.hasTemplate()) {

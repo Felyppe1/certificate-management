@@ -2,6 +2,10 @@ import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '../domain/error/validation-error'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 
@@ -25,6 +29,10 @@ export class DeleteDataSourceUseCase {
 
         if (!certificate) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+        }
+
+        if (certificate.isEmitted()) {
+            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
         }
 
         const storageFileUrl = certificate.getDataSourceStorageFileUrl()

@@ -67,6 +67,10 @@ export class AddDataSourceByDrivePickerUseCase {
             )
         }
 
+        if (certificate.isEmitted()) {
+            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
+        }
+
         const newData = await this.googleAuthGateway.checkOrGetNewAccessToken({
             accessToken: externalAccount.accessToken,
             refreshToken: externalAccount.refreshToken!,

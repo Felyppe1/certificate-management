@@ -60,14 +60,12 @@ export class UpdateDataSourceColumnsUseCase {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
-        if (!certificate.hasDataSource()) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
+        if (certificate.isEmitted()) {
+            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
         }
 
-        if (certificate.isEmitted()) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.CERTIFICATE_NOT_EMITTED,
-            )
+        if (!certificate.hasDataSource()) {
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }
 
         const columnsToValidate = certificate.updateDataSourceColumns(

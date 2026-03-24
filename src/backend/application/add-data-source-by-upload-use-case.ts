@@ -53,6 +53,10 @@ export class AddDataSourceByUploadUseCase {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
+        if (certificate.isEmitted()) {
+            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
+        }
+
         const fileMimeType = input.file.type
 
         if (!DataSource.isValidFileMimeType(fileMimeType)) {
