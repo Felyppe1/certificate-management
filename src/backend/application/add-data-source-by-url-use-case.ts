@@ -18,6 +18,10 @@ import { ITransactionManager } from './interfaces/repository/itransaction-manage
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { DataSourceDomainService } from '../domain/domain-service/data-source-domain-service'
 import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
+import {
+    FORBIDDEN_ERROR_TYPE,
+    ForbiddenError,
+} from '../domain/error/forbidden-error'
 
 interface AddDataSourceByUrlUseCaseInput {
     certificateId: string
@@ -55,6 +59,10 @@ export class AddDataSourceByUrlUseCase {
 
         if (!certificate) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+        }
+
+        if (certificate.isOwner(input.userId)) {
+            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
         if (certificate.isEmitted()) {

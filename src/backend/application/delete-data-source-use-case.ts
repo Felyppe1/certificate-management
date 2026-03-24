@@ -1,4 +1,8 @@
 import {
+    FORBIDDEN_ERROR_TYPE,
+    ForbiddenError,
+} from '../domain/error/forbidden-error'
+import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
@@ -29,6 +33,10 @@ export class DeleteDataSourceUseCase {
 
         if (!certificate) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+        }
+
+        if (certificate.isOwner(userId)) {
+            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
         if (certificate.isEmitted()) {

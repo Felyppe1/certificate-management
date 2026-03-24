@@ -10,6 +10,10 @@ import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from '../domain/error/validation-error'
+import {
+    FORBIDDEN_ERROR_TYPE,
+    ForbiddenError,
+} from '../domain/error/forbidden-error'
 
 interface DeleteTemplateUseCaseInput {
     certificateId: string
@@ -36,6 +40,10 @@ export class DeleteTemplateUseCase {
 
         if (!certificate) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+        }
+
+        if (certificate.isOwner(userId)) {
+            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
         if (certificate.isEmitted()) {

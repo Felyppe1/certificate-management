@@ -161,6 +161,10 @@ export class CertificateEmission extends AggregateRoot {
         return this.userId
     }
 
+    isOwner(userId: string) {
+        return this.userId === userId
+    }
+
     // setStatus(status: CERTIFICATE_STATUS) {
     //     this.status = status
     // }
