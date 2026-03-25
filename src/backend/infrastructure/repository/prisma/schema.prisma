@@ -129,11 +129,11 @@ model DataSource {
 }
 
 model DataSourceColumn {
-    data_source_id  String
-    name            String
-    type            COLUMN_TYPE
-    array_separator String?
-    array_item_type ARRAY_ITEM_TYPE?
+    data_source_id      String
+    name                String
+    type                COLUMN_TYPE
+    array_separator     String?
+    array_item_type     ARRAY_ITEM_TYPE?
 
     DataSource       DataSource        @relation(fields: [data_source_id], references: [certificate_emission_id], onDelete: Cascade)
     TemplateVariable TemplateVariable?
@@ -157,11 +157,13 @@ model DataSourceValue {
 }
 
 model DataSourceRow {
-    id                String @id @default(cuid())
+    id                String   @id @default(cuid())
     data_source_id    String
     file_bytes        Int?
     processing_status String // "PENDING" | "RUNNING" | "RETRYING" | "COMPLETED" | "FAILED"
     legacy_file_index Int?
+    source_row_index  Int
+    created_at        DateTime @default(now())
 
     DataSourceValue DataSourceValue[]
 

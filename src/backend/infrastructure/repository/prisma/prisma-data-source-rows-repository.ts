@@ -40,6 +40,7 @@ export class PrismaDataSourceRowsRepository
                         fileBytes,
                         processingStatus,
                         certificateEmissionId,
+                        sourceRowIndex,
                     } = dataSourceRow.serialize()
 
                     return {
@@ -47,6 +48,7 @@ export class PrismaDataSourceRowsRepository
                         data_source_id: certificateEmissionId,
                         file_bytes: fileBytes,
                         processing_status: processingStatus,
+                        source_row_index: sourceRowIndex,
                     }
                 }),
             })
@@ -105,6 +107,7 @@ export class PrismaDataSourceRowsRepository
             fileBytes: row.file_bytes,
             data,
             processingStatus: row.processing_status as any,
+            sourceRowIndex: row.source_row_index,
         })
     }
 
@@ -135,6 +138,7 @@ export class PrismaDataSourceRowsRepository
                 fileBytes: row.file_bytes,
                 data,
                 processingStatus: row.processing_status as any,
+                sourceRowIndex: row.source_row_index,
             })
         })
     }

@@ -26,11 +26,12 @@ export class DataSourceDomainService {
 
         const dataSourceColumns = certificate.getDataSourceColumns()
 
-        const dataSourceRows = newDataSourceData.rows.map(row => {
+        const dataSourceRows = newDataSourceData.rows.map((row, index) => {
             return DataSourceRow.create({
                 certificateEmissionId: certificate.getId(),
                 data: row,
                 dataSourceColumns,
+                sourceRowIndex: index,
             })
         })
 

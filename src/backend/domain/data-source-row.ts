@@ -21,6 +21,7 @@ interface DataSourceRowInput {
     fileBytes: number | null
     data: Record<string, string>
     processingStatus: PROCESSING_STATUS_ENUM
+    sourceRowIndex: number
 }
 
 interface DataSourceRowCreate
@@ -34,6 +35,7 @@ interface DataSourceRowOutput {
     fileBytes: number | null
     data: Record<string, string>
     processingStatus: PROCESSING_STATUS_ENUM
+    sourceRowIndex: number
 }
 
 export class DataSourceRow {
@@ -42,11 +44,13 @@ export class DataSourceRow {
     private fileBytes: number | null
     private data: Record<string, string>
     private processingStatus: PROCESSING_STATUS_ENUM
+    private sourceRowIndex: number
 
     static create({
         certificateEmissionId,
         data,
         dataSourceColumns,
+        sourceRowIndex,
     }: DataSourceRowCreate): DataSourceRow {
         Object.entries(data).forEach(([columnName, value]) => {
             const dataSourceColumn = dataSourceColumns.find(
@@ -78,6 +82,7 @@ export class DataSourceRow {
             fileBytes: null,
             data,
             processingStatus: PROCESSING_STATUS_ENUM.PENDING,
+            sourceRowIndex,
         })
     }
 
@@ -103,6 +108,7 @@ export class DataSourceRow {
         this.fileBytes = input.fileBytes
         this.data = input.data
         this.processingStatus = input.processingStatus
+        this.sourceRowIndex = input.sourceRowIndex
     }
 
     startGeneration() {
@@ -231,6 +237,7 @@ export class DataSourceRow {
             fileBytes: this.fileBytes,
             data: this.data,
             processingStatus: this.processingStatus,
+            sourceRowIndex: this.sourceRowIndex,
         }
     }
 }

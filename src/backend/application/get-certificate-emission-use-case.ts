@@ -42,6 +42,11 @@ export class GetCertificateEmissionUseCase {
                             DataSourceColumn: {
                                 include: {
                                     DataSourceValue: {
+                                        orderBy: {
+                                            DataSourceRow: {
+                                                source_row_index: 'asc',
+                                            },
+                                        },
                                         include: {
                                             DataSourceRow: true,
                                         },
