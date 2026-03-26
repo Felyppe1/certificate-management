@@ -13,6 +13,7 @@ O retorno deve ser um array de objetos com as chaves sendo as colunas e os valor
 Retorne todos os valores como STRINGS.
 Se não tiver nome das colunas explicitamente, chame a coluna de acordo com os valores dela com a primeira letra maiúscula.
 Se tiver uma coluna de nome, coloque os valores com cada primeira palavra do nome maiúscula.
+Se você não conseguir extrar um valor para uma célula, coloque o valor como string vazia '', não adicione traços nem nada.
 Não retorne nada mais além do json, apenas o json puro (sem \`\`\`json antes ou depois).
 `
 

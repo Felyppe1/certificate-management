@@ -662,7 +662,7 @@ export function ConfigurableDataSourceTable({
                                                             }}
                                                         />
                                                     ) : (
-                                                        cellValue || '-'
+                                                        cellValue
                                                     )}
                                                 </TableCell>
                                             )
