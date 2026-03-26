@@ -25,15 +25,15 @@ export class CreateWriteBucketSignedUrlUseCase {
     ) {}
 
     async execute(input: CreateWriteBucketSignedUrlUseCaseInput) {
-        const certificate = await this.certificateRepository.getById(
+        const certificateEmission = await this.certificateRepository.getById(
             input.certificateId,
         )
 
-        if (!certificate) {
+        if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.isOwner(input.userId)) {
+        if (!certificateEmission.isOwner(input.userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
@@ -41,7 +41,7 @@ export class CreateWriteBucketSignedUrlUseCase {
             input.mimeType === TEMPLATE_FILE_MIME_TYPE.PPTX ? 'pptx' : 'docx'
 
         // TODO: it's not this path
-        const path = `users/${input.userId}/certificates/${certificate.getId()}/original.${extension}`
+        const path = `users/${input.userId}/certificates/${certificateEmission.getId()}/original.${extension}`
 
         const signedUrl = await this.bucket.generateSignedUrl({
             bucketName: process.env.CERTIFICATES_BUCKET!,

@@ -31,22 +31,21 @@ export class UpdateCertificateEmissionUseCase {
     ) {}
 
     async execute(data: UpdateCertificateEmissionUseCaseInput) {
-        const certificate = await this.certificateEmissionsRepository.getById(
-            data.id,
-        )
+        const certificateEmission =
+            await this.certificateEmissionsRepository.getById(data.id)
 
-        if (!certificate) {
+        if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.isOwner(data.userId)) {
+        if (!certificateEmission.isOwner(data.userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
         const currentVariableColumnMapping =
-            certificate.serialize().variableColumnMapping
+            certificateEmission.serialize().variableColumnMapping
 
-        certificate.update({
+        certificateEmission.update({
             ...(data.name !== undefined ? { name: data.name } : {}),
             ...(data.variableColumnMapping !== undefined
                 ? { variableColumnMapping: data.variableColumnMapping }
@@ -60,16 +59,20 @@ export class UpdateCertificateEmissionUseCase {
                 JSON.stringify(data.variableColumnMapping)
         ) {
             await this.transactionManager.run(async () => {
-                if (certificate.hasDataSource()) {
+                if (certificateEmission.hasDataSource()) {
                     await this.dataSourceRowsRepository.resetProcessingStatusByCertificateEmissionId(
-                        certificate.getId(),
+                        certificateEmission.getId(),
                     )
                 }
 
-                await this.certificateEmissionsRepository.update(certificate)
+                await this.certificateEmissionsRepository.update(
+                    certificateEmission,
+                )
             })
         } else {
-            await this.certificateEmissionsRepository.update(certificate)
+            await this.certificateEmissionsRepository.update(
+                certificateEmission,
+            )
         }
     }
 }

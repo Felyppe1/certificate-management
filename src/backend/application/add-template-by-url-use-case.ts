@@ -62,19 +62,20 @@ export class AddTemplateByUrlUseCase {
     ) {}
 
     async execute(input: AddTemplateByUrlUseCaseInput) {
-        const certificate = await this.certificateEmissionsRepository.getById(
-            input.certificateId,
-        )
+        const certificateEmission =
+            await this.certificateEmissionsRepository.getById(
+                input.certificateId,
+            )
 
-        if (!certificate) {
+        if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.isOwner(input.userId)) {
+        if (!certificateEmission.isOwner(input.userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
-        if (certificate.isEmitted()) {
+        if (certificateEmission.isEmitted()) {
             throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
         }
 
@@ -119,7 +120,7 @@ export class AddTemplateByUrlUseCase {
         const uniqueVariables =
             this.stringVariableExtractor.extractVariables(content)
 
-        const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
+        const path = `users/${input.userId}/certificates/${certificateEmission.getId()}/template.${TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
 
         const newTemplateInput = {
             driveFileId,
@@ -131,7 +132,7 @@ export class AddTemplateByUrlUseCase {
             thumbnailUrl,
         }
 
-        certificate.setTemplate(newTemplateInput)
+        certificateEmission.setTemplate(newTemplateInput)
 
         await this.bucket.uploadObject({
             buffer,
@@ -141,13 +142,15 @@ export class AddTemplateByUrlUseCase {
         })
 
         await this.transactionManager.run(async () => {
-            if (certificate.hasDataSource()) {
+            if (certificateEmission.hasDataSource()) {
                 await this.dataSourceRowsRepository.resetProcessingStatusByCertificateEmissionId(
-                    certificate.getId(),
+                    certificateEmission.getId(),
                 )
             }
 
-            await this.certificateEmissionsRepository.update(certificate)
+            await this.certificateEmissionsRepository.update(
+                certificateEmission,
+            )
         })
     }
 }

@@ -53,27 +53,28 @@ export class RefreshTemplateUseCase {
     ) {}
 
     async execute(input: RefreshTemplateUseCaseInput) {
-        const certificate = await this.certificateEmissionsRepository.getById(
-            input.certificateId,
-        )
+        const certificateEmission =
+            await this.certificateEmissionsRepository.getById(
+                input.certificateId,
+            )
 
-        if (!certificate) {
+        if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.isOwner(input.userId)) {
+        if (!certificateEmission.isOwner(input.userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
-        if (certificate.isEmitted()) {
+        if (certificateEmission.isEmitted()) {
             throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
         }
 
-        if (!certificate.hasTemplate()) {
+        if (!certificateEmission.hasTemplate()) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
         }
 
-        const driveFileId = certificate.getDriveTemplateFileId()
+        const driveFileId = certificateEmission.getDriveTemplateFileId()
 
         if (!driveFileId) {
             throw new ValidationError(
@@ -83,13 +84,13 @@ export class RefreshTemplateUseCase {
 
         const externalAccount =
             await this.externalUserAccountsRepository.getById(
-                certificate.getUserId(),
+                certificateEmission.getUserId(),
                 'GOOGLE',
             )
 
         if (
-            certificate.isTemplateFromGoogleDrive() ||
-            certificate.isTemplateFromUrl()
+            certificateEmission.isTemplateFromGoogleDrive() ||
+            certificateEmission.isTemplateFromUrl()
         ) {
             if (!externalAccount) {
                 throw new ForbiddenError(
@@ -120,8 +121,8 @@ export class RefreshTemplateUseCase {
         const { name, fileMimeType, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
-                ...((certificate.isTemplateFromGoogleDrive() ||
-                    certificate.isTemplateFromUrl()) && {
+                ...((certificateEmission.isTemplateFromGoogleDrive() ||
+                    certificateEmission.isTemplateFromUrl()) && {
                     userAccessToken: externalAccount?.accessToken,
                     userRefreshToken:
                         externalAccount?.refreshToken ?? undefined,
@@ -137,8 +138,8 @@ export class RefreshTemplateUseCase {
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
             fileMimeType: fileMimeType,
-            ...((certificate.isTemplateFromGoogleDrive() ||
-                certificate.isTemplateFromUrl()) && {
+            ...((certificateEmission.isTemplateFromGoogleDrive() ||
+                certificateEmission.isTemplateFromUrl()) && {
                 accessToken: externalAccount?.accessToken,
             }),
         })
@@ -151,19 +152,19 @@ export class RefreshTemplateUseCase {
         const uniqueVariables =
             this.stringVariableExtractor.extractVariables(content)
 
-        const path = `users/${input.userId}/certificates/${certificate.getId()}/template.${TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
+        const path = `users/${input.userId}/certificates/${certificateEmission.getId()}/template.${TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
 
         const newTemplateInput = {
             driveFileId,
             storageFileUrl: path,
             fileMimeType: fileMimeType,
-            inputMethod: certificate.getTemplateInputMethod()!,
+            inputMethod: certificateEmission.getTemplateInputMethod()!,
             fileName: name,
             variables: uniqueVariables,
             thumbnailUrl,
         }
 
-        certificate.setTemplate(newTemplateInput)
+        certificateEmission.setTemplate(newTemplateInput)
 
         await this.bucket.uploadObject({
             buffer,
@@ -173,13 +174,15 @@ export class RefreshTemplateUseCase {
         })
 
         await this.transactionManager.run(async () => {
-            if (certificate.hasDataSource()) {
+            if (certificateEmission.hasDataSource()) {
                 await this.dataSourceRowsRepository.resetProcessingStatusByCertificateEmissionId(
-                    certificate.getId(),
+                    certificateEmission.getId(),
                 )
             }
 
-            await this.certificateEmissionsRepository.update(certificate)
+            await this.certificateEmissionsRepository.update(
+                certificateEmission,
+            )
         })
     }
 }

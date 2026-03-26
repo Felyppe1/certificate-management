@@ -48,27 +48,27 @@ export class UpdateDataSourceColumnsUseCase {
     async execute(
         data: UpdateDataSourceColumnsUseCaseInput,
     ): Promise<{ invalidColumns: InvalidColumn[] }> {
-        const certificate = await this.certificatesRepository.getById(
+        const certificateEmission = await this.certificatesRepository.getById(
             data.certificateId,
         )
 
-        if (!certificate) {
+        if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.isOwner(data.userId)) {
+        if (!certificateEmission.isOwner(data.userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
-        if (certificate.isEmitted()) {
+        if (certificateEmission.isEmitted()) {
             throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
         }
 
-        if (!certificate.hasDataSource()) {
+        if (!certificateEmission.hasDataSource()) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }
 
-        const columnsToValidate = certificate.updateDataSourceColumns(
+        const columnsToValidate = certificateEmission.updateDataSourceColumns(
             data.columns,
         )
 
@@ -107,13 +107,13 @@ export class UpdateDataSourceColumnsUseCase {
             return { invalidColumns }
         }
 
-        certificate.markAsDraft()
+        certificateEmission.markAsDraft()
 
         await this.transactionManager.run(async () => {
             await this.dataSourceRowsRepository.resetProcessingStatusByCertificateEmissionId(
-                certificate.getId(),
+                certificateEmission.getId(),
             )
-            await this.certificatesRepository.update(certificate)
+            await this.certificatesRepository.update(certificateEmission)
         })
 
         return { invalidColumns: [] }

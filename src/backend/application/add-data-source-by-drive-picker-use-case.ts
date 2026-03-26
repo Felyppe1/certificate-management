@@ -47,15 +47,16 @@ export class AddDataSourceByDrivePickerUseCase {
     ) {}
 
     async execute(input: AddDataSourceByDrivePickerUseCaseInput) {
-        const certificate = await this.certificateEmissionsRepository.getById(
-            input.certificateId,
-        )
+        const certificateEmission =
+            await this.certificateEmissionsRepository.getById(
+                input.certificateId,
+            )
 
-        if (!certificate) {
+        if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.isOwner(input.userId)) {
+        if (!certificateEmission.isOwner(input.userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
@@ -71,7 +72,7 @@ export class AddDataSourceByDrivePickerUseCase {
             )
         }
 
-        if (certificate.isEmitted()) {
+        if (certificateEmission.isEmitted()) {
             throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
         }
 
@@ -115,12 +116,12 @@ export class AddDataSourceByDrivePickerUseCase {
         const { rows } = await contentExtractor.extractColumns(buffer)
 
         const dataSourceStorageFileUrl =
-            certificate.getDataSourceStorageFileUrl()
+            certificateEmission.getDataSourceStorageFileUrl()
 
         const dataSourceDomainService = new DataSourceDomainService()
 
         const dataSourceRows = dataSourceDomainService.createDataSource({
-            certificate,
+            certificate: certificateEmission,
             newDataSourceData: {
                 driveFileId: input.fileId,
                 storageFileUrl: null,
@@ -135,7 +136,9 @@ export class AddDataSourceByDrivePickerUseCase {
         })
 
         await this.transactionManager.run(async () => {
-            await this.certificateEmissionsRepository.update(certificate)
+            await this.certificateEmissionsRepository.update(
+                certificateEmission,
+            )
 
             await this.dataSourceRowsRepository.saveMany(dataSourceRows)
         })

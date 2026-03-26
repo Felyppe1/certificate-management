@@ -53,19 +53,20 @@ export class AddDataSourceByUrlUseCase {
     ) {}
 
     async execute(input: AddDataSourceByUrlUseCaseInput) {
-        const certificate = await this.certificateEmissionsRepository.getById(
-            input.certificateId,
-        )
+        const certificateEmission =
+            await this.certificateEmissionsRepository.getById(
+                input.certificateId,
+            )
 
-        if (!certificate) {
+        if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.isOwner(input.userId)) {
+        if (!certificateEmission.isOwner(input.userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
-        if (certificate.isEmitted()) {
+        if (certificateEmission.isEmitted()) {
             throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
         }
 
@@ -109,12 +110,12 @@ export class AddDataSourceByUrlUseCase {
 
         // In case it had files in storage, delete them
         const dataSourceStorageFileUrl =
-            certificate.getDataSourceStorageFileUrl()
+            certificateEmission.getDataSourceStorageFileUrl()
 
         const dataSourceDomainService = new DataSourceDomainService()
 
         const dataSourceRows = dataSourceDomainService.createDataSource({
-            certificate,
+            certificate: certificateEmission,
             newDataSourceData: {
                 driveFileId,
                 storageFileUrl: null,
@@ -140,9 +141,9 @@ export class AddDataSourceByUrlUseCase {
         //     dataRowStart: 2,
         // }
 
-        // certificate.setDataSource(newDataSourceInput)
+        // certificateEmission.setDataSource(newDataSourceInput)
 
-        // const dataSourceColumns = certificate.getDataSourceColumns()
+        // const dataSourceColumns = certificateEmission.getDataSourceColumns()
 
         // const dataSourceRows = rows.map(row => {
         //     const data = Object.entries(row).map(([columnName, value]) => {
@@ -154,13 +155,15 @@ export class AddDataSourceByUrlUseCase {
         //     })
 
         //     return DataSourceRow.create({
-        //         certificateEmissionId: certificate.getId(),
+        //         certificateEmissionId: certificateEmission.getId(),
         //         data,
         //     })
         // })
 
         await this.transactionManager.run(async () => {
-            await this.certificateEmissionsRepository.update(certificate)
+            await this.certificateEmissionsRepository.update(
+                certificateEmission,
+            )
 
             await this.dataSourceRowsRepository.saveMany(dataSourceRows)
         })

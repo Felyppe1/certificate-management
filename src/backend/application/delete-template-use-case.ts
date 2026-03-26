@@ -35,37 +35,39 @@ export class DeleteTemplateUseCase {
     ) {}
 
     async execute({ certificateId, userId }: DeleteTemplateUseCaseInput) {
-        const certificate =
+        const certificateEmission =
             await this.certificateEmissionsRepository.getById(certificateId)
 
-        if (!certificate) {
+        if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.isOwner(userId)) {
+        if (!certificateEmission.isOwner(userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
-        if (certificate.isEmitted()) {
+        if (certificateEmission.isEmitted()) {
             throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
         }
 
-        if (!certificate.hasTemplate()) {
+        if (!certificateEmission.hasTemplate()) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
         }
 
-        const storageFileUrl = certificate.getTemplateStorageFileUrl()!
+        const storageFileUrl = certificateEmission.getTemplateStorageFileUrl()!
 
-        certificate.removeTemplate(userId)
+        certificateEmission.removeTemplate(userId)
 
         await this.transactionManager.run(async () => {
-            if (certificate.hasDataSource()) {
+            if (certificateEmission.hasDataSource()) {
                 await this.dataSourceRowsRepository.resetProcessingStatusByCertificateEmissionId(
-                    certificate.getId(),
+                    certificateEmission.getId(),
                 )
             }
 
-            await this.certificateEmissionsRepository.update(certificate)
+            await this.certificateEmissionsRepository.update(
+                certificateEmission,
+            )
         })
 
         await this.bucket.deleteObject({

@@ -44,27 +44,28 @@ export class RefreshDataSourceUseCase {
     ) {}
 
     async execute(input: RefreshDataSourceUseCaseInput) {
-        const certificate = await this.certificateEmissionsRepository.getById(
-            input.certificateId,
-        )
+        const certificateEmission =
+            await this.certificateEmissionsRepository.getById(
+                input.certificateId,
+            )
 
-        if (!certificate) {
+        if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.isOwner(input.userId)) {
+        if (!certificateEmission.isOwner(input.userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
-        if (certificate.isEmitted()) {
+        if (certificateEmission.isEmitted()) {
             throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
         }
 
-        if (!certificate.hasDataSource()) {
+        if (!certificateEmission.hasDataSource()) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }
 
-        const driveFileId = certificate.getDriveDataSourceFileId()
+        const driveFileId = certificateEmission.getDriveDataSourceFileId()
 
         if (!driveFileId) {
             throw new ValidationError(
@@ -74,13 +75,13 @@ export class RefreshDataSourceUseCase {
 
         const externalAccount =
             await this.externalUserAccountsRepository.getById(
-                certificate.getUserId(),
+                certificateEmission.getUserId(),
                 'GOOGLE',
             )
 
         if (
-            certificate.isDataSourceFromGoogleDrive() ||
-            certificate.isDataSourceFromUrl()
+            certificateEmission.isDataSourceFromGoogleDrive() ||
+            certificateEmission.isDataSourceFromUrl()
         ) {
             if (!externalAccount) {
                 throw new ForbiddenError(
@@ -111,8 +112,8 @@ export class RefreshDataSourceUseCase {
         const { name, fileMimeType, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
-                ...((certificate.isDataSourceFromGoogleDrive() ||
-                    certificate.isDataSourceFromUrl()) && {
+                ...((certificateEmission.isDataSourceFromGoogleDrive() ||
+                    certificateEmission.isDataSourceFromUrl()) && {
                     userAccessToken: externalAccount?.accessToken,
                     userRefreshToken:
                         externalAccount?.refreshToken ?? undefined,
@@ -127,8 +128,8 @@ export class RefreshDataSourceUseCase {
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
             fileMimeType: fileMimeType,
-            ...((certificate.isDataSourceFromGoogleDrive() ||
-                certificate.isDataSourceFromUrl()) && {
+            ...((certificateEmission.isDataSourceFromGoogleDrive() ||
+                certificateEmission.isDataSourceFromUrl()) && {
                 accessToken: externalAccount?.accessToken,
             }),
         })
@@ -141,13 +142,13 @@ export class RefreshDataSourceUseCase {
         const dataSourceDomainService = new DataSourceDomainService()
 
         const dataSourceRows = dataSourceDomainService.createDataSource({
-            certificate,
+            certificate: certificateEmission,
             newDataSourceData: {
                 driveFileId,
                 storageFileUrl: null,
                 fileName: name,
                 fileMimeType,
-                inputMethod: certificate.getDataSourceInputMethod()!,
+                inputMethod: certificateEmission.getDataSourceInputMethod()!,
                 thumbnailUrl,
                 columnsRow: 1,
                 dataRowStart: 2,
@@ -156,7 +157,9 @@ export class RefreshDataSourceUseCase {
         })
 
         await this.transactionManager.run(async () => {
-            await this.certificateEmissionsRepository.update(certificate)
+            await this.certificateEmissionsRepository.update(
+                certificateEmission,
+            )
 
             await this.dataSourceRowsRepository.saveMany(dataSourceRows)
         })

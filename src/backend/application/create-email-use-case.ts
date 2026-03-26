@@ -52,7 +52,7 @@ export class CreateEmailUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificateEmission.isOwner(data.userId)) {
+        if (!certificateEmission.isOwner(data.userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 

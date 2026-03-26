@@ -51,7 +51,7 @@ export class RetryCertificatesGenerationUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificateEmission.isOwner(userId)) {
+        if (!certificateEmission.isOwner(userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 

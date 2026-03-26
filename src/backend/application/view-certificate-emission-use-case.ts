@@ -34,22 +34,22 @@ export class ViewCertificateEmissionUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE_ROW)
         }
 
-        const certificate = await this.certificateRepository.getById(
+        const certificateEmission = await this.certificateRepository.getById(
             dataSourceRow.getCertificateEmissionId(),
         )
 
-        if (!certificate) {
+        if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.isOwner(input.userId)) {
+        if (!certificateEmission.isOwner(input.userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
         // TODO: handle error
 
         const bucketName = process.env.CERTIFICATES_BUCKET!
 
-        const filePath = `users/${input.userId}/certificates/${certificate.getId()}/certificate-${dataSourceRow.getId()}.pdf`
+        const filePath = `users/${input.userId}/certificates/${certificateEmission.getId()}/certificate-${dataSourceRow.getId()}.pdf`
 
         const signedUrl = await this.bucket.generateSignedUrl({
             bucketName,

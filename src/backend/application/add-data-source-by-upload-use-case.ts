@@ -41,19 +41,19 @@ export class AddDataSourceByUploadUseCase {
     ) {}
 
     async execute(input: AddDataSourceByUploadUseCaseInput) {
-        const certificate = await this.certificatesRepository.getById(
+        const certificateEmission = await this.certificatesRepository.getById(
             input.certificateId,
         )
 
-        if (!certificate) {
+        if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.isOwner(input.userId)) {
+        if (!certificateEmission.isOwner(input.userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
-        if (certificate.isEmitted()) {
+        if (certificateEmission.isEmitted()) {
             throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
         }
 
@@ -74,9 +74,9 @@ export class AddDataSourceByUploadUseCase {
         const { rows } = await contentExtractor.extractColumns(buffer)
 
         const previousDataSourceStorageFileUrl =
-            certificate.getDataSourceStorageFileUrl()
+            certificateEmission.getDataSourceStorageFileUrl()
 
-        const path = `users/${input.userId}/certificates/${certificate.getId()}/data-source.${DATA_SOURCE_MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
+        const path = `users/${input.userId}/certificates/${certificateEmission.getId()}/data-source.${DATA_SOURCE_MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
 
         await this.bucket.uploadObject({
             buffer,
@@ -88,7 +88,7 @@ export class AddDataSourceByUploadUseCase {
         const dataSourceDomainService = new DataSourceDomainService()
 
         const dataSourceRows = dataSourceDomainService.createDataSource({
-            certificate,
+            certificate: certificateEmission,
             newDataSourceData: {
                 inputMethod: INPUT_METHOD.UPLOAD,
                 driveFileId: null,
@@ -103,7 +103,7 @@ export class AddDataSourceByUploadUseCase {
         })
 
         await this.transactionManager.run(async () => {
-            await this.certificatesRepository.update(certificate)
+            await this.certificatesRepository.update(certificateEmission)
 
             await this.dataSourceRowsRepository.saveMany(dataSourceRows)
         })

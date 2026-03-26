@@ -21,20 +21,20 @@ export class DownloadDataSourceUseCase {
     ) {}
 
     async execute(input: DownloadDataSourceUseCaseInput) {
-        const certificate = await this.certificateRepository.getById(
+        const certificateEmission = await this.certificateRepository.getById(
             input.certificateEmissionId,
         )
 
-        if (!certificate) {
+        if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.isOwner(input.userId)) {
+        if (!certificateEmission.isOwner(input.userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
         const dataSourceStorageFileUrl =
-            certificate.getDataSourceStorageFileUrl()
+            certificateEmission.getDataSourceStorageFileUrl()
 
         if (!dataSourceStorageFileUrl) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)

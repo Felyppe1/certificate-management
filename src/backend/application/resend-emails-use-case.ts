@@ -11,6 +11,10 @@ import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-sou
 import { IEmailsRepository } from './interfaces/repository/iemails-repository'
 import { IQueue } from './interfaces/cloud/iqueue'
 import { Email } from '../domain/email'
+import {
+    FORBIDDEN_ERROR_TYPE,
+    ForbiddenError,
+} from '../domain/error/forbidden-error'
 
 export interface ResendEmailsUseCaseInput {
     userId: string
@@ -47,6 +51,10 @@ export class ResendEmailsUseCase {
 
         if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+        }
+
+        if (!certificateEmission.isOwner(data.userId)) {
+            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
         if (!certificateEmission.isEmitted()) {

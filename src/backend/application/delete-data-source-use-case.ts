@@ -28,26 +28,26 @@ export class DeleteDataSourceUseCase {
     ) {}
 
     async execute({ certificateId, userId }: DeleteDataSourceUseCaseInput) {
-        const certificate =
+        const certificateEmission =
             await this.certificateEmissionsRepository.getById(certificateId)
 
-        if (!certificate) {
+        if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.isOwner(userId)) {
+        if (!certificateEmission.isOwner(userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
-        if (certificate.isEmitted()) {
+        if (certificateEmission.isEmitted()) {
             throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
         }
 
-        const storageFileUrl = certificate.getDataSourceStorageFileUrl()
+        const storageFileUrl = certificateEmission.getDataSourceStorageFileUrl()
 
-        certificate.removeDataSource(userId)
+        certificateEmission.removeDataSource(userId)
 
-        await this.certificateEmissionsRepository.update(certificate)
+        await this.certificateEmissionsRepository.update(certificateEmission)
 
         if (storageFileUrl) {
             // TODO: do this on outbox pattern?

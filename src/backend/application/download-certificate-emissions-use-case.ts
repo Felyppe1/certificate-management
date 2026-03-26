@@ -30,22 +30,22 @@ export class DownloadCertificateEmissionsUseCase {
     ) {}
 
     async execute(input: DownloadCertificateEmissionsUseCaseInput) {
-        const certificate = await this.certificateRepository.getById(
+        const certificateEmission = await this.certificateRepository.getById(
             input.certificateEmissionId,
         )
 
-        if (!certificate) {
+        if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.isOwner(input.userId)) {
+        if (!certificateEmission.isOwner(input.userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
         // Build the list of specific file paths for the selected rows
         const filePaths = input.rowIds.map(
             rowId =>
-                `users/${input.userId}/certificates/${certificate.getId()}/certificate-${rowId}.pdf`,
+                `users/${input.userId}/certificates/${certificateEmission.getId()}/certificate-${rowId}.pdf`,
         )
 
         const bucketName = process.env.CERTIFICATES_BUCKET!

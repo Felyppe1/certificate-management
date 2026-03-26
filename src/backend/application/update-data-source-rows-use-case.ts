@@ -43,29 +43,32 @@ export class UpdateDataSourceRowsUseCase {
     ) {}
 
     async execute(data: UpdateDataSourceRowsUseCaseInput): Promise<void> {
-        const certificate = await this.certificatesRepository.getById(
+        const certificateEmission = await this.certificatesRepository.getById(
             data.certificateId,
         )
 
-        if (!certificate) {
+        if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.isOwner(data.userId)) {
+        if (!certificateEmission.isOwner(data.userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
-        if (certificate.isEmitted()) {
+        if (certificateEmission.isEmitted()) {
             throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
         }
 
-        if (certificate.getDataSourceInputMethod() !== INPUT_METHOD.UPLOAD) {
+        if (
+            certificateEmission.getDataSourceInputMethod() !==
+            INPUT_METHOD.UPLOAD
+        ) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.DATA_SOURCE_INVALID_INPUT_METHOD,
             )
         }
 
-        if (!certificate.hasDataSource()) {
+        if (!certificateEmission.hasDataSource()) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }
 
@@ -91,10 +94,10 @@ export class UpdateDataSourceRowsUseCase {
                 newData[item.column] = item.newValue
             })
 
-            row.updateData(newData, certificate.getDataSourceColumns())
+            row.updateData(newData, certificateEmission.getDataSourceColumns())
             row.resetProcessingStatus()
             // try {
-            //     row.updateData(newData, certificate.getDataSourceColumns())
+            //     row.updateData(newData, certificateEmission.getDataSourceColumns())
             //     row.resetProcessingStatus()
             // } catch (err: any) {
             //     errors.push(`Erro: ${err.message}`)
@@ -110,16 +113,16 @@ export class UpdateDataSourceRowsUseCase {
         //     )
         // }
 
-        certificate.markAsDraft()
+        certificateEmission.markAsDraft()
 
         await this.transactionManager.run(async () => {
-            if (certificate.hasDataSource()) {
+            if (certificateEmission.hasDataSource()) {
                 await this.dataSourceRowsRepository.resetProcessingStatusByCertificateEmissionId(
-                    certificate.getId(),
+                    certificateEmission.getId(),
                 )
             }
 
-            await this.certificatesRepository.update(certificate)
+            await this.certificatesRepository.update(certificateEmission)
             await this.dataSourceRowsRepository.updateMany(rows)
         })
     }

@@ -40,15 +40,15 @@ export class ViewCertificateEmissionsUseCase {
         const certificateEmissionId =
             dataSourceRows[0].getCertificateEmissionId()
 
-        const certificate = await this.certificateRepository.getById(
+        const certificateEmission = await this.certificateRepository.getById(
             certificateEmissionId,
         )
 
-        if (!certificate) {
+        if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        if (certificate.isOwner(input.userId)) {
+        if (!certificateEmission.isOwner(input.userId)) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
@@ -56,7 +56,7 @@ export class ViewCertificateEmissionsUseCase {
 
         const results = await Promise.all(
             dataSourceRows.map(async row => {
-                const filePath = `users/${input.userId}/certificates/${certificate.getId()}/certificate-${row.getId()}.pdf`
+                const filePath = `users/${input.userId}/certificates/${certificateEmission.getId()}/certificate-${row.getId()}.pdf`
 
                 const signedUrl = await this.bucket.generateSignedUrl({
                     bucketName,
