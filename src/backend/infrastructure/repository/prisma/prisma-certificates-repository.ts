@@ -714,6 +714,20 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         // })
     }
 
+    async delete(id: string): Promise<void> {
+        const execute = async (tx: TransactionClient) => {
+            await tx.certificateEmission.delete({
+                where: { id },
+            })
+        }
+
+        if (isPrismaClient(this.prisma)) {
+            await this.prisma.$transaction(execute)
+        } else {
+            await execute(this.prisma)
+        }
+    }
+
     async getById(id: string): Promise<CertificateEmission | null> {
         const certificate = await this.prisma.certificateEmission.findUnique({
             where: { id },

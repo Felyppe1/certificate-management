@@ -1,5 +1,6 @@
 import { GetCertificateEmissionUseCase } from '@/backend/application/get-certificate-emission-use-case'
 import { UpdateCertificateEmissionUseCase } from '@/backend/application/update-certificate-emission-use-case'
+import { DeleteCertificateEmissionUseCase } from '@/backend/application/delete-certificate-emission-use-case'
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 import { ColumnType, DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
@@ -15,6 +16,7 @@ import {
     PROCESSING_STATUS_ENUM as EMAIL_PROCESSING_STATUS_ENUM,
 } from '@/backend/domain/email'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
+import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { updateCertificateEmissionSchema } from '@/backend/infrastructure/server-actions/schemas'
 import { PROCESSING_STATUS_ENUM as DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
@@ -119,6 +121,32 @@ export async function PUT(
             id: certificateEmissionId,
             name: parsed.name,
             variableColumnMapping: parsed.variableColumnMapping,
+            userId,
+        })
+
+        return new NextResponse(null, { status: 204 })
+    } catch (error: unknown) {
+        return await handleError(error)
+    }
+}
+
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: Promise<{ certificateEmissionId: string }> },
+): Promise<NextResponse<null | HandleErrorResponse>> {
+    const certificateEmissionId = (await params).certificateEmissionId
+
+    try {
+        const { userId } = await validateSessionToken(request)
+
+        const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const bucket = new GcpBucket()
+
+        const deleteCertificateEmissionUseCase =
+            new DeleteCertificateEmissionUseCase(certificatesRepository, bucket)
+
+        await deleteCertificateEmissionUseCase.execute({
+            certificateId: certificateEmissionId,
             userId,
         })
 

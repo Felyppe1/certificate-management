@@ -19,6 +19,10 @@ export const updateCertificateEmissionSchema = z.object({
         .optional(),
 })
 
+export const deleteCertificateEmissionSchema = z.object({
+    certificateId: z.string().min(1),
+})
+
 // Data Source
 export const addDataSourceByDrivePickerSchema = z.object({
     certificateId: z.string().min(1),

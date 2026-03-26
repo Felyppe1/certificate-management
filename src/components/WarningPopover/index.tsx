@@ -33,16 +33,7 @@ export function WarningPopover({
 
     return (
         <Popover open={open} onOpenChange={onOpenChange}>
-            <PopoverTrigger
-                asChild
-                onClick={e => {
-                    if (!open) {
-                        e.preventDefault()
-                    }
-                }}
-            >
-                {children}
-            </PopoverTrigger>
+            <PopoverTrigger asChild>{children}</PopoverTrigger>
             <PopoverContent
                 className="w-[16rem] sm:w-80 px-4 sm:px-5 py-4"
                 align="end"
