@@ -9,6 +9,7 @@ import functions_framework
 from dotenv import load_dotenv
 from google.auth.transport.requests import Request
 from google.oauth2.id_token import fetch_id_token
+from datetime import date
 
 load_dotenv()
 
@@ -113,7 +114,7 @@ def main(request):
                                 <a href="https://certificate-management-924358881315.us-central1.run.app/" target="_blank"
                                     style="color: #2563eb; text-decoration: underline;">Certifica</a>
                                 <span style="margin: 0 8px; color: #52525b;">|</span>
-                                <span>© 2025</span>
+                                <span>© {date.today().year}</span>
                             </p>
                         </div>
                     </div>
