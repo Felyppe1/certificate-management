@@ -16,6 +16,7 @@ import {
     DATA_SOURCE_MIME_TYPE,
     ColumnType,
     MAX_DATA_SOURCE_ROWS,
+    MAX_DATA_SOURCE_COLUMNS,
 } from '@/backend/domain/data-source'
 import { addDataSourceByDrivePickerAction } from '@/backend/infrastructure/server-actions/add-data-source-by-drive-picker-action'
 import { addDataSourceByUploadAction } from '@/backend/infrastructure/server-actions/add-data-source-by-upload-action'
@@ -99,6 +100,10 @@ export function DataSourceSection({
             } else if (result.errorType === 'data-source-rows-exceeded') {
                 toast.error(
                     `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_ROWS} linhas`,
+                )
+            } else if (result.errorType === 'data-source-columns-exceeded') {
+                toast.error(
+                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_COLUMNS} colunas`,
                 )
             } else if (result.errorType === 'data-source-file-size-too-large') {
                 toast.error(
@@ -193,6 +198,12 @@ export function DataSourceSection({
                 toast.error(
                     `O arquivo da fonte de dados é muito grande. O tamanho máximo é 2MB`,
                 )
+            } else if (
+                driverPickerState.errorType === 'data-source-columns-exceeded'
+            ) {
+                toast.error(
+                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_COLUMNS} colunas`,
+                )
             } else {
                 toast.error(
                     'Ocorreu um erro ao tentar adicionar fonte de dados',
@@ -214,6 +225,12 @@ export function DataSourceSection({
             } else if (uploadState.errorType === 'data-source-rows-exceeded') {
                 toast.error(
                     `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_ROWS} linhas`,
+                )
+            } else if (
+                uploadState.errorType === 'data-source-columns-exceeded'
+            ) {
+                toast.error(
+                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_COLUMNS} colunas`,
                 )
             } else {
                 toast.error('Ocorreu um erro ao fazer upload da fonte de dados')

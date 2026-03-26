@@ -6,6 +6,7 @@ import {
 } from './error/validation-error'
 
 export const MAX_DATA_SOURCE_ROWS = 300
+export const MAX_DATA_SOURCE_COLUMNS = 20
 export const MAX_DATA_SOURCE_BYTES_SIZE = 2 * 1024 * 1024 // 2MB
 
 export const FORBIDDEN_TYPE_CHANGE: Record<ColumnType, ColumnType[]> = {
@@ -88,8 +89,15 @@ export class DataSource {
 
     static create(data: CreateDataSourceInput): DataSource {
         if (data.rows.length > MAX_DATA_SOURCE_ROWS) {
-            throw new Error(
-                `DataSource cannot have more than ${MAX_DATA_SOURCE_ROWS} rows`,
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.DATA_SOURCE_ROWS_EXCEEDED,
+            )
+        }
+
+        const uniqueColumns = new Set(data.rows.flatMap(Object.keys))
+        if (uniqueColumns.size > MAX_DATA_SOURCE_COLUMNS) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.DATA_SOURCE_COLUMNS_EXCEEDED,
             )
         }
 
