@@ -1,8 +1,10 @@
 'use client'
 
 import { forwardRef } from 'react'
-import { Type, Calendar, Hash, ToggleLeft, List, Settings2 } from 'lucide-react'
+import { Settings2 } from 'lucide-react'
 import { ColumnType } from '@/backend/domain/data-source'
+import { columnTypeConfig } from '../../../../../../../../../columnTypeConfig'
+import { Type } from 'lucide-react'
 
 interface ColumnHeaderMenuProps {
     columnName: string
@@ -12,37 +14,6 @@ interface ColumnHeaderMenuProps {
     isSelected?: boolean
     disabled?: boolean
     onClick?: () => void
-}
-
-export const columnTypeConfig: Record<
-    ColumnType,
-    { label: string; icon: any; iconColor: string }
-> = {
-    string: {
-        label: 'Texto',
-        icon: Type,
-        iconColor: 'text-blue-500',
-    },
-    number: {
-        label: 'Número',
-        icon: Hash,
-        iconColor: 'text-purple-500',
-    },
-    date: {
-        label: 'Data',
-        icon: Calendar,
-        iconColor: 'text-green-500',
-    },
-    boolean: {
-        label: 'Booleano',
-        icon: ToggleLeft,
-        iconColor: 'text-orange-500',
-    },
-    array: {
-        label: 'Lista',
-        icon: List,
-        iconColor: 'text-pink-500',
-    },
 }
 
 export const ColumnHeaderMenu = forwardRef<

@@ -17,10 +17,8 @@ import {
 } from '@/components/ui/sheet'
 import { Check, X } from 'lucide-react'
 import { ColumnType } from '@/backend/domain/data-source'
-import {
-    ColumnHeaderMenu,
-    columnTypeConfig,
-} from './components/ColumnHeaderMenu'
+import { columnTypeConfig } from '../../../../../../../columnTypeConfig'
+import { ColumnHeaderMenu } from './components/ColumnHeaderMenu'
 
 export interface ColumnSettingsSheetProps {
     column: {

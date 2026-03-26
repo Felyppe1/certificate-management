@@ -116,7 +116,7 @@ export default async function CertificatePage({
                     <VariableMappingSection
                         certificateId={certificateId}
                         templateVariables={templateVariables}
-                        dataSourceColumns={dataSourceColumnNames}
+                        dataSourceColumns={dataSourceColumns}
                         currentMapping={
                             certificateEmissionResponse.certificateEmission
                                 .variableColumnMapping!

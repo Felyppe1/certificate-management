@@ -36,11 +36,19 @@ import {
 import { startTransition, useActionState, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { WarningPopover } from '../../../../../../components/WarningPopover'
+import { ColumnType } from '@/backend/domain/data-source'
+import { columnTypeConfig } from '../columnTypeConfig'
+
+interface DataSourceColumn {
+    name: string
+    type: ColumnType
+    arrayItemType?: ColumnType | null
+}
 
 interface VariableMappingSectionProps {
     certificateId: string
     templateVariables: string[]
-    dataSourceColumns: string[]
+    dataSourceColumns: DataSourceColumn[]
     currentMapping: Record<string, string | null>
     emailSent: boolean
     certificatesGenerated: boolean
@@ -119,7 +127,7 @@ export function VariableMappingSection({
             .filter((column): column is string => column !== null)
 
         return dataSourceColumns.filter(
-            column => !mappedColumns.includes(column),
+            column => !mappedColumns.includes(column.name),
         )
     }
 
@@ -253,7 +261,68 @@ export function VariableMappingSection({
                                                 disabled={emailSent}
                                             >
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Selecione uma coluna" />
+                                                    <SelectValue placeholder="Selecione uma coluna">
+                                                        {(() => {
+                                                            const selectedValue =
+                                                                mappings![
+                                                                    variable
+                                                                ]
+                                                            if (!selectedValue)
+                                                                return 'Selecione uma coluna'
+
+                                                            const selectedColumn =
+                                                                dataSourceColumns.find(
+                                                                    c =>
+                                                                        c.name ===
+                                                                        selectedValue,
+                                                                )
+                                                            if (!selectedColumn)
+                                                                return selectedValue
+
+                                                            const config =
+                                                                columnTypeConfig[
+                                                                    selectedColumn
+                                                                        .type
+                                                                ]
+                                                            const baseColor =
+                                                                config.iconColor
+                                                            const Icon =
+                                                                config.icon
+
+                                                            const isArray =
+                                                                selectedColumn.type ===
+                                                                'array'
+                                                            const arrayItemConfig =
+                                                                isArray &&
+                                                                selectedColumn.arrayItemType
+                                                                    ? columnTypeConfig[
+                                                                          selectedColumn
+                                                                              .arrayItemType
+                                                                      ]
+                                                                    : null
+                                                            const ArrayItemIcon =
+                                                                arrayItemConfig?.icon
+
+                                                            return (
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="flex items-center">
+                                                                        <Icon
+                                                                            className={`size-4 ${baseColor}`}
+                                                                        />
+                                                                        {isArray &&
+                                                                            ArrayItemIcon && (
+                                                                                <ArrayItemIcon className="size-3 ml-0.5 text-muted-foreground opacity-70" />
+                                                                            )}
+                                                                    </div>
+                                                                    <span>
+                                                                        {
+                                                                            selectedValue
+                                                                        }
+                                                                    </span>
+                                                                </div>
+                                                            )
+                                                        })()}
+                                                    </SelectValue>
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     {mappings![variable] && (
@@ -272,16 +341,59 @@ export function VariableMappingSection({
                                                         </p>
                                                     ) : (
                                                         availableColumns.map(
-                                                            column => (
-                                                                <SelectItem
-                                                                    key={column}
-                                                                    value={
+                                                            column => {
+                                                                const config =
+                                                                    columnTypeConfig[
                                                                         column
-                                                                    }
-                                                                >
-                                                                    {column}
-                                                                </SelectItem>
-                                                            ),
+                                                                            .type
+                                                                    ]
+                                                                const baseColor =
+                                                                    config.iconColor
+                                                                const Icon =
+                                                                    config.icon
+
+                                                                const isArray =
+                                                                    column.type ===
+                                                                    'array'
+                                                                const arrayItemConfig =
+                                                                    isArray &&
+                                                                    column.arrayItemType
+                                                                        ? columnTypeConfig[
+                                                                              column
+                                                                                  .arrayItemType
+                                                                          ]
+                                                                        : null
+                                                                const ArrayItemIcon =
+                                                                    arrayItemConfig?.icon
+
+                                                                return (
+                                                                    <SelectItem
+                                                                        key={
+                                                                            column.name
+                                                                        }
+                                                                        value={
+                                                                            column.name
+                                                                        }
+                                                                    >
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className="flex items-center">
+                                                                                <Icon
+                                                                                    className={`size-4 ${baseColor}`}
+                                                                                />
+                                                                                {isArray &&
+                                                                                    ArrayItemIcon && (
+                                                                                        <ArrayItemIcon className="size-3 ml-0.5 text-muted-foreground opacity-70" />
+                                                                                    )}
+                                                                            </div>
+                                                                            <span>
+                                                                                {
+                                                                                    column.name
+                                                                                }
+                                                                            </span>
+                                                                        </div>
+                                                                    </SelectItem>
+                                                                )
+                                                            },
                                                         )
                                                     )}
                                                 </SelectContent>
