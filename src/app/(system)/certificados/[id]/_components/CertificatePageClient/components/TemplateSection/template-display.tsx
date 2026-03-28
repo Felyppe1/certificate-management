@@ -17,7 +17,7 @@ import { downloadTemplateAction } from '@/backend/infrastructure/server-actions/
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import { TEMPLATE_FILE_MIME_TYPE } from '@/backend/domain/template'
 import { SourceIcon } from '@/components/svg/SourceIcon'
-import { WarningPopover } from '../../../../../../components/WarningPopover'
+import { WarningPopover } from '../../../../../../../../components/WarningPopover'
 import { toast } from 'sonner'
 import { useGoogleRelogin } from '@/components/useGoogleRelogin'
 import { useMutation, useQueryClient } from '@tanstack/react-query'

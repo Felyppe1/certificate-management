@@ -3,7 +3,7 @@
 import { forwardRef } from 'react'
 import { Settings2 } from 'lucide-react'
 import { ColumnType } from '@/backend/domain/data-source'
-import { columnTypeConfig } from '../../../../../../../../../columnTypeConfig'
+import { columnTypeConfig } from '../../../../../../../../../../../../../../../../utils/columnTypeConfig'
 import { Type } from 'lucide-react'
 
 interface ColumnHeaderMenuProps {

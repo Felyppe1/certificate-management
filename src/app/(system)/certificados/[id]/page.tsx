@@ -1,12 +1,12 @@
 import { fetchMe } from '@/api-calls/fetch-me'
 import { fetchCertificateEmission } from '@/api-calls/fetch-certificate-emission'
-import { CertificatePageClient } from './_components/CertificatePageClient'
 import {
     dehydrate,
     HydrationBoundary,
     QueryClient,
 } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
+import { CertificatePageClient } from './_components/CertificatePageClient'
 
 export default async function CertificatePage({
     params,

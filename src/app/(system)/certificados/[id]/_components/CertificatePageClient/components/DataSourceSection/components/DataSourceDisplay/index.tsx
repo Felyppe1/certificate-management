@@ -41,7 +41,7 @@ import { refreshDataSourceAction } from '@/backend/infrastructure/server-actions
 import { retryDataSourceRowAction } from '@/backend/infrastructure/server-actions/retry-data-source-row-action'
 import { SourceIcon } from '@/components/svg/SourceIcon'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
-import { WarningPopover } from '../../../../../../../../components/WarningPopover'
+import { WarningPopover } from '../../../../../../../../../../components/WarningPopover'
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 

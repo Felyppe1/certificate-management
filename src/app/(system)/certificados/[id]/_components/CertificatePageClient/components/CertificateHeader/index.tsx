@@ -1,6 +1,6 @@
 'use client'
 
-import { STATUS_MAPPING } from '@/app/(system)/_components/CertificateEmissionsList/_components/List/ListRenderer'
+import { STATUS_MAPPING } from '@/app/(system)/(home)/_components/CertificateEmissionsList/_components/List/ListRenderer'
 import { deleteCertificateEmissionAction } from '@/backend/infrastructure/server-actions/delete-certificate-emission-action'
 import { updateCertificateEmissionAction } from '@/backend/infrastructure/server-actions/update-certificate-emission-action'
 import { WarningPopover } from '@/components/WarningPopover'

@@ -1,6 +1,6 @@
 import { fetchMe } from '@/api-calls/fetch-me'
 import { Header } from './_components/Header'
-import { Toast } from './Toast'
+import { Toast } from './_components/Toast'
 
 interface SystemLayoutProps {
     children: React.ReactNode
