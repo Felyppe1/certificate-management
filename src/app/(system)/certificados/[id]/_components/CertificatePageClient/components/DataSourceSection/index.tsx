@@ -114,6 +114,10 @@ export function DataSourceSection({
                 toast.error(
                     `O arquivo da fonte de dados é muito grande. O tamanho máximo é 2MB`,
                 )
+            } else if (result.errorType === 'genai-api-unavailable') {
+                toast.error(
+                    `O serviço de IA está enfrentando uma alta demanda. Por favor, tente novamente mais tarde.`,
+                )
             } else {
                 toast.error(
                     'Ocorreu um erro ao tentar adicionar fonte de dados',
@@ -177,6 +181,10 @@ export function DataSourceSection({
                 toast.error(
                     `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_COLUMNS} colunas`,
                 )
+            } else if (error?.errorType === 'genai-api-unavailable') {
+                toast.error(
+                    `O serviço de IA está enfrentando uma alta demanda. Por favor, tente novamente mais tarde.`,
+                )
             } else {
                 toast.error(
                     'Ocorreu um erro ao tentar adicionar fonte de dados',
@@ -214,6 +222,10 @@ export function DataSourceSection({
             } else if (error?.errorType === 'data-source-columns-exceeded') {
                 toast.error(
                     `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_COLUMNS} colunas`,
+                )
+            } else if (error?.errorType === 'genai-api-unavailable') {
+                toast.error(
+                    `O serviço de IA está enfrentando uma alta demanda. Por favor, tente novamente mais tarde.`,
                 )
             } else {
                 toast.error('Ocorreu um erro ao fazer upload da fonte de dados')

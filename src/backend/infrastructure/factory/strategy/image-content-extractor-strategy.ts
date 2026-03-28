@@ -1,8 +1,6 @@
-import {
-    ExtractColumns,
-    ISpreadsheetContentExtractorStrategy,
-} from '@/backend/application/interfaces/ispreadsheet-content-extractor-factory'
-import { GoogleGenAI } from '@google/genai'
+import { ISpreadsheetContentExtractorStrategy } from '@/backend/application/interfaces/ispreadsheet-content-extractor-factory'
+import { ServiceUnavailableError } from '@/backend/domain/error/service-unavailable-error'
+import { GenerateContentResponse, GoogleGenAI } from '@google/genai'
 import { fileTypeFromBuffer } from 'file-type'
 
 const prompt = `
@@ -39,17 +37,30 @@ export class ImageContentExtractorStrategy
             },
         ]
 
-        const response = await genAiClient.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: contents,
-        })
-
         let rows: Record<string, any>[] = []
+        let response: GenerateContentResponse | undefined = undefined
         try {
+            response = await genAiClient.models.generateContent({
+                model: 'gemini-3-flash-preview',
+                contents: contents,
+            })
+
             rows = JSON.parse(response.text as string)
-        } catch (error) {
+        } catch (error: any) {
+            if (error?.message) {
+                const errorData = JSON.parse(error.message)
+
+                const isHighDemandError =
+                    errorData?.error?.code === 503 &&
+                    errorData?.error?.message.includes('high demand')
+
+                if (isHighDemandError) {
+                    throw new ServiceUnavailableError('genai-api-unavailable')
+                }
+            }
+
             console.error('Failed to parse JSON from GenAI response:', error)
-            console.log('GenAI response text was:', response.text)
+            console.log('GenAI response text was:', response?.text)
         }
 
         return { columns: [], rows }
