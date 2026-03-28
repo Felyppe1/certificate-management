@@ -10,6 +10,7 @@ import { LocalQueue } from '../cloud/local/local-queue'
 import { RetryDataSourceRowUseCase } from '@/backend/application/generate-certificate-use-case'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { retryDataSourceRowSchema } from './schemas'
+import { redirect } from 'next/navigation'
 
 export async function retryDataSourceRowAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -53,6 +54,7 @@ export async function retryDataSourceRowAction(_: unknown, formData: FormData) {
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 

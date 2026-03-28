@@ -8,6 +8,7 @@ import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { DownloadTemplateUseCase } from '@/backend/application/download-template-use-case'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { downloadTemplateSchema } from './schemas'
+import { redirect } from 'next/navigation'
 
 export async function downloadTemplateAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -45,6 +46,7 @@ export async function downloadTemplateAction(_: unknown, formData: FormData) {
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 

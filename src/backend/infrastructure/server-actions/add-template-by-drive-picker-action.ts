@@ -8,7 +8,6 @@ import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-driv
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { updateTag } from 'next/cache'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
@@ -16,6 +15,7 @@ import { PrismaTransactionManager } from '../repository/prisma/prisma-transactio
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { addTemplateByDrivePickerSchema } from './schemas'
 import { LiquidStringVariableExtractor } from '../string-variable-extractor/liquidjs'
+import { redirect } from 'next/navigation'
 
 export async function addTemplateByDrivePickerAction(
     _: unknown,
@@ -74,6 +74,7 @@ export async function addTemplateByDrivePickerAction(
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 
@@ -82,8 +83,6 @@ export async function addTemplateByDrivePickerAction(
             errorType: error.type,
         }
     }
-
-    updateTag('certificate')
 
     return {
         success: true,

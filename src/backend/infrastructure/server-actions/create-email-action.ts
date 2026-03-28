@@ -6,13 +6,13 @@ import { prisma } from '../repository/prisma'
 import { PrismaEmailsRepository } from '../repository/prisma/prisma-emails-repository'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { logoutAction } from './logout-action'
-import { updateTag } from 'next/cache'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { createEmailSchema } from './schemas'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { CloudTasksQueue } from '../cloud/gcp/cloud-tasks-queue'
 import { LocalQueue } from '../cloud/local/local-queue'
+import { redirect } from 'next/navigation'
 
 export async function createEmailAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -59,6 +59,10 @@ export async function createEmailAction(_: unknown, formData: FormData) {
             scheduledAt: parsedData.scheduledAt,
             subject: parsedData.subject,
         })
+
+        return {
+            success: true,
+        }
     } catch (error: any) {
         console.log(error)
 
@@ -69,6 +73,7 @@ export async function createEmailAction(_: unknown, formData: FormData) {
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 
@@ -76,11 +81,5 @@ export async function createEmailAction(_: unknown, formData: FormData) {
             success: false,
             errorType: error.type,
         }
-    }
-
-    updateTag('certificate')
-
-    return {
-        success: true,
     }
 }

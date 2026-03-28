@@ -8,6 +8,7 @@ import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { DownloadDataSourceUseCase } from '@/backend/application/download-data-source-use-case'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { downloadDataSourceSchema } from './schemas'
+import { redirect } from 'next/navigation'
 
 export async function downloadDataSourceAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -45,6 +46,7 @@ export async function downloadDataSourceAction(_: unknown, formData: FormData) {
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 

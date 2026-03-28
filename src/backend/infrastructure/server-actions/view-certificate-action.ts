@@ -9,6 +9,7 @@ import { ViewCertificateEmissionUseCase } from '@/backend/application/view-certi
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { viewCertificateSchema } from './schemas'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
+import { redirect } from 'next/navigation'
 
 export async function viewCertificateAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -51,6 +52,7 @@ export async function viewCertificateAction(_: unknown, formData: FormData) {
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 

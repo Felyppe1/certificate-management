@@ -5,11 +5,14 @@ import { AuthenticationError } from '@/backend/domain/error/authentication-error
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { updateTag } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { logoutAction } from './logout-action'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { createCertificateEmissionSchema } from './schemas'
+import { redirect } from 'next/navigation'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from '@/backend/domain/error/validation-error'
 
 export async function createCertificateEmissionAction(
     _: unknown,
@@ -18,8 +21,6 @@ export async function createCertificateEmissionAction(
     const rawData = {
         name: formData.get('name') as string,
     }
-
-    let certificateEmissionId: string
 
     try {
         const { userId } = await validateSessionToken()
@@ -31,13 +32,18 @@ export async function createCertificateEmissionAction(
         const createCertificateEmissionUseCase =
             new CreateCertificateEmissionUseCase(certificatesRepository)
 
-        certificateEmissionId = await createCertificateEmissionUseCase.execute({
-            name: parsedData.name,
-            userId,
-        })
+        // throw new AuthenticationError('user-not-found')
+        const certificateEmissionId =
+            await createCertificateEmissionUseCase.execute({
+                name: parsedData.name,
+                userId,
+            })
 
-        updateTag('certificate-emissions')
-    } catch (error) {
+        return {
+            success: true,
+            certificateEmissionId,
+        }
+    } catch (error: any) {
         console.log(error)
 
         if (error instanceof AuthenticationError) {
@@ -47,13 +53,13 @@ export async function createCertificateEmissionAction(
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 
         return {
             success: false,
+            errorType: error.type,
         }
     }
-
-    redirect('/certificados/' + certificateEmissionId)
 }

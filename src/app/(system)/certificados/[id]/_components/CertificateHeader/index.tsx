@@ -7,15 +7,12 @@ import { WarningPopover } from '@/components/WarningPopover'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { queryKeys } from '@/lib/query-keys'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Check, Pencil, Trash2, X } from 'lucide-react'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { useRouter } from 'next/navigation'
-import {
-    startTransition,
-    useActionState,
-    useEffect,
-    useRef,
-    useState,
-} from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
@@ -48,16 +45,56 @@ export function CertificateHeader({
     const [name, setName] = useState(initialName)
     const [previousName, setPreviousName] = useState(initialName)
     const inputRef = useRef<HTMLInputElement>(null)
+    const [isTransitionLoading, startTransition] = useTransition()
 
-    const [state, action, isPending] = useActionState(
-        updateCertificateEmissionAction,
-        null,
-    )
+    const queryClient = useQueryClient()
 
-    const [deleteState, deleteAction, isDeleting] = useActionState(
-        deleteCertificateEmissionAction,
-        null,
-    )
+    const updateMutation = useMutation({
+        mutationFn: async (formData: FormData) => {
+            const result = await updateCertificateEmissionAction(null, formData)
+            if (result?.success === false) {
+                throw result
+            }
+            return result
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmissions(),
+            })
+            toast.success('Nome atualizado com sucesso')
+            setIsEditing(false)
+            setPreviousName(name)
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+
+            toast.error('Erro ao atualizar o nome')
+        },
+    })
+
+    const deleteMutation = useMutation({
+        mutationFn: async (formData: FormData) => {
+            const result = await deleteCertificateEmissionAction(null, formData)
+            if (result?.success === false) {
+                throw result
+            }
+            return result
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmissions(),
+            })
+            toast.success('Certificado excluído com sucesso')
+            startTransition(() => {
+                router.push('/')
+            })
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+
+            toast.error('Ocorreu um erro ao excluir o certificado')
+        },
+    })
 
     const handleEditClick = () => {
         setPreviousName(name)
@@ -91,9 +128,7 @@ export function CertificateHeader({
         formData.append('name', validName)
         formData.append('variableColumnMapping', 'undefined')
 
-        startTransition(() => {
-            action(formData)
-        })
+        updateMutation.mutate(formData)
     }
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -108,32 +143,8 @@ export function CertificateHeader({
         const formData = new FormData()
         formData.append('certificateId', certificateId)
 
-        startTransition(() => {
-            deleteAction(formData)
-        })
+        deleteMutation.mutate(formData)
     }
-
-    useEffect(() => {
-        if (state?.success) {
-            toast.success('Nome atualizado com sucesso')
-            setIsEditing(false)
-            setPreviousName(name)
-        } else if (state && !state.success) {
-            toast.error('Erro ao atualizar o nome')
-        }
-    }, [state])
-
-    useEffect(() => {
-        if (!deleteState) return
-
-        if (deleteState.success) {
-            toast.success('Certificado excluído com sucesso')
-            router.push('/')
-            return
-        }
-
-        toast.error('Ocorreu um erro ao excluir o certificado')
-    }, [deleteState, router])
 
     return (
         <div className="flex flex-col gap-2">
@@ -146,14 +157,22 @@ export function CertificateHeader({
                             onChange={e => setName(e.target.value)}
                             onKeyDown={handleKeyDown}
                             className="text-2xl sm:text-3xl h-auto sm:h-auto pt-0.5 pb-1 sm:pt-1 sm:pb-2 px-4 sm:px-5 font-bold bg-background flex-1"
-                            disabled={isPending || isDeleting}
+                            disabled={
+                                updateMutation.isPending ||
+                                deleteMutation.isPending ||
+                                isTransitionLoading
+                            }
                         />
                         <div className="flex items-center gap-2">
                             <Button
                                 size="icon"
                                 variant="outline"
                                 onClick={handleSave}
-                                disabled={isPending || isDeleting}
+                                disabled={
+                                    updateMutation.isPending ||
+                                    deleteMutation.isPending ||
+                                    isTransitionLoading
+                                }
                                 className="h-10 w-10 text-green-600 hover:text-green-500"
                             >
                                 <Check className="h-5 w-5" strokeWidth={3} />
@@ -162,7 +181,11 @@ export function CertificateHeader({
                                 size="icon"
                                 variant="outline"
                                 onClick={handleCancel}
-                                disabled={isPending || isDeleting}
+                                disabled={
+                                    updateMutation.isPending ||
+                                    deleteMutation.isPending ||
+                                    isTransitionLoading
+                                }
                                 className="h-10 w-10 text-red-600 hover:text-red-500"
                             >
                                 <X className="h-5 w-5" strokeWidth={3} />
@@ -178,7 +201,11 @@ export function CertificateHeader({
                             size="icon"
                             variant="outline"
                             onClick={handleEditClick}
-                            disabled={isDeleting || isPending}
+                            disabled={
+                                updateMutation.isPending ||
+                                deleteMutation.isPending ||
+                                isTransitionLoading
+                            }
                             title="Editar nome do certificado"
                         >
                             <Pencil className="h-4 w-4" />
@@ -194,7 +221,11 @@ export function CertificateHeader({
                                 <Button
                                     size="icon"
                                     variant="outline"
-                                    disabled={isDeleting || isPending}
+                                    disabled={
+                                        updateMutation.isPending ||
+                                        deleteMutation.isPending ||
+                                        isTransitionLoading
+                                    }
                                     title="Excluir certificado"
                                     className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                 >

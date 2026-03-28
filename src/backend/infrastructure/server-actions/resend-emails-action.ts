@@ -2,7 +2,6 @@
 
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { logoutAction } from './logout-action'
-import { updateTag } from 'next/cache'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { resendEmailsSchema } from './schemas/index'
 import { ResendEmailsUseCase } from '@/backend/application/resend-emails-use-case'
@@ -12,6 +11,7 @@ import { PrismaEmailsRepository } from '../repository/prisma/prisma-emails-repos
 import { prisma } from '../repository/prisma'
 import { CloudTasksQueue } from '../cloud/gcp/cloud-tasks-queue'
 import { LocalQueue } from '../cloud/local/local-queue'
+import { redirect } from 'next/navigation'
 
 export async function resendEmailsAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -47,6 +47,10 @@ export async function resendEmailsAction(_: unknown, formData: FormData) {
             certificateEmissionId: parsedData.certificateId,
             rowIds: parsedData.rowIds,
         })
+
+        return {
+            success: true,
+        }
     } catch (error: any) {
         console.error(error)
 
@@ -57,12 +61,10 @@ export async function resendEmailsAction(_: unknown, formData: FormData) {
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 
         return { success: false, errorType: error.type }
     }
-
-    updateTag('certificate')
-    return { success: true }
 }

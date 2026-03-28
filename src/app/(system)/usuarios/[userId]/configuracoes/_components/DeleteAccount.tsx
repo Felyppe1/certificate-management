@@ -15,24 +15,47 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2, Trash2 } from 'lucide-react'
-import { useState, useTransition } from 'react'
+import { useMutation } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
 
 interface DeleteAccountProps {
     userEmail: string
 }
 
 export function DeleteAccount({}: DeleteAccountProps) {
-    const [isPending, startTransition] = useTransition()
     const [isOpen, setIsOpen] = useState(false)
     const [confirmText, setConfirmText] = useState('')
 
-    const handleDeleteAccount = () => {
-        startTransition(() => {
-            deleteAccountAction()
-        })
-        setIsOpen(false)
-        setConfirmText('')
-    }
+    const router = useRouter()
+
+    const mutation = useMutation({
+        mutationFn: async () => {
+            const result = await deleteAccountAction()
+            if (result?.success === false) {
+                throw result
+            }
+
+            return result
+        },
+        onSuccess: () => {
+            router.push('/entrar')
+        },
+        onError: error => {
+            if (isRedirectError(error)) return
+
+            console.log(error)
+            toast.error('Erro ao excluir conta')
+        },
+        onMutate: () => {
+            setIsOpen(false)
+            setConfirmText('')
+        },
+    })
+
+    const isPending = mutation.isPending
 
     const isConfirmValid = confirmText === 'CONFIRMAR'
     // const login = useGoogleLogin({
@@ -132,7 +155,7 @@ export function DeleteAccount({}: DeleteAccountProps) {
                                 <Button
                                     variant="destructive"
                                     disabled={!isConfirmValid || isPending}
-                                    onClick={handleDeleteAccount}
+                                    onClick={() => mutation.mutate()}
                                 >
                                     {isPending && (
                                         <Loader2 className="animate-spin" />

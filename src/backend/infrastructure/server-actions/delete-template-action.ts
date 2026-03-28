@@ -4,13 +4,13 @@ import { AuthenticationError } from '@/backend/domain/error/authentication-error
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { DeleteTemplateUseCase } from '@/backend/application/delete-template-use-case'
-import { updateTag } from 'next/cache'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { deleteTemplateSchema } from './schemas'
+import { redirect } from 'next/navigation'
 
 export async function deleteTemplateAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -41,8 +41,6 @@ export async function deleteTemplateAction(_: unknown, formData: FormData) {
             userId,
         })
 
-        updateTag('certificate')
-
         return { success: true }
     } catch (error: any) {
         console.error('Error deleting template:', error)
@@ -54,6 +52,7 @@ export async function deleteTemplateAction(_: unknown, formData: FormData) {
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 

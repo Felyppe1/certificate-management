@@ -42,9 +42,13 @@ export async function deleteAccountAction() {
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
-    }
 
-    redirect('/entrar')
+        return {
+            success: false,
+            errorType: error.type,
+        }
+    }
 }

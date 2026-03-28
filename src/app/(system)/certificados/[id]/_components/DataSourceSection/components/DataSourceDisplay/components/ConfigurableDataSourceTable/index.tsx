@@ -1,12 +1,6 @@
 'use client'
 
-import {
-    useState,
-    useEffect,
-    useActionState,
-    startTransition,
-    useCallback,
-} from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
     Table,
     TableBody,
@@ -29,6 +23,9 @@ import { resendEmailsAction } from '@/backend/infrastructure/server-actions/rese
 import { WarningPopover } from '../../../../../../../../../../components/WarningPopover'
 import { ColumnSettingsSheet } from './components/ColumnSettingsSheet'
 import { EditableCell } from './components/EditableCell'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
+import { queryKeys } from '@/lib/query-keys'
 
 interface ConfigurableDataSourceTableProps {
     certificateId: string
@@ -66,14 +63,65 @@ export function ConfigurableDataSourceTable({
 }: ConfigurableDataSourceTableProps) {
     const [showAllRows, setShowAllRows] = useState(false)
     const [columns, setColumns] = useState(initialColumns)
-    const [columnsState, columnsAction, isColumnsPending] = useActionState(
-        updateDataSourceColumnsAction,
-        null,
-    )
-    const [rowsState, rowsAction, rowsIsPending] = useActionState(
-        updateDataSourceRowsAction,
-        null,
-    )
+
+    const queryClient = useQueryClient()
+
+    const { mutate: columnsAction, isPending: isColumnsPending } = useMutation({
+        mutationFn: async (formData: FormData) => {
+            const result = await updateDataSourceColumnsAction(null, formData)
+            if (result?.success === false) throw result
+            return result
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
+            toast.success('Configuração salva com sucesso')
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+
+            if (error?.errorType === 'invalid-column-types') {
+                const formatColumnList = (names: string[]): string => {
+                    if (names.length === 1) return names[0]
+                    return `${names.slice(0, -1).join(', ')} e ${names[names.length - 1]}`
+                }
+
+                const invalidCols =
+                    error.invalidColumns?.map((col: any) => col.name) ?? []
+
+                const isPlural = invalidCols.length > 1
+
+                const message = isPlural
+                    ? `Os tipos de dados escolhidos para as colunas ${formatColumnList(invalidCols)} são inválidos`
+                    : `O tipo de dado escolhido para a coluna ${formatColumnList(invalidCols)} é inválido`
+
+                toast.error(message)
+            } else {
+                toast.error('Ocorreu um erro ao salvar a configuração')
+            }
+        },
+    })
+    const { mutate: rowsAction, isPending: rowsIsPending } = useMutation({
+        mutationFn: async (formData: FormData) => {
+            const result = await updateDataSourceRowsAction(null, formData)
+            if (result?.success === false) throw result
+            return result
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
+            toast.success('Dados salvos com sucesso')
+            setIsEditingRows(false)
+            setEditedRows({})
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+
+            toast.error('Ocorreu um erro ao salvar os dados')
+        },
+    })
     const isPending = isColumnsPending || rowsIsPending
     const [showSaveWarning, setShowSaveWarning] = useState(false)
     const [showSaveRowsWarning, setShowSaveRowsWarning] = useState(false)
@@ -92,14 +140,52 @@ export function ConfigurableDataSourceTable({
     const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set())
     const [isDownloadingSelected, setIsDownloadingSelected] = useState(false)
 
-    const [
-        viewCertificatesState,
-        viewCertificatesActionHandler,
-        isViewingCertificates,
-    ] = useActionState(viewCertificatesAction, null)
+    const {
+        mutate: viewCertificatesActionHandler,
+        isPending: isViewingCertificates,
+    } = useMutation({
+        mutationFn: async (formData: FormData) => {
+            const result = await viewCertificatesAction(null, formData)
+            if (result?.success === false) throw result
+            return result
+        },
+        onSuccess: result => {
+            const results = result.data as {
+                rowId: string
+                signedUrl: string
+            }[]
+            results.forEach(({ signedUrl }) => {
+                window.open(signedUrl, '_blank', 'noopener,noreferrer')
+            })
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
 
-    const [resendEmailsState, resendEmailsActionHandler, isResendingEmails] =
-        useActionState(resendEmailsAction, null)
+            toast.error(
+                'Ocorreu um erro ao visualizar os certificados selecionados',
+            )
+        },
+    })
+
+    const { mutate: resendEmailsActionHandler, isPending: isResendingEmails } =
+        useMutation({
+            mutationFn: async (formData: FormData) => {
+                const result = await resendEmailsAction(null, formData)
+                if (result?.success === false) throw result
+                return result
+            },
+            onSuccess: () => {
+                toast.success(
+                    'Envio de e-mails agendado com sucesso para as linhas selecionadas.',
+                )
+                setSelectedRowIds(new Set())
+            },
+            onError: (error: any) => {
+                if (isRedirectError(error)) return
+
+                toast.error('Ocorreu um erro ao reenviar os e-mails.')
+            },
+        })
 
     const completedRows = rows.filter(
         r => r.processingStatus === PROCESSING_STATUS_ENUM.COMPLETED,
@@ -135,9 +221,7 @@ export function ConfigurableDataSourceTable({
         if (selectedRowIds.size === 0) return
         const formData = new FormData()
         formData.append('rowIds', JSON.stringify([...selectedRowIds]))
-        startTransition(() => {
-            viewCertificatesActionHandler(formData)
-        })
+        viewCertificatesActionHandler(formData)
     }
 
     const handleDownloadSelected = async () => {
@@ -173,82 +257,13 @@ export function ConfigurableDataSourceTable({
         const formData = new FormData()
         formData.append('certificateId', certificateId)
         formData.append('rowIds', JSON.stringify([...selectedRowIds]))
-        startTransition(() => {
-            resendEmailsActionHandler(formData)
-        })
+        resendEmailsActionHandler(formData)
     }
 
     useEffect(() => {
         setColumns(initialColumns)
         setSelectedColumnIndex(null)
     }, [initialColumns])
-
-    useEffect(() => {
-        if (!viewCertificatesState) return
-        if (viewCertificatesState.success) {
-            const results = viewCertificatesState.data as {
-                rowId: string
-                signedUrl: string
-            }[]
-            results.forEach(({ signedUrl }) => {
-                window.open(signedUrl, '_blank', 'noopener,noreferrer')
-            })
-        } else {
-            toast.error(
-                'Ocorreu um erro ao visualizar os certificados selecionados',
-            )
-        }
-    }, [viewCertificatesState])
-
-    useEffect(() => {
-        if (!resendEmailsState) return
-        if (resendEmailsState.success) {
-            toast.success(
-                'Envio de e-mails agendado com sucesso para as linhas selecionadas.',
-            )
-            setSelectedRowIds(new Set())
-        } else {
-            toast.error('Ocorreu um erro ao reenviar os e-mails.')
-        }
-    }, [resendEmailsState])
-
-    useEffect(() => {
-        if (!columnsState) return
-
-        if (columnsState.success) {
-            toast.success('Configuração salva com sucesso')
-        } else if (columnsState.errorType === 'invalid-column-types') {
-            const formatColumnList = (names: string[]): string => {
-                if (names.length === 1) return names[0]
-                return `${names.slice(0, -1).join(', ')} e ${names[names.length - 1]}`
-            }
-
-            const invalidCols =
-                columnsState.invalidColumns?.map((col: any) => col.name) ?? []
-
-            const isPlural = invalidCols.length > 1
-
-            const message = isPlural
-                ? `Os tipos de dados escolhidos para as colunas ${formatColumnList(invalidCols)} são inválidos`
-                : `O tipo de dado escolhido para a coluna ${formatColumnList(invalidCols)} é inválido`
-
-            toast.error(message)
-        } else {
-            toast.error('Ocorreu um erro ao salvar a configuração')
-        }
-    }, [columnsState])
-
-    useEffect(() => {
-        if (!rowsState) return
-
-        if (rowsState.success) {
-            toast.success('Dados salvos com sucesso')
-            setIsEditingRows(false)
-            setEditedRows({})
-        } else {
-            toast.error('Ocorreu um erro ao salvar os dados')
-        }
-    }, [rowsState])
 
     const hasColumnChanges =
         JSON.stringify(columns) !== JSON.stringify(initialColumns)
@@ -300,9 +315,7 @@ export function ConfigurableDataSourceTable({
 
         formData.append('columns', JSON.stringify(payloadColumns))
 
-        startTransition(() => {
-            columnsAction(formData)
-        })
+        columnsAction(formData)
     }
 
     const handleSaveClick = () => {
@@ -344,9 +357,7 @@ export function ConfigurableDataSourceTable({
 
         formData.append('editedRows', JSON.stringify(formattedEditedRows))
 
-        startTransition(() => {
-            rowsAction(formData)
-        })
+        rowsAction(formData)
     }
 
     const handleSaveRowsClick = () => {

@@ -8,7 +8,6 @@ import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-driv
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { updateTag } from 'next/cache'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
@@ -17,6 +16,7 @@ import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { LiquidStringVariableExtractor } from '../string-variable-extractor/liquidjs'
 import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
+import { redirect } from 'next/navigation'
 
 export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
     // add delay
@@ -63,8 +63,6 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
             userId,
         })
 
-        updateTag('certificate')
-
         return {
             success: true,
         }
@@ -88,6 +86,7 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 

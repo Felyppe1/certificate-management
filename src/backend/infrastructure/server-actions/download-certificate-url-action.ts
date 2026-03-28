@@ -9,6 +9,7 @@ import { DownloadCertificateEmissionUseCase } from '@/backend/application/downlo
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { downloadCertificateUrlSchema } from './schemas'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
+import { redirect } from 'next/navigation'
 
 export async function downloadCertificateUrlAction(
     _: unknown,
@@ -55,6 +56,7 @@ export async function downloadCertificateUrlAction(
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 

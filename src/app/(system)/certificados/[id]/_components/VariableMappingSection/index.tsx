@@ -33,11 +33,14 @@ import {
     Loader2,
     CheckCircle2,
 } from 'lucide-react'
-import { startTransition, useActionState, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { WarningPopover } from '../../../../../../components/WarningPopover'
 import { ColumnType } from '@/backend/domain/data-source'
 import { columnTypeConfig } from '../columnTypeConfig'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
+import { queryKeys } from '@/lib/query-keys'
 
 interface DataSourceColumn {
     name: string
@@ -62,10 +65,29 @@ export function VariableMappingSection({
     emailSent,
     certificatesGenerated,
 }: VariableMappingSectionProps) {
-    const [mappingState, mappingAction, mappingIsLoading] = useActionState(
-        updateCertificateEmissionAction,
-        null,
-    )
+    const queryClient = useQueryClient()
+
+    const { mutate: mappingAction, isPending: mappingIsLoading } = useMutation({
+        mutationFn: async (formData: FormData) => {
+            const result = await updateCertificateEmissionAction(null, formData)
+            if (result?.success === false) {
+                throw result
+            }
+            return result
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
+            toast.success('Mapeamento salvo com sucesso')
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+
+            console.error(error)
+            toast.error('Ocorreu um erro ao tentar salvar o mapeamento')
+        },
+    })
     const [showMappingWarning, setShowMappingWarning] = useState(false)
 
     const [mappings, setMappings] = useState<Record<
@@ -118,6 +140,8 @@ export function VariableMappingSection({
         }))
     }
 
+    const isLoading = mappingIsLoading
+
     const getAvailableColumns = (currentVariable: string) => {
         if (!mappings) return dataSourceColumns
 
@@ -131,7 +155,9 @@ export function VariableMappingSection({
         )
     }
 
-    const handleSaveClick = () => {
+    const handleSaveClick = (e: React.MouseEvent) => {
+        e.preventDefault()
+        console.log(certificatesGenerated)
         if (certificatesGenerated) {
             setShowMappingWarning(true)
         } else {
@@ -145,24 +171,12 @@ export function VariableMappingSection({
         formData.append('id', certificateId)
         formData.append('variableColumnMapping', JSON.stringify(mappings))
 
-        startTransition(() => {
-            mappingAction(formData)
-        })
+        mappingAction(formData)
     }
 
     const handleUndoChanges = () => {
         setMappings(currentMapping)
     }
-
-    useEffect(() => {
-        if (!mappingState) return
-
-        if (mappingState.success) {
-            toast.success('Mapeamento salvo com sucesso')
-        } else {
-            toast.error('Ocorreu um erro ao tentar salvar o mapeamento')
-        }
-    }, [mappingState])
 
     if (templateVariables.length === 0) {
         return null

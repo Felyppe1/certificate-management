@@ -1,7 +1,7 @@
 'use client'
 
 import { FileSelector, SelectOption } from '@/components/FileSelector'
-import { startTransition, useActionState, useState, useEffect } from 'react'
+import { useState } from 'react'
 import { DataSourceDisplay } from './components/DataSourceDisplay'
 import {
     Card,
@@ -27,8 +27,11 @@ import { toast } from 'sonner'
 import { useGoogleRelogin } from '@/components/useGoogleRelogin'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import z from 'zod'
 import { addDataSourceByUrlAction } from '@/backend/infrastructure/server-actions/add-data-source-by-url-action'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
+import { queryKeys } from '@/lib/query-keys'
 
 interface DataSourceSectionProps {
     certificateId: string
@@ -67,6 +70,8 @@ export function DataSourceSection({
     emailSent,
 }: DataSourceSectionProps) {
     const [isEditing, setIsEditing] = useState(false)
+
+    const queryClient = useQueryClient()
 
     const dataSourceUrlFormSchema = z.object({
         fileUrl: z.url('URL inválida'),
@@ -118,26 +123,110 @@ export function DataSourceSection({
             return
         }
 
+        await queryClient.invalidateQueries({
+            queryKey: queryKeys.certificateEmission(certificateId),
+        })
         toast.success('Fonte de dados adicionada com sucesso')
         urlForm.reset()
         setIsEditing(false)
     }
 
-    const [driverPickerState, drivePickerAction, drivePickerIsLoading] =
-        useActionState(addDataSourceByDrivePickerAction, null)
-    const [uploadState, uploadAction, uploadIsLoading] = useActionState(
-        addDataSourceByUploadAction,
-        null,
-    )
+    const { login, isLoading: loginIsLoading } = useGoogleRelogin({ userEmail })
+
+    const drivePickerMutation = useMutation({
+        mutationFn: async (formData: FormData) => {
+            const result = await addDataSourceByDrivePickerAction(
+                null,
+                formData,
+            )
+            if (result?.success === false) {
+                throw result
+            }
+            return result
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
+            toast.success('Fonte de dados adicionada com sucesso')
+            setIsEditing(false)
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+
+            if (error?.errorType === 'google-token-refresh-failed') {
+                toast.error(
+                    'Sessão do Google expirada. Entre novamente com a sua conta.',
+                )
+                login()
+            } else if (
+                error?.errorType === 'unsupported-data-source-mimetype'
+            ) {
+                toast.error(
+                    'Tipo de arquivo não suportado. Apenas Google Planilhas, .csv ou .xlsx são permitidos',
+                )
+            } else if (error?.errorType === 'data-source-rows-exceeded') {
+                toast.error(
+                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_ROWS} linhas`,
+                )
+            } else if (error?.errorType === 'data-source-file-size-too-large') {
+                toast.error(
+                    `O arquivo da fonte de dados é muito grande. O tamanho máximo é 2MB`,
+                )
+            } else if (error?.errorType === 'data-source-columns-exceeded') {
+                toast.error(
+                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_COLUMNS} colunas`,
+                )
+            } else {
+                toast.error(
+                    'Ocorreu um erro ao tentar adicionar fonte de dados',
+                )
+            }
+        },
+    })
+
+    const uploadMutation = useMutation({
+        mutationFn: async (formData: FormData) => {
+            const result = await addDataSourceByUploadAction(null, formData)
+            if (result?.success === false) {
+                throw result
+            }
+            return result
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
+            toast.success('Fonte de dados adicionada com sucesso')
+            setIsEditing(false)
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+
+            if (error?.errorType === 'unsupported-data-source-mimetype') {
+                toast.error(
+                    'Tipo de arquivo não suportado. Apenas .csv ou .xlsx são permitidos',
+                )
+            } else if (error?.errorType === 'data-source-rows-exceeded') {
+                toast.error(
+                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_ROWS} linhas`,
+                )
+            } else if (error?.errorType === 'data-source-columns-exceeded') {
+                toast.error(
+                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_COLUMNS} colunas`,
+                )
+            } else {
+                toast.error('Ocorreu um erro ao fazer upload da fonte de dados')
+            }
+        },
+    })
 
     const handleSubmitDrive = async (fileId: string) => {
         const formData = new FormData()
         formData.append('fileId', fileId)
         formData.append('certificateId', certificateId)
 
-        startTransition(() => {
-            drivePickerAction(formData)
-        })
+        drivePickerMutation.mutate(formData)
     }
 
     const handleSubmitUpload = async (file: File) => {
@@ -146,9 +235,7 @@ export function DataSourceSection({
         formData.append('certificateId', certificateId)
         formData.append('file', file)
 
-        startTransition(() => {
-            uploadAction(formData)
-        })
+        uploadMutation.mutate(formData)
     }
 
     const handleEdit = () => {
@@ -158,85 +245,6 @@ export function DataSourceSection({
     const handleCancelEdit = () => {
         setIsEditing(false)
     }
-
-    const { login, isLoading: loginIsLoading } = useGoogleRelogin({ userEmail })
-
-    useEffect(() => {
-        if (driverPickerState?.success || uploadState?.success) {
-            setIsEditing(false)
-        }
-    }, [driverPickerState, uploadState])
-
-    useEffect(() => {
-        if (!driverPickerState) return
-
-        if (driverPickerState.success) {
-            toast.success('Fonte de dados adicionada com sucesso')
-        } else {
-            if (driverPickerState.errorType === 'google-token-refresh-failed') {
-                toast.error(
-                    'Sessão do Google expirada. Entre novamente com a sua conta.',
-                )
-                login()
-            } else if (
-                driverPickerState.errorType ===
-                'unsupported-data-source-mimetype'
-            ) {
-                toast.error(
-                    'Tipo de arquivo não suportado. Apenas Google Planilhas, .csv ou .xlsx são permitidos',
-                )
-            } else if (
-                driverPickerState.errorType === 'data-source-rows-exceeded'
-            ) {
-                toast.error(
-                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_ROWS} linhas`,
-                )
-            } else if (
-                driverPickerState.errorType ===
-                'data-source-file-size-too-large'
-            ) {
-                toast.error(
-                    `O arquivo da fonte de dados é muito grande. O tamanho máximo é 2MB`,
-                )
-            } else if (
-                driverPickerState.errorType === 'data-source-columns-exceeded'
-            ) {
-                toast.error(
-                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_COLUMNS} colunas`,
-                )
-            } else {
-                toast.error(
-                    'Ocorreu um erro ao tentar adicionar fonte de dados',
-                )
-            }
-        }
-    }, [driverPickerState])
-
-    useEffect(() => {
-        if (!uploadState) return
-
-        if (uploadState.success) {
-            toast.success('Fonte de dados adicionada com sucesso')
-        } else {
-            if (uploadState.errorType === 'unsupported-data-source-mimetype') {
-                toast.error(
-                    'Tipo de arquivo não suportado. Apenas .csv ou .xlsx são permitidos',
-                )
-            } else if (uploadState.errorType === 'data-source-rows-exceeded') {
-                toast.error(
-                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_ROWS} linhas`,
-                )
-            } else if (
-                uploadState.errorType === 'data-source-columns-exceeded'
-            ) {
-                toast.error(
-                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_COLUMNS} colunas`,
-                )
-            } else {
-                toast.error('Ocorreu um erro ao fazer upload da fonte de dados')
-            }
-        }
-    }, [uploadState])
 
     const radioGroupName = 'data-source'
 
@@ -256,7 +264,7 @@ export function DataSourceSection({
                         onClick={handleCancelEdit}
                         disabled={
                             urlForm.formState.isSubmitting ||
-                            drivePickerIsLoading
+                            drivePickerMutation.isPending
                         }
                         className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     >
@@ -279,8 +287,10 @@ export function DataSourceSection({
                         onSubmitUrl={onSubmitUrl}
                         onSubmitDrive={handleSubmitDrive}
                         onSubmitUpload={handleSubmitUpload}
-                        isDriveLoading={drivePickerIsLoading || loginIsLoading}
-                        isUploadLoading={uploadIsLoading}
+                        isDriveLoading={
+                            drivePickerMutation.isPending || loginIsLoading
+                        }
+                        isUploadLoading={uploadMutation.isPending}
                         radioGroupName={radioGroupName}
                         type="data-source"
                     />
@@ -328,8 +338,10 @@ export function DataSourceSection({
                     onSubmitUrl={onSubmitUrl}
                     onSubmitDrive={handleSubmitDrive}
                     onSubmitUpload={handleSubmitUpload}
-                    isDriveLoading={drivePickerIsLoading || loginIsLoading}
-                    isUploadLoading={uploadIsLoading}
+                    isDriveLoading={
+                        drivePickerMutation.isPending || loginIsLoading
+                    }
+                    isUploadLoading={uploadMutation.isPending}
                     radioGroupName={radioGroupName}
                     type="data-source"
                 />

@@ -6,6 +6,7 @@ import { fetchUserBySessionToken } from '@/api-calls/fetch-user-by-session-token
 import { GoogleAnalytics } from './_components/GoogleAnalytics'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { Toaster } from '@/components/ui/sonner'
+import { Providers } from '@/app/(system)/_components/Providers'
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -46,14 +47,16 @@ export default async function RootLayout({
                 />
 
                 <GoogleOAuthProvider clientId={process.env.GOOGLE_CLIENT_ID!}>
-                    <ThemeProvider
-                        attribute="class"
-                        defaultTheme="system"
-                        enableSystem
-                        disableTransitionOnChange
-                    >
-                        {children}
-                    </ThemeProvider>
+                    <Providers>
+                        <ThemeProvider
+                            attribute="class"
+                            defaultTheme="system"
+                            enableSystem
+                            disableTransitionOnChange
+                        >
+                            {children}
+                        </ThemeProvider>
+                    </Providers>
                 </GoogleOAuthProvider>
             </body>
         </html>

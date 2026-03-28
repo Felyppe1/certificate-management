@@ -4,13 +4,13 @@ import { AuthenticationError } from '@/backend/domain/error/authentication-error
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { updateTag } from 'next/cache'
 import { logoutAction } from './logout-action'
 import { UpdateCertificateEmissionUseCase } from '@/backend/application/update-certificate-emission-use-case'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { updateCertificateEmissionSchema } from './schemas'
+import { redirect } from 'next/navigation'
 
 export async function updateCertificateEmissionAction(
     _: unknown,
@@ -52,6 +52,10 @@ export async function updateCertificateEmissionAction(
             variableColumnMapping: parsedData.variableColumnMapping,
             userId,
         })
+
+        return {
+            success: true,
+        }
     } catch (error: any) {
         console.log(error)
 
@@ -62,6 +66,7 @@ export async function updateCertificateEmissionAction(
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 
@@ -69,11 +74,5 @@ export async function updateCertificateEmissionAction(
             success: false,
             errorType: error.type,
         }
-    }
-
-    updateTag('certificate')
-
-    return {
-        success: true,
     }
 }

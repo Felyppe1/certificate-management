@@ -5,10 +5,10 @@ import { AuthenticationError } from '@/backend/domain/error/authentication-error
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
-import { updateTag } from 'next/cache'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { logoutAction } from './logout-action'
 import { deleteCertificateEmissionSchema } from './schemas'
+import { redirect } from 'next/navigation'
 
 export async function deleteCertificateEmissionAction(
     _: unknown,
@@ -33,9 +33,6 @@ export async function deleteCertificateEmissionAction(
             userId,
         })
 
-        // updateTag('certificate')
-        // updateTag('certificate-emissions')
-
         return { success: true }
     } catch (error: any) {
         console.error('Error deleting certificate emission:', error)
@@ -47,6 +44,7 @@ export async function deleteCertificateEmissionAction(
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 

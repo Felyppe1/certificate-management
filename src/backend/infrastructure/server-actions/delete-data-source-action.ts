@@ -3,12 +3,12 @@
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { updateTag } from 'next/cache'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { DeleteDataSourceUseCase } from '@/backend/application/delete-data-source-use-case'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { deleteDataSourceSchema } from './schemas'
+import { redirect } from 'next/navigation'
 
 export async function deleteDataSourceAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -34,6 +34,10 @@ export async function deleteDataSourceAction(_: unknown, formData: FormData) {
             certificateId: parsedData.certificateId,
             userId,
         })
+
+        return {
+            success: true,
+        }
     } catch (error: any) {
         console.error('Error deleting data source:', error)
 
@@ -44,6 +48,7 @@ export async function deleteDataSourceAction(_: unknown, formData: FormData) {
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 
@@ -52,8 +57,4 @@ export async function deleteDataSourceAction(_: unknown, formData: FormData) {
             errorType: error.type,
         }
     }
-
-    updateTag('certificate')
-
-    return { success: true }
 }

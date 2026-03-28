@@ -1,8 +1,15 @@
-import { fetchCertificateEmissions } from '@/api-calls/fetch-certificate-emissions'
+'use client'
+
 import { ListRenderer } from './ListRenderer'
+import { ListLoading } from '../ListLoading'
+import { useCertificateEmissions } from '@/custom-hooks/use-certificate-emissions'
 
-export async function List() {
-    const data = await fetchCertificateEmissions()
+export function List() {
+    const { data, isLoading } = useCertificateEmissions()
 
-    return <ListRenderer certificateEmissions={data.certificateEmissions} />
+    if (isLoading) return <ListLoading />
+
+    return (
+        <ListRenderer certificateEmissions={data?.certificateEmissions ?? []} />
+    )
 }

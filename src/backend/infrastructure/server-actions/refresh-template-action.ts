@@ -4,7 +4,6 @@ import { RefreshTemplateUseCase } from '@/backend/application/refresh-template-u
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { updateTag } from 'next/cache'
 import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { logoutAction } from './logout-action'
@@ -17,6 +16,7 @@ import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { refreshTemplateSchema } from './schemas'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { LiquidStringVariableExtractor } from '../string-variable-extractor/liquidjs'
+import { redirect } from 'next/navigation'
 
 export async function refreshTemplateAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -58,8 +58,6 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
             certificateId: parsedData.certificateId,
         })
 
-        updateTag('certificate')
-
         return {
             success: true,
         }
@@ -73,13 +71,7 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
-            }
-        }
-
-        if (error instanceof NotFoundError) {
-            return {
-                success: false,
-                errorType: error.type,
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 

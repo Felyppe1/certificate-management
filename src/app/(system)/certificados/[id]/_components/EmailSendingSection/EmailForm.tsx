@@ -22,7 +22,7 @@ interface EmailFormProps {
     isDisabled: boolean
     sendMode: 'now' | 'scheduled'
     form: UseFormReturn<EmailFormType>
-    onSubmit: (data: EmailFormType) => Promise<void>
+    onSubmit: (data: EmailFormType) => void
 }
 
 export function EmailForm({

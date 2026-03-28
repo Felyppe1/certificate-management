@@ -6,8 +6,8 @@ import { prisma } from '../repository/prisma'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-google-access-token-use-case'
 import { logoutAction } from './logout-action'
-import { updateTag } from 'next/cache'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { redirect } from 'next/navigation'
 
 export async function refreshGoogleAccessTokenAction() {
     try {
@@ -24,13 +24,18 @@ export async function refreshGoogleAccessTokenAction() {
             )
 
         await refreshGoogleAccessTokenUseCase.execute({ userId })
-    } catch (error) {
+
+        return {
+            success: true,
+        }
+    } catch (error: any) {
         if (error instanceof AuthenticationError) {
             if (
                 error.type === 'missing-session' ||
                 error.type === 'session-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
 
             // TODO: como fazer para fazer login novamente pegando o refresh token por popup
@@ -43,11 +48,7 @@ export async function refreshGoogleAccessTokenAction() {
 
         return {
             success: false,
-            message: 'Não foi possível acessar seu Google Drive',
+            errorType: error.type,
         }
     }
-
-    updateTag('me')
-
-    return { success: true }
 }

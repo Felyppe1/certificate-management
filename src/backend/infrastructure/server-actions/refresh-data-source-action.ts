@@ -2,7 +2,6 @@
 
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { updateTag } from 'next/cache'
 import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { logoutAction } from './logout-action'
@@ -15,6 +14,7 @@ import { PrismaTransactionManager } from '../repository/prisma/prisma-transactio
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { refreshDataSourceSchema } from './schemas'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
+import { redirect } from 'next/navigation'
 
 export async function refreshDataSourceAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -53,8 +53,6 @@ export async function refreshDataSourceAction(_: unknown, formData: FormData) {
             certificateId: parsedData.certificateId,
         })
 
-        updateTag('certificate')
-
         return {
             success: true,
         }
@@ -68,13 +66,7 @@ export async function refreshDataSourceAction(_: unknown, formData: FormData) {
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
-            }
-        }
-
-        if (error instanceof NotFoundError) {
-            return {
-                success: false,
-                errorType: error.type,
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 

@@ -1,7 +1,6 @@
 'use server'
 
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import { updateTag } from 'next/cache'
 import { logoutAction } from './logout-action'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GenerateCertificatesUseCase } from '@/backend/application/generate-certificates-use-case'
@@ -14,6 +13,7 @@ import { LocalQueue } from '../cloud/local/local-queue'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { generateCertificatesSchema } from './schemas'
+import { redirect } from 'next/navigation'
 
 export async function generateCertificatesAction(
     _: unknown,
@@ -55,6 +55,10 @@ export async function generateCertificatesAction(
             certificateEmissionId: parsedData.certificateId,
             userId,
         })
+
+        return {
+            success: true,
+        }
     } catch (error: any) {
         console.log(error)
 
@@ -65,6 +69,7 @@ export async function generateCertificatesAction(
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 
@@ -72,12 +77,5 @@ export async function generateCertificatesAction(
             success: false,
             errorType: error.type,
         }
-    }
-
-    updateTag('certificate')
-    updateTag('me')
-
-    return {
-        success: true,
     }
 }

@@ -43,10 +43,14 @@ import { SourceIcon } from '@/components/svg/SourceIcon'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
 import { WarningPopover } from '../../../../../../../../components/WarningPopover'
 import { toast } from 'sonner'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { downloadDataSourceAction } from '@/backend/infrastructure/server-actions/download-data-source-action'
 import { ConfigurableDataSourceTable } from './components/ConfigurableDataSourceTable'
 import { useGoogleRelogin } from '@/components/useGoogleRelogin'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
+import error from '@/app/(system)/error'
+import { queryKeys } from '@/lib/query-keys'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -115,26 +119,7 @@ export function DataSourceDisplay({
     const [showRefreshWarning, setShowRefreshWarning] = useState(false)
     const [showEditWarning, setShowEditWarning] = useState(false)
 
-    const [refreshState, refreshAction, isRefreshing] = useActionState(
-        refreshDataSourceAction,
-        null,
-    )
-
-    const [deleteState, deleteAction, isDeleting] = useActionState(
-        deleteDataSourceAction,
-        null,
-    )
-
-    const [
-        downloadDataSourceState,
-        downloadDataSourceActionHandler,
-        isDownloadingDataSource,
-    ] = useActionState(downloadDataSourceAction, null)
-
-    const [retryState, retryActionHandler, isRetrying] = useActionState(
-        retryDataSourceRowAction,
-        null,
-    )
+    const queryClient = useQueryClient()
 
     const { login, isLoading: loginIsLoading } = useGoogleRelogin({
         userEmail,
@@ -145,31 +130,129 @@ export function DataSourceDisplay({
         },
     })
 
+    const refreshMutation = useMutation({
+        mutationFn: async (formData: FormData) => {
+            const result = await refreshDataSourceAction(null, formData)
+            if (result?.success === false) {
+                throw result
+            }
+            return result
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
+            toast.success('Fonte de dados atualizada com sucesso')
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+
+            if (error?.errorType === 'drive-file-not-found') {
+                toast.error(
+                    'Arquivo não encontrado. Verifique se ele se existe no Drive, se você tem permissão para acessá-lo ou se ele está público',
+                )
+            } else if (error?.errorType === 'google-session-expired') {
+                toast.error(
+                    'Sessão do Google expirada. Entre novamente com a sua conta.',
+                )
+                login()
+            } else if (error?.errorType === 'data-source-rows-exceeded') {
+                toast.error(
+                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_ROWS} linhas`,
+                )
+            } else if (error?.errorType === 'data-source-columns-exceeded') {
+                toast.error(
+                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_COLUMNS} colunas`,
+                )
+            } else {
+                toast.error(
+                    'Ocorreu um erro ao tentar atualizar a fonte de dados',
+                )
+            }
+        },
+    })
+
+    const deleteMutation = useMutation({
+        mutationFn: async (formData: FormData) => {
+            const result = await deleteDataSourceAction(null, formData)
+            if (result?.success === false) {
+                throw result
+            }
+            return result
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
+            toast.success('Fonte de dados removida com sucesso')
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+
+            toast.error('Ocorreu um erro ao deletar a fonte de dados')
+        },
+    })
+
+    const downloadDataSourceMutation = useMutation({
+        mutationFn: async (formData: FormData) => {
+            const result = await downloadDataSourceAction(null, formData)
+            if (result?.success === false) {
+                throw result
+            }
+            return result
+        },
+        onSuccess: result => {
+            // TODO: organize typing in the back and in the front to avoid this optional chaining
+            const signedUrl = result?.data
+            window.open(signedUrl, '_blank', 'noopener,noreferrer')
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+
+            toast.error('Ocorreu um erro ao tentar baixar a fonte de dados')
+        },
+    })
+
+    const retryMutation = useMutation({
+        mutationFn: async (formData: FormData) => {
+            const result = await retryDataSourceRowAction(null, formData)
+            if (result?.success === false) {
+                throw result
+            }
+            return result
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
+            toast.success('Reprocessamento iniciado')
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+
+            toast.error('Erro ao tentar reprocessar o registro')
+        },
+    })
+
     const handleRefresh = () => {
         const formData = new FormData()
         formData.append('certificateId', certificateId)
 
-        startTransition(() => {
-            refreshAction(formData)
-        })
+        refreshMutation.mutate(formData)
     }
 
     const handleRemoveDataSource = () => {
         const formData = new FormData()
         formData.append('certificateId', certificateId)
 
-        startTransition(() => {
-            deleteAction(formData)
-        })
+        deleteMutation.mutate(formData)
     }
 
     const handleDownloadDataSource = () => {
         const formData = new FormData()
         formData.append('certificateEmissionId', certificateId)
 
-        startTransition(() => {
-            downloadDataSourceActionHandler(formData)
-        })
+        downloadDataSourceMutation.mutate(formData)
     }
 
     const handleViewFile = () => {
@@ -208,75 +291,8 @@ export function DataSourceDisplay({
         const formData = new FormData()
         formData.append('rowId', rowId)
 
-        startTransition(() => {
-            retryActionHandler(formData)
-        })
+        retryMutation.mutate(formData)
     }
-
-    useEffect(() => {
-        if (!retryState) return
-
-        if (retryState.success) {
-            toast.success('Reprocessamento iniciado')
-        } else {
-            toast.error('Erro ao tentar reprocessar o registro')
-        }
-    }, [retryState])
-
-    useEffect(() => {
-        if (!refreshState) return
-
-        if (refreshState.success) {
-            toast.success('Fonte de dados atualizada com sucesso')
-        } else {
-            if (refreshState.errorType === 'drive-file-not-found') {
-                toast.error(
-                    'Arquivo não encontrado. Verifique se ele se existe no Drive, se você tem permissão para acessá-lo ou se ele está público',
-                )
-            } else if (refreshState.errorType === 'google-session-expired') {
-                toast.error(
-                    'Sessão do Google expirada. Entre novamente com a sua conta.',
-                )
-                login()
-            } else if (refreshState.errorType === 'data-source-rows-exceeded') {
-                toast.error(
-                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_ROWS} linhas`,
-                )
-            } else if (
-                refreshState.errorType === 'data-source-columns-exceeded'
-            ) {
-                toast.error(
-                    `A fonte de dados não pode ter mais de ${MAX_DATA_SOURCE_COLUMNS} colunas`,
-                )
-            } else {
-                toast.error(
-                    'Ocorreu um erro ao tentar atualizar a fonte de dados',
-                )
-            }
-        }
-    }, [refreshState])
-
-    useEffect(() => {
-        if (!deleteState) return
-
-        if (deleteState.success) {
-            toast.success('Fonte de dados removida com sucesso')
-        } else {
-            toast.error('Ocorreu um erro ao deletar a fonte de dados')
-        }
-    }, [deleteState])
-
-    useEffect(() => {
-        if (!downloadDataSourceState) return
-
-        if (downloadDataSourceState.success) {
-            const signedUrl = downloadDataSourceState.data!
-
-            window.open(signedUrl, '_blank', 'noopener,noreferrer')
-        } else {
-            toast.error('Ocorreu um erro ao tentar baixar a fonte de dados')
-        }
-    }, [downloadDataSourceState])
 
     const rows = dataSource.rows
     const certificatesGenerated =
@@ -312,16 +328,16 @@ export function DataSourceDisplay({
                                     variant="outline"
                                     onClick={handleRefreshClick}
                                     disabled={
-                                        isRefreshing ||
-                                        isDeleting ||
+                                        refreshMutation.isPending ||
+                                        deleteMutation.isPending ||
                                         isDisabled ||
                                         loginIsLoading
                                     }
                                 >
                                     <RefreshCw
-                                        className={`scale-80 ${isRefreshing ? 'animate-spin' : ''}`}
+                                        className={`scale-80 ${refreshMutation.isPending ? 'animate-spin' : ''}`}
                                     />
-                                    {isRefreshing
+                                    {refreshMutation.isPending
                                         ? 'Atualizando...'
                                         : 'Atualizar'}
                                 </Button>
@@ -339,8 +355,8 @@ export function DataSourceDisplay({
                                 variant="outline"
                                 onClick={handleEditClick}
                                 disabled={
-                                    isRefreshing ||
-                                    isDeleting ||
+                                    refreshMutation.isPending ||
+                                    deleteMutation.isPending ||
                                     isDisabled ||
                                     loginIsLoading
                                 }
@@ -353,15 +369,17 @@ export function DataSourceDisplay({
                             variant="outline"
                             onClick={handleRemoveDataSource}
                             disabled={
-                                isDeleting ||
-                                isRefreshing ||
+                                deleteMutation.isPending ||
+                                refreshMutation.isPending ||
                                 isDisabled ||
                                 loginIsLoading
                             }
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
                             <Trash2 className="scale-80" />
-                            {isDeleting ? 'Removendo...' : 'Remover'}
+                            {deleteMutation.isPending
+                                ? 'Removendo...'
+                                : 'Remover'}
                         </Button>
                     </div>
                 </CardHeader>
@@ -416,7 +434,7 @@ export function DataSourceDisplay({
                                                 onClick={handleViewFile}
                                                 size="sm"
                                                 disabled={
-                                                    isDownloadingDataSource
+                                                    downloadDataSourceMutation.isPending
                                                 }
                                             >
                                                 <svg
@@ -427,7 +445,7 @@ export function DataSourceDisplay({
                                                 >
                                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
                                                 </svg>
-                                                {isDownloadingDataSource
+                                                {downloadDataSourceMutation.isPending
                                                     ? 'Baixando...'
                                                     : 'Baixar'}
                                             </Button>

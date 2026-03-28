@@ -6,13 +6,13 @@ import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certif
 import { prisma } from '../repository/prisma'
 import { AddTemplateByUploadUseCase } from '@/backend/application/add-template-by-upload-use-case'
 import { FileContentExtractorFactory } from '../factory/file-content-extractor-factory'
-import { updateTag } from 'next/cache'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { logoutAction } from './logout-action'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { addTemplateByUploadSchema } from './schemas'
 import { LiquidStringVariableExtractor } from '../string-variable-extractor/liquidjs'
+import { redirect } from 'next/navigation'
 
 export async function addTemplateByUploadAction(
     _: unknown,
@@ -51,6 +51,10 @@ export async function addTemplateByUploadAction(
             certificateId: parsedData.certificateId,
             file: parsedData.file,
         })
+
+        return {
+            success: true,
+        }
     } catch (error: any) {
         console.error(error)
 
@@ -61,6 +65,7 @@ export async function addTemplateByUploadAction(
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 
@@ -68,11 +73,5 @@ export async function addTemplateByUploadAction(
             success: false,
             errorType: error.type,
         }
-    }
-
-    updateTag('certificate')
-
-    return {
-        success: true,
     }
 }

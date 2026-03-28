@@ -3,7 +3,6 @@
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
-import { updateTag } from 'next/cache'
 import { AddDataSourceByUploadUseCase } from '@/backend/application/add-data-source-by-upload-use-case'
 import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-content-extractor-factory'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
@@ -12,6 +11,7 @@ import { PrismaTransactionManager } from '../repository/prisma/prisma-transactio
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { logoutAction } from './logout-action'
 import { addDataSourceByUploadSchema } from './schemas'
+import { redirect } from 'next/navigation'
 
 export async function addDataSourceByUploadAction(
     _: unknown,
@@ -49,6 +49,10 @@ export async function addDataSourceByUploadAction(
             certificateId: parsedData.certificateId,
             file: parsedData.file,
         })
+
+        return {
+            success: true,
+        }
     } catch (error: any) {
         console.error(error)
 
@@ -59,6 +63,7 @@ export async function addDataSourceByUploadAction(
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 
@@ -66,11 +71,5 @@ export async function addDataSourceByUploadAction(
             success: false,
             errorType: error.type,
         }
-    }
-
-    updateTag('certificate')
-
-    return {
-        success: true,
     }
 }

@@ -1,7 +1,10 @@
-import { fetchCertificateEmissionsMetricsByUser } from '@/api-calls/fetch-certificate-emissions-metrics-by-user'
+'use client'
+
+import { useCertificateEmissionsMetrics } from '@/custom-hooks/use-certificate-emissions-metrics'
 import { Card } from '@/components/ui/card'
 import { Clock, Minus, TrendingDown, TrendingUp } from 'lucide-react'
 import { MonthMetric } from './MonthMetric'
+import { MetricsSkeleton } from './MetricsSkeleton'
 
 function calcularVariacaoPercentual(
     mesAtual: number,
@@ -29,9 +32,12 @@ function getVariationColor(variation: number) {
     return 'text-muted-foreground'
 }
 
-export async function Metrics() {
-    const { certificateEmissionsMetrics } =
-        await fetchCertificateEmissionsMetricsByUser()
+export function Metrics() {
+    const { data, isLoading } = useCertificateEmissionsMetrics()
+
+    if (isLoading) return <MetricsSkeleton />
+
+    const { certificateEmissionsMetrics } = data
 
     const certificatesVariation = calcularVariacaoPercentual(
         certificateEmissionsMetrics.totalCertificatesGeneratedThisMonth,
@@ -147,29 +153,6 @@ export async function Metrics() {
                             }
                         />
                     </div>
-                    {/* <div className="flex flex-wrap divide-x divide-muted-foreground/25 gap-6 md:gap-12 mb-3">
-                        <div className="flex flex-col shrink-0 pr-6 md:pr-12">
-                            <p className="text-muted-foreground text-sm sm:text-base">
-                                Mês Atual
-                            </p>
-                            <p className="text-2xl sm:text-3xl font-bold">
-                                {
-                                    certificateEmissionsMetrics.totalEmailsSentThisMonth
-                                }
-                            </p>
-                        </div>
-
-                        <div className="flex flex-col shrink-0">
-                            <p className="text-muted-foreground text-sm sm:text-base">
-                                Mês Anterior
-                            </p>
-                            <p className="text-2xl sm:text-3xl font-bold">
-                                {
-                                    certificateEmissionsMetrics.totalEmailsSentLastMonth
-                                }
-                            </p>
-                        </div>
-                    </div> */}
 
                     <div className="flex items-center flex-wrap gap-x-1">
                         {getVariationIcon(emailsVariation)}

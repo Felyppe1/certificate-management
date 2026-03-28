@@ -5,11 +5,11 @@ import { UpdateDataSourceColumnsUseCase } from '@/backend/application/update-dat
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { prisma } from '../repository/prisma'
-import { updateTag } from 'next/cache'
 import { logoutAction } from './logout-action'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { updateDataSourceColumnsSchema } from './schemas'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
+import { redirect } from 'next/navigation'
 
 export async function updateDataSourceColumnsAction(
     _: unknown,
@@ -64,6 +64,10 @@ export async function updateDataSourceColumnsAction(
                 invalidColumns: result.invalidColumns,
             }
         }
+
+        return {
+            success: true,
+        }
     } catch (error: any) {
         console.log(error)
 
@@ -74,6 +78,7 @@ export async function updateDataSourceColumnsAction(
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 
@@ -81,11 +86,5 @@ export async function updateDataSourceColumnsAction(
             success: false,
             errorType: error.type,
         }
-    }
-
-    updateTag('certificate')
-
-    return {
-        success: true,
     }
 }

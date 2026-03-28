@@ -2,6 +2,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query-keys'
 import { createEmailAction } from '@/backend/infrastructure/server-actions/create-email-action'
 
 export const emailFormSchema = z.object({
@@ -27,50 +29,60 @@ export function useEmailForm({
     totalRecipients,
     defaultValues,
 }: UseEmailFormProps) {
+    const queryClient = useQueryClient()
     const form = useForm<EmailForm>({
         resolver: zodResolver(emailFormSchema),
         defaultValues,
     })
 
-    const onSubmit = async (data: EmailForm) => {
-        const formData = new FormData()
-        formData.append('certificateId', certificateId)
-        formData.append('subject', data.subject)
-        formData.append('body', data.body)
-        formData.append('emailColumn', data.emailColumn)
+    const mutation = useMutation({
+        mutationFn: async (data: EmailForm) => {
+            const formData = new FormData()
+            formData.append('certificateId', certificateId)
+            formData.append('subject', data.subject)
+            formData.append('body', data.body)
+            formData.append('emailColumn', data.emailColumn)
 
-        if (data.scheduledDate && data.scheduledTime) {
-            const scheduledAt = new Date(
-                `${data.scheduledDate}T${data.scheduledTime}`,
+            if (data.scheduledDate && data.scheduledTime) {
+                const scheduledAt = new Date(
+                    `${data.scheduledDate}T${data.scheduledTime}`,
+                )
+                formData.append('scheduledAt', scheduledAt.toISOString())
+            }
+
+            const result = await createEmailAction(null, formData)
+            if (!result?.success) {
+                throw result
+            }
+            return result
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
+            toast.success(
+                totalRecipients < 2
+                    ? 'Email enviado com sucesso'
+                    : 'Emails enviados com sucesso',
             )
-            formData.append('scheduledAt', scheduledAt.toISOString())
-        }
-
-        const result = await createEmailAction(null, formData)
-
-        if (!result?.success) {
-            if (result.errorType === 'invalid-recipient-email') {
+            form.reset()
+            onSuccess?.()
+        },
+        onError: (error: any) => {
+            if (error?.errorType === 'invalid-recipient-email') {
                 toast.error(
                     'Há pelo menos um e-mail inválido na coluna selecionada',
                 )
             } else {
                 toast.error('Ocorreu um erro ao enviar o email')
             }
-
-            return
-        }
-
-        toast.success(
-            totalRecipients < 2
-                ? 'Email enviado com sucesso'
-                : 'Emails enviados com sucesso',
-        )
-        form.reset()
-        onSuccess?.()
-    }
+        },
+    })
 
     return {
         form,
-        onSubmit,
+        onSubmit: (data: EmailForm) => mutation.mutateAsync(data),
+        isSubmitting: mutation.isPending,
+        errors: form.formState.errors,
     }
 }

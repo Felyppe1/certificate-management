@@ -1,6 +1,5 @@
 'use server'
 
-import { updateTag } from 'next/cache'
 import { z } from 'zod'
 import { prisma } from '../repository/prisma'
 import { logoutAction } from './logout-action'
@@ -15,6 +14,7 @@ import {
     ValidationError,
 } from '@/backend/domain/error/validation-error'
 import { updateDataSourceRowsSchema } from './schemas'
+import { redirect } from 'next/navigation'
 
 export async function updateDataSourceRowsAction(
     _: unknown,
@@ -59,29 +59,13 @@ export async function updateDataSourceRowsAction(
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
-            }
-        }
-
-        if (
-            error instanceof ValidationError &&
-            error.type === VALIDATION_ERROR_TYPE.INVALID_ROW_DATA
-        ) {
-            return {
-                success: false,
-                errorType: error.type,
-                message: error.message,
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 
         return {
             success: false,
-            errorType: error.type || 'internal-error',
+            errorType: error.type,
         }
-    }
-
-    updateTag('certificate')
-
-    return {
-        success: true,
     }
 }

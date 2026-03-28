@@ -22,15 +22,11 @@ import {
     FilePlay,
     File,
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import {
-    startTransition,
-    useActionState,
-    useEffect,
-    useRef,
-    useState,
-} from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query-keys'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
 
 interface GenerateCertificatesSectionProps {
     certificateId: string
@@ -47,19 +43,8 @@ export function GenerateCertificatesSection({
     allVariablesWereMapped,
     rows,
     emailSent,
-    // certificatesGenerated
 }: GenerateCertificatesSectionProps) {
-    const [state, action, isGeneratePending] = useActionState(
-        generateCertificatesAction,
-        null,
-    )
-
-    const [retryState, retryAction, isRetryPending] = useActionState(
-        retryCertificatesGenerationAction,
-        null,
-    )
-
-    const router = useRouter()
+    const queryClient = useQueryClient()
     const [completedRows, setCompletedRows] = useState(0)
     const [retryCompletedRows, setRetryCompletedRows] = useState(0)
     const [totalRetryingRows, setTotalRetryingRows] = useState(0)
@@ -95,38 +80,74 @@ export function GenerateCertificatesSection({
     const certificatesGenerated =
         successRows + failedRows + retryingRows === totalRows && totalRows > 0
 
-    const handleGenerate = async () => {
-        const formData = new FormData()
-        formData.append('certificateId', certificateId)
-
-        startTransition(() => {
-            action(formData)
-        })
-    }
-
-    const handleRetry = async () => {
-        const formData = new FormData()
-        formData.append('certificateId', certificateId)
-        setRetryCompletedRows(0)
-
-        startTransition(() => {
-            retryAction(formData)
-        })
-    }
-
-    // Reset progress when starting a new generation
-    useEffect(() => {
-        if (isGeneratePending) {
+    const generateMutation = useMutation({
+        mutationFn: async () => {
+            const formData = new FormData()
+            formData.append('certificateId', certificateId)
+            const result = await generateCertificatesAction(null, formData)
+            if (!result?.success) throw result
+            return result
+        },
+        onMutate: () => {
             setCompletedRows(0)
-        }
-    }, [isGeneratePending])
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.me(),
+            })
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
 
-    // Set total retrying rows when retry action succeeds
-    useEffect(() => {
-        if (retryState?.success && retryState.data) {
-            setTotalRetryingRows(retryState.data.totalRetrying)
-        }
-    }, [retryState])
+            if (error?.errorType === 'no-data-set-rows') {
+                toast.error(
+                    'Não há linhas na fonte de dados para gerar certificados',
+                )
+            } else if (error?.errorType === 'insufficient-credits') {
+                toast.error(
+                    'Créditos insuficientes para gerar os certificados. Aguarde até amanhã para seus créditos renovarem.',
+                )
+            } else {
+                toast.error('Ocorreu um erro ao gerar os certificados')
+            }
+        },
+    })
+
+    const retryMutation = useMutation({
+        mutationFn: async () => {
+            const formData = new FormData()
+            formData.append('certificateId', certificateId)
+            setRetryCompletedRows(0)
+            const result = await retryCertificatesGenerationAction(
+                null,
+                formData,
+            )
+            if (!result?.success) throw result
+            return result
+        },
+        onSuccess: async data => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
+            if (data?.data) {
+                setTotalRetryingRows(data.data.totalRetrying)
+            }
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+
+            if (error?.errorType === 'no-failed-data-source-rows') {
+                toast.error('Não há certificados com falha para reprocessar')
+            } else {
+                toast.error(
+                    'Ocorreu um erro ao tentar reprocessar os certificados',
+                )
+            }
+        },
+    })
 
     useSSE(`/api/certificate-emissions/${certificateId}/events`, {
         onEvent: data => {
@@ -142,11 +163,13 @@ export function GenerateCertificatesSection({
     })
 
     useEffect(() => {
-        if (completedRows === totalRows) {
+        if (completedRows === totalRows && totalRows > 0 && completedRows > 0) {
             toast.success('A geração de certificados finalizou')
-            router.refresh()
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
         }
-    }, [completedRows, totalRows, router])
+    }, [completedRows, totalRows])
 
     // Handle retry completion
     useEffect(() => {
@@ -158,44 +181,14 @@ export function GenerateCertificatesSection({
             toast.success(
                 'O reprocessamento dos certificados que falharam finalizou',
             )
-            router.refresh()
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
         }
-    }, [retryCompletedRows, totalRetryingRows, isRetrying, router])
+    }, [retryCompletedRows, totalRetryingRows, isRetrying])
 
-    useEffect(() => {
-        if (!state) return
-
-        if (!state.success) {
-            if (state.errorType === 'no-data-set-rows') {
-                toast.error(
-                    'Não há linhas na fonte de dados para gerar certificados',
-                )
-            } else if (state.errorType === 'insufficient-credits') {
-                toast.error(
-                    'Créditos insuficientes para gerar os certificados. Aguarde até amanhã para seus créditos renovarem.',
-                )
-            } else {
-                toast.error('Ocorreu um erro ao gerar os certificados')
-            }
-        }
-    }, [state])
-
-    useEffect(() => {
-        if (!retryState) return
-
-        if (!retryState.success) {
-            if (retryState.errorType === 'no-failed-data-source-rows') {
-                toast.error('Não há certificados com falha para reprocessar')
-            } else {
-                toast.error(
-                    'Ocorreu um erro ao tentar reprocessar os certificados',
-                )
-            }
-        }
-    }, [retryState])
-
-    const isPending = isGeneratePending || isGenerating
-    const isRetryProcessing = isRetryPending || isRetrying
+    const isPending = generateMutation.isPending || isGenerating
+    const isRetryProcessing = retryMutation.isPending || isRetrying
 
     const progressPercentage =
         totalRows > 0 ? (completedRows / totalRows) * 100 : 0
@@ -220,26 +213,6 @@ export function GenerateCertificatesSection({
                                 ${successRows !== 1 ? 'gerados' : 'gerado'}
                                 com sucesso
                             `}
-                            // description={
-                            //     <p>
-                            //         Você pode visualiza-
-                            //         {totalRows !== 1 ? 'los' : 'lo'} ou baixa-
-                            //         {totalRows !== 1 ? 'los' : 'lo'} na seção de{' '}
-                            //         <span
-                            //             className="cursor-pointer underline"
-                            //             onClick={() => {
-                            //                 const el = document.getElementById(
-                            //                     'data-source-section',
-                            //                 )
-                            //                 el?.scrollIntoView({
-                            //                     behavior: 'smooth',
-                            //                 })
-                            //             }}
-                            //         >
-                            //             Fonte de Dados
-                            //         </span>
-                            //     </p>
-                            // }
                         />
                     )}
 
@@ -253,11 +226,11 @@ export function GenerateCertificatesSection({
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={handleRetry}
+                                    onClick={() => retryMutation.mutate()}
                                     disabled={isRetryProcessing || isPending}
                                     className="text-red-700 dark:text-red-300 border-red-300 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30"
                                 >
-                                    {isRetryPending ? (
+                                    {retryMutation.isPending ? (
                                         <>
                                             <Loader2 className="scale-90 h-3 w-3 animate-spin" />
                                             Iniciando...
@@ -300,11 +273,11 @@ export function GenerateCertificatesSection({
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={handleRetry}
+                                onClick={() => retryMutation.mutate()}
                                 disabled={isRetryProcessing || isPending}
                                 className="text-red-700 dark:text-red-300 border-red-300 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30"
                             >
-                                {isRetryPending ? (
+                                {retryMutation.isPending ? (
                                     <>
                                         <Loader2 className="h-3 w-3 animate-spin" />
                                         Iniciando...
@@ -409,7 +382,7 @@ export function GenerateCertificatesSection({
 
                     <Button
                         size="lg"
-                        onClick={handleGenerate}
+                        onClick={() => generateMutation.mutate()}
                         disabled={
                             certificatesGenerated ||
                             isPending ||
@@ -449,7 +422,7 @@ export function useDataSetPolling(
     dataSetId: string | null,
     options: UseDataSetPollingOptions,
 ) {
-    const router = useRouter()
+    const queryClient = useQueryClient()
     const timeoutRef = useRef<NodeJS.Timeout | null>(null)
     const attemptsRef = useRef(0)
 
@@ -480,7 +453,6 @@ export function useDataSetPolling(
 
                 if (isComplete) {
                     onComplete?.(dataSet.processingStatus)
-                    router.refresh()
 
                     return true
                 }
@@ -510,5 +482,5 @@ export function useDataSetPolling(
                 clearTimeout(timeoutRef.current)
             }
         }
-    }, [dataSetId, enabled, onComplete, router])
+    }, [dataSetId, enabled, onComplete, queryClient])
 }

@@ -4,7 +4,6 @@ import { LogoutUseCase } from '@/backend/application/logout-use-case'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
 
 export async function logoutAction() {
     const cookie = await cookies()
@@ -12,7 +11,9 @@ export async function logoutAction() {
     const sessionToken = cookie.get('session_token')?.value
 
     if (!sessionToken) {
-        redirect('/entrar')
+        return {
+            success: true,
+        }
     }
 
     try {
@@ -27,6 +28,8 @@ export async function logoutAction() {
     } finally {
         cookie.delete('session_token')
 
-        redirect('/entrar')
+        return {
+            success: true,
+        }
     }
 }

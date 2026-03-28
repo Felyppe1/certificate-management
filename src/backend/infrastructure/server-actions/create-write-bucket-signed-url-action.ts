@@ -8,6 +8,7 @@ import { CreateWriteBucketSignedUrlUseCase } from '@/backend/application/create-
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { logoutAction } from './logout-action'
 import { createWriteBucketSignedUrlSchema } from './schemas'
+import { redirect } from 'next/navigation'
 
 export async function createWriteBucketSignedUrlAction(
     _: unknown,
@@ -53,6 +54,7 @@ export async function createWriteBucketSignedUrlAction(
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
+                redirect(`/entrar?error=${error.type}`)
             }
         }
 

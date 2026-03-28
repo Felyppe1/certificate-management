@@ -9,8 +9,10 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { useTransition } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface UserDropdownProps {
     name: string
@@ -18,13 +20,23 @@ interface UserDropdownProps {
 }
 
 export function UserDropdown({ name, userId }: UserDropdownProps) {
-    const [isPending, startTransition] = useTransition()
+    const router = useRouter()
+
+    const mutation = useMutation({
+        mutationFn: async () => {
+            window.gtag?.('set', 'user_id', null)
+            return await logoutAction()
+        },
+        onSuccess: () => {
+            toast.success('Você saiu com sucesso')
+            router.push('/entrar')
+        },
+    })
+
+    const isPending = mutation.isPending
 
     const handleLogout = () => {
-        startTransition(async () => {
-            window.gtag?.('set', 'user_id', null)
-            await logoutAction()
-        })
+        mutation.mutate()
     }
 
     const firstAndLastName = name.split(' ').slice(0, 2).join(' ')

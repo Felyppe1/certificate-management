@@ -1,7 +1,7 @@
 'use client'
 
 import { FileSelector, SelectOption } from '@/components/FileSelector'
-import { startTransition, useActionState, useState, useEffect } from 'react'
+import { startTransition, useState, useEffect } from 'react'
 import { TemplateDisplay } from './template-display'
 import {
     Card,
@@ -21,6 +21,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { addTemplateByUrlAction } from '@/backend/infrastructure/server-actions/add-template-by-url-action'
 import z from 'zod'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/query-keys'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
 
 interface TemplateSectionProps {
     certificateId: string
@@ -49,6 +52,7 @@ export function TemplateSection({
     certificatesGenerated,
 }: TemplateSectionProps) {
     const [isEditing, setIsEditing] = useState(false)
+    const queryClient = useQueryClient()
 
     const templateUrlFormSchema = z.object({
         fileUrl: z.url('URL inválida'),
@@ -61,136 +65,119 @@ export function TemplateSection({
         defaultValues: { fileUrl: '' },
     })
 
-    const onSubmitUrl = async (data: TemplateUrlForm) => {
-        const formData = new FormData()
-        formData.append('certificateId', certificateId)
-        formData.append('fileUrl', data.fileUrl)
+    const urlMutation = useMutation({
+        mutationFn: async (data: TemplateUrlForm) => {
+            const formData = new FormData()
+            formData.append('certificateId', certificateId)
+            formData.append('fileUrl', data.fileUrl)
+            const result = await addTemplateByUrlAction(null, formData)
+            if (!result?.success) throw result
+            return result
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
+            toast.success('Template adicionado com sucesso')
+            templateUrlForm.reset()
+            setIsEditing(false)
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
 
-        const result = await addTemplateByUrlAction(null, formData)
-
-        if (!result?.success) {
-            if (result.errorType === 'drive-file-not-found') {
+            if (error?.errorType === 'drive-file-not-found') {
                 toast.error(
                     'Arquivo não encontrado. Verifique se ele se existe no Drive, se você tem permissão para acessá-lo ou se ele está público',
                 )
-            } else if (result.errorType === 'unsupported-template-mimetype') {
+            } else if (error?.errorType === 'unsupported-template-mimetype') {
                 toast.error(
                     'Tipo de arquivo não suportado. Apenas Google Slides, Google Docs, .pptx ou .docx são permitidos',
                 )
             } else if (
-                result.errorType === 'template-variables-parsing-error'
+                error?.errorType === 'template-variables-parsing-error'
             ) {
                 toast.error(
                     'Foi encontrado um erro de sintaxe do Liquid no template.',
                 )
-            } else if (result.errorType === 'template-file-size-too-large') {
+            } else if (error?.errorType === 'template-file-size-too-large') {
                 toast.error(
                     `O arquivo do template é muito grande. O tamanho máximo é 5MB`,
                 )
             } else {
                 toast.error('Ocorreu um erro ao tentar adicionar template')
             }
+        },
+    })
 
-            return
-        }
-
-        toast.success('Template adicionado com sucesso')
-        templateUrlForm.reset()
-        setIsEditing(false)
-    }
-
-    const [driverPickerState, drivePickerAction, drivePickerIsLoading] =
-        useActionState(addTemplateByDrivePickerAction, null)
-    const [uploadState, uploadAction, uploadIsLoading] = useActionState(
-        addTemplateByUploadAction,
-        null,
-    )
-
-    const handleSubmitDrive = async (fileId: string) => {
-        const formData = new FormData()
-        formData.append('fileId', fileId)
-        formData.append('certificateId', certificateId)
-
-        startTransition(() => {
-            drivePickerAction(formData)
-        })
-    }
-
-    const handleSubmitUpload = async (file: File) => {
-        const formData = new FormData()
-
-        formData.append('certificateId', certificateId)
-        formData.append('file', file)
-
-        startTransition(() => {
-            uploadAction(formData)
-        })
-    }
-
-    const handleEdit = () => {
-        setIsEditing(true)
-    }
-
-    const handleCancelEdit = () => {
-        setIsEditing(false)
-    }
-
-    const { login, isLoading: loginIsLoading } = useGoogleRelogin({ userEmail })
-
-    useEffect(() => {
-        if (driverPickerState?.success || uploadState?.success) {
-            setIsEditing(false)
-        }
-    }, [driverPickerState, uploadState])
-
-    useEffect(() => {
-        if (!driverPickerState) return
-
-        if (driverPickerState.success) {
+    const drivePickerMutation = useMutation({
+        mutationFn: async (fileId: string) => {
+            const formData = new FormData()
+            formData.append('fileId', fileId)
+            formData.append('certificateId', certificateId)
+            const result = await addTemplateByDrivePickerAction(null, formData)
+            if (!result?.success) throw result
+            return result
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
             toast.success('Template adicionado com sucesso')
-        } else {
-            if (driverPickerState.errorType === 'google-token-refresh-failed') {
+            setIsEditing(false)
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+
+            if (error?.errorType === 'google-token-refresh-failed') {
                 toast.error(
                     'Sessão do Google expirada. Entre novamente com a sua conta.',
                 )
                 login()
-            } else if (
-                driverPickerState.errorType === 'unsupported-template-mimetype'
-            ) {
+            } else if (error?.errorType === 'unsupported-template-mimetype') {
                 toast.error(
                     'Tipo de arquivo não suportado. Apenas Google Slides, Google Docs, .pptx ou .docx são permitidos',
                 )
             } else if (
-                driverPickerState.errorType ===
-                'template-variables-parsing-error'
+                error?.errorType === 'template-variables-parsing-error'
             ) {
                 toast.error(
                     'Foi encontrado um erro de sintaxe do Liquid no template.',
                 )
-            } else if (
-                driverPickerState.errorType === 'template-file-size-too-large'
-            ) {
+            } else if (error?.errorType === 'template-file-size-too-large') {
                 toast.error(
                     `O arquivo do template é muito grande. O tamanho máximo é 5MB`,
                 )
             } else {
                 toast.error('Ocorreu um erro ao tentar adicionar template')
             }
-        }
-    }, [driverPickerState])
+        },
+    })
 
-    useEffect(() => {
-        if (!uploadState) return
-
-        if (uploadState.success) {
+    const uploadMutation = useMutation({
+        mutationFn: async (file: File) => {
+            const formData = new FormData()
+            formData.append('certificateId', certificateId)
+            formData.append('file', file)
+            const result = await addTemplateByUploadAction(null, formData)
+            if (!result?.success) throw result
+            return result
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
             toast.success('Template adicionado com sucesso')
-        } else {
-            if (uploadState.errorType === 'unsupported-template-mimetype') {
+            setIsEditing(false)
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+
+            if (error?.errorType === 'unsupported-template-mimetype') {
                 toast.error(
                     'Tipo de arquivo não suportado. Apenas .pptx ou .docx são permitidos',
                 )
             } else if (
-                uploadState.errorType === 'template-variables-parsing-error'
+                error?.errorType === 'template-variables-parsing-error'
             ) {
                 toast.error(
                     'Foi encontrado um erro de sintaxe do Liquid no template.',
@@ -198,8 +185,13 @@ export function TemplateSection({
             } else {
                 toast.error('Ocorreu um erro ao fazer upload do template')
             }
-        }
-    }, [uploadState])
+        },
+    })
+
+    const handleEdit = () => setIsEditing(true)
+    const handleCancelEdit = () => setIsEditing(false)
+
+    const { login, isLoading: loginIsLoading } = useGoogleRelogin({ userEmail })
 
     const radioGroupName = 'template'
 
@@ -218,8 +210,8 @@ export function TemplateSection({
                         variant="outline"
                         onClick={handleCancelEdit}
                         disabled={
-                            templateUrlForm.formState.isSubmitting ||
-                            drivePickerIsLoading
+                            urlMutation.isPending ||
+                            drivePickerMutation.isPending
                         }
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 self-end xs:self-auto"
                     >
@@ -231,11 +223,15 @@ export function TemplateSection({
                         userEmail={userEmail}
                         googleOAuthToken={googleOAuthToken}
                         urlForm={templateUrlForm}
-                        onSubmitUrl={onSubmitUrl}
-                        onSubmitDrive={handleSubmitDrive}
-                        onSubmitUpload={handleSubmitUpload}
-                        isDriveLoading={drivePickerIsLoading || loginIsLoading}
-                        isUploadLoading={uploadIsLoading}
+                        onSubmitUrl={data => urlMutation.mutate(data)}
+                        onSubmitDrive={fileId =>
+                            drivePickerMutation.mutate(fileId)
+                        }
+                        onSubmitUpload={file => uploadMutation.mutate(file)}
+                        isDriveLoading={
+                            drivePickerMutation.isPending || loginIsLoading
+                        }
+                        isUploadLoading={uploadMutation.isPending}
                         radioGroupName={radioGroupName}
                         type="template"
                     />
@@ -270,11 +266,13 @@ export function TemplateSection({
                     userEmail={userEmail}
                     googleOAuthToken={googleOAuthToken}
                     urlForm={templateUrlForm}
-                    onSubmitUrl={onSubmitUrl}
-                    onSubmitDrive={handleSubmitDrive}
-                    onSubmitUpload={handleSubmitUpload}
-                    isDriveLoading={drivePickerIsLoading || loginIsLoading}
-                    isUploadLoading={uploadIsLoading}
+                    onSubmitUrl={data => urlMutation.mutate(data)}
+                    onSubmitDrive={fileId => drivePickerMutation.mutate(fileId)}
+                    onSubmitUpload={file => uploadMutation.mutate(file)}
+                    isDriveLoading={
+                        drivePickerMutation.isPending || loginIsLoading
+                    }
+                    isUploadLoading={uploadMutation.isPending}
                     radioGroupName={radioGroupName}
                     type="template"
                 />

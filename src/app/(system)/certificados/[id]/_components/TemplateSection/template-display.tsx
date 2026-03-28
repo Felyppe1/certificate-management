@@ -10,7 +10,7 @@ import {
     CardTitle,
 } from '@/components/ui/card'
 import { RefreshCw, Edit3, Trash2, ALargeSmall } from 'lucide-react'
-import { startTransition, useActionState, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { refreshTemplateAction } from '@/backend/infrastructure/server-actions/refresh-template-action'
 import { deleteTemplateAction } from '@/backend/infrastructure/server-actions/delete-template-action'
 import { downloadTemplateAction } from '@/backend/infrastructure/server-actions/download-template-action'
@@ -20,6 +20,9 @@ import { SourceIcon } from '@/components/svg/SourceIcon'
 import { WarningPopover } from '../../../../../../components/WarningPopover'
 import { toast } from 'sonner'
 import { useGoogleRelogin } from '@/components/useGoogleRelogin'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
+import { queryKeys } from '@/lib/query-keys'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -62,21 +65,88 @@ export function TemplateDisplay({
     const [showRefreshWarning, setShowRefreshWarning] = useState(false)
     const [showEditWarning, setShowEditWarning] = useState(false)
 
-    const [refreshState, refreshAction, isRefreshing] = useActionState(
-        refreshTemplateAction,
-        null,
-    )
+    const queryClient = useQueryClient()
 
-    const [deleteState, deleteAction, isDeleting] = useActionState(
-        deleteTemplateAction,
-        null,
-    )
+    const { mutate: refreshAction, isPending: isRefreshing } = useMutation({
+        mutationFn: async () => {
+            const formData = new FormData()
+            formData.append('certificateId', certificateId)
+            const result = await refreshTemplateAction(null, formData)
+            if (result?.success === false) {
+                throw result
+            }
+            return result
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
+            toast.success('Template atualizado com sucesso')
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
 
-    const [
-        downloadTemplateState,
-        downloadTemplateActionHandler,
-        isDownloadingTemplate,
-    ] = useActionState(downloadTemplateAction, null)
+            if (error?.errorType === 'drive-file-not-found') {
+                toast.error(
+                    'Arquivo não encontrado. Verifique se ele se existe no Drive, se você tem permissão para acessá-lo ou se ele está público',
+                )
+            } else if (error?.errorType === 'google-session-expired') {
+                toast.error(
+                    'Sessão do Google expirada. Entre novamente com a sua conta.',
+                )
+                login()
+            } else {
+                toast.error('Ocorreu um erro ao tentar atualizar o template')
+            }
+        },
+    })
+
+    const { mutate: deleteAction, isPending: isDeleting } = useMutation({
+        mutationFn: async () => {
+            const formData = new FormData()
+            formData.append('certificateId', certificateId)
+            const result = await deleteTemplateAction(null, formData)
+            if (result?.success === false) {
+                throw result
+            }
+            return result
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
+            toast.success('Template removido com sucesso')
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+
+            toast.error('Ocorreu um erro ao deletar o template')
+        },
+    })
+
+    const {
+        mutate: downloadTemplateActionHandler,
+        isPending: isDownloadingTemplate,
+    } = useMutation({
+        mutationFn: async () => {
+            const formData = new FormData()
+            formData.append('certificateEmissionId', certificateId)
+            const result = await downloadTemplateAction(null, formData)
+            if (result?.success === false) {
+                throw result
+            }
+            return result
+        },
+        onSuccess: result => {
+            const signedUrl = result.data!
+            window.open(signedUrl, '_blank', 'noopener,noreferrer')
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+
+            toast.error('Ocorreu um erro ao tentar baixar o template')
+        },
+    })
 
     const { login, isLoading: loginIsLoading } = useGoogleRelogin({
         userEmail,
@@ -88,30 +158,15 @@ export function TemplateDisplay({
     })
 
     const handleRefresh = () => {
-        const formData = new FormData()
-        formData.append('certificateId', certificateId)
-
-        startTransition(() => {
-            refreshAction(formData)
-        })
+        refreshAction()
     }
 
     const handleRemoveTemplate = () => {
-        const formData = new FormData()
-        formData.append('certificateId', certificateId)
-
-        startTransition(() => {
-            deleteAction(formData)
-        })
+        deleteAction()
     }
 
     const handleDownloadTemplate = () => {
-        const formData = new FormData()
-        formData.append('certificateEmissionId', certificateId)
-
-        startTransition(() => {
-            downloadTemplateActionHandler(formData)
-        })
+        downloadTemplateActionHandler()
     }
 
     const handleViewFile = () => {
@@ -138,50 +193,6 @@ export function TemplateDisplay({
             onEdit()
         }
     }
-
-    useEffect(() => {
-        if (!refreshState) return
-
-        if (refreshState.success) {
-            toast.success('Template atualizado com sucesso')
-        } else {
-            if (refreshState.errorType === 'drive-file-not-found') {
-                toast.error(
-                    'Arquivo não encontrado. Verifique se ele se existe no Drive, se você tem permissão para acessá-lo ou se ele está público',
-                )
-            } else if (refreshState.errorType === 'google-session-expired') {
-                toast.error(
-                    'Sessão do Google expirada. Entre novamente com a sua conta.',
-                )
-                login()
-            } else {
-                toast.error('Ocorreu um erro ao tentar atualizar o template')
-            }
-        }
-    }, [refreshState])
-
-    useEffect(() => {
-        console.log('DELETE', deleteState)
-        if (!deleteState) return
-
-        if (deleteState.success) {
-            toast.success('Template removido com sucesso')
-        } else {
-            toast.error('Ocorreu um erro ao deletar o template')
-        }
-    }, [deleteState])
-
-    useEffect(() => {
-        if (!downloadTemplateState) return
-
-        if (downloadTemplateState.success) {
-            const signedUrl = downloadTemplateState.data!
-
-            window.open(signedUrl, '_blank', 'noopener,noreferrer')
-        } else {
-            toast.error('Ocorreu um erro ao tentar baixar o template')
-        }
-    }, [downloadTemplateState])
 
     return (
         <>
