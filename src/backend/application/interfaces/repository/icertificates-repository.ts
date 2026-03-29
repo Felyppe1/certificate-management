@@ -14,6 +14,7 @@ export interface ICertificatesRepository {
     update(certificate: CertificateEmission): Promise<void>
     delete(id: string): Promise<void>
     getById(id: string): Promise<CertificateEmission | null>
+    markAsGeneratedIfNotAlready(id: string): Promise<void>
     getCertificateEmissionsMetricsByUserId(
         userId: string,
     ): Promise<GetCertificateEmissionsMetricsByUserIdOutput>

@@ -349,17 +349,26 @@ export class PrismaDataSourceRowsRepository
     async allRowsFinishedProcessing(
         certificateEmissionId: string,
     ): Promise<boolean> {
-        const count = await this.prisma.dataSourceRow.count({
-            where: {
-                data_source_id: certificateEmissionId,
-                processing_status: {
-                    notIn: [
-                        PROCESSING_STATUS_ENUM.COMPLETED,
-                        PROCESSING_STATUS_ENUM.FAILED,
-                    ],
+        let count: number = 0
+        const execute = async (tx: TransactionClient) => {
+            count = await tx.dataSourceRow.count({
+                where: {
+                    data_source_id: certificateEmissionId,
+                    processing_status: {
+                        notIn: [
+                            PROCESSING_STATUS_ENUM.COMPLETED,
+                            PROCESSING_STATUS_ENUM.FAILED,
+                        ],
+                    },
                 },
-            },
-        })
+            })
+        }
+
+        if (isPrismaClient(this.prisma)) {
+            await this.prisma.$transaction(execute)
+        } else {
+            await execute(this.prisma)
+        }
 
         return count === 0
     }

@@ -728,6 +728,28 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         }
     }
 
+    async markAsGeneratedIfNotAlready(id: string): Promise<void> {
+        const execute = async (tx: TransactionClient) => {
+            await tx.certificateEmission.updateMany({
+                where: {
+                    id,
+                    status: {
+                        not: CERTIFICATE_STATUS.GENERATED,
+                    },
+                },
+                data: {
+                    status: CERTIFICATE_STATUS.GENERATED,
+                },
+            })
+        }
+
+        if (isPrismaClient(this.prisma)) {
+            await this.prisma.$transaction(execute)
+        } else {
+            await execute(this.prisma)
+        }
+    }
+
     async getById(id: string): Promise<CertificateEmission | null> {
         const certificate = await this.prisma.certificateEmission.findUnique({
             where: { id },

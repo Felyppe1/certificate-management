@@ -24,7 +24,7 @@ export class FinishCertificatesGenerationUseCase {
         >,
         private certificatesRepository: Pick<
             ICertificatesRepository,
-            'getById' | 'update'
+            'markAsGeneratedIfNotAlready'
         >,
         private transactionManager: ITransactionManager,
     ) {}
@@ -53,25 +53,18 @@ export class FinishCertificatesGenerationUseCase {
         const certificateEmissionId =
             dataSourceRow.serialize().certificateEmissionId
 
-        await this.transactionManager.run(async () => {
-            await this.dataSourceRowsRepository.update(dataSourceRow)
+        await this.dataSourceRowsRepository.update(dataSourceRow)
 
-            const allFinished =
-                await this.dataSourceRowsRepository.allRowsFinishedProcessing(
-                    certificateEmissionId,
-                )
+        const allFinished =
+            await this.dataSourceRowsRepository.allRowsFinishedProcessing(
+                certificateEmissionId,
+            )
 
-            if (allFinished) {
-                const certificate = await this.certificatesRepository.getById(
-                    certificateEmissionId,
-                )
-
-                if (certificate) {
-                    certificate.markAsGenerated()
-                    await this.certificatesRepository.update(certificate)
-                }
-            }
-        })
+        if (allFinished) {
+            await this.certificatesRepository.markAsGeneratedIfNotAlready(
+                certificateEmissionId,
+            )
+        }
 
         return {
             certificateEmissionId,
