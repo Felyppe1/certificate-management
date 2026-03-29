@@ -14,13 +14,12 @@ import re
 import google.auth.transport.requests
 import google.oauth2.id_token
 import zipfile
-from liquid import Template
+from liquid_types import LiquidDate, LiquidFloat, liquid_environment
 from pydantic import BaseModel, ValidationError
 from typing import List, Optional, Dict, Any
 from enum import Enum
 from datetime import datetime
 import re
-import inspect
 import tempfile
 import subprocess
 from googleapiclient.discovery import build
@@ -143,7 +142,7 @@ def process_buffer(paragraph_list, text_list, context):
         print(f"DEBUG LIQUID: {sanitized_text}")
         
     try:
-        template = Template(sanitized_text)
+        template = liquid_environment.from_string(sanitized_text)
         new_complete_text = template.render(**context)
         # If the text did not change, do nothing (preserves original formatting)
         if new_complete_text == complete_text:
@@ -480,7 +479,7 @@ def process_buffer_pptx(paragraph_list, text_list, context):
         print(f"DEBUG LIQUID PPTX: {sanitized_text}")
         
     try:
-        template = Template(sanitized_text)
+        template = liquid_environment.from_string(sanitized_text)
         new_complete_text = template.render(**context)
         
         if new_complete_text == complete_text:
@@ -773,49 +772,6 @@ def get_template_cached(storage_file_url: str) -> bytes:
             print(f"[{thread_name}] Released waiting threads")
 
     return template_bytes
-
-class LiquidDate(datetime):
-    # The __new__ intercepts the creation. We receive a string (display) and the datetime object
-    def __new__(cls, display, dt_obj):
-        # We feed the super class (datetime) with the integer numbers she needs
-        obj = datetime.__new__(
-            cls, 
-            dt_obj.year, 
-            dt_obj.month, 
-            dt_obj.day, 
-            dt_obj.hour, 
-            dt_obj.minute, 
-            dt_obj.second
-        )
-        # Now, we set the custom string in the object created.
-        obj.display = display
-        return obj
-
-    def __str__(self):
-        return self.display
-
-class LiquidFloat(float):
-    def __new__(cls, display_value):
-        math_value = float(display_value.replace(',', '.'))
-        obj = float.__new__(cls, math_value)
-        obj.display = display_value
-        return obj
-
-    def __str__(self):
-        try:
-            caller_frame = inspect.currentframe().f_back
-            caller_filename = caller_frame.f_code.co_filename
-            
-            # If the request came from the 'filters' folder of Liquid (like math.py in your error)
-            if 'liquid' in caller_filename and 'filters' in caller_filename:
-                # We return the version with a dot ("150.5") so the Decimal doesn't break
-                return str(float(self))
-        except Exception:
-            pass # If something fails in the inspection, continue as normal
-            
-        # If the request came from the standard output of the screen (that is, just {{ number }}),
-        # we deliver the format with the nice comma.
-        return self.display
 
 class InputMethod(str, Enum):
     UPLOAD = "UPLOAD"

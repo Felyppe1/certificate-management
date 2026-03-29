@@ -337,7 +337,6 @@ export class DataSource {
 
             items.push(...split)
         }
-        console.log({ items })
 
         let itemType: ArrayItemType = 'string'
         if (items.every(this.isBoolean)) itemType = 'boolean'
@@ -362,8 +361,59 @@ export class DataSource {
     }
 
     static isNumber(value: string): boolean {
-        const replacedValue = value.replace(',', '.')
-        const parsed = z.coerce.number().safeParse(replacedValue)
+        let cleaned = value.trim()
+
+        // --- 1. STRUCTURAL GATEKEEPER (REGEX) ---
+        // BR Rule: Accepts direct numbers (1000) OR groups of 3 digits separated by a dot (1.000.000),
+        // followed by an optional decimal comma (,90)
+        const isValidBR = /^[+-]?(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d+)?$/.test(
+            cleaned,
+        )
+
+        // US Rule: Accepts direct numbers (1000) OR groups of 3 digits separated by a comma (1,000,000),
+        // followed by an optional decimal dot (.90)
+        const isValidUS = /^[+-]?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?$/.test(
+            cleaned,
+        )
+
+        if (!isValidBR && !isValidUS) {
+            return false
+        }
+
+        // --- 2. NORMALIZATION ---
+        // (From here on, we are sure the string is safe and the thousands separators are correct)
+        const hasDot = cleaned.includes('.')
+        const hasComma = cleaned.includes(',')
+
+        if (hasDot && hasComma) {
+            const lastDotIndex = cleaned.lastIndexOf('.')
+            const lastCommaIndex = cleaned.lastIndexOf(',')
+
+            if (lastCommaIndex > lastDotIndex) {
+                // BR format (Comma comes last): 1.100.100,90
+                cleaned = cleaned.replaceAll('.', '').replace(',', '.')
+            } else {
+                // US format (Dot comes last): 1,100,100.90
+                cleaned = cleaned.replaceAll(',', '')
+            }
+        } else if (hasComma) {
+            const commaCount = (cleaned.match(/,/g) || []).length
+            if (commaCount > 1) {
+                // US thousand separator
+                cleaned = cleaned.replaceAll(',', '')
+            } else {
+                // BR decimal
+                cleaned = cleaned.replace(',', '.')
+            }
+        } else if (hasDot) {
+            const dotCount = (cleaned.match(/\./g) || []).length
+            if (dotCount > 1) {
+                // BR thousand separator
+                cleaned = cleaned.replaceAll('.', '')
+            }
+        }
+
+        const parsed = z.coerce.number().safeParse(cleaned)
 
         return parsed.success
     }
