@@ -326,6 +326,14 @@ export function ConfigurableDataSourceTable({
         }
     }
 
+    const handleViewSelectedClick = () => {
+        if (selectedRowIds.size > 5) {
+            setShowViewWarning(true)
+        } else {
+            handleViewSelected()
+        }
+    }
+
     const handleUndo = () => {
         setColumns(initialColumns)
         setSelectedColumnIndex(null)
@@ -747,8 +755,8 @@ export function ConfigurableDataSourceTable({
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                onClick={() =>
-                                                    setShowViewWarning(true)
+                                                onClick={
+                                                    handleViewSelectedClick
                                                 }
                                                 disabled={isViewingCertificates}
                                             >

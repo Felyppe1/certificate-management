@@ -221,6 +221,7 @@ export function CertificateHeader({
                                 <Button
                                     size="icon"
                                     variant="outline"
+                                    onClick={() => setShowDeleteWarning(true)}
                                     disabled={
                                         updateMutation.isPending ||
                                         deleteMutation.isPending ||

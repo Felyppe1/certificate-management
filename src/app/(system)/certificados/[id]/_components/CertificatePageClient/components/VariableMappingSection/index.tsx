@@ -155,8 +155,7 @@ export function VariableMappingSection({
         )
     }
 
-    const handleSaveClick = (e: React.PointerEvent<HTMLButtonElement>) => {
-        e.preventDefault()
+    const handleSaveClick = () => {
         if (certificatesGenerated) {
             setShowMappingWarning(true)
         } else {

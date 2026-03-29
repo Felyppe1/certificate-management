@@ -1,10 +1,6 @@
 'use client'
 
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle } from 'lucide-react'
 import { ReactNode } from 'react'
@@ -33,7 +29,7 @@ export function WarningPopover({
 
     return (
         <Popover open={open} onOpenChange={onOpenChange}>
-            <PopoverTrigger asChild>{children}</PopoverTrigger>
+            <PopoverAnchor asChild>{children}</PopoverAnchor>
             <PopoverContent
                 className="w-[16rem] sm:w-80 px-4 sm:px-5 py-4"
                 align="end"
