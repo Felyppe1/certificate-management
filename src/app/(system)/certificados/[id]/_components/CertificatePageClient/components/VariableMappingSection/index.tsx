@@ -155,9 +155,8 @@ export function VariableMappingSection({
         )
     }
 
-    const handleSaveClick = (e: React.MouseEvent) => {
+    const handleSaveClick = (e: React.PointerEvent<HTMLButtonElement>) => {
         e.preventDefault()
-        console.log(certificatesGenerated)
         if (certificatesGenerated) {
             setShowMappingWarning(true)
         } else {
