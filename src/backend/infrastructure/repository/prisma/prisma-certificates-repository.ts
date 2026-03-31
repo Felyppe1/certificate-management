@@ -189,8 +189,9 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
             template,
             dataSource,
             variableColumnMapping,
-            domainEvents,
         } = certificate.serialize()
+
+        const domainEvents = certificate.pullDomainEvents()
 
         const execute = async (tx: Prisma.TransactionClient) => {
             await tx.certificateEmission.create({
@@ -365,8 +366,9 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
             template,
             dataSource,
             variableColumnMapping,
-            domainEvents,
         } = certificate.serialize()
+
+        const domainEvents = certificate.pullDomainEvents()
 
         const previousCertificate =
             await this.prisma.certificateEmission.findUnique({

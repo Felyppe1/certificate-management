@@ -42,7 +42,6 @@ export interface EmailOutput extends EmailInput {
 }
 
 export class Email extends AggregateRoot {
-    private id: string
     private certificateEmissionId: string
     private subject: string | null
     private body: string | null
@@ -62,17 +61,13 @@ export class Email extends AggregateRoot {
 
         const event = new EmailCreatedDomainEvent(data.certificateEmissionId)
 
-        email.addDomainEvent(event)
+        email.registerDomainEvent(event)
 
         return email
     }
 
     constructor(data: EmailInput) {
-        super()
-
-        if (!data.id) {
-            throw new Error('Email id is required')
-        }
+        super(data.id)
 
         if (!data.certificateEmissionId) {
             throw new Error('Email certificateEmissionId is required')
@@ -102,7 +97,6 @@ export class Email extends AggregateRoot {
             throw new Error('emailErrorType is required')
         }
 
-        this.id = data.id
         this.certificateEmissionId = data.certificateEmissionId
         this.subject = data.subject
         this.body = data.body
@@ -155,17 +149,13 @@ export class Email extends AggregateRoot {
         return this.scheduledAt
     }
 
-    getId() {
-        return this.id
-    }
-
     getCertificateEmissionId() {
         return this.certificateEmissionId
     }
 
     serialize(): EmailOutput {
         return {
-            id: this.id,
+            id: this.getId(),
             certificateEmissionId: this.certificateEmissionId,
             subject: this.subject,
             body: this.body,

@@ -6,6 +6,7 @@ import {
     DataSourceColumn,
 } from './data-source'
 import z from 'zod'
+import { AggregateRoot } from './primitives/aggregate-root'
 
 export enum PROCESSING_STATUS_ENUM {
     PENDING = 'PENDING',
@@ -38,8 +39,7 @@ interface DataSourceRowOutput {
     sourceRowIndex: number
 }
 
-export class DataSourceRow {
-    private id: string
+export class DataSourceRow extends AggregateRoot {
     private certificateEmissionId: string
     private fileBytes: number | null
     private data: Record<string, string>
@@ -87,9 +87,7 @@ export class DataSourceRow {
     }
 
     constructor(input: DataSourceRowInput) {
-        if (!input.id) {
-            throw new Error('DataSourceRow id is required')
-        }
+        super(input.id)
 
         if (!input.certificateEmissionId) {
             throw new Error('DataSourceRow certificate emission id is required')
@@ -103,7 +101,6 @@ export class DataSourceRow {
             throw new Error('DataSourceRow processing status is required')
         }
 
-        this.id = input.id
         this.certificateEmissionId = input.certificateEmissionId
         this.fileBytes = input.fileBytes
         this.data = input.data
@@ -176,10 +173,6 @@ export class DataSourceRow {
         this.fileBytes = null
     }
 
-    getId() {
-        return this.id
-    }
-
     getProcessingStatus() {
         return this.processingStatus
     }
@@ -232,7 +225,7 @@ export class DataSourceRow {
 
     serialize(): DataSourceRowOutput {
         return {
-            id: this.id,
+            id: this.getId(),
             certificateEmissionId: this.certificateEmissionId,
             fileBytes: this.fileBytes,
             data: this.data,

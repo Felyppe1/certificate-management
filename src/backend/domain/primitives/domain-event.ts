@@ -8,11 +8,6 @@ export abstract class DomainEvent {
     constructor(name: string) {
         this.id = randomUUID()
         this.name = name
-        this.ocurredOn = new Date(
-            new Date().getTime() - new Date().getTimezoneOffset() * 60000,
-        )
+        this.ocurredOn = new Date()
     }
-
-    // TODO: change to serialize
-    abstract toPrimitives(): Record<string, any>
 }

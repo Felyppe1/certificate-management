@@ -1,17 +1,11 @@
 import { DomainEvent } from '../primitives/domain-event'
 
 export class CertificateCreatedDomainEvent extends DomainEvent {
-    private certificateId: string
+    readonly certificateId: string
 
     constructor(certificateId: string) {
-        super('certificate-creeated-domain-event')
+        super('certificate-created-domain-event')
 
         this.certificateId = certificateId
-    }
-
-    toPrimitives() {
-        return {
-            certificateId: this.certificateId,
-        }
     }
 }

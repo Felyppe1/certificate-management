@@ -61,11 +61,9 @@ interface CertificateOutput
     template: TemplateOutput | null
     dataSource: DataSourceOutput | null
     // email: EmailOutput
-    domainEvents: DomainEvent[]
 }
 
 export class CertificateEmission extends AggregateRoot {
-    private id: string
     private name: string
     private template: Template | null
     private dataSource: DataSource | null
@@ -113,13 +111,13 @@ export class CertificateEmission extends AggregateRoot {
             certificate.getId(),
         )
 
-        certificate.addDomainEvent(domainEvent)
+        certificate.registerDomainEvent(domainEvent)
 
         return certificate
     }
 
     constructor(data: CertificateInput) {
-        super()
+        super(data.id)
 
         if (!data.id) {
             throw new Error('Certificate ID is required')
@@ -141,7 +139,6 @@ export class CertificateEmission extends AggregateRoot {
             throw new Error('Certificate creation date is required')
         }
 
-        this.id = data.id
         this.name = data.name
         this.template = data.template
         this.dataSource = data.dataSource
@@ -151,10 +148,6 @@ export class CertificateEmission extends AggregateRoot {
         this.variableColumnMapping = data.variableColumnMapping
 
         this.validateVariableColumnMapping()
-    }
-
-    getId() {
-        return this.id
     }
 
     getUserId() {
@@ -246,9 +239,9 @@ export class CertificateEmission extends AggregateRoot {
 
         this.markAsDraft()
 
-        const domainEvent = new TemplateSetDomainEvent(this.id)
+        const domainEvent = new TemplateSetDomainEvent(this.getId())
 
-        this.addDomainEvent(domainEvent)
+        this.registerDomainEvent(domainEvent)
     }
 
     removeTemplate(userIdTryingToRemove: string) {
@@ -321,9 +314,9 @@ export class CertificateEmission extends AggregateRoot {
 
         this.markAsDraft()
 
-        const domainEvent = new DataSourceSetDomainEvent(this.id)
+        const domainEvent = new DataSourceSetDomainEvent(this.getId())
 
-        this.addDomainEvent(domainEvent)
+        this.registerDomainEvent(domainEvent)
     }
 
     updateDataSourceColumns(columns: DataSourceColumn[]): string[] {
@@ -489,7 +482,7 @@ export class CertificateEmission extends AggregateRoot {
 
     serialize(): CertificateOutput {
         return {
-            id: this.id,
+            id: this.getId(),
             name: this.name,
             template: this.template?.serialize() ?? null,
             dataSource: this.dataSource?.serialize() ?? null,
@@ -497,7 +490,6 @@ export class CertificateEmission extends AggregateRoot {
             status: this.status,
             createdAt: this.createdAt,
             userId: this.userId,
-            domainEvents: this.getDomainEvents(),
             variableColumnMapping: this.variableColumnMapping,
         }
     }
