@@ -1,5 +1,6 @@
 import z from 'zod'
 import { INPUT_METHOD } from './certificate'
+import { ValueObject } from './primitives/value-object'
 import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
@@ -76,16 +77,16 @@ export interface CreateDataSourceInput
 // export interface UpdateDataSourceInput
 //     extends Partial<Omit<DataSourceInput>> {}
 
-export class DataSource {
-    private driveFileId: string | null
-    private storageFileUrl: string | null
-    private inputMethod: INPUT_METHOD
-    private fileName: string
-    private fileMimeType: DATA_SOURCE_MIME_TYPE
-    private columns: DataSourceColumn[]
-    private columnsRow: number
-    private dataRowStart: number
-    private thumbnailUrl: string | null
+export class DataSource extends ValueObject<DataSource> {
+    private readonly driveFileId: string | null
+    private readonly storageFileUrl: string | null
+    private readonly inputMethod: INPUT_METHOD
+    private readonly fileName: string
+    private readonly fileMimeType: DATA_SOURCE_MIME_TYPE
+    private readonly columns: DataSourceColumn[]
+    private readonly columnsRow: number
+    private readonly dataRowStart: number
+    private readonly thumbnailUrl: string | null
 
     static create(data: CreateDataSourceInput): DataSource {
         if (data.rows.length > MAX_DATA_SOURCE_ROWS) {
@@ -108,6 +109,8 @@ export class DataSource {
     }
 
     constructor(data: DataSourceInput) {
+        super()
+
         if (!data.inputMethod) {
             throw new Error('DataSource input method is required')
         }
@@ -253,9 +256,10 @@ export class DataSource {
             )
         }
 
-        this.columns = columns
-
-        return unsafeColumnNames
+        return {
+            dataSource: new DataSource({ ...this.serialize(), columns }),
+            unsafeColumnNames,
+        }
     }
 
     private static inferTypes(
@@ -518,8 +522,8 @@ export class DataSource {
         return this.driveFileId
     }
 
-    setStorageFileUrl(url: string) {
-        this.storageFileUrl = url
+    setStorageFileUrl(url: string): DataSource {
+        return new DataSource({ ...this.serialize(), storageFileUrl: url })
     }
 
     getStorageFileUrl() {
@@ -538,8 +542,15 @@ export class DataSource {
         return this.inputMethod
     }
 
-    setThumbnailUrl(url: string) {
-        this.thumbnailUrl = url
+    setThumbnailUrl(url: string): DataSource {
+        return new DataSource({ ...this.serialize(), thumbnailUrl: url })
+    }
+
+    equals(other: DataSource): boolean {
+        return (
+            JSON.stringify(this.serialize()) ===
+            JSON.stringify(other.serialize())
+        )
     }
 
     static getFileIdFromUrl(url: string): string | null {

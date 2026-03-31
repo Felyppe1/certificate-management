@@ -324,7 +324,10 @@ export class CertificateEmission extends AggregateRoot {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }
 
-        return this.dataSource.setColumns(columns)
+        const { dataSource, unsafeColumnNames } =
+            this.dataSource.setColumns(columns)
+        this.dataSource = dataSource
+        return unsafeColumnNames
     }
 
     hasDataSource() {
@@ -368,7 +371,7 @@ export class CertificateEmission extends AggregateRoot {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }
 
-        this.dataSource.setStorageFileUrl(url)
+        this.dataSource = this.dataSource.setStorageFileUrl(url)
     }
 
     removeDataSource(userIdTryingToRemove: string) {
