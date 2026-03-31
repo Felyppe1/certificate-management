@@ -287,7 +287,7 @@ export class CertificateEmission extends AggregateRoot {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
         }
 
-        this.template.setStorageFileUrl(url)
+        this.template = this.template.setStorageFileUrl(url)
     }
 
     setTemplateThumbnailUrl(url: string) {
@@ -295,7 +295,7 @@ export class CertificateEmission extends AggregateRoot {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
         }
 
-        this.template.setThumbnailUrl(url)
+        this.template = this.template.setThumbnailUrl(url)
     }
 
     getTemplateStorageFileUrl() {

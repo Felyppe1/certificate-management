@@ -1,4 +1,5 @@
 import { INPUT_METHOD } from './certificate'
+import { ValueObject } from './primitives/value-object'
 
 export const MAX_TEMPLATE_BYTES_SIZE = 5 * 1024 * 1024 // 5MB
 
@@ -33,16 +34,18 @@ export interface CreateTemplateInput extends TemplateInput {}
 // export interface UpdateTemplateInput
 //     extends Partial<Omit<TemplateInput, 'id'>> {}
 
-export class Template {
-    private driveFileId: string | null
-    private storageFileUrl: string
-    private inputMethod: INPUT_METHOD
-    private fileName: string
-    private fileMimeType: TEMPLATE_FILE_MIME_TYPE
-    private variables: string[]
-    private thumbnailUrl: string | null
+export class Template extends ValueObject<Template> {
+    private readonly driveFileId: string | null
+    private readonly storageFileUrl: string
+    private readonly inputMethod: INPUT_METHOD
+    private readonly fileName: string
+    private readonly fileMimeType: TEMPLATE_FILE_MIME_TYPE
+    private readonly variables: string[]
+    private readonly thumbnailUrl: string | null
 
     constructor(data: TemplateInput) {
+        super()
+
         if (!data.inputMethod) {
             throw new Error('Template input method is required')
         }
@@ -89,35 +92,27 @@ export class Template {
         return this.inputMethod
     }
 
-    setStorageFileUrl(url: string) {
-        this.storageFileUrl = url
+    setStorageFileUrl(url: string): Template {
+        return new Template({ ...this.serialize(), storageFileUrl: url })
     }
 
     getStorageFileUrl() {
         return this.storageFileUrl
     }
 
-    setThumbnailUrl(url: string) {
-        this.thumbnailUrl = url
+    setThumbnailUrl(url: string): Template {
+        return new Template({ ...this.serialize(), thumbnailUrl: url })
     }
 
-    update(data: Partial<Omit<TemplateInput, 'id'>>) {
-        if (data.inputMethod) this.inputMethod = data.inputMethod
+    update(data: Partial<TemplateInput>): Template {
+        return new Template({ ...this.serialize(), ...data })
+    }
 
-        if (data.driveFileId !== undefined) {
-            Template.validateDriveFileId(data.driveFileId, data.inputMethod)
-            this.driveFileId = data.driveFileId
-        }
-
-        if (data.storageFileUrl !== undefined) {
-            this.storageFileUrl = data.storageFileUrl
-        }
-
-        if (data.fileName) this.fileName = data.fileName
-        if (data.fileMimeType) this.fileMimeType = data.fileMimeType
-        if (data.variables) this.variables = data.variables
-        if (data.thumbnailUrl !== undefined)
-            this.thumbnailUrl = data.thumbnailUrl
+    equals(other: Template): boolean {
+        return (
+            JSON.stringify(this.serialize()) ===
+            JSON.stringify(other.serialize())
+        )
     }
 
     private static validateDriveFileId(
