@@ -17,7 +17,7 @@ import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 
 const addDataSourceByUrlBodySchema = z.object({
-    fileUrl: z.url('Invalid file URL'),
+    fileUrls: z.array(z.url('Invalid file URL')).min(1).max(4),
 })
 
 export async function PUT(
@@ -59,7 +59,7 @@ export async function PUT(
 
         await addDataSourceByUrlUseCase.execute({
             certificateId: certificateEmissionId,
-            fileUrl: parsed.fileUrl,
+            fileUrls: parsed.fileUrls,
             userId,
         })
 

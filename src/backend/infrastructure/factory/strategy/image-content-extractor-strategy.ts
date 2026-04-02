@@ -12,41 +12,46 @@ Retorne todos os valores como STRINGS.
 Se não tiver nome das colunas explicitamente, chame a coluna de acordo com os valores dela com a primeira letra maiúscula.
 Se tiver uma coluna de nome, coloque os valores com cada primeira palavra do nome maiúscula.
 Se você não conseguir extrar um valor para uma célula, coloque o valor como string vazia '', não adicione traços nem nada.
-Não retorne nada mais além do json, apenas o json puro (sem \`\`\`json antes ou depois).
+Não retorne nada mais além do json! NÃO RETORNE \`\`\`json no início nem nada. A resposta deve começar com a abertura do json "{" ou "[".
 `
 
 export class ImageContentExtractorStrategy
     implements ISpreadsheetContentExtractorStrategy
 {
     // TODO: receive the file mime type through constructor?
-    async extractColumns(buffer: Buffer) {
+    async extractColumns(buffers: Buffer[]) {
         const genAiClient = new GoogleGenAI({})
-        const base64ImageFile = buffer.toString('base64')
 
-        const mimeType = await fileTypeFromBuffer(buffer)
+        const inlineDatas = await Promise.all(
+            buffers.map(async buffer => {
+                const base64 = buffer.toString('base64')
+                const mimeType = await fileTypeFromBuffer(buffer)
+                return {
+                    inlineData: {
+                        mimeType: mimeType?.mime || 'image/jpeg',
+                        data: base64,
+                    },
+                }
+            }),
+        )
 
-        const contents = [
-            {
-                inlineData: {
-                    mimeType: mimeType?.mime || 'image/jpeg',
-                    data: base64ImageFile,
-                },
-            },
-            {
-                text: prompt,
-            },
-        ]
+        const contents = [...inlineDatas, { text: prompt }]
 
         let rows: Record<string, any>[] = []
         let response: GenerateContentResponse | undefined = undefined
         try {
             response = await genAiClient.models.generateContent({
-                model: 'gemini-3-flash-preview',
+                model: 'gemini-3-flash-preview', //'gemini-3.1-flash-image-preview',
                 contents: contents,
             })
 
+            console.log(response.text)
+
             rows = JSON.parse(response.text as string)
         } catch (error: any) {
+            console.error('Failed to parse JSON from GenAI response:', error)
+            console.log('GenAI response text was:', response?.text)
+
             if (error?.message) {
                 const errorData = JSON.parse(error.message)
 
@@ -59,8 +64,7 @@ export class ImageContentExtractorStrategy
                 }
             }
 
-            console.error('Failed to parse JSON from GenAI response:', error)
-            console.log('GenAI response text was:', response?.text)
+            throw new Error('Failed to extract content from image')
         }
 
         return { columns: [], rows }

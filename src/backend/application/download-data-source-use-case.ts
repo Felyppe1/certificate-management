@@ -12,6 +12,7 @@ import {
 interface DownloadDataSourceUseCaseInput {
     userId: string
     certificateEmissionId: string
+    fileIndex: number
 }
 
 export class DownloadDataSourceUseCase {
@@ -34,7 +35,7 @@ export class DownloadDataSourceUseCase {
         }
 
         const dataSourceStorageFileUrl =
-            certificateEmission.getDataSourceStorageFileUrl()
+            certificateEmission.getDataSourceStorageFileUrl(input.fileIndex)
 
         if (!dataSourceStorageFileUrl) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)

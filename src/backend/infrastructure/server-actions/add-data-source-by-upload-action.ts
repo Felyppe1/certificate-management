@@ -19,7 +19,7 @@ export async function addDataSourceByUploadAction(
 ) {
     const rawData = {
         certificateId: formData.get('certificateId') as string,
-        file: formData.get('file') as File,
+        files: formData.getAll('files') as File[],
     }
 
     try {
@@ -47,7 +47,7 @@ export async function addDataSourceByUploadAction(
         await addDataSourceByUploadUseCase.execute({
             userId,
             certificateId: parsedData.certificateId,
-            file: parsedData.file,
+            files: parsedData.files,
         })
 
         return {

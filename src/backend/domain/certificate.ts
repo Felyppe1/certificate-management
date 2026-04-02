@@ -334,16 +334,28 @@ export class CertificateEmission extends AggregateRoot {
         return !!this.dataSource
     }
 
+    dataSourceHasImage() {
+        return this.dataSource?.hasImageMimeType() ?? false
+    }
+
     hasDataSourceColumn(columnName: string): boolean {
         return this.dataSource?.hasColumn(columnName) ?? false
     }
 
-    getDataSourceStorageFileUrl() {
-        return this.dataSource?.getStorageFileUrl() ?? null
+    getDataSourceStorageFileUrl(fileIndex = 0) {
+        return this.dataSource?.getStorageFileUrl(fileIndex) ?? null
     }
 
-    getDriveDataSourceFileId() {
-        return this.dataSource?.getDriveFileId() ?? null
+    getDataSourceStorageFileUrls(): string[] {
+        return this.dataSource?.getStorageFileUrls() ?? []
+    }
+
+    getDriveDataSourceFileId(fileIndex = 0) {
+        return this.dataSource?.getDriveFileId(fileIndex) ?? null
+    }
+
+    getDriveDataSourceFileIds(): string[] {
+        return this.dataSource?.getDriveFileIds() ?? []
     }
 
     getDataSourceInputMethod() {

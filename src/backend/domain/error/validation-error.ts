@@ -31,6 +31,10 @@ export enum VALIDATION_ERROR_TYPE {
     CERTIFICATE_NOT_EMITTED = 'certificate-not-emitted',
     CERTIFICATE_EMITTED = 'certificate-emitted',
     INVALID_ROW_DATA = 'invalid-row-data',
+    DATA_SOURCE_FILE_REQUIRED = 'data-source-file-required',
+    DATA_SOURCE_ALL_FILES_NOT_IMAGES = 'data-source-all-files-not-images',
+    DATA_SOURCE_IMAGE_FILES_EXCEEDED = 'data-source-image-files-exceeded',
+    DATA_SOURCE_IMAGE_REFRESH_NOT_ALLOWED = 'data-source-image-refresh-not-allowed',
 }
 
 export class ValidationError extends AppError<VALIDATION_ERROR_TYPE> {

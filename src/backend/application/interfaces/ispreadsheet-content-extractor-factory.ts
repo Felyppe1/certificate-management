@@ -6,7 +6,7 @@ export interface ExtractColumns {
 }
 
 export interface ISpreadsheetContentExtractorStrategy {
-    extractColumns(buffer: Buffer): Promise<ExtractColumns>
+    extractColumns(buffers: Buffer[]): Promise<ExtractColumns>
 }
 
 export interface ISpreadsheetContentExtractorFactory {

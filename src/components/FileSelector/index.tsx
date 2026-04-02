@@ -27,7 +27,7 @@ import { GoogleDriveIcon } from '../svg/GoogleDriveIcon'
 import { toast } from 'sonner'
 import { useGoogleRelogin } from '../useGoogleRelogin'
 import { UseFormReturn } from 'react-hook-form'
-import { UrlForm } from './UrlForm'
+import { UrlForm, UrlFormValues } from './UrlForm'
 
 export type SelectOption = 'upload' | 'link' | 'drive'
 
@@ -36,10 +36,10 @@ export type FileSelectorType = 'template' | 'data-source'
 interface FileSelectorProps {
     isDriveLoading: boolean
     isUploadLoading: boolean
-    urlForm: UseFormReturn<{ fileUrl: string }>
-    onSubmitUrl: (data: { fileUrl: string }) => void
-    onSubmitDrive: (fileId: string) => void
-    onSubmitUpload: (file: File) => void
+    urlForm: UseFormReturn<UrlFormValues>
+    onSubmitUrl: (data: UrlFormValues) => void
+    onSubmitDrive: (fileIds: string[]) => void
+    onSubmitUpload: (files: File[]) => void
     userEmail: string
     googleOAuthToken: string | null
     radioGroupName: string
@@ -76,9 +76,37 @@ export function FileSelector({
 
     const handlePickerPicked = (event: PickerPickedEvent) => {
         console.log('Picker picked:', event)
-        const fileId = event.detail.docs[0].id
+        const docs = event.detail.docs as { mimeType: string; id: string }[] // TODO: real typing
 
-        onSubmitDrive(fileId)
+        if (type === 'data-source' && docs.length > 1) {
+            const allImages = docs.every(
+                doc =>
+                    doc.mimeType === DATA_SOURCE_MIME_TYPE.PNG ||
+                    doc.mimeType === DATA_SOURCE_MIME_TYPE.JPEG,
+            )
+            if (!allImages) {
+                toast.error(
+                    'Só é possível enviar mais de um arquivo se forem imagens',
+                )
+                setSelectedOption(null)
+                setPickerIsReady(false)
+                return
+            }
+            if (docs.length > 4) {
+                toast.error('É permitido no máximo 4 imagens por vez')
+                setSelectedOption(null)
+                setPickerIsReady(false)
+                return
+            }
+        }
+
+        const fileIds = docs.map(doc => doc.id)
+
+        if (type === 'template') {
+            onSubmitDrive([fileIds[0]])
+        } else {
+            onSubmitDrive(fileIds)
+        }
         setPickerIsReady(false)
     }
 
@@ -99,6 +127,20 @@ export function FileSelector({
     const onDrop = useCallback((acceptedFiles: File[]) => {
         if (acceptedFiles.length === 0) return
 
+        if (acceptedFiles.length > 1) {
+            const allImages = acceptedFiles.every(
+                f =>
+                    f.type === DATA_SOURCE_MIME_TYPE.PNG ||
+                    f.type === DATA_SOURCE_MIME_TYPE.JPEG,
+            )
+            if (!allImages) {
+                toast.error(
+                    'Só é possível enviar mais de um arquivo se forem imagens',
+                )
+                return
+            }
+        }
+
         const file = acceptedFiles[0]
 
         if (
@@ -113,7 +155,7 @@ export function FileSelector({
             return
         }
 
-        onSubmitUpload(file)
+        onSubmitUpload(acceptedFiles)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
@@ -129,7 +171,7 @@ export function FileSelector({
         )
 
         if (tooManyFiles) {
-            toast.error('Somente um arquivo é permitido')
+            toast.error('É permitido no máximo 4 imagens por vez')
         }
 
         if (fileTooLarge) {
@@ -140,9 +182,9 @@ export function FileSelector({
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
         onDropRejected,
-        maxFiles: 1,
+        maxFiles: type === 'data-source' ? 4 : 1,
         maxSize: 5 * 1024 * 1024, // 5MB
-        multiple: false,
+        multiple: type === 'data-source',
         accept:
             type === 'template'
                 ? {
@@ -366,7 +408,7 @@ export function FileSelector({
                 <p className="text-xs">
                     Arquivos aceitos:{' '}
                     {type === 'data-source'
-                        ? 'Google Planilhas, .csv, .xlsx, .png ou .jpeg'
+                        ? 'Google Planilhas, .csv, .xlsx, .png ou .jpeg (imagens: até 4)'
                         : 'Google Slides, Google Docs, .pptx ou .docx'}
                 </p>
                 <p>·</p>
@@ -389,6 +431,9 @@ export function FileSelector({
                         client-id={process.env.GOOGLE_CLIENT_ID}
                         app-id={process.env.GCP_PROJECT_ID}
                         oauth-token={googleOAuthToken!}
+                        {...(type === 'data-source' && {
+                            multiselect: true,
+                        })}
                     >
                         <drive-picker-docs-view
                             mime-types={(type === 'template'
@@ -424,6 +469,7 @@ export function FileSelector({
                             <UrlForm
                                 urlForm={urlForm}
                                 onSubmitUrl={onSubmitUrl}
+                                type={type}
                             />
                         </CardContent>
                     </Card>

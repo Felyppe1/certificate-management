@@ -80,10 +80,12 @@ function formatBytes(bytes: number, decimals = 2) {
 
 interface DataSourceDisplayProps {
     dataSource: {
-        driveFileId: string | null
-        storageFileUrl: string | null
+        files: {
+            fileName: string
+            driveFileId: string | null
+            storageFileUrl: string | null
+        }[]
         inputMethod: INPUT_METHOD
-        fileName: string
         fileMimeType: DATA_SOURCE_MIME_TYPE
         columns: {
             name: string
@@ -248,18 +250,22 @@ export function DataSourceDisplay({
         deleteMutation.mutate(formData)
     }
 
-    const handleDownloadDataSource = () => {
+    const handleDownloadDataSource = (fileIndex: number) => {
         const formData = new FormData()
         formData.append('certificateEmissionId', certificateId)
+        formData.append('fileIndex', String(fileIndex))
 
         downloadDataSourceMutation.mutate(formData)
     }
 
-    const handleViewFile = () => {
+    const handleViewFile = (fileIndex: number) => {
+        const file = dataSource.files[fileIndex]
+        if (!file) return
+
         if (dataSource.inputMethod === 'UPLOAD') {
-            handleDownloadDataSource()
-        } else if (dataSource.driveFileId) {
-            const driveUrl = `https://drive.google.com/file/d/${dataSource.driveFileId}/view`
+            handleDownloadDataSource(fileIndex)
+        } else if (file.driveFileId) {
+            const driveUrl = `https://drive.google.com/file/d/${file.driveFileId}/view`
             window.open(driveUrl, '_blank')
         }
     }
@@ -316,7 +322,11 @@ export function DataSourceDisplay({
                     </div>
 
                     <div className="flex flex-wrap justify-start sm:justify-end gap-2 min-w-[15rem]">
-                        {dataSource.inputMethod !== 'UPLOAD' && (
+                        {((dataSource.fileMimeType !==
+                            DATA_SOURCE_MIME_TYPE.PNG &&
+                            dataSource.fileMimeType !==
+                                DATA_SOURCE_MIME_TYPE.JPEG) ||
+                            dataSource.inputMethod !== 'UPLOAD') && (
                             <WarningPopover
                                 open={showRefreshWarning}
                                 onOpenChange={setShowRefreshWarning}
@@ -406,11 +416,63 @@ export function DataSourceDisplay({
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-muted-foreground mb-1">
-                                        Nome do arquivo
+                                        {dataSource.files.length > 1
+                                            ? 'Nomes dos arquivos'
+                                            : 'Nome do arquivo'}
                                     </p>
-                                    <p className="font-medium truncate">
-                                        {dataSource.fileName}
-                                    </p>
+                                    <div className="flex flex-col gap-3">
+                                        {dataSource.files.map((file, i) => (
+                                            <div key={i} className="flex gap-4">
+                                                <p className="font-medium truncate">
+                                                    {file.fileName}
+                                                </p>
+                                                {dataSource.inputMethod ===
+                                                'UPLOAD' ? (
+                                                    <Button
+                                                        variant="default"
+                                                        onClick={() =>
+                                                            handleViewFile(i)
+                                                        }
+                                                        size="sm"
+                                                        disabled={
+                                                            downloadDataSourceMutation.isPending
+                                                        }
+                                                    >
+                                                        <svg
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="2"
+                                                        >
+                                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                                                        </svg>
+                                                        {downloadDataSourceMutation.isPending
+                                                            ? 'Baixando...'
+                                                            : 'Baixar'}
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        variant="default"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            handleViewFile(i)
+                                                        }
+                                                    >
+                                                        <svg
+                                                            className=""
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="2"
+                                                        >
+                                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
+                                                        </svg>
+                                                        Abrir
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
 
@@ -422,51 +484,12 @@ export function DataSourceDisplay({
                                     <p className="text-muted-foreground mb-1">
                                         Fonte
                                     </p>
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex flex-col gap-2">
                                         <p className="font-medium">
                                             {getInputMethodLabel(
                                                 dataSource.inputMethod,
                                             )}
                                         </p>
-                                        {dataSource.inputMethod === 'UPLOAD' ? (
-                                            <Button
-                                                variant="default"
-                                                onClick={handleViewFile}
-                                                size="sm"
-                                                disabled={
-                                                    downloadDataSourceMutation.isPending
-                                                }
-                                            >
-                                                <svg
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2"
-                                                >
-                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
-                                                </svg>
-                                                {downloadDataSourceMutation.isPending
-                                                    ? 'Baixando...'
-                                                    : 'Baixar'}
-                                            </Button>
-                                        ) : (
-                                            <Button
-                                                variant="default"
-                                                size="sm"
-                                                onClick={handleViewFile}
-                                            >
-                                                <svg
-                                                    className=""
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2"
-                                                >
-                                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
-                                                </svg>
-                                                Abrir
-                                            </Button>
-                                        )}
                                     </div>
                                 </div>
                             </div>

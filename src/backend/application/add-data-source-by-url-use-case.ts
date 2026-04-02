@@ -13,7 +13,11 @@ import {
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 import { INPUT_METHOD } from '../domain/certificate'
-import { DataSource } from '../domain/data-source'
+import {
+    DATA_SOURCE_MIME_TYPE,
+    DataSource,
+    MAX_IMAGE_FILES,
+} from '../domain/data-source'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { DataSourceDomainService } from '../domain/domain-service/data-source-domain-service'
@@ -25,7 +29,7 @@ import {
 
 interface AddDataSourceByUrlUseCaseInput {
     certificateId: string
-    fileUrl: string
+    fileUrls: string[]
     userId: string
 }
 
@@ -70,13 +74,17 @@ export class AddDataSourceByUrlUseCase {
             throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
         }
 
-        const driveFileId = DataSource.getFileIdFromUrl(input.fileUrl)
+        const driveFileIds = input.fileUrls.map(fileUrl => {
+            const driveFileId = DataSource.getFileIdFromUrl(fileUrl)
 
-        if (!driveFileId) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.UNEXISTENT_DATA_SOURCE_DRIVE_FILE_ID,
-            )
-        }
+            if (!driveFileId) {
+                throw new ValidationError(
+                    VALIDATION_ERROR_TYPE.UNEXISTENT_DATA_SOURCE_DRIVE_FILE_ID,
+                )
+            }
+
+            return driveFileId
+        })
 
         const externalAccount =
             await this.externalUserAccountsRepository.getById(
@@ -84,81 +92,91 @@ export class AddDataSourceByUrlUseCase {
                 'GOOGLE',
             )
 
-        const { name, fileMimeType, thumbnailUrl } =
-            await this.googleDriveGateway.getFileMetadata({
-                fileId: driveFileId,
-                userAccessToken: externalAccount?.accessToken,
-                userRefreshToken: externalAccount?.refreshToken || undefined,
-            })
+        const filesMetadata = await Promise.all(
+            driveFileIds.map(fileId =>
+                this.googleDriveGateway.getFileMetadata({
+                    fileId,
+                    userAccessToken: externalAccount?.accessToken,
+                    userRefreshToken:
+                        externalAccount?.refreshToken || undefined,
+                }),
+            ),
+        )
 
-        if (!DataSource.isValidFileMimeType(fileMimeType)) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
-            )
+        for (const metadata of filesMetadata) {
+            if (!DataSource.isValidFileMimeType(metadata.fileMimeType)) {
+                throw new ValidationError(
+                    VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
+                )
+            }
         }
 
-        const buffer = await this.googleDriveGateway.downloadFile({
-            driveFileId,
-            fileMimeType: fileMimeType,
-            accessToken: externalAccount?.accessToken,
-        })
+        const fileMimeType = filesMetadata[0]
+            .fileMimeType as DATA_SOURCE_MIME_TYPE
+
+        const isImage = DataSource.isImageMimeType(fileMimeType)
+
+        if (isImage) {
+            if (driveFileIds.length > MAX_IMAGE_FILES) {
+                throw new ValidationError(
+                    VALIDATION_ERROR_TYPE.DATA_SOURCE_IMAGE_FILES_EXCEEDED,
+                )
+            }
+
+            const allFilesAreImages = filesMetadata.every(metadata =>
+                DataSource.isImageMimeType(metadata.fileMimeType),
+            )
+
+            if (!allFilesAreImages) {
+                throw new ValidationError(
+                    VALIDATION_ERROR_TYPE.DATA_SOURCE_ALL_FILES_NOT_IMAGES,
+                )
+            }
+        } else {
+            if (driveFileIds.length !== 1) {
+                throw new ValidationError(
+                    VALIDATION_ERROR_TYPE.DATA_SOURCE_ALL_FILES_NOT_IMAGES,
+                )
+            }
+        }
+
+        const buffers = await Promise.all(
+            driveFileIds.map((driveFileId, index) =>
+                this.googleDriveGateway.downloadFile({
+                    driveFileId,
+                    fileMimeType: filesMetadata[index].fileMimeType,
+                    accessToken: externalAccount?.accessToken,
+                }),
+            ),
+        )
 
         const contentExtractor =
             this.spreadsheetContentExtractorFactory.create(fileMimeType)
 
-        const { rows } = await contentExtractor.extractColumns(buffer)
+        const { rows } = await contentExtractor.extractColumns(buffers)
 
         // In case it had files in storage, delete them
-        const dataSourceStorageFileUrl =
-            certificateEmission.getDataSourceStorageFileUrl()
+        const dataSourceStorageFileUrls =
+            certificateEmission.getDataSourceStorageFileUrls()
 
         const dataSourceDomainService = new DataSourceDomainService()
 
         const dataSourceRows = dataSourceDomainService.createDataSource({
             certificate: certificateEmission,
             newDataSourceData: {
-                driveFileId,
-                storageFileUrl: null,
-                fileName: name,
+                files: driveFileIds.map((driveFileId, index) => ({
+                    driveFileId,
+                    storageFileUrl: null,
+                    fileName: filesMetadata[index].name,
+                })),
                 fileMimeType,
                 inputMethod: INPUT_METHOD.URL,
-                thumbnailUrl,
+                thumbnailUrl: filesMetadata[0].thumbnailUrl,
                 columnsRow: 1,
                 dataRowStart: 2,
                 rows,
             },
         })
-
-        // const newDataSourceInput = {
-        //     driveFileId,
-        //     storageFileUrl: null,
-        //     inputMethod: INPUT_METHOD.URL,
-        //     fileName: name,
-        //     fileMimeType,
-        //     thumbnailUrl,
-        //     rows,
-        //     columnsRow: 1,
-        //     dataRowStart: 2,
-        // }
-
-        // certificateEmission.setDataSource(newDataSourceInput)
-
-        // const dataSourceColumns = certificateEmission.getDataSourceColumns()
-
-        // const dataSourceRows = rows.map(row => {
-        //     const data = Object.entries(row).map(([columnName, value]) => {
-        //         return {
-        //             columnName,
-        //             value,
-        //             type: dataSourceColumns.find(column => column.name === columnName)!.type // TODO: it can only have the ! operator safely when validating if all the columns are in the columns variable
-        //         }
-        //     })
-
-        //     return DataSourceRow.create({
-        //         certificateEmissionId: certificateEmission.getId(),
-        //         data,
-        //     })
-        // })
 
         await this.transactionManager.run(async () => {
             await this.certificateEmissionsRepository.update(
@@ -168,11 +186,15 @@ export class AddDataSourceByUrlUseCase {
             await this.dataSourceRowsRepository.saveMany(dataSourceRows)
         })
 
-        if (dataSourceStorageFileUrl) {
-            await this.bucket.deleteObject({
-                bucketName: process.env.CERTIFICATES_BUCKET!,
-                objectName: dataSourceStorageFileUrl,
-            })
+        if (dataSourceStorageFileUrls.length > 0) {
+            await Promise.all(
+                dataSourceStorageFileUrls.map(url =>
+                    this.bucket.deleteObject({
+                        bucketName: process.env.CERTIFICATES_BUCKET!,
+                        objectName: url,
+                    }),
+                ),
+            )
         }
     }
 }

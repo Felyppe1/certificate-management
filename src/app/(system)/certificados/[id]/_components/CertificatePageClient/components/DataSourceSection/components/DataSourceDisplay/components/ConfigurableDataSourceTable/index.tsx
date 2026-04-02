@@ -401,7 +401,7 @@ export function ConfigurableDataSourceTable({
                 </div>
 
                 <div className="flex items-center gap-2">
-                    {canEditData && !isEditingRows && !hasColumnChanges && (
+                    {/* {canEditData && !isEditingRows && !hasColumnChanges && (
                         <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-300">
                             <Button
                                 variant="outline"
@@ -413,7 +413,7 @@ export function ConfigurableDataSourceTable({
                                 Editar dados
                             </Button>
                         </div>
-                    )}
+                    )} */}
 
                     {isEditingRows && (
                         <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-300">

@@ -48,8 +48,8 @@ export class DeleteCertificateEmissionUseCase {
 
         const templateStorageFileUrl =
             certificateEmission.getTemplateStorageFileUrl()
-        const dataSourceStorageFileUrl =
-            certificateEmission.getDataSourceStorageFileUrl()
+        const dataSourceStorageFileUrls =
+            certificateEmission.getDataSourceStorageFileUrls()
 
         await this.certificateEmissionsRepository.delete(
             certificateEmission.getId(),
@@ -62,11 +62,13 @@ export class DeleteCertificateEmissionUseCase {
             })
         }
 
-        if (dataSourceStorageFileUrl) {
-            await this.bucket.deleteObject({
-                bucketName: process.env.CERTIFICATES_BUCKET!,
-                objectName: dataSourceStorageFileUrl,
-            })
-        }
+        await Promise.all(
+            dataSourceStorageFileUrls.map(url =>
+                this.bucket.deleteObject({
+                    bucketName: process.env.CERTIFICATES_BUCKET!,
+                    objectName: url,
+                }),
+            ),
+        )
     }
 }

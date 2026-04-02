@@ -13,6 +13,7 @@ import { redirect } from 'next/navigation'
 export async function downloadDataSourceAction(_: unknown, formData: FormData) {
     const rawData = {
         certificateEmissionId: formData.get('certificateEmissionId') as string,
+        fileIndex: formData.get('fileIndex'),
     }
     try {
         const { userId } = await validateSessionToken()
@@ -29,6 +30,7 @@ export async function downloadDataSourceAction(_: unknown, formData: FormData) {
 
         const signedUrl = await downloadDataSourceUseCase.execute({
             certificateEmissionId: parsedData.certificateEmissionId,
+            fileIndex: parsedData.fileIndex,
             userId,
         })
 

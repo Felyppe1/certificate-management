@@ -16,7 +16,7 @@ import { PrismaTransactionManager } from '@/backend/infrastructure/repository/pr
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 
 const addDataSourceByDrivePickerBodySchema = z.object({
-    fileId: z.string().min(1, 'File ID is required'),
+    fileIds: z.array(z.string().min(1)).min(1).max(4),
 })
 
 export async function PUT(
@@ -60,7 +60,7 @@ export async function PUT(
 
         await addDataSourceByDrivePickerUseCase.execute({
             certificateId: certificateEmissionId,
-            fileId: parsed.fileId,
+            fileIds: parsed.fileIds,
             userId,
         })
 

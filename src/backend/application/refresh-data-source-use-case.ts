@@ -1,5 +1,4 @@
-import { INPUT_METHOD } from '../domain/certificate'
-import { DataSource } from '../domain/data-source'
+import { DATA_SOURCE_MIME_TYPE, DataSource } from '../domain/data-source'
 import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
@@ -65,6 +64,12 @@ export class RefreshDataSourceUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }
 
+        if (certificateEmission.dataSourceHasImage()) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.DATA_SOURCE_IMAGE_REFRESH_NOT_ALLOWED,
+            )
+        }
+
         const driveFileId = certificateEmission.getDriveDataSourceFileId()
 
         if (!driveFileId) {
@@ -108,48 +113,66 @@ export class RefreshDataSourceUseCase {
             }
         }
 
-        // TODO: should it be a domain service?
+        const authParams =
+            certificateEmission.isDataSourceFromGoogleDrive() ||
+            certificateEmission.isDataSourceFromUrl()
+                ? {
+                      userAccessToken: externalAccount?.accessToken,
+                      userRefreshToken:
+                          externalAccount?.refreshToken ?? undefined,
+                  }
+                : {}
+
         const { name, fileMimeType, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
-                ...((certificateEmission.isDataSourceFromGoogleDrive() ||
-                    certificateEmission.isDataSourceFromUrl()) && {
-                    userAccessToken: externalAccount?.accessToken,
-                    userRefreshToken:
-                        externalAccount?.refreshToken ?? undefined,
-                }),
+                ...authParams,
             })
+
         if (!DataSource.isValidFileMimeType(fileMimeType)) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
             )
         }
 
+        if (DataSource.isImageMimeType(fileMimeType)) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.DATA_SOURCE_IMAGE_REFRESH_NOT_ALLOWED,
+            )
+        }
+
+        const accessTokenParam =
+            certificateEmission.isDataSourceFromGoogleDrive() ||
+            certificateEmission.isDataSourceFromUrl()
+                ? { accessToken: externalAccount?.accessToken }
+                : {}
+
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
-            fileMimeType: fileMimeType,
-            ...((certificateEmission.isDataSourceFromGoogleDrive() ||
-                certificateEmission.isDataSourceFromUrl()) && {
-                accessToken: externalAccount?.accessToken,
-            }),
+            fileMimeType,
+            ...accessTokenParam,
         })
 
         const contentExtractor =
             this.spreadsheetContentExtractorFactory.create(fileMimeType)
 
-        const { columns, rows } = await contentExtractor.extractColumns(buffer)
+        const { rows } = await contentExtractor.extractColumns([buffer])
 
         const dataSourceDomainService = new DataSourceDomainService()
 
         const dataSourceRows = dataSourceDomainService.createDataSource({
             certificate: certificateEmission,
             newDataSourceData: {
-                driveFileId,
-                storageFileUrl: null,
-                fileName: name,
+                files: [
+                    {
+                        driveFileId,
+                        storageFileUrl: null,
+                        fileName: name,
+                    },
+                ],
                 fileMimeType,
                 inputMethod: certificateEmission.getDataSourceInputMethod()!,
-                thumbnailUrl,
+                thumbnailUrl: thumbnailUrl,
                 columnsRow: 1,
                 dataRowStart: 2,
                 rows,

@@ -43,18 +43,21 @@ export class DeleteDataSourceUseCase {
             throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
         }
 
-        const storageFileUrl = certificateEmission.getDataSourceStorageFileUrl()
+        const storageFileUrls =
+            certificateEmission.getDataSourceStorageFileUrls()
 
         certificateEmission.removeDataSource(userId)
 
         await this.certificateEmissionsRepository.update(certificateEmission)
 
-        if (storageFileUrl) {
-            // TODO: do this on outbox pattern?
-            await this.bucket.deleteObject({
-                bucketName: process.env.CERTIFICATES_BUCKET!,
-                objectName: storageFileUrl,
-            })
-        }
+        await Promise.all(
+            storageFileUrls.map(url =>
+                // TODO: do this on outbox pattern?
+                this.bucket.deleteObject({
+                    bucketName: process.env.CERTIFICATES_BUCKET!,
+                    objectName: url,
+                }),
+            ),
+        )
     }
 }

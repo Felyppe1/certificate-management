@@ -204,12 +204,22 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                     ...(dataSource && {
                         DataSource: {
                             create: {
-                                drive_file_id: dataSource.driveFileId,
-                                storage_file_url: dataSource.storageFileUrl,
                                 input_method: dataSource.inputMethod,
-                                file_name: dataSource.fileName,
                                 file_extension: dataSource.fileMimeType,
                                 thumbnail_url: dataSource.thumbnailUrl,
+                                DataSourceFile: {
+                                    createMany: {
+                                        data: dataSource.files.map(
+                                            (file, index) => ({
+                                                file_index: index,
+                                                file_name: file.fileName,
+                                                drive_file_id: file.driveFileId,
+                                                storage_file_url:
+                                                    file.storageFileUrl,
+                                            }),
+                                        ),
+                                    },
+                                },
                                 DataSourceColumn: {
                                     createMany: {
                                         data: dataSource.columns.map(
@@ -412,12 +422,19 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                     where: { certificate_emission_id: id },
                     create: {
                         certificate_emission_id: id,
-                        drive_file_id: dataSource.driveFileId,
-                        storage_file_url: dataSource.storageFileUrl,
                         input_method: dataSource.inputMethod,
-                        file_name: dataSource.fileName,
                         file_extension: dataSource.fileMimeType,
                         thumbnail_url: dataSource.thumbnailUrl,
+                        DataSourceFile: {
+                            createMany: {
+                                data: dataSource.files.map((file, index) => ({
+                                    file_index: index,
+                                    file_name: file.fileName,
+                                    drive_file_id: file.driveFileId,
+                                    storage_file_url: file.storageFileUrl,
+                                })),
+                            },
+                        },
                         DataSourceColumn: {
                             createMany: {
                                 data: dataSource.columns.map(column => ({
@@ -438,12 +455,20 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                         },
                     },
                     update: {
-                        drive_file_id: dataSource.driveFileId,
-                        storage_file_url: dataSource.storageFileUrl,
-                        file_name: dataSource.fileName,
                         input_method: dataSource.inputMethod,
                         file_extension: dataSource.fileMimeType,
                         thumbnail_url: dataSource.thumbnailUrl,
+                        DataSourceFile: {
+                            deleteMany: {},
+                            createMany: {
+                                data: dataSource.files.map((file, index) => ({
+                                    file_index: index,
+                                    file_name: file.fileName,
+                                    drive_file_id: file.driveFileId,
+                                    storage_file_url: file.storageFileUrl,
+                                })),
+                            },
+                        },
                         DataSourceColumn: {
                             upsert: dataSource.columns.map(column => ({
                                 where: {
@@ -764,6 +789,9 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                 DataSource: {
                     include: {
                         DataSourceColumn: true,
+                        DataSourceFile: {
+                            orderBy: { file_index: 'asc' },
+                        },
                     },
                 },
             },
@@ -792,11 +820,13 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
 
         const dataSource = certificate.DataSource
             ? new DataSource({
-                  driveFileId: certificate.DataSource.drive_file_id,
-                  storageFileUrl: certificate.DataSource.storage_file_url,
+                  files: certificate.DataSource.DataSourceFile.map(f => ({
+                      fileName: f.file_name,
+                      driveFileId: f.drive_file_id,
+                      storageFileUrl: f.storage_file_url,
+                  })),
                   inputMethod: certificate.DataSource
                       .input_method as INPUT_METHOD,
-                  fileName: certificate.DataSource.file_name,
                   fileMimeType: certificate.DataSource
                       .file_extension as DATA_SOURCE_MIME_TYPE,
                   columns: certificate.DataSource.DataSourceColumn.map(

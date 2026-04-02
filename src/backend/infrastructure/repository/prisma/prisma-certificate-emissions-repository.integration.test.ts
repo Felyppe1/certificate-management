@@ -37,11 +37,11 @@ const createDataSourceData = (
 ): DataSourceInput => ({
     fileMimeType: DATA_SOURCE_MIME_TYPE.CSV,
     inputMethod: INPUT_METHOD.URL,
-    driveFileId: '1',
-    storageFileUrl: null,
-    fileName: 'File Name',
+    files: [{ fileName: 'File Name', driveFileId: '1', storageFileUrl: null }],
     columns: [],
     thumbnailUrl: null,
+    columnsRow: 1,
+    dataRowStart: 2,
     ...overrides,
 })
 

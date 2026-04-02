@@ -1,6 +1,7 @@
 'use client'
 
 import { FileSelector, SelectOption } from '@/components/FileSelector'
+import { UrlFormValues } from '@/components/FileSelector/UrlForm'
 import { useState } from 'react'
 import { DataSourceDisplay } from './components/DataSourceDisplay'
 import {
@@ -37,10 +38,12 @@ interface DataSourceSectionProps {
     certificateId: string
     certificatesEmitted: boolean
     dataSource: {
-        driveFileId: string | null
-        storageFileUrl: string | null
+        files: {
+            fileName: string
+            driveFileId: string | null
+            storageFileUrl: string | null
+        }[]
         inputMethod: INPUT_METHOD
-        fileName: string
         fileMimeType: DATA_SOURCE_MIME_TYPE
         columns: {
             name: string
@@ -74,20 +77,23 @@ export function DataSourceSection({
     const queryClient = useQueryClient()
 
     const dataSourceUrlFormSchema = z.object({
-        fileUrl: z.url('URL inválida'),
+        fileUrls: z
+            .array(z.object({ value: z.url('URL inválida') }))
+            .min(1)
+            .max(4),
     })
 
     type DataSourceUrlForm = z.infer<typeof dataSourceUrlFormSchema>
 
-    const urlForm = useForm<DataSourceUrlForm>({
+    const urlForm = useForm<UrlFormValues>({
         resolver: zodResolver(dataSourceUrlFormSchema),
-        defaultValues: { fileUrl: '' },
+        defaultValues: { fileUrls: [{ value: '' }] },
     })
 
-    const onSubmitUrl = async (data: DataSourceUrlForm) => {
+    const onSubmitUrl = async (data: UrlFormValues) => {
         const formData = new FormData()
         formData.append('certificateId', certificateId)
-        formData.append('fileUrl', data.fileUrl)
+        data.fileUrls.forEach(({ value }) => formData.append('fileUrls', value))
 
         const result = await addDataSourceByUrlAction(null, formData)
 
@@ -116,7 +122,13 @@ export function DataSourceSection({
                 )
             } else if (result.errorType === 'genai-api-unavailable') {
                 toast.error(
-                    `O serviço de IA está enfrentando uma alta demanda. Por favor, tente novamente mais tarde.`,
+                    `O serviço de IA está enfrentando uma alta demanda. Por favor, tente novamente mais tarde`,
+                )
+            } else if (
+                result.errorType === 'data-source-all-files-not-images'
+            ) {
+                toast.error(
+                    'Só é possível enviar mais de um arquivo se forem imagens',
                 )
             } else {
                 toast.error(
@@ -131,7 +143,7 @@ export function DataSourceSection({
             queryKey: queryKeys.certificateEmission(certificateId),
         })
         toast.success('Fonte de dados adicionada com sucesso')
-        urlForm.reset()
+        urlForm.reset({ fileUrls: [{ value: '' }] })
         setIsEditing(false)
     }
 
@@ -233,19 +245,19 @@ export function DataSourceSection({
         },
     })
 
-    const handleSubmitDrive = async (fileId: string) => {
+    const handleSubmitDrive = async (fileIds: string[]) => {
         const formData = new FormData()
-        formData.append('fileId', fileId)
+        fileIds.forEach(fileId => formData.append('fileIds', fileId))
         formData.append('certificateId', certificateId)
 
         drivePickerMutation.mutate(formData)
     }
 
-    const handleSubmitUpload = async (file: File) => {
+    const handleSubmitUpload = async (files: File[]) => {
         const formData = new FormData()
 
         formData.append('certificateId', certificateId)
-        formData.append('file', file)
+        files.forEach(file => formData.append('files', file))
 
         uploadMutation.mutate(formData)
     }

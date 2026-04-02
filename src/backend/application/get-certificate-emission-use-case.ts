@@ -39,6 +39,9 @@ export class GetCertificateEmissionUseCase {
                     },
                     DataSource: {
                         include: {
+                            DataSourceFile: {
+                                orderBy: { file_index: 'asc' },
+                            },
                             DataSourceColumn: {
                                 include: {
                                     DataSourceValue: {
@@ -145,12 +148,15 @@ export class GetCertificateEmissionUseCase {
                 : null,
             dataSource: certificateEmission.DataSource
                 ? {
-                      driveFileId: certificateEmission.DataSource.drive_file_id,
-                      storageFileUrl:
-                          certificateEmission.DataSource.storage_file_url,
+                      files: certificateEmission.DataSource.DataSourceFile.map(
+                          f => ({
+                              fileName: f.file_name,
+                              driveFileId: f.drive_file_id,
+                              storageFileUrl: f.storage_file_url,
+                          }),
+                      ),
                       inputMethod: certificateEmission.DataSource
                           .input_method as INPUT_METHOD,
-                      fileName: certificateEmission.DataSource.file_name,
                       fileMimeType: certificateEmission.DataSource
                           .file_extension as DATA_SOURCE_MIME_TYPE,
                       columns:

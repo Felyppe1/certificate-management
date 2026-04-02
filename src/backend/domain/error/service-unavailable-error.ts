@@ -10,8 +10,7 @@ export class ServiceUnavailableError extends AppError<SERVICE_UNAVAILABLE_ERROR_
         detail?: string,
         message?: string,
     ) {
-        const title =
-            'The server could not process the request because it would break a business rule'
+        const title = 'The required service is currently unavailable'
 
         super(title, type, detail)
         this.message = message

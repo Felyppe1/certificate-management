@@ -114,26 +114,37 @@ model TemplateVariable {
 model DataSource {
     certificate_emission_id String @id
 
-    drive_file_id    String?
-    storage_file_url String?
-    thumbnail_url    String?
-    file_name        String
-    input_method     String // "URL" | "GOOGLE_DRIVE" | "UPLOAD"
-    file_extension   String
+    thumbnail_url  String?
+    input_method   String // "URL" | "GOOGLE_DRIVE" | "UPLOAD"
+    file_extension String
 
     DataSourceColumn    DataSourceColumn[]
     DataSourceRow       DataSourceRow[]
+    DataSourceFile      DataSourceFile[]
     CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id], onDelete: Cascade)
 
     @@map("data_sources")
 }
 
+model DataSourceFile {
+    data_source_id   String
+    file_index       Int
+    file_name        String
+    drive_file_id    String?
+    storage_file_url String?
+
+    DataSource DataSource @relation(fields: [data_source_id], references: [certificate_emission_id], onDelete: Cascade)
+
+    @@id([data_source_id, file_index])
+    @@map("data_source_files")
+}
+
 model DataSourceColumn {
-    data_source_id      String
-    name                String
-    type                COLUMN_TYPE
-    array_separator     String?
-    array_item_type     ARRAY_ITEM_TYPE?
+    data_source_id  String
+    name            String
+    type            COLUMN_TYPE
+    array_separator String?
+    array_item_type ARRAY_ITEM_TYPE?
 
     DataSource       DataSource        @relation(fields: [data_source_id], references: [certificate_emission_id], onDelete: Cascade)
     TemplateVariable TemplateVariable?

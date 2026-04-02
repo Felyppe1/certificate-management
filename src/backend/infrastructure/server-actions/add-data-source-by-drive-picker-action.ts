@@ -23,7 +23,7 @@ export async function addDataSourceByDrivePickerAction(
 ) {
     const rawData = {
         certificateId: formData.get('certificateId') as string,
-        fileId: formData.get('fileId') as string,
+        fileIds: formData.getAll('fileIds') as string[],
     }
 
     try {
@@ -60,7 +60,7 @@ export async function addDataSourceByDrivePickerAction(
 
         await addDataSourceByDrivePickerUseCase.execute({
             certificateId: rawData.certificateId,
-            fileId: parsedData.fileId,
+            fileIds: parsedData.fileIds,
             userId,
         })
     } catch (error: any) {

@@ -39,10 +39,12 @@ export interface GetCertificateEmissionControllerResponse {
             thumbnailUrl: string | null
         } | null
         dataSource: {
-            driveFileId: string | null
-            storageFileUrl: string | null
+            files: {
+                fileName: string
+                driveFileId: string | null
+                storageFileUrl: string | null
+            }[]
             inputMethod: INPUT_METHOD
-            fileName: string
             fileMimeType: DATA_SOURCE_MIME_TYPE
             columns: {
                 name: string

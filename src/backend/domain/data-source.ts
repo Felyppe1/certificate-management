@@ -9,6 +9,7 @@ import {
 export const MAX_DATA_SOURCE_ROWS = 300
 export const MAX_DATA_SOURCE_COLUMNS = 20
 export const MAX_DATA_SOURCE_BYTES_SIZE = 2 * 1024 * 1024 // 2MB
+export const MAX_IMAGE_FILES = 4
 
 export const FORBIDDEN_TYPE_CHANGE: Record<ColumnType, ColumnType[]> = {
     string: [],
@@ -38,6 +39,14 @@ export enum DATA_SOURCE_MIME_TYPE {
 export const DATA_SOURCE_MIME_TYPE_TO_FILE_EXTENSION: Record<string, string> = {
     [DATA_SOURCE_MIME_TYPE.CSV]: 'csv',
     [DATA_SOURCE_MIME_TYPE.XLSX]: 'xlsx',
+    [DATA_SOURCE_MIME_TYPE.PNG]: 'png',
+    [DATA_SOURCE_MIME_TYPE.JPEG]: 'jpeg',
+}
+
+export type DataSourceFileReference = {
+    fileName: string
+    driveFileId: string | null
+    storageFileUrl: string | null
 }
 
 export type ColumnType = 'string' | 'number' | 'boolean' | 'date' | 'array'
@@ -56,10 +65,8 @@ export type DataSourceColumn = {
 }
 
 export interface DataSourceInput {
-    driveFileId: string | null
-    storageFileUrl: string | null
+    files: DataSourceFileReference[]
     inputMethod: INPUT_METHOD
-    fileName: string
     fileMimeType: DATA_SOURCE_MIME_TYPE
     thumbnailUrl: string | null
     columnsRow: number
@@ -78,10 +85,8 @@ export interface CreateDataSourceInput
 //     extends Partial<Omit<DataSourceInput>> {}
 
 export class DataSource extends ValueObject<DataSource> {
-    private readonly driveFileId: string | null
-    private readonly storageFileUrl: string | null
+    private readonly files: DataSourceFileReference[]
     private readonly inputMethod: INPUT_METHOD
-    private readonly fileName: string
     private readonly fileMimeType: DATA_SOURCE_MIME_TYPE
     private readonly columns: DataSourceColumn[]
     private readonly columnsRow: number
@@ -115,13 +120,32 @@ export class DataSource extends ValueObject<DataSource> {
             throw new Error('DataSource input method is required')
         }
 
-        if (!data.fileName) {
-            // TODO: validate regex for file name
-            throw new Error('DataSource file name is required')
+        if (!data.files || data.files.length === 0) {
+            throw new Error('DataSource files are required')
+        }
+
+        for (const file of data.files) {
+            if (!file.fileName) {
+                throw new Error('DataSource file name is required')
+            }
         }
 
         if (!data.fileMimeType) {
             throw new Error('DataSource mimetype is required')
+        }
+
+        if (DataSource.isImageMimeType(data.fileMimeType)) {
+            if (data.files.length > MAX_IMAGE_FILES) {
+                throw new ValidationError(
+                    VALIDATION_ERROR_TYPE.DATA_SOURCE_IMAGE_FILES_EXCEEDED,
+                )
+            }
+        } else {
+            if (data.files.length !== 1) {
+                throw new ValidationError(
+                    VALIDATION_ERROR_TYPE.DATA_SOURCE_IMAGE_FILES_EXCEEDED,
+                )
+            }
         }
 
         if (!data.columnsRow) {
@@ -146,13 +170,8 @@ export class DataSource extends ValueObject<DataSource> {
             throw new Error('DataSource columns is required')
         }
 
-        this.validateDriveFileId(data.driveFileId, data.inputMethod)
-        this.validateStorageFileUrl(data.storageFileUrl, data.inputMethod)
-
-        this.driveFileId = data.driveFileId
-        this.storageFileUrl = data.storageFileUrl
+        this.files = data.files
         this.inputMethod = data.inputMethod
-        this.fileName = data.fileName
         this.fileMimeType = data.fileMimeType
         this.thumbnailUrl = data.thumbnailUrl
         this.columnsRow = data.columnsRow ?? 1
@@ -518,20 +537,56 @@ export class DataSource extends ValueObject<DataSource> {
         }
     }
 
-    getDriveFileId() {
-        return this.driveFileId
+    getDriveFileId(fileIndex = 0) {
+        return this.files[fileIndex]?.driveFileId ?? null
+    }
+
+    getDriveFileIds(): string[] {
+        return this.files
+            .map(f => f.driveFileId)
+            .filter((id): id is string => id !== null)
+    }
+
+    /** Returns the storage URL of the first file (used for download/refresh). */
+    getStorageFileUrl(fileIndex = 0) {
+        return this.files[fileIndex]?.storageFileUrl ?? null
+    }
+
+    /** Returns all non-null storage URLs (used for bucket cleanup). */
+    getStorageFileUrls(): string[] {
+        return this.files
+            .map(f => f.storageFileUrl)
+            .filter((url): url is string => url !== null)
+    }
+
+    getFiles(): DataSourceFileReference[] {
+        return this.files
     }
 
     setStorageFileUrl(url: string): DataSource {
-        return new DataSource({ ...this.serialize(), storageFileUrl: url })
+        const updatedFiles = this.files.map((f, i) =>
+            i === 0 ? { ...f, storageFileUrl: url } : f,
+        )
+        return new DataSource({ ...this.serialize(), files: updatedFiles })
     }
 
-    getStorageFileUrl() {
-        return this.storageFileUrl
+    setStorageFileUrls(urls: string[]): DataSource {
+        const updatedFiles = this.files.map((f, i) => ({
+            ...f,
+            storageFileUrl: urls[i] ?? f.storageFileUrl,
+        }))
+        return new DataSource({ ...this.serialize(), files: updatedFiles })
     }
 
     getColumns() {
         return this.columns
+    }
+
+    hasImageMimeType(): boolean {
+        return (
+            this.fileMimeType === DATA_SOURCE_MIME_TYPE.PNG ||
+            this.fileMimeType === DATA_SOURCE_MIME_TYPE.JPEG
+        )
     }
 
     hasColumn(columnName: string): boolean {
@@ -558,6 +613,13 @@ export class DataSource extends ValueObject<DataSource> {
         return match ? match[1] : null
     }
 
+    static isImageMimeType(mimeType: string): boolean {
+        return (
+            mimeType === DATA_SOURCE_MIME_TYPE.PNG ||
+            mimeType === DATA_SOURCE_MIME_TYPE.JPEG
+        )
+    }
+
     // static extractVariablesFromContent(content: string): string[] {
     //     const matches = [...content.matchAll(/\{\{\s*([\w.-]+)\s*\}\}/g)]
     //     const columns = matches.map(match => match[1])
@@ -576,10 +638,8 @@ export class DataSource extends ValueObject<DataSource> {
 
     serialize(): DataSourceOutput {
         return {
-            driveFileId: this.driveFileId,
-            storageFileUrl: this.storageFileUrl,
+            files: this.files,
             inputMethod: this.inputMethod,
-            fileName: this.fileName,
             fileMimeType: this.fileMimeType,
             columns: this.columns,
             thumbnailUrl: this.thumbnailUrl,

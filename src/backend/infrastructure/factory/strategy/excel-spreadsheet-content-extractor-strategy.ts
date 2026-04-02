@@ -4,8 +4,8 @@ import * as XLSX from 'xlsx'
 export class ExcelSpreadsheetContentExtractorStrategy
     implements ISpreadsheetContentExtractorStrategy
 {
-    async extractColumns(buffer: Buffer) {
-        const workbook = XLSX.read(buffer, { type: 'buffer' })
+    async extractColumns(buffers: Buffer[]) {
+        const workbook = XLSX.read(buffers[0], { type: 'buffer' })
         const firstSheetName = workbook.SheetNames[0]
         const worksheet = workbook.Sheets[firstSheetName]
 

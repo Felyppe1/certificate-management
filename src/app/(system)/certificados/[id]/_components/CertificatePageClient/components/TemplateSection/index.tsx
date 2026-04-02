@@ -1,6 +1,7 @@
 'use client'
 
 import { FileSelector, SelectOption } from '@/components/FileSelector'
+import { UrlFormValues } from '@/components/FileSelector/UrlForm'
 import { startTransition, useState, useEffect } from 'react'
 import { TemplateDisplay } from './template-display'
 import {
@@ -55,21 +56,22 @@ export function TemplateSection({
     const queryClient = useQueryClient()
 
     const templateUrlFormSchema = z.object({
-        fileUrl: z.url('URL inválida'),
+        fileUrls: z
+            .array(z.object({ value: z.url('URL inválida') }))
+            .min(1)
+            .max(1),
     })
 
-    type TemplateUrlForm = z.infer<typeof templateUrlFormSchema>
-
-    const templateUrlForm = useForm<TemplateUrlForm>({
+    const templateUrlForm = useForm<UrlFormValues>({
         resolver: zodResolver(templateUrlFormSchema),
-        defaultValues: { fileUrl: '' },
+        defaultValues: { fileUrls: [{ value: '' }] },
     })
 
     const urlMutation = useMutation({
-        mutationFn: async (data: TemplateUrlForm) => {
+        mutationFn: async (data: UrlFormValues) => {
             const formData = new FormData()
             formData.append('certificateId', certificateId)
-            formData.append('fileUrl', data.fileUrl)
+            formData.append('fileUrl', data.fileUrls[0].value)
             const result = await addTemplateByUrlAction(null, formData)
             if (!result?.success) throw result
             return result
@@ -79,7 +81,7 @@ export function TemplateSection({
                 queryKey: queryKeys.certificateEmission(certificateId),
             })
             toast.success('Template adicionado com sucesso')
-            templateUrlForm.reset()
+            templateUrlForm.reset({ fileUrls: [{ value: '' }] })
             setIsEditing(false)
         },
         onError: (error: any) => {
@@ -224,10 +226,12 @@ export function TemplateSection({
                         googleOAuthToken={googleOAuthToken}
                         urlForm={templateUrlForm}
                         onSubmitUrl={data => urlMutation.mutate(data)}
-                        onSubmitDrive={fileId =>
-                            drivePickerMutation.mutate(fileId)
+                        onSubmitDrive={fileIds =>
+                            drivePickerMutation.mutate(fileIds[0])
                         }
-                        onSubmitUpload={file => uploadMutation.mutate(file)}
+                        onSubmitUpload={files =>
+                            uploadMutation.mutate(files[0])
+                        }
                         isDriveLoading={
                             drivePickerMutation.isPending || loginIsLoading
                         }
@@ -267,8 +271,10 @@ export function TemplateSection({
                     googleOAuthToken={googleOAuthToken}
                     urlForm={templateUrlForm}
                     onSubmitUrl={data => urlMutation.mutate(data)}
-                    onSubmitDrive={fileId => drivePickerMutation.mutate(fileId)}
-                    onSubmitUpload={file => uploadMutation.mutate(file)}
+                    onSubmitDrive={fileIds =>
+                        drivePickerMutation.mutate(fileIds[0])
+                    }
+                    onSubmitUpload={files => uploadMutation.mutate(files[0])}
                     isDriveLoading={
                         drivePickerMutation.isPending || loginIsLoading
                     }

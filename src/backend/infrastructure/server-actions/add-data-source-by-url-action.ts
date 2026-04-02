@@ -20,7 +20,7 @@ import { redirect } from 'next/navigation'
 export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
     const rawData = {
         certificateId: formData.get('certificateId') as string,
-        fileUrl: formData.get('fileUrl') as string,
+        fileUrls: formData.getAll('fileUrls') as string[],
     }
 
     try {
@@ -55,7 +55,7 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
 
         await addDataSourceByUrlUseCase.execute({
             certificateId: parsedData.certificateId,
-            fileUrl: parsedData.fileUrl,
+            fileUrls: parsedData.fileUrls,
             userId,
         })
 

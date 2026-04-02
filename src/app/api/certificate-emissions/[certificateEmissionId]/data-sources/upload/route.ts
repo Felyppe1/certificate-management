@@ -16,9 +16,13 @@ import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
 
 const addDataSourceByUploadBodySchema = z.object({
-    file: z.instanceof(File).refine(file => file.size <= MAXIMUM_FILE_SIZE, {
-        message: 'File size must be less than 5MB',
-    }),
+    files: z
+        .array(z.instanceof(File))
+        .min(1)
+        .max(4)
+        .refine(files => files.every(f => f.size <= MAXIMUM_FILE_SIZE), {
+            message: 'Each file must be less than 5MB',
+        }),
 })
 
 export async function PUT(
@@ -31,9 +35,9 @@ export async function PUT(
         const { userId } = await validateSessionToken(request)
 
         const formData = await request.formData()
-        const file = formData.get('file') as File
+        const files = formData.getAll('files') as File[]
 
-        const parsed = addDataSourceByUploadBodySchema.parse({ file })
+        const parsed = addDataSourceByUploadBodySchema.parse({ files })
 
         const bucket = new GcpBucket()
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
@@ -55,7 +59,7 @@ export async function PUT(
         await addDataSourceByUploadUseCase.execute({
             userId,
             certificateId: certificateEmissionId,
-            file: parsed.file,
+            files: parsed.files,
         })
 
         return new NextResponse(null, { status: 204 })

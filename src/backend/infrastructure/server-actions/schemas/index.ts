@@ -26,21 +26,26 @@ export const deleteCertificateEmissionSchema = z.object({
 // Data Source
 export const addDataSourceByDrivePickerSchema = z.object({
     certificateId: z.string().min(1),
-    fileId: z.string().min(1),
+    fileIds: z.array(z.string().min(1)).min(1).max(4),
 })
 
 export const addDataSourceByUrlSchema = z.object({
     certificateId: z.string().min(1),
-    fileUrl: z.url(),
+    fileUrls: z.array(z.url()).min(1).max(4),
 })
 
 export const addDataSourceByUploadSchema = z.object({
     certificateId: z.string().min(1),
-    file: z
-        .instanceof(File)
-        .refine(file => file.size <= MAX_DATA_SOURCE_BYTES_SIZE, {
-            message: 'File size must be less than 2MB',
-        }),
+    files: z
+        .array(z.instanceof(File))
+        .min(1)
+        .max(4)
+        .refine(
+            files => files.every(f => f.size <= MAX_DATA_SOURCE_BYTES_SIZE),
+            {
+                message: 'Each file must be less than 2MB',
+            },
+        ),
 })
 
 export const deleteDataSourceSchema = z.object({
@@ -53,6 +58,7 @@ export const refreshDataSourceSchema = z.object({
 
 export const downloadDataSourceSchema = z.object({
     certificateEmissionId: z.string().min(1),
+    fileIndex: z.coerce.number().int().min(0).default(0),
 })
 
 export const updateDataSourceColumnsSchema = z.object({
