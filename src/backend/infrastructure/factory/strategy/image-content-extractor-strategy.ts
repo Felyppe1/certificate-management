@@ -12,7 +12,7 @@ Retorne todos os valores como STRINGS.
 Se não tiver nome das colunas explicitamente, chame a coluna de acordo com os valores dela com a primeira letra maiúscula.
 Se tiver uma coluna de nome, coloque os valores com cada primeira palavra do nome maiúscula.
 Se você não conseguir extrar um valor para uma célula, coloque o valor como string vazia '', não adicione traços nem nada.
-Não retorne nada mais além do json! NÃO RETORNE \`\`\`json no início nem nada. A resposta deve começar com a abertura do json "{" ou "[".
+Não retorne \`\`\`json no início do output. A resposta deve começar com "[", contendo apenas os dados sem nenhum outro tipo de texto.
 `
 
 export class ImageContentExtractorStrategy
@@ -41,13 +41,17 @@ export class ImageContentExtractorStrategy
         let response: GenerateContentResponse | undefined = undefined
         try {
             response = await genAiClient.models.generateContent({
-                model: 'gemini-3-flash-preview', //'gemini-3.1-flash-image-preview',
+                model: /* 'gemini-3-flash-preview', // */ 'gemini-3.1-flash-image-preview',
                 contents: contents,
             })
 
-            console.log(response.text)
+            const cleanedText = response.text
+                ?.replace(/^```json\s*/i, '')
+                .replace(/^```/, '')
+                .replace(/```$/, '')
+                .trim()
 
-            rows = JSON.parse(response.text as string)
+            rows = cleanedText ? JSON.parse(cleanedText) : []
         } catch (error: any) {
             console.error('Failed to parse JSON from GenAI response:', error)
             console.log('GenAI response text was:', response?.text)
