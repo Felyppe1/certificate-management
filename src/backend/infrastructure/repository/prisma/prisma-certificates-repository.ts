@@ -291,16 +291,30 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
             })
 
         const execute = async (tx: TransactionClient) => {
+            const deletePromises = []
+
             if (!template && previousCertificate?.Template) {
-                await tx.template.delete({
-                    where: { certificate_emission_id: previousCertificate.id },
-                })
+                deletePromises.push(
+                    tx.template.delete({
+                        where: {
+                            certificate_emission_id: previousCertificate.id,
+                        },
+                    }),
+                )
             }
 
             if (!dataSource && previousCertificate?.DataSource) {
-                await tx.dataSource.delete({
-                    where: { certificate_emission_id: previousCertificate.id },
-                })
+                deletePromises.push(
+                    tx.dataSource.delete({
+                        where: {
+                            certificate_emission_id: previousCertificate.id,
+                        },
+                    }),
+                )
+            }
+
+            if (deletePromises.length > 0) {
+                await Promise.all(deletePromises)
             }
 
             // First, update/create DataSource and DataSourceColumns
