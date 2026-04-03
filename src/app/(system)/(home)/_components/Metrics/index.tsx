@@ -2,7 +2,7 @@
 
 import { useCertificateEmissionsMetrics } from '@/custom-hooks/use-certificate-emissions-metrics'
 import { Card } from '@/components/ui/card'
-import { Clock, Info } from 'lucide-react'
+import { Clock } from 'lucide-react'
 import { MetricsSkeleton } from './MetricsSkeleton'
 import { MetricChart, MetricChartDataPoint } from './MetricChart'
 import {
@@ -11,53 +11,12 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover'
 
-const mockCertificatesData: (MetricChartDataPoint & { emissoes: number })[] = [
-    { date: '04/03', value: 12, emissoes: 2 },
-    { date: '06/03', value: 45, emissoes: 3 },
-    { date: '09/03', value: 8, emissoes: 1 },
-    { date: '11/03', value: 60, emissoes: 4 },
-    { date: '13/03', value: 30, emissoes: 2 },
-    { date: '16/03', value: 22, emissoes: 2 },
-    { date: '18/03', value: 75, emissoes: 5 },
-    { date: '20/03', value: 15, emissoes: 1 },
-    { date: '23/03', value: 50, emissoes: 3 },
-    { date: '25/03', value: 18, emissoes: 2 },
-    { date: '28/03', value: 90, emissoes: 6 },
-    { date: '01/04', value: 33, emissoes: 3 },
-    { date: '02/04', value: 47, emissoes: 4 },
-]
-
-const mockEmailsData: MetricChartDataPoint[] = [
-    // { date: '04/03', value: 11 },
-    // { date: '06/03', value: 43 },
-    // { date: '09/03', value: 7  },
-    // { date: '11/03', value: 58 },
-    // { date: '13/03', value: 29 },
-    // { date: '16/03', value: 21 },
-    // { date: '18/03', value: 72 },
-    // { date: '20/03', value: 14 },
-    // { date: '23/03', value: 49 },
-    // { date: '25/03', value: 17 },
-    // { date: '28/03', value: 88 },
-    // { date: '01/04', value: 30 },
-    // { date: '02/04', value: 45 },
-]
-
-const certificatesChartData: MetricChartDataPoint[] = mockCertificatesData.map(
-    d => ({
-        date: d.date,
-        value: d.value,
-        extraLabel: 'Certificados',
-        extraValue: d.emissoes,
-    }),
-)
-
-const emailsChartData: MetricChartDataPoint[] = mockEmailsData.map((d, i) => ({
-    date: d.date,
-    value: d.value,
-    extraLabel: 'Certificados',
-    extraValue: mockCertificatesData[i]?.emissoes,
-}))
+function formatDate(isoDate: string): string {
+    const d = new Date(isoDate)
+    const day = String(d.getUTCDate()).padStart(2, '0')
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0')
+    return `${day}/${month}`
+}
 
 export function Metrics() {
     const { data, isLoading } = useCertificateEmissionsMetrics()
@@ -65,6 +24,22 @@ export function Metrics() {
     if (isLoading) return <MetricsSkeleton />
 
     const { certificateEmissionsMetrics } = data
+
+    const certificatesChartData: MetricChartDataPoint[] =
+        certificateEmissionsMetrics.dailyCertificates.map(
+            (d: { date: string; quantity: number }) => ({
+                date: formatDate(d.date),
+                value: d.quantity,
+            }),
+        )
+
+    const emailsChartData: MetricChartDataPoint[] =
+        certificateEmissionsMetrics.dailyEmails.map(
+            (d: { date: string; quantity: number }) => ({
+                date: formatDate(d.date),
+                value: d.quantity,
+            }),
+        )
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-3 md:gap-6 mb-4 sm:mb-6 md:mb-10">

@@ -36,146 +36,64 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
     }
 
     async getCertificateEmissionsMetricsByUserId(userId: string) {
-        const now = new Date()
+        type TotalsRow = { certificates_total: number; emails_total: number }
+        type DailyRow = { date: Date; quantity: number }
 
-        const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-        const startOfNextMonth = new Date(
-            now.getFullYear(),
-            now.getMonth() + 1,
-            1,
-        )
+        const prisma = this.prisma
 
-        const startOfLastMonth = new Date(
-            now.getFullYear(),
-            now.getMonth() - 1,
-            1,
-        )
-        const endOfLastMonth = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            0,
-            23,
-            59,
-            59,
-            999,
-        )
+        const [totalsRows, dailyCertificatesRows, dailyEmailsRows] =
+            await Promise.all([
+                prisma.$queryRaw<TotalsRow[]>`
+                    WITH cert_total AS (
+                        SELECT COALESCE(SUM(cgh.quantity), 0)::int AS total
+                        FROM certificate_generation_histories cgh
+                        INNER JOIN certificate_emissions ce ON ce.id = cgh.certificate_emission_id
+                        WHERE ce.user_id = ${userId}
+                    ),
+                    email_total AS (
+                        SELECT COALESCE(SUM(egh.quantity), 0)::int AS total
+                        FROM email_generation_histories egh
+                        INNER JOIN emails e ON e.id = egh.email_id
+                        INNER JOIN certificate_emissions ce ON ce.id = e.certificate_emission_id
+                        WHERE ce.user_id = ${userId}
+                    )
+                    SELECT cert_total.total AS certificates_total, email_total.total AS emails_total
+                    FROM cert_total, email_total
+                `,
 
-        const execute = async (tx: Prisma.TransactionClient) => {
-            const [
-                totalCertificatesGenerated,
-                totalEmailsSent,
-                totalCertificatesGeneratedThisMonth,
-                totalEmailsSentThisMonth,
-                totalCertificatesGeneratedLastMonth,
-                totalEmailsSentLastMonth,
-            ] = await Promise.all([
-                // Total certificates generation of the user
-                tx.certificateGenerationHistory.aggregate({
-                    _sum: { quantity: true },
-                    where: {
-                        CertificateEmission: {
-                            user_id: userId,
-                        },
-                    },
-                }),
+                prisma.$queryRaw<DailyRow[]>`
+                    SELECT
+                        DATE_TRUNC('day', cgh.created_at)::date AS date,
+                        COALESCE(SUM(cgh.quantity), 0)::int AS quantity
+                    FROM certificate_generation_histories cgh
+                    INNER JOIN certificate_emissions ce ON ce.id = cgh.certificate_emission_id
+                    WHERE ce.user_id = ${userId}
+                        AND cgh.created_at >= NOW() - INTERVAL '30 days'
+                    GROUP BY DATE_TRUNC('day', cgh.created_at)
+                    ORDER BY date ASC
+                `,
 
-                // Total emails sent by the user
-                tx.emailGenerationHistory.aggregate({
-                    _sum: { quantity: true },
-                    where: {
-                        Email: {
-                            CertificateEmission: {
-                                user_id: userId,
-                            },
-                        },
-                    },
-                }),
-
-                // Certificates generated this month
-                tx.certificateGenerationHistory.aggregate({
-                    _sum: { quantity: true },
-                    where: {
-                        created_at: {
-                            gte: startOfThisMonth,
-                            lt: startOfNextMonth,
-                        },
-                        CertificateEmission: {
-                            user_id: userId,
-                        },
-                    },
-                }),
-
-                // Emails sent this month
-                tx.emailGenerationHistory.aggregate({
-                    _sum: { quantity: true },
-                    where: {
-                        created_at: {
-                            gte: startOfThisMonth,
-                            lt: startOfNextMonth,
-                        },
-                        Email: {
-                            CertificateEmission: {
-                                user_id: userId,
-                            },
-                        },
-                    },
-                }),
-
-                // Certificates generated last month
-                tx.certificateGenerationHistory.aggregate({
-                    _sum: { quantity: true },
-                    where: {
-                        created_at: {
-                            gte: startOfLastMonth,
-                            lte: endOfLastMonth,
-                        },
-                        CertificateEmission: {
-                            user_id: userId,
-                        },
-                    },
-                }),
-
-                // Emails sent last month
-                tx.emailGenerationHistory.aggregate({
-                    _sum: { quantity: true },
-                    where: {
-                        created_at: {
-                            gte: startOfLastMonth,
-                            lte: endOfLastMonth,
-                        },
-                        Email: {
-                            CertificateEmission: {
-                                user_id: userId,
-                            },
-                        },
-                    },
-                }),
+                prisma.$queryRaw<DailyRow[]>`
+                    SELECT
+                        DATE_TRUNC('day', egh.created_at)::date AS date,
+                        COALESCE(SUM(egh.quantity), 0)::int AS quantity
+                    FROM email_generation_histories egh
+                    INNER JOIN emails e ON e.id = egh.email_id
+                    INNER JOIN certificate_emissions ce ON ce.id = e.certificate_emission_id
+                    WHERE ce.user_id = ${userId}
+                        AND egh.created_at >= NOW() - INTERVAL '30 days'
+                    GROUP BY DATE_TRUNC('day', egh.created_at)
+                    ORDER BY date ASC
+                `,
             ])
 
-            return {
-                totalCertificatesGenerated:
-                    totalCertificatesGenerated._sum.quantity ?? 0,
+        const totals = totalsRows[0]
 
-                totalEmailsSent: totalEmailsSent._sum.quantity ?? 0,
-
-                totalCertificatesGeneratedThisMonth:
-                    totalCertificatesGeneratedThisMonth._sum.quantity ?? 0,
-
-                totalEmailsSentThisMonth:
-                    totalEmailsSentThisMonth._sum.quantity ?? 0,
-
-                totalCertificatesGeneratedLastMonth:
-                    totalCertificatesGeneratedLastMonth._sum.quantity ?? 0,
-
-                totalEmailsSentLastMonth:
-                    totalEmailsSentLastMonth._sum.quantity ?? 0,
-            }
-        }
-
-        if (isPrismaClient(this.prisma)) {
-            return await this.prisma.$transaction(execute)
-        } else {
-            return await execute(this.prisma)
+        return {
+            totalCertificatesGenerated: totals.certificates_total,
+            totalEmailsSent: totals.emails_total,
+            dailyCertificates: dailyCertificatesRows,
+            dailyEmails: dailyEmailsRows,
         }
     }
 

@@ -12,10 +12,8 @@ export interface GetCertificateEmissionsMetricsControllerResponse {
     certificateEmissionsMetrics: {
         totalCertificatesGenerated: number
         totalEmailsSent: number
-        totalCertificatesGeneratedThisMonth: number
-        totalEmailsSentThisMonth: number
-        totalCertificatesGeneratedLastMonth: number
-        totalEmailsSentLastMonth: number
+        dailyCertificates: { date: Date; quantity: number }[]
+        dailyEmails: { date: Date; quantity: number }[]
     }
 }
 
