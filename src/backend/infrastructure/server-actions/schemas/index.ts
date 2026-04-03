@@ -56,6 +56,12 @@ export const refreshDataSourceSchema = z.object({
     certificateId: z.string().min(1),
 })
 
+export const turnDataSourceIntoSpreadsheetSchema = z.object({
+    certificateId: z.string().min(1),
+    format: z.enum(['csv', 'xlsx']),
+    destination: z.enum(['local', 'drive']),
+})
+
 export const downloadDataSourceSchema = z.object({
     certificateEmissionId: z.string().min(1),
     fileIndex: z.coerce.number().int().min(0).default(0),

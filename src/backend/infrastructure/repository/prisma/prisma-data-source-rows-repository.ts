@@ -434,6 +434,36 @@ export class PrismaDataSourceRowsRepository
         }
     }
 
+    async getAllRawByCertificateEmissionId(
+        certificateEmissionId: string,
+    ): Promise<{ id: string; data: Record<string, string> }[]> {
+        const rows = await this.prisma.dataSourceRow.findMany({
+            where: {
+                data_source_id: certificateEmissionId,
+            },
+            orderBy: { source_row_index: 'asc' },
+            include: {
+                DataSourceValue: {
+                    where: {
+                        data_source_id: certificateEmissionId,
+                    },
+                    select: {
+                        column_name: true,
+                        value: true,
+                    },
+                },
+            },
+        })
+
+        return rows.map(row => {
+            const data: Record<string, string> = {}
+            for (const value of row.DataSourceValue) {
+                data[value.column_name] = value.value
+            }
+            return { id: row.id, data }
+        })
+    }
+
     async countByCertificateEmissionId(
         certificateEmissionId: string,
     ): Promise<number> {

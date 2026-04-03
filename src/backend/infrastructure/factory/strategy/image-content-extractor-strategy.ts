@@ -1,4 +1,5 @@
 import { ISpreadsheetContentExtractorStrategy } from '@/backend/application/interfaces/ispreadsheet-content-extractor-factory'
+import { DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
 import { ServiceUnavailableError } from '@/backend/domain/error/service-unavailable-error'
 import { GenerateContentResponse, GoogleGenAI } from '@google/genai'
 import { fileTypeFromBuffer } from 'file-type'
@@ -72,5 +73,12 @@ export class ImageContentExtractorStrategy
         }
 
         return { columns: [], rows }
+    }
+
+    async generate(
+        columnNames: string[],
+        rows: Record<string, string>[],
+    ): Promise<Buffer> {
+        throw new Error('Method not implemented.')
     }
 }

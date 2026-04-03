@@ -13,6 +13,9 @@ export interface IDataSourceRowsReadRepository {
         }[]
         nextCursor: string | null
     }>
+    getAllRawByCertificateEmissionId(
+        certificateEmissionId: string,
+    ): Promise<{ id: string; data: Record<string, string> }[]>
     countByCertificateEmissionId(certificateEmissionId: string): Promise<number>
 
     countWithStatuses(

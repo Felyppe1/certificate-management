@@ -307,6 +307,7 @@ export class DataSource extends ValueObject<DataSource> {
         type: ColumnType
         arrayMetadata: ArrayMetadata | null
     } {
+        console.log(values)
         const nonEmpty = values
             .filter(v => v != null)
             .map(v => v.trim())
@@ -593,12 +594,35 @@ export class DataSource extends ValueObject<DataSource> {
         return this.columns.some(column => column.name === columnName)
     }
 
+    getFileMimeType() {
+        return this.fileMimeType
+    }
+
     getInputMethod() {
         return this.inputMethod
     }
 
     setThumbnailUrl(url: string): DataSource {
         return new DataSource({ ...this.serialize(), thumbnailUrl: url })
+    }
+
+    replaceWithSpreadsheet(
+        newFile: DataSourceFileReference,
+        newMimeType: DATA_SOURCE_MIME_TYPE.CSV | DATA_SOURCE_MIME_TYPE.XLSX,
+        newInputMethod: INPUT_METHOD,
+    ): DataSource {
+        if (!DataSource.isImageMimeType(this.fileMimeType)) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.DATA_SOURCE_NOT_IMAGE,
+            )
+        }
+
+        return new DataSource({
+            ...this.serialize(),
+            files: [newFile],
+            fileMimeType: newMimeType,
+            inputMethod: newInputMethod,
+        })
     }
 
     equals(other: DataSource): boolean {

@@ -2,6 +2,7 @@ import {
     DownloadFileInput,
     GetFileMetadataInput,
     IGoogleDriveGateway,
+    UploadFileInput,
 } from '@/backend/application/interfaces/igoogle-drive-gateway'
 import { IGoogleAuthGateway } from '@/backend/application/interfaces/igoogle-auth-gateway'
 import {
@@ -190,5 +191,39 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
         const buffer = Buffer.concat(chunks)
 
         return buffer
+    }
+
+    async uploadFile({
+        buffer,
+        mimeType,
+        fileName,
+        accessToken,
+    }: UploadFileInput) {
+        const oauth2Client =
+            this.googleAuthGateway.getOAuth2ClientWithCredentials({
+                accessToken,
+                refreshToken: undefined,
+            })
+
+        const drive = google.drive({ version: 'v3', auth: oauth2Client })
+
+        const { Readable } = await import('stream')
+
+        const response = await drive.files.create({
+            requestBody: {
+                name: fileName,
+                mimeType,
+            },
+            media: {
+                mimeType,
+                body: Readable.from(buffer),
+            },
+            fields: 'id, webViewLink',
+        })
+
+        return {
+            fileId: response.data.id!,
+            webViewLink: response.data.webViewLink!,
+        }
     }
 }

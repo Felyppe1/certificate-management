@@ -13,7 +13,7 @@ export class FileContentExtractorFactory
 {
     create(
         fileMimeType: TEMPLATE_FILE_MIME_TYPE,
-    ): IFileContentExtractorStrategy {
+    ): Pick<IFileContentExtractorStrategy, 'extractText'> {
         if (
             fileMimeType === TEMPLATE_FILE_MIME_TYPE.PPTX ||
             fileMimeType === TEMPLATE_FILE_MIME_TYPE.GOOGLE_SLIDES

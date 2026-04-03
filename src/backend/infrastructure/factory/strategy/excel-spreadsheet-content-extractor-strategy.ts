@@ -1,11 +1,15 @@
 import { ISpreadsheetContentExtractorStrategy } from '@/backend/application/interfaces/ispreadsheet-content-extractor-factory'
+import { DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
 import * as XLSX from 'xlsx'
 
 export class ExcelSpreadsheetContentExtractorStrategy
     implements ISpreadsheetContentExtractorStrategy
 {
     async extractColumns(buffers: Buffer[]) {
-        const workbook = XLSX.read(buffers[0], { type: 'buffer' })
+        const workbook = XLSX.read(buffers[0], {
+            type: 'buffer',
+            cellDates: true,
+        })
         const firstSheetName = workbook.SheetNames[0]
         const worksheet = workbook.Sheets[firstSheetName]
 
@@ -14,31 +18,33 @@ export class ExcelSpreadsheetContentExtractorStrategy
             {
                 defval: null,
                 blankrows: false,
+                raw: false,
             },
         )
 
+        console.log(records)
+
         const columns = records.length > 0 ? Object.keys(records[0]) : []
-        // const records = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet, {
-        //     defval: null, // mantém células vazias como null
-        //     raw: false,   // converte valores formatados (datas, etc.)
-        //     blankrows: false, // ignora linhas completamente vazias
-        //     header: 1, // pegará a linha de cabeçalho também
-        // })
-
-        // // Se usarmos header: 1, a primeira linha contém as colunas
-        // const [headerRow, ...dataRows] = records
-
-        // // Monta objetos linha = { coluna: valor }
-        // const columns = (headerRow as string[]) ?? []
-        // const rows = dataRows.map((row) => {
-        //     const obj: Record<string, any> = {}
-        //     columns.forEach((col, i) => (obj[col] = (row as any[])[i] ?? null))
-        //     return obj
-        // })
 
         return {
             columns,
             rows: records,
         }
+    }
+
+    async generate(
+        columnNames: string[],
+        rows: Record<string, string>[],
+    ): Promise<Buffer> {
+        const worksheetData = [
+            columnNames,
+            ...rows.map(row => columnNames.map(col => row[col] ?? '')),
+        ]
+
+        const wb = XLSX.utils.book_new()
+        const ws = XLSX.utils.aoa_to_sheet(worksheetData)
+        XLSX.utils.book_append_sheet(wb, ws, 'Sheet1')
+
+        return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' })
     }
 }

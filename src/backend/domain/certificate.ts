@@ -10,8 +10,14 @@ import {
     DataSourceOutput,
     CreateDataSourceInput,
     DataSourceColumn,
+    DATA_SOURCE_MIME_TYPE,
+    DataSourceFileReference,
 } from './data-source'
 import { NOT_FOUND_ERROR_TYPE, NotFoundError } from './error/not-found-error'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from './error/validation-error'
 import { DataSourceSetDomainEvent } from './events/data-source-set-domain-event'
 // import { Email, EmailOutput } from './email'
 
@@ -156,6 +162,10 @@ export class CertificateEmission extends AggregateRoot {
 
     isOwner(userId: string) {
         return this.userId === userId
+    }
+
+    getName() {
+        return this.name
     }
 
     // setStatus(status: CERTIFICATE_STATUS) {
@@ -384,6 +394,22 @@ export class CertificateEmission extends AggregateRoot {
         }
 
         this.dataSource = this.dataSource.setStorageFileUrl(url)
+    }
+
+    replaceDataSourceWithSpreadsheet(
+        newFile: DataSourceFileReference,
+        newMimeType: DATA_SOURCE_MIME_TYPE.CSV | DATA_SOURCE_MIME_TYPE.XLSX,
+        newInputMethod: INPUT_METHOD,
+    ) {
+        if (!this.dataSource) {
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
+        }
+
+        this.dataSource = this.dataSource.replaceWithSpreadsheet(
+            newFile,
+            newMimeType,
+            newInputMethod,
+        )
     }
 
     removeDataSource(userIdTryingToRemove: string) {

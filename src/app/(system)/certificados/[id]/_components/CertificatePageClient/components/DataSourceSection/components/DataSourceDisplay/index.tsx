@@ -26,12 +26,13 @@ import {
     ALargeSmall,
     Eye,
     RotateCw,
-    Loader2,
+    FileSpreadsheet,
 } from 'lucide-react'
 import { startTransition, useActionState, useEffect, useState } from 'react'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import {
     DATA_SOURCE_MIME_TYPE,
+    DataSource,
     ColumnType,
     MAX_DATA_SOURCE_ROWS,
     MAX_DATA_SOURCE_COLUMNS,
@@ -47,6 +48,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { downloadDataSourceAction } from '@/backend/infrastructure/server-actions/download-data-source-action'
 import { ConfigurableDataSourceTable } from './components/ConfigurableDataSourceTable'
+import { ConvertToSpreadsheetDialog } from './components/ConvertToSpreadsheetDialog'
 import { useGoogleRelogin } from '@/components/useGoogleRelogin'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import error from '@/app/(system)/error'
@@ -120,6 +122,7 @@ export function DataSourceDisplay({
     const [showAllRows, setShowAllRows] = useState(false)
     const [showRefreshWarning, setShowRefreshWarning] = useState(false)
     const [showEditWarning, setShowEditWarning] = useState(false)
+    const [showConvertModal, setShowConvertModal] = useState(false)
 
     const queryClient = useQueryClient()
 
@@ -300,6 +303,10 @@ export function DataSourceDisplay({
         retryMutation.mutate(formData)
     }
 
+    const isImageDataSource =
+        dataSource.fileMimeType === DATA_SOURCE_MIME_TYPE.PNG ||
+        dataSource.fileMimeType === DATA_SOURCE_MIME_TYPE.JPEG
+
     const rows = dataSource.rows
     const certificatesGenerated =
         rows.length > 0 &&
@@ -309,7 +316,6 @@ export function DataSourceDisplay({
                 row.processingStatus === PROCESSING_STATUS_ENUM.FAILED ||
                 row.processingStatus === PROCESSING_STATUS_ENUM.RETRYING,
         )
-
     return (
         <>
             <Card className="" id="data-source-section">
@@ -322,36 +328,49 @@ export function DataSourceDisplay({
                     </div>
 
                     <div className="flex flex-wrap justify-start sm:justify-end gap-2 min-w-[15rem]">
-                        {((dataSource.fileMimeType !==
-                            DATA_SOURCE_MIME_TYPE.PNG &&
-                            dataSource.fileMimeType !==
-                                DATA_SOURCE_MIME_TYPE.JPEG) ||
-                            dataSource.inputMethod !== 'UPLOAD') && (
-                            <WarningPopover
-                                open={showRefreshWarning}
-                                onOpenChange={setShowRefreshWarning}
-                                onConfirm={handleRefresh}
-                                description="Você precisará gerar os certificados novamente após esta ação."
-                                title="Atualizar fonte de dados?"
-                            >
-                                <Button
-                                    variant="outline"
-                                    onClick={handleRefreshClick}
-                                    disabled={
-                                        refreshMutation.isPending ||
-                                        deleteMutation.isPending ||
-                                        isDisabled ||
-                                        loginIsLoading
-                                    }
+                        {dataSource.inputMethod !== INPUT_METHOD.UPLOAD &&
+                            !isImageDataSource && (
+                                <WarningPopover
+                                    open={showRefreshWarning}
+                                    onOpenChange={setShowRefreshWarning}
+                                    onConfirm={handleRefresh}
+                                    description="Você precisará gerar os certificados novamente após esta ação."
+                                    title="Atualizar fonte de dados?"
                                 >
-                                    <RefreshCw
-                                        className={`scale-80 ${refreshMutation.isPending ? 'animate-spin' : ''}`}
-                                    />
-                                    {refreshMutation.isPending
-                                        ? 'Atualizando...'
-                                        : 'Atualizar'}
-                                </Button>
-                            </WarningPopover>
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleRefreshClick}
+                                        disabled={
+                                            refreshMutation.isPending ||
+                                            deleteMutation.isPending ||
+                                            isDisabled ||
+                                            loginIsLoading
+                                        }
+                                    >
+                                        <RefreshCw
+                                            className={`scale-80 ${refreshMutation.isPending ? 'animate-spin' : ''}`}
+                                        />
+                                        {refreshMutation.isPending
+                                            ? 'Atualizando...'
+                                            : 'Atualizar'}
+                                    </Button>
+                                </WarningPopover>
+                            )}
+
+                        {isImageDataSource && (
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowConvertModal(true)}
+                                disabled={
+                                    deleteMutation.isPending ||
+                                    refreshMutation.isPending ||
+                                    isDisabled ||
+                                    loginIsLoading
+                                }
+                            >
+                                <FileSpreadsheet className="scale-80" />
+                                Converter
+                            </Button>
                         )}
 
                         <WarningPopover
@@ -557,6 +576,13 @@ export function DataSourceDisplay({
                     </div>
                 </div>
             )} */}
+
+            <ConvertToSpreadsheetDialog
+                open={showConvertModal}
+                onOpenChange={setShowConvertModal}
+                certificateId={certificateId}
+                login={login}
+            />
         </>
     )
 }
