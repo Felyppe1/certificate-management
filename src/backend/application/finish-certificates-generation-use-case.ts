@@ -8,12 +8,14 @@ import {
 } from '../domain/error/validation-error'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 interface FinishCertificatesGenerationUseCaseInput {
     dataSourceRowId: string
     success: boolean
     totalBytes?: number
+    userId?: string
 }
 
 export class FinishCertificatesGenerationUseCase {
@@ -24,8 +26,9 @@ export class FinishCertificatesGenerationUseCase {
         >,
         private certificatesRepository: Pick<
             ICertificatesRepository,
-            'markAsGeneratedIfNotAlready'
+            'checkIfExistsById' | 'markAsGeneratedIfNotAlready'
         >,
+        private usersRepository: Pick<IUsersRepository, 'upsertDailyUsage'>,
         private transactionManager: ITransactionManager,
     ) {}
 
@@ -53,7 +56,22 @@ export class FinishCertificatesGenerationUseCase {
         const certificateEmissionId =
             dataSourceRow.serialize().certificateEmissionId
 
+        const certificateExists =
+            await this.certificatesRepository.checkIfExistsById(
+                certificateEmissionId,
+            )
+
+        if (!certificateExists) {
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+        }
+
         await this.dataSourceRowsRepository.update(dataSourceRow)
+
+        if (input.success && input.userId) {
+            await this.usersRepository.upsertDailyUsage(input.userId, {
+                certificatesGeneratedCount: 1,
+            })
+        }
 
         const allFinished =
             await this.dataSourceRowsRepository.allRowsFinishedProcessing(

@@ -15,4 +15,11 @@ export interface IUsersRepository {
     delete(id: string): Promise<void>
     deductCredits(userId: string, amount: number): Promise<boolean>
     resetAllDailyCredits(): Promise<void>
+    upsertDailyUsage(
+        userId: string,
+        increment: {
+            certificatesGeneratedCount?: number
+            emailsSentCount?: number
+        },
+    ): Promise<void>
 }

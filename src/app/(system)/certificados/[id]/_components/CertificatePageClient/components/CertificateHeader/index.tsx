@@ -254,7 +254,7 @@ export function CertificateHeader({
             </div>
 
             <p className="text-foreground/90 text-base sm:text-lg font-light">
-                Gerencie esta emissão de certificados
+                Gerencie essa emissão de certificados
             </p>
         </div>
     )

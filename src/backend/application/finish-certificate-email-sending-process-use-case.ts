@@ -1,17 +1,18 @@
-import { CERTIFICATE_STATUS } from '../domain/certificate'
 import { EMAIL_ERROR_TYPE_ENUM, PROCESSING_STATUS_ENUM } from '../domain/email'
 import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
 import { IEmailsRepository } from './interfaces/repository/iemails-repository'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 interface FinishCertificateEmailSendingProcessUseCaseInput {
     emailId: string
     status: PROCESSING_STATUS_ENUM.COMPLETED | PROCESSING_STATUS_ENUM.FAILED
+    emailsSentCount?: number
+    userId?: string
 }
 
 export class FinishCertificateEmailSendingProcessUseCase {
@@ -19,17 +20,14 @@ export class FinishCertificateEmailSendingProcessUseCase {
         private emailsRepository: Pick<IEmailsRepository, 'getById' | 'update'>,
         private certificateEmissionsRepository: Pick<
             ICertificatesRepository,
-            'getById' | 'update'
+            'checkIfExistsById'
         >,
-        private dataSourceRowsReadRepository: Pick<
-            IDataSourceRowsReadRepository,
-            'countByCertificateEmissionId'
-        >,
+        private usersRepository: Pick<IUsersRepository, 'upsertDailyUsage'>,
         private transactionManager: ITransactionManager,
     ) {}
 
     async execute(input: FinishCertificateEmailSendingProcessUseCaseInput) {
-        const { emailId, status } = input
+        const { emailId, status, emailsSentCount, userId } = input
 
         const email = await this.emailsRepository.getById(emailId)
 
@@ -37,33 +35,28 @@ export class FinishCertificateEmailSendingProcessUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.EMAIL)
         }
 
-        const certificateEmission =
-            await this.certificateEmissionsRepository.getById(
-                email.getCertificateEmissionId(),
+        const certificateEmissionId = email.getCertificateEmissionId()
+
+        const certificateExists =
+            await this.certificateEmissionsRepository.checkIfExistsById(
+                certificateEmissionId,
             )
 
-        if (!certificateEmission) {
+        if (!certificateExists) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
-        const rowsCount =
-            await this.dataSourceRowsReadRepository.countByCertificateEmissionId(
-                certificateEmission.getId(),
-            )
+        email.setProcessingStatus(status)
 
-        email.setProcessingStatus(status, rowsCount)
-
-        if (status === PROCESSING_STATUS_ENUM.COMPLETED) {
-            certificateEmission.markAsEmitted()
-        } else {
+        if (status === PROCESSING_STATUS_ENUM.FAILED) {
             email.setEmailErrorType(EMAIL_ERROR_TYPE_ENUM.INTERNAL_ERROR)
         }
 
         await this.transactionManager.run(async () => {
-            if (status === PROCESSING_STATUS_ENUM.COMPLETED) {
-                await this.certificateEmissionsRepository.update(
-                    certificateEmission,
-                )
+            if (status === PROCESSING_STATUS_ENUM.COMPLETED && userId) {
+                await this.usersRepository.upsertDailyUsage(userId, {
+                    emailsSentCount,
+                })
             }
 
             await this.emailsRepository.update(email)

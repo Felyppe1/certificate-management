@@ -37,9 +37,7 @@ export interface CreateEmailInput {
     emailErrorType: EMAIL_ERROR_TYPE_ENUM | null
 }
 
-export interface EmailOutput extends EmailInput {
-    quantityEmailsSent: number
-}
+export interface EmailOutput extends EmailInput {}
 
 export class Email extends AggregateRoot {
     private certificateEmissionId: string
@@ -49,8 +47,6 @@ export class Email extends AggregateRoot {
     private scheduledAt: Date | null
     private status: PROCESSING_STATUS_ENUM
     private emailErrorType: EMAIL_ERROR_TYPE_ENUM | null
-
-    private quantityEmailsSent: number
 
     static create(data: CreateEmailInput) {
         const email = new Email({
@@ -104,7 +100,6 @@ export class Email extends AggregateRoot {
         this.scheduledAt = data.scheduledAt
         this.status = data.status
         this.emailErrorType = data.emailErrorType
-        this.quantityEmailsSent = 0
     }
 
     static validateEmailColumnRecords(emailColumnRecords: string[]): boolean {
@@ -120,20 +115,7 @@ export class Email extends AggregateRoot {
         return true
     }
 
-    setProcessingStatus(
-        status: PROCESSING_STATUS_ENUM,
-        quantityEmailsSent?: number,
-    ) {
-        if (status === PROCESSING_STATUS_ENUM.COMPLETED) {
-            if (quantityEmailsSent === undefined) {
-                throw new Error(
-                    'quantityEmailsSent is required when status is COMPLETED',
-                )
-            }
-
-            this.quantityEmailsSent = quantityEmailsSent
-        }
-
+    setProcessingStatus(status: PROCESSING_STATUS_ENUM) {
         this.status = status
     }
 
@@ -163,7 +145,6 @@ export class Email extends AggregateRoot {
             scheduledAt: this.scheduledAt,
             status: this.status,
             emailErrorType: this.emailErrorType,
-            quantityEmailsSent: this.quantityEmailsSent,
         }
     }
 }

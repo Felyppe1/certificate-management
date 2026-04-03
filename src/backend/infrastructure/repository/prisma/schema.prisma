@@ -33,6 +33,7 @@ model User {
     ExternalUserAccount ExternalUserAccount[]
 
     CertificateEmission CertificateEmission[]
+    DailyUsage          DailyUsage[]
 
     @@map("users")
 }
@@ -75,7 +76,6 @@ model CertificateEmission {
     Template                     Template?
     DataSource                   DataSource?
     Email                        Email?
-    CertificateGenerationHistory CertificateGenerationHistory[]
 
     @@map("certificate_emissions")
 }
@@ -172,7 +172,6 @@ model DataSourceRow {
     data_source_id    String
     file_bytes        Int?
     processing_status String // "PENDING" | "RUNNING" | "RETRYING" | "COMPLETED" | "FAILED"
-    legacy_file_index Int?
     source_row_index  Int
     created_at        DateTime @default(now())
 
@@ -196,31 +195,20 @@ model Email {
     email_column            String?
 
     CertificateEmission    CertificateEmission      @relation(fields: [certificate_emission_id], references: [id], onDelete: Cascade)
-    EmailGenerationHistory EmailGenerationHistory[]
 
     @@map("emails")
 }
 
-model EmailGenerationHistory {
-    email_id   String
-    quantity   Int
-    created_at DateTime @default(now())
+model DailyUsage {
+    user_id                      String
+    date                         DateTime @db.Date
+    certificates_generated_count Int
+    emails_sent_count            Int
 
-    Email Email @relation(fields: [email_id], references: [id], onDelete: Cascade)
+    User User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-    @@id([email_id, created_at])
-    @@map("email_generation_histories")
-}
-
-model CertificateGenerationHistory {
-    certificate_emission_id String
-    quantity                Int
-    created_at              DateTime @default(now())
-
-    CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id], onDelete: Cascade)
-
-    @@id([certificate_emission_id, created_at])
-    @@map("certificate_generation_histories")
+    @@id([user_id, date])
+    @@map("daily_usages")
 }
 
 model Outbox {

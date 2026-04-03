@@ -36,64 +36,43 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
     }
 
     async getCertificateEmissionsMetricsByUserId(userId: string) {
-        type TotalsRow = { certificates_total: number; emails_total: number }
-        type DailyRow = { date: Date; quantity: number }
+        type DailyItem = { date: string; quantity: number }
+        type ResultRow = {
+            certificates_total: number
+            emails_total: number
+            daily_certificates: DailyItem[] | null
+            daily_emails: DailyItem[] | null
+        }
 
         const prisma = this.prisma
 
-        const [totalsRows, dailyCertificatesRows, dailyEmailsRows] =
-            await Promise.all([
-                prisma.$queryRaw<TotalsRow[]>`
-                    WITH cert_total AS (
-                        SELECT COALESCE(SUM(cgh.quantity), 0)::int AS total
-                        FROM certificate_generation_histories cgh
-                        INNER JOIN certificate_emissions ce ON ce.id = cgh.certificate_emission_id
-                        WHERE ce.user_id = ${userId}
-                    ),
-                    email_total AS (
-                        SELECT COALESCE(SUM(egh.quantity), 0)::int AS total
-                        FROM email_generation_histories egh
-                        INNER JOIN emails e ON e.id = egh.email_id
-                        INNER JOIN certificate_emissions ce ON ce.id = e.certificate_emission_id
-                        WHERE ce.user_id = ${userId}
-                    )
-                    SELECT cert_total.total AS certificates_total, email_total.total AS emails_total
-                    FROM cert_total, email_total
-                `,
-
-                prisma.$queryRaw<DailyRow[]>`
-                    SELECT
-                        DATE_TRUNC('day', cgh.created_at)::date AS date,
-                        COALESCE(SUM(cgh.quantity), 0)::int AS quantity
-                    FROM certificate_generation_histories cgh
-                    INNER JOIN certificate_emissions ce ON ce.id = cgh.certificate_emission_id
-                    WHERE ce.user_id = ${userId}
-                        AND cgh.created_at >= NOW() - INTERVAL '30 days'
-                    GROUP BY DATE_TRUNC('day', cgh.created_at)
+        const [row] = await prisma.$queryRaw<ResultRow[]>`
+            SELECT
+                COALESCE(SUM(certificates_generated_count), 0)::int AS certificates_total,
+                COALESCE(SUM(emails_sent_count), 0)::int AS emails_total,
+                JSON_AGG(
+                    JSON_BUILD_OBJECT('date', date, 'quantity', certificates_generated_count)
                     ORDER BY date ASC
-                `,
-
-                prisma.$queryRaw<DailyRow[]>`
-                    SELECT
-                        DATE_TRUNC('day', egh.created_at)::date AS date,
-                        COALESCE(SUM(egh.quantity), 0)::int AS quantity
-                    FROM email_generation_histories egh
-                    INNER JOIN emails e ON e.id = egh.email_id
-                    INNER JOIN certificate_emissions ce ON ce.id = e.certificate_emission_id
-                    WHERE ce.user_id = ${userId}
-                        AND egh.created_at >= NOW() - INTERVAL '30 days'
-                    GROUP BY DATE_TRUNC('day', egh.created_at)
+                ) FILTER (WHERE date >= CURRENT_DATE - INTERVAL '30 days') AS daily_certificates,
+                JSON_AGG(
+                    JSON_BUILD_OBJECT('date', date, 'quantity', emails_sent_count)
                     ORDER BY date ASC
-                `,
-            ])
-
-        const totals = totalsRows[0]
+                ) FILTER (WHERE date >= CURRENT_DATE - INTERVAL '30 days') AS daily_emails
+            FROM daily_usages
+            WHERE user_id = ${userId}
+        `
 
         return {
-            totalCertificatesGenerated: totals.certificates_total,
-            totalEmailsSent: totals.emails_total,
-            dailyCertificates: dailyCertificatesRows,
-            dailyEmails: dailyEmailsRows,
+            totalCertificatesGenerated: row.certificates_total,
+            totalEmailsSent: row.emails_total,
+            dailyCertificates: (row.daily_certificates ?? []).map(item => ({
+                date: new Date(item.date),
+                quantity: item.quantity,
+            })),
+            dailyEmails: (row.daily_emails ?? []).map(item => ({
+                date: new Date(item.date),
+                quantity: item.quantity,
+            })),
         }
     }
 
@@ -693,6 +672,13 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         } else {
             await execute(this.prisma)
         }
+    }
+
+    async checkIfExistsById(id: string): Promise<boolean> {
+        const count = await this.prisma.certificateEmission.count({
+            where: { id },
+        })
+        return count > 0
     }
 
     async getById(id: string): Promise<CertificateEmission | null> {

@@ -267,7 +267,7 @@ def delete_by_prefix(prefix: str):
 
 
 ################################ Functions to call backend endpoints ################################
-def finish_certificates_generation(data_source_row_id, success, total_bytes=None):
+def finish_certificates_generation(data_source_row_id, success, total_bytes=None, user_id=None):
     print('Inside update')
     url = f"{APP_BASE_URL}/api/internal/data-source-rows/{data_source_row_id}/generations"
 
@@ -288,6 +288,7 @@ def finish_certificates_generation(data_source_row_id, success, total_bytes=None
     body = {k: v for k, v in {
         "success": success,
         "totalBytes": total_bytes,
+        "userId": user_id,
     }.items() if v is not None}
 
     print('before sending patch')
@@ -841,6 +842,7 @@ def main(request):
     
     raw_data = request.get_json(silent=True)
     data_source_row_id = raw_data.get('row', {}).get('id')
+    user_id = None
 
     if raw_data is None:
         return {"error": "JSON body is required"}, 400
@@ -966,7 +968,7 @@ def main(request):
         pdf_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{data_source_row_id}.pdf"
         blob = upload_to_bucket(pdf_buffer, pdf_path)
 
-        finish_certificates_generation(data_source_row_id, True, blob.size)
+        finish_certificates_generation(data_source_row_id, True, blob.size, user_id)
         
         return "", 204
         
@@ -988,7 +990,7 @@ def main(request):
 
         print("Validation errors:", friendly_errors)
         
-        if data_source_row_id:
+        if data_source_row_id and user_id:
             finish_certificates_generation(data_source_row_id, False)
             
         return {"error": friendly_errors}, 200
@@ -999,7 +1001,7 @@ def main(request):
 
         try:
             print('Sending error status update...')
-            if data_source_row_id:
+            if data_source_row_id and user_id:
                 finish_certificates_generation(data_source_row_id, False)
         except Exception as inner_e:
             update_error = str(inner_e)

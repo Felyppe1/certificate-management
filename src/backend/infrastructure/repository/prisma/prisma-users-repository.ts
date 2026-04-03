@@ -81,4 +81,34 @@ export class PrismaUsersRepository implements IUsersRepository {
             data: { credits: USER_CREDITS },
         })
     }
+
+    async upsertDailyUsage(
+        userId: string,
+        increment: {
+            certificatesGeneratedCount?: number
+            emailsSentCount?: number
+        },
+    ): Promise<void> {
+        const date = new Date()
+        await this.prisma.dailyUsage.upsert({
+            where: {
+                user_id_date: { user_id: userId, date },
+            },
+            create: {
+                user_id: userId,
+                date,
+                certificates_generated_count:
+                    increment.certificatesGeneratedCount ?? 0,
+                emails_sent_count: increment.emailsSentCount ?? 0,
+            },
+            update: {
+                certificates_generated_count: {
+                    increment: increment.certificatesGeneratedCount ?? 0,
+                },
+                emails_sent_count: {
+                    increment: increment.emailsSentCount ?? 0,
+                },
+            },
+        })
+    }
 }

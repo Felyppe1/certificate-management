@@ -72,11 +72,13 @@ export function MetricChart({ data, color, valueLabel }: MetricChartProps) {
     const ticks =
         len > 0
             ? ([
-                  trimmed[0]?.date,
-                  trimmed[Math.floor(len * 0.25)]?.date,
-                  trimmed[Math.floor(len * 0.5)]?.date,
-                  trimmed[Math.floor(len * 0.75)]?.date,
-                  trimmed[len - 1]?.date,
+                  ...new Set([
+                      trimmed[0]?.date,
+                      trimmed[Math.floor(len * 0.25)]?.date,
+                      trimmed[Math.floor(len * 0.5)]?.date,
+                      trimmed[Math.floor(len * 0.75)]?.date,
+                      trimmed[len - 1]?.date,
+                  ]),
               ].filter(Boolean) as string[])
             : undefined
 
@@ -87,7 +89,7 @@ export function MetricChart({ data, color, valueLabel }: MetricChartProps) {
             <ResponsiveContainer width="100%" height={120}>
                 <AreaChart
                     data={trimmed}
-                    margin={{ top: 4, right: 8, left: 8, bottom: 0 }}
+                    margin={{ top: 4, right: 16, left: 16, bottom: 0 }}
                 >
                     <defs>
                         <linearGradient

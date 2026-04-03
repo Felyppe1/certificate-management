@@ -9,13 +9,15 @@ import { PrismaCertificatesRepository } from '@/backend/infrastructure/repositor
 import { PrismaEmailsRepository } from '@/backend/infrastructure/repository/prisma/prisma-emails-repository'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateServiceAccountToken } from '@/utils/middleware/validateServiceAccountToken'
-import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
+import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 
 const updateEmailSchema = z.object({
     status: z.enum([
         PROCESSING_STATUS_ENUM.COMPLETED,
         PROCESSING_STATUS_ENUM.FAILED,
     ]),
+    emailsSentCount: z.number().int().positive().optional(),
+    userId: z.string().optional(),
 })
 
 export async function PATCH(
@@ -34,22 +36,22 @@ export async function PATCH(
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
-        const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
-            prisma,
-        )
+        const usersRepository = new PrismaUsersRepository(prisma)
         const transactionManager = new PrismaTransactionManager(prisma)
 
         const finishCertificateEmailSendingProcessUseCase =
             new FinishCertificateEmailSendingProcessUseCase(
                 emailsRepository,
                 certificateEmissionsRepository,
-                dataSourceRowsRepository,
+                usersRepository,
                 transactionManager,
             )
 
         await finishCertificateEmailSendingProcessUseCase.execute({
             emailId,
             status: parsed.status,
+            emailsSentCount: parsed.emailsSentCount,
+            userId: parsed.userId,
         })
 
         sseBroker.sendEvent(emailId, {

@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 from google.auth.transport.requests import Request
 from google.oauth2.id_token import fetch_id_token
 from datetime import date
+from pydantic import BaseModel, ValidationError
+from typing import List
 
 load_dotenv()
 
@@ -35,13 +37,26 @@ for var_name, var_value in {
 
 storage_client = storage.Client()
 
+class RecipientModel(BaseModel):
+    rowId: str
+    email: str
+
+class SendCertificateEmailsInput(BaseModel):
+    certificateEmissionId: str
+    emailId: str
+    userId: str
+    sender: str
+    subject: str
+    body: str
+    recipients: List[RecipientModel]
+
 def get_from_bucket(file_path):
     bucket = storage_client.bucket(CERTIFICATES_BUCKET)
     blob = bucket.blob(file_path)
     return blob.download_as_bytes()
 
 
-def update_email_status(email_id, status):
+def update_email_status(email_id, status, user_id=None, emails_sent_count=None):
     print('Inside update')
     url = f"{APP_BASE_URL}/api/internal/emails/{email_id}"
 
@@ -61,8 +76,14 @@ def update_email_status(email_id, status):
         }
     
     body = {
-        "status": status
+        "status": status,
     }
+
+    if user_id is not None:
+        body["userId"] = user_id
+
+    if emails_sent_count is not None:
+        body["emailsSentCount"] = emails_sent_count
 
     print('before sending patch')
     response = requests.patch(url, json=body, headers=headers)
@@ -70,21 +91,24 @@ def update_email_status(email_id, status):
 
 @functions_framework.http
 def main(request):
-    data = request.get_json()
-
-    # TODO: validate data
-    certificate_emission_id = data.get("certificateEmissionId")
-    email_id = data.get("emailId")
-    user_id = data.get("userId")
-    sender = data.get("sender")
-    subject = data.get("subject")
-    body = data.get("body")
-    recipients = data.get("recipients")
+    raw_data = request.get_json()
+    email_id = None
+    user_id = None
 
     try:
-        def send_email_to_recipient(recipient_data):
-            row_id = recipient_data.get('rowId')
-            recipient = recipient_data.get('email')
+        input_data = SendCertificateEmailsInput(**raw_data)
+
+        certificate_emission_id = input_data.certificateEmissionId
+        email_id = input_data.emailId
+        user_id = input_data.userId
+        sender = input_data.sender
+        subject = input_data.subject
+        body = input_data.body
+        recipients = input_data.recipients
+
+        def send_email_to_recipient(recipient_data: RecipientModel):
+            row_id = recipient_data.rowId
+            recipient = recipient_data.email
             path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{row_id}.pdf"
             pdf_bytes = get_from_bucket(path)
 
@@ -169,10 +193,30 @@ def main(request):
             for f in futures:
                 f.result()
 
-        update_email_status(email_id, 'COMPLETED')
+        update_email_status(email_id, 'COMPLETED', user_id, len(recipients))
 
         return "", 204
     
+    except ValidationError as e:
+        def format_pydantic_errors(errors):
+            formatted_errors = []
+
+            for error in errors:
+                field = ".".join([str(x) for x in error['loc']])
+                message = error['msg']
+                formatted_errors.append({
+                    "field": field,
+                    "message": message
+                })
+
+            return formatted_errors
+
+        friendly_errors = format_pydantic_errors(e.errors())
+
+        print("Validation errors:", friendly_errors)
+
+        return {"error": friendly_errors}, 200
+
     except Exception as e:
         original_error = str(e)
         update_error = None

@@ -58,7 +58,7 @@ export function Metrics() {
                     <MetricChart
                         data={certificatesChartData}
                         color="#0073ff"
-                        valueLabel="Arquivos"
+                        valueLabel="Certificados Gerados"
                     />
                 </div>
             </Card>
@@ -91,7 +91,7 @@ export function Metrics() {
                     <MetricChart
                         data={emailsChartData}
                         color="#aa50ff"
-                        valueLabel="E-mails"
+                        valueLabel="E-mails Enviados"
                     />
                 </div>
             </Card>

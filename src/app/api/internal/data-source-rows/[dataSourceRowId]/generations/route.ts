@@ -8,10 +8,12 @@ import { FinishCertificatesGenerationUseCase } from '@/backend/application/finis
 import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
+import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 
 const finishCertificatesGenerationSchema = z.object({
     success: z.boolean(),
     totalBytes: z.number().optional(),
+    userId: z.string().optional(),
 })
 
 export async function PATCH(
@@ -32,12 +34,14 @@ export async function PATCH(
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
+        const usersRepository = new PrismaUsersRepository(prisma)
         const transactionManager = new PrismaTransactionManager(prisma)
 
         const finishCertificatesGenerationUseCase =
             new FinishCertificatesGenerationUseCase(
                 dataSourceRowsRepository,
                 certificateEmissionsRepository,
+                usersRepository,
                 transactionManager,
             )
 
@@ -46,6 +50,7 @@ export async function PATCH(
                 dataSourceRowId,
                 success: parsed.success,
                 totalBytes: parsed.totalBytes,
+                userId: parsed.userId,
             })
 
         sseBroker.sendEvent(certificateEmissionId, {
