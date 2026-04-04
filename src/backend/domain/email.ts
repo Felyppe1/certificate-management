@@ -20,9 +20,9 @@ export enum EMAIL_ERROR_TYPE_ENUM {
 export interface EmailInput {
     id: string
     certificateEmissionId: string
-    subject: string | null
-    body: string | null
-    emailColumn: string | null
+    subject: string
+    body: string
+    emailColumn: string
     scheduledAt: Date | null
     status: PROCESSING_STATUS_ENUM
     emailErrorType: EMAIL_ERROR_TYPE_ENUM | null
@@ -30,9 +30,9 @@ export interface EmailInput {
 
 export interface CreateEmailInput {
     certificateEmissionId: string
-    subject: string | null
-    body: string | null
-    emailColumn: string | null
+    subject: string
+    body: string
+    emailColumn: string
     scheduledAt: Date | null
     emailErrorType: EMAIL_ERROR_TYPE_ENUM | null
 }
@@ -41,9 +41,9 @@ export interface EmailOutput extends EmailInput {}
 
 export class Email extends AggregateRoot {
     private certificateEmissionId: string
-    private subject: string | null
-    private body: string | null
-    private emailColumn: string | null
+    private subject: string
+    private body: string
+    private emailColumn: string
     private scheduledAt: Date | null
     private status: PROCESSING_STATUS_ENUM
     private emailErrorType: EMAIL_ERROR_TYPE_ENUM | null
@@ -69,15 +69,15 @@ export class Email extends AggregateRoot {
             throw new Error('Email certificateEmissionId is required')
         }
 
-        if (data.subject === undefined) {
+        if (!data.subject) {
             throw new Error('Email subject is required')
         }
 
-        if (data.body === undefined) {
+        if (!data.body) {
             throw new Error('Email body is required')
         }
 
-        if (data.emailColumn === undefined) {
+        if (!data.emailColumn) {
             throw new Error('Email column is required')
         }
 
