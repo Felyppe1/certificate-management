@@ -101,10 +101,10 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
             case DATA_SOURCE_MIME_TYPE.XLSX:
                 url = `https://docs.google.com/spreadsheets/d/${driveFileId}/export?format=xlsx`
                 break
-            case DATA_SOURCE_MIME_TYPE.CSV:
             case DATA_SOURCE_MIME_TYPE.GOOGLE_SHEETS:
                 url = `https://docs.google.com/spreadsheets/d/${driveFileId}/export?format=csv`
                 break
+            case DATA_SOURCE_MIME_TYPE.CSV:
             case DATA_SOURCE_MIME_TYPE.PNG:
             case DATA_SOURCE_MIME_TYPE.JPEG:
                 url = accessToken
@@ -123,6 +123,7 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
         const res = await fetch(url, { headers })
 
         if (!res.ok) {
+            console.log(await res.text())
             throw new Error('Error downloading file from Google Drive')
         }
 
@@ -209,10 +210,23 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
 
         const { Readable } = await import('stream')
 
+        let targetMimeType = mimeType
+        switch (mimeType) {
+            case DATA_SOURCE_MIME_TYPE.CSV:
+            case DATA_SOURCE_MIME_TYPE.XLSX:
+                targetMimeType = DATA_SOURCE_MIME_TYPE.GOOGLE_SHEETS
+                break
+            case TEMPLATE_FILE_MIME_TYPE.DOCX:
+                targetMimeType = TEMPLATE_FILE_MIME_TYPE.GOOGLE_DOCS
+                break
+            case TEMPLATE_FILE_MIME_TYPE.PPTX:
+                targetMimeType = TEMPLATE_FILE_MIME_TYPE.GOOGLE_SLIDES
+        }
+
         const response = await drive.files.create({
             requestBody: {
                 name: fileName,
-                mimeType,
+                mimeType: targetMimeType,
             },
             media: {
                 mimeType,

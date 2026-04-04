@@ -36,18 +36,10 @@ export async function turnDataSourceIntoSpreadsheetAction(
         )
         const bucket = new GcpBucket()
 
-        let driveGateway: GoogleDriveGateway | undefined
-        let externalUserAccountsRepository:
-            | PrismaExternalUserAccountsRepository
-            | undefined
-        let googleAuthGateway: GoogleAuthGateway | undefined
-
-        if (parsedData.destination === 'drive') {
-            googleAuthGateway = new GoogleAuthGateway()
-            driveGateway = new GoogleDriveGateway(googleAuthGateway)
-            externalUserAccountsRepository =
-                new PrismaExternalUserAccountsRepository(prisma)
-        }
+        const googleAuthGateway = new GoogleAuthGateway()
+        const driveGateway = new GoogleDriveGateway(googleAuthGateway)
+        const externalUserAccountsRepository =
+            new PrismaExternalUserAccountsRepository(prisma)
 
         const spreadsheetGeneratorFactory = new SpreadsheetGeneratorFactory()
 

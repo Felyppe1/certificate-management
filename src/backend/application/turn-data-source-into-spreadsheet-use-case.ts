@@ -46,12 +46,12 @@ export class TurnDataSourceIntoSpreadsheetUseCase {
         >,
         private bucket: Pick<IBucket, 'uploadObject' | 'deleteObject'>,
         private spreadsheetGeneratorFactory: ISpreadsheetGeneratorFactory,
-        private googleDriveGateway?: Pick<IGoogleDriveGateway, 'uploadFile'>,
-        private externalUserAccountsRepository?: Pick<
+        private googleDriveGateway: Pick<IGoogleDriveGateway, 'uploadFile'>,
+        private externalUserAccountsRepository: Pick<
             IExternalUserAccountsRepository,
             'getById' | 'update'
         >,
-        private googleAuthGateway?: Pick<
+        private googleAuthGateway: Pick<
             IGoogleAuthGateway,
             'checkOrGetNewAccessToken'
         >,
@@ -191,7 +191,7 @@ export class TurnDataSourceIntoSpreadsheetUseCase {
                 INPUT_METHOD.UPLOAD,
             )
         } else {
-            const { fileId } = await this.googleDriveGateway!.uploadFile({
+            const { fileId } = await this.googleDriveGateway.uploadFile({
                 buffer,
                 mimeType: newMimeType,
                 fileName: displayFileName,

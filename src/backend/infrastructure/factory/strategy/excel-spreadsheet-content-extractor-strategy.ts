@@ -22,8 +22,6 @@ export class ExcelSpreadsheetContentExtractorStrategy
             },
         )
 
-        console.log(records)
-
         const columns = records.length > 0 ? Object.keys(records[0]) : []
 
         return {

@@ -1,3 +1,6 @@
+import { DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
+import { TEMPLATE_FILE_MIME_TYPE } from '@/backend/domain/template'
+
 export interface DownloadFileInput {
     driveFileId: string
     fileMimeType: string
@@ -18,7 +21,7 @@ export interface GetFileMetadataOutput {
 
 export interface UploadFileInput {
     buffer: Buffer
-    mimeType: string
+    mimeType: TEMPLATE_FILE_MIME_TYPE | DATA_SOURCE_MIME_TYPE
     fileName: string
     accessToken: string
 }
