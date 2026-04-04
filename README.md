@@ -1,26 +1,66 @@
 # Gerenciamento de Certificados
 
-Aplicação web desenvolvida em Next.js com o objetivo de simplificar e automatizar o gerenciamento de certificados digitais. A plataforma oferece uma interface intuitiva que permite criar certificados personalizados, anexar templates e vincular diferentes fontes de dados de participantes.
+Essa aplicação web, desenvolvida com Next.js, foi criada para otimizar e automatizar a geração de certificados em massa. A plataforma combina uma interface intuitiva com um motor de personalização utilizando a sintaxe [Liquid](https://shopify.github.io/liquid/), permitindo a criação de templates dinâmicos. É possível importar planilhas ou utilizar IA para extração de dados via imagens. Além disso, você pode enviar os e-mails diretamente pela plataforma.
+
 O sistema é fortemente integrado aos serviços da Google, possibilitando o uso de arquivos do Google Drive, autenticação com OAuth 2.0, ferramentas da cloud, entre outros.
+
 Dessa forma, a plataforma atende à necessidade de reduzir esforços manuais ou overhead de tentar automatizar esse processo por conta própria — o que é recorrente em instituições acadêmicas e organizacionais —, oferecendo um fluxo completo e intuitivo.
 
 **Objetivo Acadêmico**: esse projeto será utilizado como Trabalho de Conclusão de Curso (TCC), além de utilizar tecnologias e conceitos de arquitetura na qual gostaria de me aperfeiçoar.
 
 ## Stack principal
+
 - Next.js 15 + React 19 + TypeScript
 - Prisma ORM
 - PostgreSQL (banco padrão)
 - Tailwind CSS
 - Google Workspace (opcional, para login e upload no Drive)
 
-![alt text](architecture.png)
+![alt text](architecture.jpeg)
+
+## Configurando o Google Cloud
+
+Antes de rodar o sistema pela primeira vez, é necessário configurar alguns recursos no Google Cloud.
+
+### 1. Configurar OAuth 2.0
+
+1. **Crie um projeto** no [Google Cloud Console](https://console.cloud.google.com/).
+2. **Crie um Branding** em _APIs e Serviços → Tela de permissão OAuth_.
+3. **Crie um cliente OAuth**:
+    - Vá em _APIs e Serviços → Clientes → Criar cliente_.
+    - Selecione Aplicativo da Web.
+    - Adicione `http://localhost:3000` em Origens JavasScript autorizadas.
+    - Adicione `http://localhost:3000/api/auth/google/callback` em URIs de redirecionamento autorizados.
+    - Anote o `client_id` e o `client_secret` gerados — você vai precisar deles nas variáveis de ambiente.
+4. **Adicione os escopos** necessários em _APIs e Serviços -> Acesso a dados_:
+    - `https://www.googleapis.com/auth/drive.file` (Escopos não confidenciais)
+    - `https://www.googleapis.com/auth/drive.readonly` (Escopos restritos)
+5. **Adicione os usuários permitidos** em _APIs e Serviços -> Público-alvo_ (enquanto o app estiver em modo de teste).
+
+### 2. Criar o bucket de certificados
+
+É necessário um bucket no Google Cloud Storage para armazenar os certificados gerados. Você pode criá-lo manualmente no [Console do GCP](https://console.cloud.google.com/storage) ou provisionar via Terraform (veja a pasta `terraform/`).
+
+### 3. Autenticar com gcloud
+
+1. **Instale o gcloud CLI**: https://cloud.google.com/sdk/docs/install-sdk?hl=pt-br#deb
+
+2. **Autentique-se impersonando a Service Account**:
+
+    ```bash
+    gcloud auth application-default login --impersonate-service-account=<email-da-service-account>
+    ```
+
+---
 
 ## Como rodar o sistema (primeira vez)
 
 ### Pré‑requisitos
+
 - Node.js 20+ e npm
 - Docker e Docker Compose (recomendado para subir Postgres e Redis)
-- Projeto no Google Cloud
+- Projeto no Google Cloud configurado (veja a seção acima)
+- gcloud CLI instalado e autenticado
 
 ### Passo a passo:
 
@@ -35,7 +75,7 @@ Dessa forma, a plataforma atende à necessidade de reduzir esforços manuais ou 
     Preencha as variáveis necessárias
 
 2. **Criar containers**:
-    
+
     Com o Docker rodando, crie e rode os containers necessários:
 
     ```bash
@@ -43,29 +83,20 @@ Dessa forma, a plataforma atende à necessidade de reduzir esforços manuais ou 
     ```
 
 3. **Instale as dependências**:
+
     ```bash
     npm install
     ```
 
 4. **Crie o client do Prisma ORM e execute as migrações do banco**:
+
     ```bash
     npm run prisma:generate
     npm run prisma:dev
     ```
 
-5. **Exporte as credenciais da Service Account da Google**:
+5. **Inicie o servidor**:
 
-    Para pegar a service account na GCP:
-    1. Vá em Contas de serviço.
-    2. Crie ou selecione uma conta de serviço.
-    3. Vá na aba Chaves → Adicionar chave → Criar nova chave (JSON).
-    4. Baixe o arquivo e use ele no comando:
-
-    ```bash
-    export GOOGLE_APPLICATION_CREDENTIALS=caminho-da-sua-service-account
-    ```
-
-6. **Inicie o servidor**:
     ```bash
     npm run dev
     ```
@@ -73,114 +104,32 @@ Dessa forma, a plataforma atende à necessidade de reduzir esforços manuais ou 
     Acessível via: http://localhost:3000
 
 ### Como rodar o sistema nas próximas vezes
+
 1. **Rodar containers**:
-    
+
     Com o Docker rodando, rode os containers já criados:
 
     ```bash
     docker compose start
     ```
 
-2. **Exporte as credenciais da Service Account da Google**:
-    ```bash
-    export GOOGLE_APPLICATION_CREDENTIALS=caminho-da-sua-service-account
-    ```
+2. **Inicie o servidor de desenvolvimento**:
 
-3. **Inicie o servidor de desenvolvimento**:
     ```bash
     npm run dev
     ```
 
     Acessível via: http://localhost:3000
 
+## Modelagem
 
-## Como rodar as cloud functions localmente
+### Banco de dados
 
-Todas as Cloud Functions estão dentro da pasta `cloud-functions/`.
+A modelagem está normalizada até a **3FN**. Cada atributo armazena apenas dados atômicos e depende exclusivamente da chave primária de sua tabela, o que minimiza o custo de armazenamento e simplifica a lógica da aplicação.
 
-### Pré‑requisitos
-- Python 3.14+
+![Modelagem do banco de dados](db-modeling.png)
 
-### Passo a passo de Cloud Function COM Dockerfile:
+### Modelagem do domínio
 
-1. **Entre na pasta da função desejada**:
-
-    ```bash
-    cd cloud-functions/nome-da-funcao
-    ```
-
-2. **Configure as variáveis de ambiente**:
-
-    Copie o arquivo `.env.example` para um arquivo `.env`
-
-    ```bash
-    cp .env.example .env
-    ```
-
-    Preencha as variáveis necessárias
-
-3. **Rode o container**:
-
-    Se for a primeira vez:
-    ```bash
-    docker compose up
-    ```
-    Senão:
-    ```bash
-    docker compose start
-    ```
-
-### Passo a passo de Cloud Function SEM Dockerfile
-
-1. **Entre na pasta da função desejada**:
-
-    ```bash
-    cd cloud-functions/nome-da-funcao
-    ```
-
-2. **Configure as variáveis de ambiente**:
-
-    Copie o arquivo `.env.example` para um arquivo `.env`
-
-    ```bash
-    cp .env.example .env
-    ```
-
-    Preencha as variáveis necessárias
-
-3. **Exporte as credenciais da Service Account da Google**:
-
-    ```bash
-    export GOOGLE_APPLICATION_CREDENTIALS=caminho-da-sua-service-account
-    ```
-
-4. **Crie um ambiente virtual Python**:
-    ```bash
-    python -m venv .venv
-    source .venv/bin/activate
-    ```
-
-5. **Instale as dependências**:
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-6. **Rode a função localmente**:
-    ```bash
-    functions-framework --target=main --port=8080 --debug
-    ```
-    A função ficará acessível em: `http://localhost:8080`.
-
-> Dica: você pode abrir várias abas/terminais para rodar múltiplas funções ao mesmo tempo, cada uma em uma porta diferente.
-
-## Modelagem do banco
-
-![alt text](db-modelling.png)
-
-### Padrão Outbox (eventos de domínio)
-
-Esse projeto persiste eventos de domínio em uma tabela `outbox` junto com as alterações de dados de negócio, garantindo atomicidade.
-
-Para trocar de banco de dados, é necessário implementar uma forma de persistir e capturar esses eventos para que o sistema funcione corretamente.
-
+![Modelagem do domínio](context-mapping.png)
 
