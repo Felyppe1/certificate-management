@@ -1,12 +1,5 @@
-export const USER_CREDITS = 300
-
-export interface User {
-    id: string
-    email: string
-    name: string
-    passwordHash: string | null
-    credits: number
-}
+import { User } from '../../../domain/user'
+export { USER_CREDITS } from '../../../domain/user'
 
 export interface IUsersRepository {
     getById(id: string): Promise<User | null>

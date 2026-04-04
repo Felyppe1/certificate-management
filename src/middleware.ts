@@ -43,15 +43,32 @@ export async function middleware(request: NextRequest) {
         return response
     }
 
-    if (!sessionToken) {
-        return NextResponse.redirect(new URL('/entrar', request.url))
+    let isSessionValid = false
+
+    if (sessionToken) {
+        const session = await verifySession(sessionToken)
+        if (session) {
+            isSessionValid = true
+        } else {
+            cookie.delete('session_token')
+        }
     }
 
-    const session = await verifySession(sessionToken)
+    if (!isSessionValid) {
+        // Check if the request came from a Server Action
+        const isServerAction = request.headers.has('next-action')
 
-    if (!session) {
-        cookie.delete('session_token')
+        if (isServerAction) {
+            // If it's a Server Action, LET IT PASS.
+            // The request will hit your Action, your `validateSessionToken()`
 
+            // It will throw an error, fall into the Catch block, and return `{ success: false, errorType: '...' }`
+            // which is exactly what your frontend (React Query) expects to receive.
+            return response
+        }
+
+        // If it's NOT a Server Action (e.g., the user typed the URL or refreshed the page)
+        // Redirect to the login page normally
         return NextResponse.redirect(new URL('/entrar', request.url))
     }
 

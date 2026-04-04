@@ -28,7 +28,10 @@ export class DeleteAccountUseCase {
         }
 
         const externalAccount =
-            await this.externalUserAccountsRepository.getById(user.id, 'GOOGLE')
+            await this.externalUserAccountsRepository.getById(
+                user.getId(),
+                'GOOGLE',
+            )
 
         if (externalAccount) {
             await this.googleAuthGateway.revokeRefreshToken(
@@ -36,6 +39,6 @@ export class DeleteAccountUseCase {
             )
         }
 
-        await this.usersRepository.delete(user.id)
+        await this.usersRepository.delete(user.getId())
     }
 }

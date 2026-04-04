@@ -8,6 +8,7 @@ import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/pr
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { AppError } from '@/backend/domain/error/app-error'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
+import { SESSION_EXPIRY_DAYS } from '@/backend/domain/session'
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
@@ -46,6 +47,7 @@ export async function GET(request: Request) {
         cookie.set('session_token', sessionToken, {
             httpOnly: true,
             path: '/',
+            maxAge: SESSION_EXPIRY_DAYS * 24 * 60 * 60,
             // secure: true,
             // sameSite: "strict" // TODO: use sameSite
         })

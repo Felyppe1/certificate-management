@@ -8,6 +8,7 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { SESSION_EXPIRY_DAYS } from '@/backend/domain/session'
 
 export interface GetSessionControllerResponse {
     token: string
@@ -54,6 +55,7 @@ export async function POST(
             // secure: true,
             httpOnly: true,
             path: '/',
+            maxAge: SESSION_EXPIRY_DAYS * 24 * 60 * 60,
             // sameSite: "strict"
         })
 

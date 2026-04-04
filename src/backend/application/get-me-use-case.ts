@@ -20,13 +20,15 @@ export class GetMeUseCase {
         }
 
         const externalAccounts =
-            await this.externalUserAccountsRepository.getManyByUserId(user.id)
+            await this.externalUserAccountsRepository.getManyByUserId(
+                user.getId(),
+            )
 
         return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            credits: user.credits,
+            id: user.getId(),
+            email: user.getEmail(),
+            name: user.getName(),
+            credits: user.getCredits(),
             externalAccounts: externalAccounts.map(account => ({
                 provider: account.provider,
                 providerUserId: account.providerUserId,

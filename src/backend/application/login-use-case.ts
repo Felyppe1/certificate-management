@@ -1,8 +1,8 @@
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import bcrypt from 'bcrypt'
-import crypto from 'crypto'
 import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 import { AuthenticationError } from '../domain/error/authentication-error'
+import { Session } from '../domain/session'
 
 export class LoginUseCase {
     constructor(
@@ -20,26 +20,23 @@ export class LoginUseCase {
         // TODO: check if ''compared to '' passes
         const isPasswordValid = await bcrypt.compare(
             password,
-            user.passwordHash ?? '',
+            user.getPasswordHash() ?? '',
         )
 
         if (!isPasswordValid) {
             throw new AuthenticationError('incorrect-credentials')
         }
 
-        const sessionToken = crypto.randomBytes(32).toString('hex')
+        const session = Session.create(user.getId())
 
-        await this.sessionsRepository.save({
-            userId: user.id,
-            token: sessionToken,
-        })
+        await this.sessionsRepository.save(session)
 
         return {
-            token: sessionToken,
+            token: session.getToken(),
             user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
+                id: user.getId(),
+                name: user.getName(),
+                email: user.getEmail(),
             },
         }
     }

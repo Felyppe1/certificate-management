@@ -3,15 +3,12 @@ import {
     IExternalUserAccountsRepository,
 } from './interfaces/repository/iexternal-user-accounts-repository'
 import { ISessionsRepository } from './interfaces/repository/isessions-repository'
-import {
-    User,
-    IUsersRepository,
-    USER_CREDITS,
-} from './interfaces/repository/iusers-repository'
-import crypto from 'crypto'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { AuthenticationError } from '../domain/error/authentication-error'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
+import { User } from '../domain/user'
+import { Session } from '../domain/session'
 
 interface LoginGoogleUseCaseInput {
     code: string
@@ -59,21 +56,22 @@ export class LoginGoogleUseCase {
         let newUser: User
 
         if (!userExists) {
-            newUser = {
-                id: crypto.randomUUID(),
+            newUser = User.create({
                 email: userInfo.email,
                 name: userInfo.name,
                 passwordHash: null,
-                credits: USER_CREDITS,
-            }
+            })
         }
 
         const user = userExists ?? newUser!
 
         const externalAccount =
-            await this.externalUserAccountsRepository.getById(user.id, 'GOOGLE')
+            await this.externalUserAccountsRepository.getById(
+                user.getId(),
+                'GOOGLE',
+            )
 
-        const sessionToken = crypto.randomBytes(32).toString('hex')
+        const session = Session.create(user.getId())
 
         await this.transactionManager.run(async () => {
             if (!userExists) {
@@ -82,7 +80,7 @@ export class LoginGoogleUseCase {
 
             if (!externalAccount) {
                 const newExternalAccount: ExternalUserAccount = {
-                    userId: user.id,
+                    userId: user.getId(),
                     provider: 'GOOGLE',
                     providerUserId: userInfo.providerUserId,
                     accessToken: tokenData.accessToken,
@@ -108,12 +106,9 @@ export class LoginGoogleUseCase {
                 )
             }
 
-            await this.sessionsRepository.save({
-                userId: user.id,
-                token: sessionToken,
-            })
+            await this.sessionsRepository.save(session)
         })
 
-        return sessionToken
+        return session.getToken()
     }
 }

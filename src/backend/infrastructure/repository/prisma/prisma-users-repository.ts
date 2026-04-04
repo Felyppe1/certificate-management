@@ -1,8 +1,8 @@
 import {
-    User,
     IUsersRepository,
     USER_CREDITS,
 } from '@/backend/application/interfaces/repository/iusers-repository'
+import { User } from '@/backend/domain/user'
 import { PrismaExecutor } from '.'
 import { transactionStorage } from './prisma-transaction-manager'
 
@@ -22,13 +22,13 @@ export class PrismaUsersRepository implements IUsersRepository {
 
         if (!user) return null
 
-        return {
+        return new User({
             id: user.id,
             email: user.email,
             name: user.name,
             passwordHash: user.password_hash,
             credits: user.credits,
-        }
+        })
     }
 
     async getById(id: string) {
@@ -40,22 +40,22 @@ export class PrismaUsersRepository implements IUsersRepository {
 
         if (!user) return null
 
-        return {
+        return new User({
             id: user.id,
             email: user.email,
             name: user.name,
             passwordHash: user.password_hash,
             credits: user.credits,
-        }
+        })
     }
 
     async save(user: User) {
         await this.prisma.user.create({
             data: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                password_hash: user.passwordHash,
+                id: user.getId(),
+                email: user.getEmail(),
+                name: user.getName(),
+                password_hash: user.getPasswordHash(),
             },
         })
     }

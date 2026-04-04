@@ -39,8 +39,9 @@ model User {
 }
 
 model Session {
-    token   String @id
-    user_id String
+    token      String   @id
+    user_id    String
+    expires_at DateTime
 
     User User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -149,6 +150,7 @@ model DataSourceColumn {
     DataSource       DataSource        @relation(fields: [data_source_id], references: [certificate_emission_id], onDelete: Cascade)
     TemplateVariable TemplateVariable?
     DataSourceValue  DataSourceValue[]
+    Email Email?
 
     @@id([name, data_source_id])
     @@map("data_source_columns")
@@ -192,10 +194,12 @@ model Email {
     email_error_type String?
 
     certificate_emission_id String  @unique
-    email_column            String?
+    email_column            String
 
     CertificateEmission    CertificateEmission      @relation(fields: [certificate_emission_id], references: [id], onDelete: Cascade)
+    DataSourceColumn        DataSourceColumn   @relation(fields: [email_column, certificate_emission_id], references: [name, data_source_id])
 
+    @@unique([email_column, certificate_emission_id])
     @@map("emails")
 }
 

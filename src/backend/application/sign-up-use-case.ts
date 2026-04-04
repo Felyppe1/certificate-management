@@ -2,10 +2,8 @@ import {
     CONFLICT_ERROR_TYPE,
     ConflictError,
 } from '../domain/error/conflict-error'
-import {
-    IUsersRepository,
-    USER_CREDITS,
-} from './interfaces/repository/iusers-repository'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { User } from '../domain/user'
 import bcrypt from 'bcrypt'
 
 interface SignUpInput {
@@ -26,16 +24,14 @@ export class SignUpUseCase {
 
         const passwordHash = await bcrypt.hash(data.password, 10)
 
-        const userId = crypto.randomUUID()
-
-        await this.usersRepository.save({
-            id: userId,
+        const user = User.create({
             name: data.name,
             email: data.email,
             passwordHash,
-            credits: USER_CREDITS,
         })
 
-        return { userId }
+        await this.usersRepository.save(user)
+
+        return { userId: user.getId() }
     }
 }

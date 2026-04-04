@@ -1,7 +1,4 @@
-export interface Session {
-    userId: string
-    token: string
-}
+import { Session } from '../../../domain/session'
 
 export interface ISessionsRepository {
     save(session: Session): Promise<void>

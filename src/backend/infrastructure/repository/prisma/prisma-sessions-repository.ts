@@ -1,9 +1,7 @@
-import {
-    Session,
-    ISessionsRepository,
-} from '@/backend/application/interfaces/repository/isessions-repository'
+import { ISessionsRepository } from '@/backend/application/interfaces/repository/isessions-repository'
 import { PrismaExecutor } from '.'
 import { transactionStorage } from './prisma-transaction-manager'
+import { Session } from '@/backend/domain/session'
 
 export class PrismaSessionsRepository implements ISessionsRepository {
     constructor(private readonly defaultPrisma: PrismaExecutor) {}
@@ -21,17 +19,19 @@ export class PrismaSessionsRepository implements ISessionsRepository {
 
         if (!session) return null
 
-        return {
-            userId: session.user_id,
+        return new Session({
             token: session.token,
-        }
+            userId: session.user_id,
+            expiresAt: session.expires_at,
+        })
     }
 
     async save(session: Session) {
         await this.prisma.session.create({
             data: {
-                user_id: session.userId,
-                token: session.token,
+                user_id: session.getUserId(),
+                token: session.getToken(),
+                expires_at: session.getExpiresAt(),
             },
         })
     }

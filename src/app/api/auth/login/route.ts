@@ -7,6 +7,7 @@ import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/pr
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { loginSchema } from '@/backend/infrastructure/server-actions/schemas'
+import { SESSION_EXPIRY_DAYS } from '@/backend/domain/session'
 
 export interface LoginControllerResponse {
     token: string
@@ -34,7 +35,7 @@ export async function POST(
             {
                 status: 200,
                 headers: {
-                    'Set-Cookie': `session_token=${result.token}; HttpOnly; Path=/; SameSite=Strict`,
+                    'Set-Cookie': `session_token=${result.token}; HttpOnly; Path=/; SameSite=Strict; Max-Age=${SESSION_EXPIRY_DAYS * 24 * 60 * 60}`,
                 },
             },
         )
