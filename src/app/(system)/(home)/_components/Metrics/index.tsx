@@ -75,7 +75,7 @@ export function Metrics() {
                             <h2 className="text-4xl sm:text-5xl font-bold text-foreground">
                                 {certificateEmissionsMetrics.totalEmailsSent}
                             </h2>
-                            <Popover>
+                            {/* <Popover>
                                 <PopoverTrigger className="h-fit cursor-pointer text-muted-foreground p-0.5 mt-2 outline-none rounded-sm focus-visible:ring-[3px] focus-visible:ring-ring/50">
                                     <Clock className="size-3 sm:size-3.5 hover:text-muted-foreground/85" />
                                 </PopoverTrigger>
@@ -85,7 +85,7 @@ export function Metrics() {
                                         atualizar
                                     </p>
                                 </PopoverContent>
-                            </Popover>
+                            </Popover> */}
                         </div>
                     </div>
                     <MetricChart
