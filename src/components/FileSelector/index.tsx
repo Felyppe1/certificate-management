@@ -408,7 +408,7 @@ export function FileSelector({
                 <p className="text-xs">
                     Arquivos aceitos:{' '}
                     {type === 'data-source'
-                        ? 'Google Planilhas, .csv, .xlsx, .png ou .jpeg (imagens: até 4)'
+                        ? 'Google Planilhas, .csv, .xlsx, .png ou .jpeg'
                         : 'Google Slides, Google Docs, .pptx ou .docx'}
                 </p>
                 <p>·</p>

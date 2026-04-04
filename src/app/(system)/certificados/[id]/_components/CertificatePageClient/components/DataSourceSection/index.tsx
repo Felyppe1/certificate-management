@@ -302,7 +302,7 @@ export function DataSourceSection({
                         className="[&>svg]:size-6 pr-3 mb-4"
                     >
                         <AiIcon3 />
-                        IA habilitada para imagens
+                        Extração dos dados com IA para imagens
                     </Badge>
                     <FileSelector
                         userEmail={userEmail}
@@ -353,7 +353,7 @@ export function DataSourceSection({
                     className="[&>svg]:size-6 pr-3 mb-4"
                 >
                     <AiIcon3 />
-                    IA habilitada para imagens
+                    Extração dos dados com IA para imagens
                 </Badge>
                 <FileSelector
                     userEmail={userEmail}

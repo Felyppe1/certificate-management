@@ -582,6 +582,7 @@ export function DataSourceDisplay({
                 onOpenChange={setShowConvertModal}
                 certificateId={certificateId}
                 login={login}
+                multipleFiles={dataSource.files.length > 1}
             />
         </>
     )

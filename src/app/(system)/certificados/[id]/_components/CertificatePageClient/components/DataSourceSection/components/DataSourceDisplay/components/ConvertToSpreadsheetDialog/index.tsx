@@ -24,6 +24,7 @@ interface ConvertToSpreadsheetDialogProps {
     onOpenChange: (open: boolean) => void
     certificateId: string
     login: () => void
+    multipleFiles: boolean
 }
 
 export function ConvertToSpreadsheetDialog({
@@ -31,6 +32,7 @@ export function ConvertToSpreadsheetDialog({
     onOpenChange,
     certificateId,
     login,
+    multipleFiles,
 }: ConvertToSpreadsheetDialogProps) {
     const [convertFormat, setConvertFormat] = useState<'csv' | 'xlsx'>('xlsx')
     const [convertDestination, setConvertDestination] = useState<
@@ -91,10 +93,17 @@ export function ConvertToSpreadsheetDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Converter imagens em planilha</DialogTitle>
+                    <DialogTitle>
+                        Converter{' '}
+                        {multipleFiles
+                            ? 'imagens em planilha'
+                            : 'imagem em planilha'}
+                    </DialogTitle>
                     <DialogDescription>
-                        As imagens serão removidas do armazenamento e
-                        substituídas por uma planilha com os dados extraídos.
+                        {multipleFiles
+                            ? 'As imagens serão removidas do armazenamento e substituídas'
+                            : 'A imagem será removida do armazenamento e substituída'}{' '}
+                        por uma planilha com os dados extraídos.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -149,12 +158,14 @@ export function ConvertToSpreadsheetDialog({
                         variant="outline"
                         onClick={() => onOpenChange(false)}
                         disabled={convertMutation.isPending}
+                        className="py-2"
                     >
                         Cancelar
                     </Button>
                     <Button
                         onClick={handleConvert}
                         disabled={convertMutation.isPending}
+                        className="py-2"
                     >
                         {convertMutation.isPending ? (
                             <>

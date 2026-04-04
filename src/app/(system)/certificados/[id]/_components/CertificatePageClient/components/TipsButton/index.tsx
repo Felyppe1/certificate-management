@@ -19,6 +19,11 @@ const tips = [
             'O template suporta a sintaxe <strong>Liquid</strong>, permitindo o uso de variáveis, condicionais e filtros. Exemplo: <code class="bg-blue-900 px-1 rounded">{{ nome }}</code>. Consulte a <a href="https://shopify.github.io/liquid/" target="_blank" rel="noopener noreferrer" class="underline">documentação oficial</a>.',
     },
     {
+        title: 'Converta Imagens em Planilha',
+        description:
+            'Após adicionar uma fonte de dados com imagens, você pode convertê-las em planilha para manusear os dados.',
+    },
+    {
         title: 'Mapeamento',
         description:
             'Ao adicionar variáveis no template, você pode escolher quais colunas da fonte de dados vão substituí-las na geração.',
