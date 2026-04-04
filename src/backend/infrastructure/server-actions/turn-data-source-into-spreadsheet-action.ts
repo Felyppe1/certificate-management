@@ -8,7 +8,7 @@ import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { GoogleDriveGateway } from '../gateway/google-drive-gateway'
-import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
+import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
 import { TurnDataSourceIntoSpreadsheetUseCase } from '@/backend/application/turn-data-source-into-spreadsheet-use-case'
 import { SpreadsheetGeneratorFactory } from '../factory/spreadsheet-generator-factory'
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
@@ -38,8 +38,7 @@ export async function turnDataSourceIntoSpreadsheetAction(
 
         const googleAuthGateway = new GoogleAuthGateway()
         const driveGateway = new GoogleDriveGateway(googleAuthGateway)
-        const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository(prisma)
+        const usersRepository = new PrismaUsersRepository(prisma)
 
         const spreadsheetGeneratorFactory = new SpreadsheetGeneratorFactory()
 
@@ -49,7 +48,7 @@ export async function turnDataSourceIntoSpreadsheetAction(
             bucket,
             spreadsheetGeneratorFactory,
             driveGateway,
-            externalUserAccountsRepository,
+            usersRepository,
             googleAuthGateway,
         )
 

@@ -1,5 +1,11 @@
 import { createId } from '@paralleldrive/cuid2'
 import { AggregateRoot } from './primitives/aggregate-root'
+import {
+    ExternalAccount,
+    ExternalAccountInput,
+    ExternalAccountOutput,
+    Provider,
+} from './external-account'
 
 export const USER_CREDITS = 300
 
@@ -9,6 +15,7 @@ export interface UserInput {
     name: string
     passwordHash: string | null
     credits: number
+    externalAccounts?: ExternalAccountInput[]
 }
 
 interface CreateUserInput {
@@ -23,6 +30,7 @@ export interface UserOutput {
     name: string
     passwordHash: string | null
     credits: number
+    externalAccounts: ExternalAccountOutput[]
 }
 
 export class User extends AggregateRoot {
@@ -30,6 +38,7 @@ export class User extends AggregateRoot {
     private name: string
     private passwordHash: string | null
     private credits: number
+    private externalAccounts: ExternalAccount[]
 
     static create(data: CreateUserInput): User {
         return new User({
@@ -47,6 +56,42 @@ export class User extends AggregateRoot {
         this.name = data.name
         this.passwordHash = data.passwordHash
         this.credits = data.credits
+        this.externalAccounts = (data.externalAccounts ?? []).map(
+            a => new ExternalAccount(a),
+        )
+    }
+
+    addExternalAccount(data: ExternalAccountInput): void {
+        this.externalAccounts.push(new ExternalAccount(data))
+    }
+
+    updateExternalAccount(
+        provider: Provider,
+        tokens: {
+            accessToken: string
+            accessTokenExpiryDateTime: Date | null
+            refreshToken?: string | null
+        },
+    ): void {
+        const account = this.externalAccounts.find(
+            a => a.getProvider() === provider,
+        )
+
+        if (!account) return
+
+        account.updateTokens(
+            tokens.accessToken,
+            tokens.accessTokenExpiryDateTime,
+            tokens.refreshToken,
+        )
+    }
+
+    getExternalAccount(provider: Provider): ExternalAccount | undefined {
+        return this.externalAccounts.find(a => a.getProvider() === provider)
+    }
+
+    getExternalAccounts(): ExternalAccount[] {
+        return [...this.externalAccounts]
     }
 
     getEmail(): string {
@@ -72,6 +117,9 @@ export class User extends AggregateRoot {
             name: this.name,
             passwordHash: this.passwordHash,
             credits: this.credits,
+            externalAccounts: this.externalAccounts.map(account =>
+                account.serialize(),
+            ),
         }
     }
 }

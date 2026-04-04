@@ -1,7 +1,7 @@
 'use server'
 
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
+import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
 import { prisma } from '../repository/prisma'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-google-access-token-use-case'
@@ -13,13 +13,12 @@ export async function refreshGoogleAccessTokenAction() {
     try {
         const { userId } = await validateSessionToken()
 
-        const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository(prisma)
+        const usersRepository = new PrismaUsersRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
 
         const refreshGoogleAccessTokenUseCase =
             new RefreshGoogleAccessTokenUseCase(
-                externalUserAccountsRepository,
+                usersRepository,
                 googleAuthGateway,
             )
 

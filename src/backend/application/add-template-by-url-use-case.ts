@@ -18,7 +18,7 @@ import { IBucket } from './interfaces/cloud/ibucket'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { IStringVariableExtractor } from './interfaces/istring-variable-extractor'
-import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
@@ -55,10 +55,7 @@ export class AddTemplateByUrlUseCase {
             IStringVariableExtractor,
             'extractVariables'
         >,
-        private externalUserAccountsRepository: Pick<
-            IExternalUserAccountsRepository,
-            'getById'
-        >,
+        private usersRepository: Pick<IUsersRepository, 'getById'>,
     ) {}
 
     async execute(input: AddTemplateByUrlUseCaseInput) {
@@ -87,17 +84,15 @@ export class AddTemplateByUrlUseCase {
             )
         }
 
-        const externalAccount =
-            await this.externalUserAccountsRepository.getById(
-                input.userId,
-                'GOOGLE',
-            )
+        const user = await this.usersRepository.getById(input.userId)
+        const externalAccount = user?.getExternalAccount('GOOGLE')
 
         const { name, fileMimeType, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
-                userAccessToken: externalAccount?.accessToken,
-                userRefreshToken: externalAccount?.refreshToken || undefined,
+                userAccessToken: externalAccount?.getAccessToken(),
+                userRefreshToken:
+                    externalAccount?.getRefreshToken() || undefined,
             })
 
         if (!Template.isValidFileMimeType(fileMimeType)) {
@@ -109,7 +104,7 @@ export class AddTemplateByUrlUseCase {
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
             fileMimeType: fileMimeType,
-            accessToken: externalAccount?.accessToken,
+            accessToken: externalAccount?.getAccessToken(),
         })
 
         const contentExtractor =

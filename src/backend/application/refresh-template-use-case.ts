@@ -16,7 +16,7 @@ import {
     Template,
 } from '../domain/template'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor-factory'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
@@ -43,7 +43,7 @@ export class RefreshTemplateUseCase {
             'checkOrGetNewAccessToken'
         >,
         private fileContentExtractorFactory: IFileContentExtractorFactory,
-        private externalUserAccountsRepository: IExternalUserAccountsRepository,
+        private usersRepository: Pick<IUsersRepository, 'getById' | 'update'>,
         private transactionManager: ITransactionManager,
         private bucket: Pick<IBucket, 'uploadObject'>,
         private stringVariableExtractor: Pick<
@@ -82,11 +82,10 @@ export class RefreshTemplateUseCase {
             )
         }
 
-        const externalAccount =
-            await this.externalUserAccountsRepository.getById(
-                certificateEmission.getUserId(),
-                'GOOGLE',
-            )
+        const user = await this.usersRepository.getById(
+            certificateEmission.getUserId(),
+        )
+        const externalAccount = user?.getExternalAccount('GOOGLE')
 
         if (
             certificateEmission.isTemplateFromGoogleDrive() ||
@@ -100,20 +99,20 @@ export class RefreshTemplateUseCase {
 
             const newData =
                 await this.googleAuthGateway.checkOrGetNewAccessToken({
-                    accessToken: externalAccount.accessToken,
-                    refreshToken: externalAccount.refreshToken!,
+                    accessToken: externalAccount.getAccessToken(),
+                    refreshToken: externalAccount.getRefreshToken()!,
                     accessTokenExpiryDateTime:
-                        externalAccount.accessTokenExpiryDateTime!,
+                        externalAccount.getAccessTokenExpiryDateTime()!,
                 })
 
             if (newData) {
-                externalAccount.accessToken = newData.newAccessToken
-                externalAccount.accessTokenExpiryDateTime =
-                    newData.newAccessTokenExpiryDateTime
+                user!.updateExternalAccount('GOOGLE', {
+                    accessToken: newData.newAccessToken,
+                    accessTokenExpiryDateTime:
+                        newData.newAccessTokenExpiryDateTime,
+                })
 
-                await this.externalUserAccountsRepository.update(
-                    externalAccount,
-                )
+                await this.usersRepository.update(user!)
             }
         }
 
@@ -123,9 +122,9 @@ export class RefreshTemplateUseCase {
                 fileId: driveFileId,
                 ...((certificateEmission.isTemplateFromGoogleDrive() ||
                     certificateEmission.isTemplateFromUrl()) && {
-                    userAccessToken: externalAccount?.accessToken,
+                    userAccessToken: externalAccount?.getAccessToken(),
                     userRefreshToken:
-                        externalAccount?.refreshToken ?? undefined,
+                        externalAccount?.getRefreshToken() ?? undefined,
                 }),
             })
 
@@ -140,7 +139,7 @@ export class RefreshTemplateUseCase {
             fileMimeType: fileMimeType,
             ...((certificateEmission.isTemplateFromGoogleDrive() ||
                 certificateEmission.isTemplateFromUrl()) && {
-                accessToken: externalAccount?.accessToken,
+                accessToken: externalAccount?.getAccessToken(),
             }),
         })
 

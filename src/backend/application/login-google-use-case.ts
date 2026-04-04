@@ -1,7 +1,3 @@
-import {
-    ExternalUserAccount,
-    IExternalUserAccountsRepository,
-} from './interfaces/repository/iexternal-user-accounts-repository'
 import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { AuthenticationError } from '../domain/error/authentication-error'
@@ -17,10 +13,9 @@ interface LoginGoogleUseCaseInput {
 
 export class LoginGoogleUseCase {
     constructor(
-        private usersRepository: Pick<IUsersRepository, 'save' | 'getByEmail'>,
-        private externalUserAccountsRepository: Pick<
-            IExternalUserAccountsRepository,
-            'save' | 'update' | 'getById'
+        private usersRepository: Pick<
+            IUsersRepository,
+            'save' | 'update' | 'getByEmail'
         >,
         private sessionsRepository: Pick<ISessionsRepository, 'save'>,
         private googleAuthGateway: Pick<
@@ -53,57 +48,54 @@ export class LoginGoogleUseCase {
 
         const userExists = await this.usersRepository.getByEmail(userInfo.email)
 
-        let newUser: User
+        let user: User
 
         if (!userExists) {
-            newUser = User.create({
+            user = User.create({
                 email: userInfo.email,
                 name: userInfo.name,
                 passwordHash: null,
             })
-        }
-
-        const user = userExists ?? newUser!
-
-        const externalAccount =
-            await this.externalUserAccountsRepository.getById(
-                user.getId(),
-                'GOOGLE',
-            )
-
-        const session = Session.create(user.getId())
-
-        await this.transactionManager.run(async () => {
-            if (!userExists) {
-                await this.usersRepository.save(newUser!)
-            }
-
+            user.addExternalAccount({
+                provider: 'GOOGLE',
+                providerUserId: userInfo.providerUserId,
+                accessToken: tokenData.accessToken,
+                refreshToken: tokenData.refreshToken,
+                accessTokenExpiryDateTime: tokenData.accessTokenExpiryDateTime,
+                refreshTokenExpiryDateTime: null, // Not necessary because Google refresh tokens don't expire in Published mode
+            })
+        } else {
+            user = userExists
+            const externalAccount = user.getExternalAccount('GOOGLE')
             if (!externalAccount) {
-                const newExternalAccount: ExternalUserAccount = {
-                    userId: user.getId(),
+                user.addExternalAccount({
                     provider: 'GOOGLE',
                     providerUserId: userInfo.providerUserId,
                     accessToken: tokenData.accessToken,
                     refreshToken: tokenData.refreshToken,
                     accessTokenExpiryDateTime:
                         tokenData.accessTokenExpiryDateTime,
-                    refreshTokenExpiryDateTime: null, // Not necessary because Google refresh tokens don't expire in Published mode
-                }
-
-                await this.externalUserAccountsRepository.save(
-                    newExternalAccount,
-                )
+                    refreshTokenExpiryDateTime: null,
+                })
             } else {
-                externalAccount.accessToken = tokenData.accessToken
-                externalAccount.refreshToken =
-                    tokenData.refreshToken ?? externalAccount.refreshToken
-                externalAccount.accessTokenExpiryDateTime =
-                    tokenData.accessTokenExpiryDateTime
-                externalAccount.refreshTokenExpiryDateTime = null
+                user.updateExternalAccount('GOOGLE', {
+                    accessToken: tokenData.accessToken,
+                    accessTokenExpiryDateTime:
+                        tokenData.accessTokenExpiryDateTime,
+                    refreshToken:
+                        tokenData.refreshToken ??
+                        externalAccount.getRefreshToken(),
+                })
+            }
+        }
 
-                await this.externalUserAccountsRepository.update(
-                    externalAccount,
-                )
+        const session = Session.create(user.getId())
+
+        await this.transactionManager.run(async () => {
+            if (!userExists) {
+                await this.usersRepository.save(user)
+            } else {
+                await this.usersRepository.update(user)
             }
 
             await this.sessionsRepository.save(session)

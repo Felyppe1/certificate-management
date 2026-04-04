@@ -15,7 +15,7 @@ import { PrismaTransactionManager } from '@/backend/infrastructure/repository/pr
 import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
 import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
 import { LiquidStringVariableExtractor } from '@/backend/infrastructure/string-variable-extractor/liquidjs'
-import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
+import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 
 const addTemplateByUrlBodySchema = z.object({
     fileUrl: z.url('File URL is invalid'),
@@ -45,8 +45,7 @@ export async function PUT(
         const bucket = new GcpBucket()
         const transactionManager = new PrismaTransactionManager(prisma)
         const stringVariableExtractor = new LiquidStringVariableExtractor()
-        const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository(prisma)
+        const usersRepository = new PrismaUsersRepository(prisma)
 
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificateEmissionsRepository,
@@ -56,7 +55,7 @@ export async function PUT(
             bucket,
             transactionManager,
             stringVariableExtractor,
-            externalUserAccountsRepository,
+            usersRepository,
         )
 
         await addTemplateByUrlUseCase.execute({

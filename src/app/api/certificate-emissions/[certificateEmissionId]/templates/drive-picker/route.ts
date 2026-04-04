@@ -6,7 +6,7 @@ import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/fi
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
+import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import z from 'zod'
@@ -41,8 +41,7 @@ export async function PUT(
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
-        const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository(prisma)
+        const usersRepository = new PrismaUsersRepository(prisma)
         const bucket = new GcpBucket()
         const transactionManager = new PrismaTransactionManager(prisma)
         const stringVariableExtractor = new LiquidStringVariableExtractor()
@@ -52,7 +51,7 @@ export async function PUT(
                 certificateEmissionsRepository,
                 googleDriveGateway,
                 fileContentExtractorFactory,
-                externalUserAccountsRepository,
+                usersRepository,
                 dataSourceRowsRepository,
                 googleAuthGateway,
                 bucket,

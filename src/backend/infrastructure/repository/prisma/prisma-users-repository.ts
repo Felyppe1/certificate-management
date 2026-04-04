@@ -3,6 +3,7 @@ import {
     USER_CREDITS,
 } from '@/backend/application/interfaces/repository/iusers-repository'
 import { User } from '@/backend/domain/user'
+import { Provider } from '@/backend/domain/external-account'
 import { PrismaExecutor } from '.'
 import { transactionStorage } from './prisma-transaction-manager'
 
@@ -18,6 +19,7 @@ export class PrismaUsersRepository implements IUsersRepository {
             where: {
                 email,
             },
+            include: { ExternalUserAccount: true },
         })
 
         if (!user) return null
@@ -28,6 +30,15 @@ export class PrismaUsersRepository implements IUsersRepository {
             name: user.name,
             passwordHash: user.password_hash,
             credits: user.credits,
+            externalAccounts: user.ExternalUserAccount.map(a => ({
+                userId: a.user_id,
+                provider: a.provider as Provider,
+                providerUserId: a.provider_user_id,
+                accessToken: a.access_token,
+                refreshToken: a.refresh_token,
+                accessTokenExpiryDateTime: a.access_token_expiry_datetime,
+                refreshTokenExpiryDateTime: a.refresh_token_expiry_datetime,
+            })),
         })
     }
 
@@ -36,6 +47,7 @@ export class PrismaUsersRepository implements IUsersRepository {
             where: {
                 id,
             },
+            include: { ExternalUserAccount: true },
         })
 
         if (!user) return null
@@ -46,16 +58,82 @@ export class PrismaUsersRepository implements IUsersRepository {
             name: user.name,
             passwordHash: user.password_hash,
             credits: user.credits,
+            externalAccounts: user.ExternalUserAccount.map(a => ({
+                userId: a.user_id,
+                provider: a.provider as Provider,
+                providerUserId: a.provider_user_id,
+                accessToken: a.access_token,
+                refreshToken: a.refresh_token,
+                accessTokenExpiryDateTime: a.access_token_expiry_datetime,
+                refreshTokenExpiryDateTime: a.refresh_token_expiry_datetime,
+            })),
         })
     }
 
     async save(user: User) {
+        const { id, name, email, credits, passwordHash, externalAccounts } =
+            user.serialize()
+
         await this.prisma.user.create({
             data: {
-                id: user.getId(),
-                email: user.getEmail(),
-                name: user.getName(),
-                password_hash: user.getPasswordHash(),
+                id,
+                email,
+                name,
+                password_hash: passwordHash,
+                ExternalUserAccount: {
+                    create: externalAccounts.map(account => ({
+                        provider: account.provider,
+                        provider_user_id: account.providerUserId,
+                        access_token: account.accessToken,
+                        refresh_token: account.refreshToken,
+                        access_token_expiry_datetime:
+                            account.accessTokenExpiryDateTime,
+                        refresh_token_expiry_datetime:
+                            account.refreshTokenExpiryDateTime,
+                    })),
+                },
+            },
+        })
+    }
+
+    async update(user: User) {
+        const { id, email, name, passwordHash, credits, externalAccounts } =
+            user.serialize()
+        await this.prisma.user.update({
+            where: { id },
+            data: {
+                email,
+                name,
+                password_hash: passwordHash,
+                ExternalUserAccount: {
+                    upsert: externalAccounts.map(a => ({
+                        where: {
+                            user_id_provider: {
+                                user_id: id,
+                                provider: a.provider,
+                            },
+                        },
+                        create: {
+                            provider: a.provider,
+                            provider_user_id: a.providerUserId,
+                            access_token: a.accessToken,
+                            refresh_token: a.refreshToken,
+                            access_token_expiry_datetime:
+                                a.accessTokenExpiryDateTime,
+                            refresh_token_expiry_datetime:
+                                a.refreshTokenExpiryDateTime,
+                        },
+                        update: {
+                            provider_user_id: a.providerUserId,
+                            access_token: a.accessToken,
+                            refresh_token: a.refreshToken,
+                            access_token_expiry_datetime:
+                                a.accessTokenExpiryDateTime,
+                            refresh_token_expiry_datetime:
+                                a.refreshTokenExpiryDateTime,
+                        },
+                    })),
+                },
             },
         })
     }

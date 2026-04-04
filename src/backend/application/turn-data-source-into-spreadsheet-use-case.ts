@@ -22,7 +22,7 @@ import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { ISpreadsheetGeneratorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
-import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
 
 export type SpreadsheetFormat = 'csv' | 'xlsx'
 export type SpreadsheetDestination = 'local' | 'drive'
@@ -47,10 +47,7 @@ export class TurnDataSourceIntoSpreadsheetUseCase {
         private bucket: Pick<IBucket, 'uploadObject' | 'deleteObject'>,
         private spreadsheetGeneratorFactory: ISpreadsheetGeneratorFactory,
         private googleDriveGateway: Pick<IGoogleDriveGateway, 'uploadFile'>,
-        private externalUserAccountsRepository: Pick<
-            IExternalUserAccountsRepository,
-            'getById' | 'update'
-        >,
+        private usersRepository: Pick<IUsersRepository, 'getById' | 'update'>,
         private googleAuthGateway: Pick<
             IGoogleAuthGateway,
             'checkOrGetNewAccessToken'
@@ -96,21 +93,8 @@ export class TurnDataSourceIntoSpreadsheetUseCase {
         let accessToken: string | undefined
 
         if (input.destination === 'drive') {
-            if (
-                !this.externalUserAccountsRepository ||
-                !this.googleAuthGateway ||
-                !this.googleDriveGateway
-            ) {
-                throw new ForbiddenError(
-                    FORBIDDEN_ERROR_TYPE.GOOGLE_ACCOUNT_NOT_FOUND,
-                )
-            }
-
-            const externalAccount =
-                await this.externalUserAccountsRepository.getById(
-                    input.userId,
-                    'GOOGLE',
-                )
+            const user = await this.usersRepository.getById(input.userId)
+            const externalAccount = user?.getExternalAccount('GOOGLE')
 
             if (!externalAccount) {
                 throw new ForbiddenError(
@@ -120,23 +104,23 @@ export class TurnDataSourceIntoSpreadsheetUseCase {
 
             const newData =
                 await this.googleAuthGateway.checkOrGetNewAccessToken({
-                    accessToken: externalAccount.accessToken,
-                    refreshToken: externalAccount.refreshToken!,
+                    accessToken: externalAccount.getAccessToken(),
+                    refreshToken: externalAccount.getRefreshToken()!,
                     accessTokenExpiryDateTime:
-                        externalAccount.accessTokenExpiryDateTime!,
+                        externalAccount.getAccessTokenExpiryDateTime()!,
                 })
 
             if (newData) {
-                externalAccount.accessToken = newData.newAccessToken
-                externalAccount.accessTokenExpiryDateTime =
-                    newData.newAccessTokenExpiryDateTime
+                user!.updateExternalAccount('GOOGLE', {
+                    accessToken: newData.newAccessToken,
+                    accessTokenExpiryDateTime:
+                        newData.newAccessTokenExpiryDateTime,
+                })
 
-                await this.externalUserAccountsRepository.update(
-                    externalAccount,
-                )
+                await this.usersRepository.update(user!)
             }
 
-            accessToken = externalAccount.accessToken
+            accessToken = externalAccount.getAccessToken()
         }
 
         // Determine output mime type and generate buffer via DI

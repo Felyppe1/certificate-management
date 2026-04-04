@@ -5,7 +5,7 @@ import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
-import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
@@ -41,7 +41,7 @@ export class AddDataSourceByDrivePickerUseCase {
         >,
         private googleDriveGateway: IGoogleDriveGateway,
         private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
-        private externalUserAccountsRepository: IExternalUserAccountsRepository,
+        private usersRepository: Pick<IUsersRepository, 'getById' | 'update'>,
         private googleAuthGateway: Pick<
             IGoogleAuthGateway,
             'checkOrGetNewAccessToken'
@@ -64,11 +64,8 @@ export class AddDataSourceByDrivePickerUseCase {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
-        const externalAccount =
-            await this.externalUserAccountsRepository.getById(
-                input.userId,
-                'GOOGLE',
-            )
+        const user = await this.usersRepository.getById(input.userId)
+        const externalAccount = user?.getExternalAccount('GOOGLE')
 
         if (!externalAccount) {
             throw new ForbiddenError(
@@ -81,26 +78,28 @@ export class AddDataSourceByDrivePickerUseCase {
         }
 
         const newData = await this.googleAuthGateway.checkOrGetNewAccessToken({
-            accessToken: externalAccount.accessToken,
-            refreshToken: externalAccount.refreshToken!,
+            accessToken: externalAccount.getAccessToken(),
+            refreshToken: externalAccount.getRefreshToken()!,
             accessTokenExpiryDateTime:
-                externalAccount.accessTokenExpiryDateTime!,
+                externalAccount.getAccessTokenExpiryDateTime()!,
         })
 
         if (newData) {
-            externalAccount.accessToken = newData.newAccessToken
-            externalAccount.accessTokenExpiryDateTime =
-                newData.newAccessTokenExpiryDateTime
+            user!.updateExternalAccount('GOOGLE', {
+                accessToken: newData.newAccessToken,
+                accessTokenExpiryDateTime: newData.newAccessTokenExpiryDateTime,
+            })
 
-            await this.externalUserAccountsRepository.update(externalAccount)
+            await this.usersRepository.update(user!)
         }
 
         const filesMetadata = await Promise.all(
             input.fileIds.map(fileId =>
                 this.googleDriveGateway.getFileMetadata({
                     fileId,
-                    userAccessToken: externalAccount.accessToken,
-                    userRefreshToken: externalAccount.refreshToken || undefined,
+                    userAccessToken: externalAccount.getAccessToken(),
+                    userRefreshToken:
+                        externalAccount.getRefreshToken() || undefined,
                 }),
             ),
         )
@@ -147,7 +146,7 @@ export class AddDataSourceByDrivePickerUseCase {
                 this.googleDriveGateway.downloadFile({
                     driveFileId: fileId,
                     fileMimeType: filesMetadata[index].fileMimeType,
-                    accessToken: externalAccount.accessToken,
+                    accessToken: externalAccount.getAccessToken(),
                 }),
             ),
         )

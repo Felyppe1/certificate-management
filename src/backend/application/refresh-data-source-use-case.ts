@@ -12,7 +12,7 @@ import {
     ValidationError,
 } from '../domain/error/validation-error'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
@@ -38,7 +38,7 @@ export class RefreshDataSourceUseCase {
             'checkOrGetNewAccessToken'
         >,
         private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
-        private externalUserAccountsRepository: IExternalUserAccountsRepository,
+        private usersRepository: Pick<IUsersRepository, 'getById' | 'update'>,
         private transactionManager: ITransactionManager,
     ) {}
 
@@ -78,11 +78,10 @@ export class RefreshDataSourceUseCase {
             )
         }
 
-        const externalAccount =
-            await this.externalUserAccountsRepository.getById(
-                certificateEmission.getUserId(),
-                'GOOGLE',
-            )
+        const user = await this.usersRepository.getById(
+            certificateEmission.getUserId(),
+        )
+        const externalAccount = user?.getExternalAccount('GOOGLE')
 
         if (
             certificateEmission.isDataSourceFromGoogleDrive() ||
@@ -96,20 +95,20 @@ export class RefreshDataSourceUseCase {
 
             const newData =
                 await this.googleAuthGateway.checkOrGetNewAccessToken({
-                    accessToken: externalAccount.accessToken,
-                    refreshToken: externalAccount.refreshToken!,
+                    accessToken: externalAccount.getAccessToken(),
+                    refreshToken: externalAccount.getRefreshToken()!,
                     accessTokenExpiryDateTime:
-                        externalAccount.accessTokenExpiryDateTime!,
+                        externalAccount.getAccessTokenExpiryDateTime()!,
                 })
 
             if (newData) {
-                externalAccount.accessToken = newData.newAccessToken
-                externalAccount.accessTokenExpiryDateTime =
-                    newData.newAccessTokenExpiryDateTime
+                user!.updateExternalAccount('GOOGLE', {
+                    accessToken: newData.newAccessToken,
+                    accessTokenExpiryDateTime:
+                        newData.newAccessTokenExpiryDateTime,
+                })
 
-                await this.externalUserAccountsRepository.update(
-                    externalAccount,
-                )
+                await this.usersRepository.update(user!)
             }
         }
 
@@ -117,9 +116,9 @@ export class RefreshDataSourceUseCase {
             certificateEmission.isDataSourceFromGoogleDrive() ||
             certificateEmission.isDataSourceFromUrl()
                 ? {
-                      userAccessToken: externalAccount?.accessToken,
+                      userAccessToken: externalAccount?.getAccessToken(),
                       userRefreshToken:
-                          externalAccount?.refreshToken ?? undefined,
+                          externalAccount?.getRefreshToken() ?? undefined,
                   }
                 : {}
 
@@ -144,7 +143,7 @@ export class RefreshDataSourceUseCase {
         const accessTokenParam =
             certificateEmission.isDataSourceFromGoogleDrive() ||
             certificateEmission.isDataSourceFromUrl()
-                ? { accessToken: externalAccount?.accessToken }
+                ? { accessToken: externalAccount?.getAccessToken() }
                 : {}
 
         const buffer = await this.googleDriveGateway.downloadFile({

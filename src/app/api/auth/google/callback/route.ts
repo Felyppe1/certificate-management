@@ -1,4 +1,3 @@
-import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextResponse } from 'next/server'
@@ -22,15 +21,12 @@ export async function GET(request: Request) {
     }
 
     const usersRepository = new PrismaUsersRepository(prisma)
-    const externalUserAccountsRepository =
-        new PrismaExternalUserAccountsRepository(prisma)
     const sessionsRepository = new PrismaSessionsRepository(prisma)
     const googleAuthGateway = new GoogleAuthGateway()
     const transactionManager = new PrismaTransactionManager(prisma)
 
     const loginGoogleUseCase = new LoginGoogleUseCase(
         usersRepository,
-        externalUserAccountsRepository,
         sessionsRepository,
         googleAuthGateway,
         transactionManager,

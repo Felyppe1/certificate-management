@@ -4,7 +4,7 @@ import { RefreshTemplateUseCase } from '@/backend/application/refresh-template-u
 import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
+import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { logoutAction } from './logout-action'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
@@ -35,8 +35,7 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
-        const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository(prisma)
+        const usersRepository = new PrismaUsersRepository(prisma)
         const transactionManager = new PrismaTransactionManager(prisma)
         const bucket = new GcpBucket()
         const stringVariableExtractor = new LiquidStringVariableExtractor()
@@ -47,7 +46,7 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
             googleDriveGateway,
             googleAuthGateway,
             fileContentExtractorFactory,
-            externalUserAccountsRepository,
+            usersRepository,
             transactionManager,
             bucket,
             stringVariableExtractor,

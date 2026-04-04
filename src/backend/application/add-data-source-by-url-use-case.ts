@@ -21,7 +21,7 @@ import {
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { DataSourceDomainService } from '../domain/domain-service/data-source-domain-service'
-import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
@@ -50,10 +50,7 @@ export class AddDataSourceByUrlUseCase {
         private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
         private bucket: Pick<IBucket, 'deleteObject'>,
         private transactionManager: ITransactionManager,
-        private externalUserAccountsRepository: Pick<
-            IExternalUserAccountsRepository,
-            'getById'
-        >,
+        private usersRepository: Pick<IUsersRepository, 'getById'>,
     ) {}
 
     async execute(input: AddDataSourceByUrlUseCaseInput) {
@@ -86,19 +83,16 @@ export class AddDataSourceByUrlUseCase {
             return driveFileId
         })
 
-        const externalAccount =
-            await this.externalUserAccountsRepository.getById(
-                input.userId,
-                'GOOGLE',
-            )
+        const user = await this.usersRepository.getById(input.userId)
+        const externalAccount = user?.getExternalAccount('GOOGLE')
 
         const filesMetadata = await Promise.all(
             driveFileIds.map(fileId =>
                 this.googleDriveGateway.getFileMetadata({
                     fileId,
-                    userAccessToken: externalAccount?.accessToken,
+                    userAccessToken: externalAccount?.getAccessToken(),
                     userRefreshToken:
-                        externalAccount?.refreshToken || undefined,
+                        externalAccount?.getRefreshToken() || undefined,
                 }),
             ),
         )
@@ -145,7 +139,7 @@ export class AddDataSourceByUrlUseCase {
                 this.googleDriveGateway.downloadFile({
                     driveFileId,
                     fileMimeType: filesMetadata[index].fileMimeType,
-                    accessToken: externalAccount?.accessToken,
+                    accessToken: externalAccount?.getAccessToken(),
                 }),
             ),
         )

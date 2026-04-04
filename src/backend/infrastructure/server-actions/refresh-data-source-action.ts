@@ -2,7 +2,7 @@
 
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaExternalUserAccountsRepository } from '../repository/prisma/prisma-external-user-accounts-repository'
+import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { logoutAction } from './logout-action'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
@@ -34,8 +34,7 @@ export async function refreshDataSourceAction(_: unknown, formData: FormData) {
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
-        const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository(prisma)
+        const usersRepository = new PrismaUsersRepository(prisma)
         const transactionManager = new PrismaTransactionManager(prisma)
 
         const refreshDataSourceUseCase = new RefreshDataSourceUseCase(
@@ -44,7 +43,7 @@ export async function refreshDataSourceAction(_: unknown, formData: FormData) {
             googleDriveGateway,
             googleAuthGateway,
             spreadsheetContentExtractorFactory,
-            externalUserAccountsRepository,
+            usersRepository,
             transactionManager,
         )
 

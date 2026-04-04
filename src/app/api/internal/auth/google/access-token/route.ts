@@ -1,6 +1,6 @@
 import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-google-access-token-use-case'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
-import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
+import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { handleError, HandleErrorResponse } from '@/utils/handle-error'
 import { NextRequest, NextResponse } from 'next/server'
@@ -29,13 +29,12 @@ export async function POST(
 
         const { userId } = bodySchema.parse(body)
 
-        const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository(prisma)
+        const usersRepository = new PrismaUsersRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
 
         const refreshGoogleAccessTokenUseCase =
             new RefreshGoogleAccessTokenUseCase(
-                externalUserAccountsRepository,
+                usersRepository,
                 googleAuthGateway,
             )
 

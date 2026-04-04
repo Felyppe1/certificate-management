@@ -1,6 +1,5 @@
 import { GetMeUseCase } from '@/backend/application/get-me-use-case'
-import { Provider } from '@/backend/application/interfaces/repository/iexternal-user-accounts-repository'
-import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
+import { Provider } from '@/backend/domain/external-account'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest, NextResponse } from 'next/server'
@@ -29,13 +28,8 @@ export async function GET(
         const { userId } = await validateSessionToken(request)
 
         const usersRepository = new PrismaUsersRepository(prisma)
-        const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository(prisma)
 
-        const getMeUseCase = new GetMeUseCase(
-            usersRepository,
-            externalUserAccountsRepository,
-        )
+        const getMeUseCase = new GetMeUseCase(usersRepository)
 
         const user = await getMeUseCase.execute({ userId })
 

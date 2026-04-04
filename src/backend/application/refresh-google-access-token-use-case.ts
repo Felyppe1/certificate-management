@@ -2,7 +2,7 @@ import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
 } from '../domain/error/forbidden-error'
-import { IExternalUserAccountsRepository } from './interfaces/repository/iexternal-user-accounts-repository'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 
 interface RefreshGoogleAccessTokenUseCaseInput {
@@ -11,13 +11,14 @@ interface RefreshGoogleAccessTokenUseCaseInput {
 
 export class RefreshGoogleAccessTokenUseCase {
     constructor(
-        private externalUserAccountsRepository: IExternalUserAccountsRepository,
+        private usersRepository: Pick<IUsersRepository, 'getById' | 'update'>,
         private googleAuthGateway: IGoogleAuthGateway,
     ) {}
 
     async execute({ userId }: RefreshGoogleAccessTokenUseCaseInput) {
-        const externalAccount =
-            await this.externalUserAccountsRepository.getById(userId, 'GOOGLE')
+        const user = await this.usersRepository.getById(userId)
+
+        const externalAccount = user?.getExternalAccount('GOOGLE')
 
         if (!externalAccount) {
             throw new ForbiddenError(
@@ -26,21 +27,22 @@ export class RefreshGoogleAccessTokenUseCase {
         }
 
         const newToken = await this.googleAuthGateway.checkOrGetNewAccessToken({
-            accessToken: externalAccount.accessToken,
-            refreshToken: externalAccount.refreshToken!,
+            accessToken: externalAccount.getAccessToken(),
+            refreshToken: externalAccount.getRefreshToken()!,
             accessTokenExpiryDateTime:
-                externalAccount.accessTokenExpiryDateTime!,
+                externalAccount.getAccessTokenExpiryDateTime()!,
         })
 
         if (newToken) {
-            const { newAccessToken, newAccessTokenExpiryDateTime } = newToken
-            externalAccount.accessToken = newAccessToken
-            externalAccount.accessTokenExpiryDateTime =
-                newAccessTokenExpiryDateTime
+            user!.updateExternalAccount('GOOGLE', {
+                accessToken: newToken.newAccessToken,
+                accessTokenExpiryDateTime:
+                    newToken.newAccessTokenExpiryDateTime,
+            })
 
-            await this.externalUserAccountsRepository.update(externalAccount)
+            await this.usersRepository.update(user!)
         }
 
-        return externalAccount.accessToken
+        return externalAccount.getAccessToken()
     }
 }

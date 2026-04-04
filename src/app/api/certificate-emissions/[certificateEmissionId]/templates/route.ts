@@ -7,7 +7,7 @@ import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/fi
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
+import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { handleError, HandleErrorResponse } from '@/utils/handle-error'
@@ -68,8 +68,7 @@ export async function PATCH(
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
-        const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository(prisma)
+        const usersRepository = new PrismaUsersRepository(prisma)
         const transactionManager = new PrismaTransactionManager(prisma)
 
         const bucket = new GcpBucket()
@@ -81,7 +80,7 @@ export async function PATCH(
             googleDriveGateway,
             googleAuthGateway,
             fileContentExtractorFactory,
-            externalUserAccountsRepository,
+            usersRepository,
             transactionManager,
             bucket,
             stringVariableExtractor,

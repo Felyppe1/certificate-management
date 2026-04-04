@@ -4,7 +4,7 @@ import { AuthenticationError } from '@/backend/domain/error/authentication-error
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { GoogleDriveGateway } from '@/backend/infrastructure/gateway/google-drive-gateway'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaExternalUserAccountsRepository } from '@/backend/infrastructure/repository/prisma/prisma-external-user-accounts-repository'
+import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import z from 'zod'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
@@ -41,8 +41,7 @@ export async function addDataSourceByDrivePickerAction(
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
-        const externalUserAccountsRepository =
-            new PrismaExternalUserAccountsRepository(prisma)
+        const usersRepository = new PrismaUsersRepository(prisma)
         const bucket = new GcpBucket()
         const transactionManager = new PrismaTransactionManager(prisma)
 
@@ -52,7 +51,7 @@ export async function addDataSourceByDrivePickerAction(
                 dataSourceRowsRepository,
                 googleDriveGateway,
                 spreadsheetContentExtractorFactory,
-                externalUserAccountsRepository,
+                usersRepository,
                 googleAuthGateway,
                 bucket,
                 transactionManager,
