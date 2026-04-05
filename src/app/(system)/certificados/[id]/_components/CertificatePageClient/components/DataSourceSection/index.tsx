@@ -299,7 +299,7 @@ export function DataSourceSection({
                     <Badge
                         variant="purple"
                         size="md"
-                        className="[&>svg]:size-6 pr-3 mb-4"
+                        className="[&>svg]:size-6 pr-3 mb-4 text-xs xs:text-sm"
                     >
                         <AiIcon3 />
                         Extração dos dados com IA para imagens
@@ -350,7 +350,7 @@ export function DataSourceSection({
                 <Badge
                     variant="purple"
                     size="md"
-                    className="[&>svg]:size-6 pr-3 mb-4"
+                    className="[&>svg]:size-4 pr-3 mb-4 text-xs xs:text-sm"
                 >
                     <AiIcon3 />
                     Extração dos dados com IA para imagens

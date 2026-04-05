@@ -29,7 +29,7 @@ const badgeVariants = cva(
                 sm: `sm:px-2 sm:py-1 sm:text-xs sm:rounded-lg sm:[&>svg]:size-3
                     px-1.5 py-0.5 text-[.625rem] rounded-md [&>svg]:size-2.5
                 `,
-                md: `sm:px-3 sm:py-1.5 sm:text-base sm:gap-2 sm:rounded-lg sm:[&>svg]:size-4
+                md: `sm:px-3 sm:py-1.5 sm:text-base sm:gap-2 sm:rounded-lg sm:[&>svg]:size-6
                     px-2 py-1 text-sm rounded-md [&>svg]:size-3.5
                 `,
                 lg: `sm:px-4 sm:py-2 sm:text-base sm:rounded-xl sm:[&>svg]:size-5

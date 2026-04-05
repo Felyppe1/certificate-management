@@ -147,7 +147,7 @@ export function CertificateHeader({
     }
 
     return (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 px-3">
             <div className="flex items-center gap-3 md:gap-4 flex-wrap min-h-[3rem]">
                 {isEditing ? (
                     <div className="flex items-center gap-2 w-full sm:w-[70%] max-w-2xl">

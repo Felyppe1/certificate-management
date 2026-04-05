@@ -404,7 +404,18 @@ export function FileSelector({
                 </div>
             </RadioGroup>
 
-            <div className="flex flex-wrap gap-x-2.5 justify-center items-center text-muted-foreground mt-3">
+            <p className="text-xs text-muted-foreground mt-3 text-center">
+                Arquivos aceitos:{' '}
+                {type === 'data-source'
+                    ? 'Google Planilhas, .csv, .xlsx, .png ou .jpeg'
+                    : 'Google Slides, Google Docs, .pptx ou .docx'}
+                <span className="mx-2"> · </span>
+                Tamanho máximo: {type === 'data-source' ? '2MB' : '5MB'}
+                {/* {type === 'data-source' && (
+                    <> · Máximo de 300 linhas</>
+                )} */}
+            </p>
+            {/* <div className="flex flex-wrap gap-x-2.5 justify-center items-center text-muted-foreground mt-3">
                 <p className="text-xs">
                     Arquivos aceitos:{' '}
                     {type === 'data-source'
@@ -421,7 +432,7 @@ export function FileSelector({
                         <p className="text-xs">Máximo de 300 linhas</p>
                     </>
                 )}
-            </div>
+            </div> */}
 
             {selectedOption === 'drive' &&
                 googleOAuthToken &&

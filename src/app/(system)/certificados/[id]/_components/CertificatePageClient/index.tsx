@@ -62,8 +62,8 @@ export function CertificatePageClient({
     const emailSent = (email && !email.scheduledAt) || false
 
     return (
-        <div className="px-2">
-            <div className="flex justify-between">
+        <div>
+            <div className="flex justify-between px-3">
                 <GoBackButton />
                 <TipsButton />
             </div>
