@@ -25,6 +25,8 @@ export class ExcelSpreadsheetContentExtractorStrategy
         const records = XLSX.utils.sheet_to_json<Record<string, any>>(
             worksheet,
             {
+                header: columns,
+                range: 1,
                 defval: null,
                 blankrows: false,
                 raw: false,
