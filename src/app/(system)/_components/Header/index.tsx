@@ -1,3 +1,5 @@
+'use client'
+
 // import { ThemeToggle } from './ThemeToggle'
 import { UserDropdown } from './UserDropdown'
 import Link from 'next/link'
@@ -7,14 +9,14 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
+import { useMe } from '@/custom-hooks/use-me'
 
-interface HeaderProps {
-    userName: string
-    userId: string
-    credits: number
-}
+export function Header() {
+    const { data: meResponse } = useMe()
 
-export function Header({ userName, userId, credits }: HeaderProps) {
+    if (!meResponse) return null
+
+    const { email: userName, id: userId, credits } = meResponse.user
     return (
         <header className="fixed top-0 w-full z-51 bg-card/80 backdrop-blur-md border-b border-input/30 shadow-lg shadow-black/20 border-b-input">
             <nav className="max-w-7xl mx-auto px-[6vw] xs:px-10 py-4 flex items-center justify-between gap-8">

@@ -360,10 +360,11 @@ export function FileSelector({
                         </Card>
                         {(isDriveLoading ||
                             isRefreshTokenLoading ||
-                            googleReloginIsLoading) && (
+                            googleReloginIsLoading ||
+                            (selectedOption === 'drive' && !pickerIsReady)) && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 <div className="bg-background/80 rounded-full p-2">
-                                    <Loader2 className="w-10 h-10 animate-spin text-foreground" />
+                                    <Loader2 className="size-6 sm:size-10 animate-spin text-foreground" />
                                 </div>
                             </div>
                         )}

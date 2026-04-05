@@ -22,10 +22,10 @@ export default async function CertificatePage({
             queryKey: queryKeys.certificateEmission(certificateId),
             queryFn: () => fetchCertificateEmission(certificateId),
         }),
-        queryClient.prefetchQuery({
-            queryKey: queryKeys.me(),
-            queryFn: fetchMe,
-        }),
+        // queryClient.prefetchQuery({
+        //     queryKey: queryKeys.me(),
+        //     queryFn: fetchMe,
+        // }),
     ])
 
     return (
