@@ -133,7 +133,8 @@ export class AddDataSourceByUploadUseCase {
             fileMimeType as DATA_SOURCE_MIME_TYPE,
         )
 
-        const { rows } = await contentExtractor.extractColumns(fileBuffers)
+        const { rows, columns } =
+            await contentExtractor.extractColumns(fileBuffers)
 
         const previousDataSourceStorageFileUrls =
             certificateEmission.getDataSourceStorageFileUrls()
@@ -153,6 +154,7 @@ export class AddDataSourceByUploadUseCase {
                 thumbnailUrl: null,
                 columnsRow: 1,
                 dataRowStart: 2,
+                columns,
                 rows,
             },
         })
@@ -160,7 +162,13 @@ export class AddDataSourceByUploadUseCase {
         await this.transactionManager.run(async () => {
             await this.certificatesRepository.update(certificateEmission)
 
-            await this.dataSourceRowsRepository.saveMany(dataSourceRows)
+            await this.dataSourceRowsRepository.deleteManyByCertificateEmissionId(
+                certificateEmission.getId(),
+            )
+
+            if (dataSourceRows.length > 0) {
+                await this.dataSourceRowsRepository.saveMany(dataSourceRows)
+            }
         })
 
         // TODO: it should be done using outbox pattern

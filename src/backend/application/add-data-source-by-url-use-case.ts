@@ -147,7 +147,7 @@ export class AddDataSourceByUrlUseCase {
         const contentExtractor =
             this.spreadsheetContentExtractorFactory.create(fileMimeType)
 
-        const { rows } = await contentExtractor.extractColumns(buffers)
+        const { rows, columns } = await contentExtractor.extractColumns(buffers)
 
         // In case it had files in storage, delete them
         const dataSourceStorageFileUrls =
@@ -168,6 +168,7 @@ export class AddDataSourceByUrlUseCase {
                 thumbnailUrl: filesMetadata[0].thumbnailUrl,
                 columnsRow: 1,
                 dataRowStart: 2,
+                columns,
                 rows,
             },
         })
@@ -177,7 +178,13 @@ export class AddDataSourceByUrlUseCase {
                 certificateEmission,
             )
 
-            await this.dataSourceRowsRepository.saveMany(dataSourceRows)
+            await this.dataSourceRowsRepository.deleteManyByCertificateEmissionId(
+                certificateEmission.getId(),
+            )
+
+            if (dataSourceRows.length > 0) {
+                await this.dataSourceRowsRepository.saveMany(dataSourceRows)
+            }
         })
 
         if (dataSourceStorageFileUrls.length > 0) {

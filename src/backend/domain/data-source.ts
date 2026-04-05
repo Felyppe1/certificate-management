@@ -79,6 +79,7 @@ export interface DataSourceOutput extends DataSourceInput {}
 export interface CreateDataSourceInput
     extends Omit<DataSourceInput, 'columns'> {
     rows: Record<string, string>[]
+    columns: string[]
 }
 
 // export interface UpdateDataSourceInput
@@ -94,27 +95,46 @@ export class DataSource extends ValueObject<DataSource> {
     private readonly thumbnailUrl: string | null
 
     static create(data: CreateDataSourceInput): DataSource {
+        if (data.columns.length > MAX_DATA_SOURCE_COLUMNS) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.DATA_SOURCE_COLUMNS_EXCEEDED,
+            )
+        }
+
         if (data.rows.length > MAX_DATA_SOURCE_ROWS) {
             throw new ValidationError(
                 VALIDATION_ERROR_TYPE.DATA_SOURCE_ROWS_EXCEEDED,
             )
         }
 
-        const uniqueColumns = new Set(data.rows.flatMap(Object.keys))
-        if (uniqueColumns.size > MAX_DATA_SOURCE_COLUMNS) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.DATA_SOURCE_COLUMNS_EXCEEDED,
-            )
-        }
+        data.rows.some(row => {
+            Object.keys(row).some(key => {
+                if (data.columns.indexOf(key) === -1) {
+                    throw new ValidationError(
+                        VALIDATION_ERROR_TYPE.DATA_SOURCE_COLUMNS_NOT_FOUND,
+                    )
+                }
+            })
+        })
+
+        const columns =
+            data.rows.length === 0
+                ? data.columns.map(column => ({
+                      name: column,
+                      type: 'string' as ColumnType,
+                      arrayMetadata: null,
+                  }))
+                : this.inferTypes(data.rows)
 
         return new DataSource({
             ...data,
-            columns: this.inferTypes(data.rows),
+            columns,
         })
     }
 
     constructor(data: DataSourceInput) {
         super()
+        console.log('columns', data.columns)
 
         if (!data.inputMethod) {
             throw new Error('DataSource input method is required')
@@ -166,7 +186,7 @@ export class DataSource extends ValueObject<DataSource> {
             )
         }
 
-        if (!data.columns) {
+        if (!data.columns || data.columns.length === 0) {
             throw new Error('DataSource columns is required')
         }
 

@@ -155,7 +155,9 @@ export class RefreshDataSourceUseCase {
         const contentExtractor =
             this.spreadsheetContentExtractorFactory.create(fileMimeType)
 
-        const { rows } = await contentExtractor.extractColumns([buffer])
+        const { rows, columns } = await contentExtractor.extractColumns([
+            buffer,
+        ])
 
         const dataSourceDomainService = new DataSourceDomainService()
 
@@ -174,6 +176,7 @@ export class RefreshDataSourceUseCase {
                 thumbnailUrl: thumbnailUrl,
                 columnsRow: 1,
                 dataRowStart: 2,
+                columns,
                 rows,
             },
         })
@@ -183,7 +186,13 @@ export class RefreshDataSourceUseCase {
                 certificateEmission,
             )
 
-            await this.dataSourceRowsRepository.saveMany(dataSourceRows)
+            await this.dataSourceRowsRepository.deleteManyByCertificateEmissionId(
+                certificateEmission.getId(),
+            )
+
+            if (dataSourceRows.length > 0) {
+                await this.dataSourceRowsRepository.saveMany(dataSourceRows)
+            }
         })
     }
 }

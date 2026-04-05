@@ -13,6 +13,15 @@ export class ExcelSpreadsheetContentExtractorStrategy
         const firstSheetName = workbook.SheetNames[0]
         const worksheet = workbook.Sheets[firstSheetName]
 
+        const columns =
+            XLSX.utils.sheet_to_json<string[]>(worksheet, {
+                defval: null,
+                blankrows: false,
+                raw: false,
+                header: 1,
+                range: 0,
+            })[0] || []
+
         const records = XLSX.utils.sheet_to_json<Record<string, any>>(
             worksheet,
             {
@@ -21,8 +30,6 @@ export class ExcelSpreadsheetContentExtractorStrategy
                 raw: false,
             },
         )
-
-        const columns = records.length > 0 ? Object.keys(records[0]) : []
 
         return {
             columns,

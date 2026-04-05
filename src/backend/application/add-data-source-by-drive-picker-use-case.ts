@@ -154,7 +154,7 @@ export class AddDataSourceByDrivePickerUseCase {
         const contentExtractor =
             this.spreadsheetContentExtractorFactory.create(fileMimeType)
 
-        const { rows } = await contentExtractor.extractColumns(buffers)
+        const { rows, columns } = await contentExtractor.extractColumns(buffers)
 
         const dataSourceStorageFileUrls =
             certificateEmission.getDataSourceStorageFileUrls()
@@ -174,6 +174,7 @@ export class AddDataSourceByDrivePickerUseCase {
                 thumbnailUrl: filesMetadata[0].thumbnailUrl,
                 columnsRow: 1,
                 dataRowStart: 2,
+                columns,
                 rows,
             },
         })
@@ -183,7 +184,13 @@ export class AddDataSourceByDrivePickerUseCase {
                 certificateEmission,
             )
 
-            await this.dataSourceRowsRepository.saveMany(dataSourceRows)
+            await this.dataSourceRowsRepository.deleteManyByCertificateEmissionId(
+                certificateEmission.getId(),
+            )
+
+            if (dataSourceRows.length > 0) {
+                await this.dataSourceRowsRepository.saveMany(dataSourceRows)
+            }
         })
 
         await Promise.all(

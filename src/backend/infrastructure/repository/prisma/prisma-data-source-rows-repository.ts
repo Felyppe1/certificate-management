@@ -22,17 +22,7 @@ export class PrismaDataSourceRowsRepository
 
     async saveMany(dataSourceRows: DataSourceRow[]): Promise<void> {
         const execute = async (tx: TransactionClient) => {
-            const certificateEmissionId =
-                dataSourceRows[0].getCertificateEmissionId()
-
-            // First, delete old rows (values were deleted in the certificates repository)
-            await tx.dataSourceRow.deleteMany({
-                where: {
-                    data_source_id: certificateEmissionId,
-                },
-            })
-
-            // Second, create new rows
+            // Create new rows
             await tx.dataSourceRow.createMany({
                 data: dataSourceRows.map(dataSourceRow => {
                     const {
@@ -302,7 +292,6 @@ export class PrismaDataSourceRowsRepository
         })
     }
 
-    // TODO: delete, not being used
     async deleteManyByCertificateEmissionId(
         certificateEmissionId: string,
     ): Promise<void> {
