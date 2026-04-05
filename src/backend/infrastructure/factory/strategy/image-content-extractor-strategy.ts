@@ -72,7 +72,9 @@ export class ImageContentExtractorStrategy
             throw new Error('Failed to extract content from image')
         }
 
-        return { columns: [], rows }
+        const columns = rows.length > 0 ? Object.keys(rows[0]) : []
+
+        return { columns, rows }
     }
 
     async generate(
