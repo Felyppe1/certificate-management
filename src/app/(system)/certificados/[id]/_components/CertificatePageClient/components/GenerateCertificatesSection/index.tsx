@@ -168,9 +168,6 @@ export function GenerateCertificatesSection({
             queryClient.invalidateQueries({
                 queryKey: queryKeys.certificateEmission(certificateId),
             })
-            queryClient.invalidateQueries({
-                queryKey: queryKeys.me(),
-            })
         }
     }, [completedRows, totalRows])
 
