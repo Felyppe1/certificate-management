@@ -83,7 +83,8 @@ jobs:
             GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
             GA_ID: env.GA_ID,
             SUFFIX: env.SUFFIX,
-            NEXT_PUBLIC_BASE_URL: env.NEXT_PUBLIC_BASE_URL
+            NEXT_PUBLIC_BASE_URL: env.NEXT_PUBLIC_BASE_URL,
+            GEMINI_API_KEY: env.GEMINI_API_KEY
           }')
 
           echo "TF_VAR_environment_variables=$TF_ENV_VARS" >> $GITHUB_ENV
@@ -207,7 +208,8 @@ jobs:
             GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
             GA_ID: env.GA_ID,
             SUFFIX: env.SUFFIX,
-            NEXT_PUBLIC_BASE_URL: env.NEXT_PUBLIC_BASE_URL
+            NEXT_PUBLIC_BASE_URL: env.NEXT_PUBLIC_BASE_URL,
+            GEMINI_API_KEY: env.GEMINI_API_KEY
           }')
 
           echo "TF_VAR_environment_variables=$TF_ENV_VARS" >> $GITHUB_ENV
