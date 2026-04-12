@@ -1,3 +1,5 @@
+import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
+
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -7,7 +9,7 @@ export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl
     console.log('middleware triggered by request to:', pathname)
 
-    const sessionToken = request.cookies.get('session_token')?.value
+    const sessionToken = request.cookies.get(SESSION_COOKIE_NAME)?.value
     console.log('Session token from cookie:', sessionToken)
 
     const isPublicRoute = publicRoutes.includes(pathname)
@@ -29,7 +31,7 @@ export function proxy(request: NextRequest) {
     // protection against infinite loop
     if (isPublicRoute) {
         const response = NextResponse.next()
-        response.cookies.delete('session_token')
+        response.cookies.delete(SESSION_COOKIE_NAME)
         return response
     }
 
