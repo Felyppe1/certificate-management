@@ -1,6 +1,6 @@
-import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
+'use server'
 
-;('use server')
+import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
 
 import { LogoutUseCase } from '@/backend/application/logout-use-case'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'

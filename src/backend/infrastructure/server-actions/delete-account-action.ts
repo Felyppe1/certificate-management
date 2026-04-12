@@ -1,7 +1,6 @@
+'use server'
+
 import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
-
-;('use server')
-
 import { DeleteAccountUseCase } from '@/backend/application/delete-google-account-use-case'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'

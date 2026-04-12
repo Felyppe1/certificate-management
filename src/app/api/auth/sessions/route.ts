@@ -1,7 +1,4 @@
 import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
-
-;('use server')
-
 import { LoginUseCase } from '@/backend/application/login-use-case'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
