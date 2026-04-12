@@ -8,6 +8,8 @@ import {
 } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
 
+export const dynamic = 'force-dynamic'
+
 interface SystemLayoutProps {
     children: React.ReactNode
 }

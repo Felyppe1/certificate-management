@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useRef } from 'react'
+import { Suspense, useEffect } from 'react'
 import { toast } from 'sonner'
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -10,7 +10,7 @@ const ERROR_MESSAGES: Record<string, string> = {
     'not-certificate-owner': 'Você não tem permissão para ver o certificado.',
 }
 
-export function Toast() {
+function ToastContent() {
     const searchParams = useSearchParams()
     const router = useRouter()
     const pathname = usePathname()
@@ -29,7 +29,15 @@ export function Toast() {
 
             router.replace(cleanUrl)
         }
-    }, [pathname])
+    }, [pathname, error, searchParams, router])
 
     return null
+}
+
+export function Toast() {
+    return (
+        <Suspense fallback={null}>
+            <ToastContent />
+        </Suspense>
+    )
 }
