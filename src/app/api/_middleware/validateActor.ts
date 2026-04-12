@@ -1,3 +1,5 @@
+import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
+
 import { NextRequest } from 'next/server'
 import { validateServiceAccountToken } from './validateServiceAccountToken'
 import { validateSessionToken } from './validateSessionToken'
@@ -14,7 +16,7 @@ export async function validateActor(
 
     if (
         authHeader?.startsWith('Bearer ') &&
-        !req.cookies.get('session_token')
+        !req.cookies.get(SESSION_COOKIE_NAME)
     ) {
         try {
             const serviceAccountEmail = await validateServiceAccountToken(req)

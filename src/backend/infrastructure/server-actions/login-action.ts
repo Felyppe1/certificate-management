@@ -1,4 +1,6 @@
-'use server'
+import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
+
+;('use server')
 
 import { LoginUseCase } from '@/backend/application/login-use-case'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
@@ -32,7 +34,7 @@ export async function loginAction(_: unknown, formData: FormData) {
 
         const cookie = await cookies()
 
-        cookie.set('session_token', result.token, {
+        cookie.set(SESSION_COOKIE_NAME, result.token, {
             httpOnly: true,
             path: '/',
             // secure: true,

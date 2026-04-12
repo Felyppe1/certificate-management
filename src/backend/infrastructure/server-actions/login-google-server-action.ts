@@ -1,4 +1,6 @@
-'use server'
+import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
+
+;('use server')
 
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
@@ -38,7 +40,7 @@ export async function loginGoogleServerAction(_: unknown, formData: FormData) {
 
         const cookie = await cookies()
 
-        cookie.set('session_token', sessionToken, {
+        cookie.set(SESSION_COOKIE_NAME, sessionToken, {
             httpOnly: true,
             path: '/',
             // secure: true,

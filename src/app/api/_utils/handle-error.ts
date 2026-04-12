@@ -1,3 +1,5 @@
+import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
+
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { ConflictError } from '@/backend/domain/error/conflict-error'
 import { ForbiddenError } from '@/backend/domain/error/forbidden-error'
@@ -40,7 +42,7 @@ export async function handleError(error: any) {
         )
     }
     if (error instanceof AuthenticationError) {
-        ;(await cookies()).delete('session_token')
+        ;(await cookies()).delete(SESSION_COOKIE_NAME)
 
         return NextResponse.json(
             { type: error.type, title: error.title, detail: error.detail },

@@ -1,4 +1,6 @@
-'use server'
+import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
+
+;('use server')
 
 import { DeleteAccountUseCase } from '@/backend/application/delete-google-account-use-case'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
@@ -27,7 +29,7 @@ export async function deleteAccountAction() {
         })
 
         const cookie = await cookies()
-        cookie.delete('session_token')
+        cookie.delete(SESSION_COOKIE_NAME)
     } catch (error: any) {
         console.error('Error deleting Google account:', error)
 

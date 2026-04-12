@@ -1,14 +1,16 @@
+import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
+
 import { cookies } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 
 export async function fetchCertificateEmissionsMetricsByUser() {
-    const sessionToken = (await cookies()).get('session_token')?.value
+    const sessionToken = (await cookies()).get(SESSION_COOKIE_NAME)?.value
 
     const response = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/certificate-emissions/metrics`,
         {
             headers: {
-                Cookie: `session_token=${sessionToken}`,
+                Cookie: `${SESSION_COOKIE_NAME}=${sessionToken}`,
             },
             next: {
                 tags: ['certificate-emissions-metrics-by-user'],

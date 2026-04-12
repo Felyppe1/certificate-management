@@ -1,3 +1,5 @@
+import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
+
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextResponse } from 'next/server'
@@ -40,7 +42,7 @@ export async function GET(request: Request) {
 
         const cookie = await cookies()
 
-        cookie.set('session_token', sessionToken, {
+        cookie.set(SESSION_COOKIE_NAME, sessionToken, {
             httpOnly: true,
             path: '/',
             maxAge: SESSION_EXPIRY_DAYS * 24 * 60 * 60,

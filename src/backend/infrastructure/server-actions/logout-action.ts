@@ -1,4 +1,6 @@
-'use server'
+import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
+
+;('use server')
 
 import { LogoutUseCase } from '@/backend/application/logout-use-case'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
@@ -8,7 +10,7 @@ import { cookies } from 'next/headers'
 export async function logoutAction() {
     const cookie = await cookies()
 
-    const sessionToken = cookie.get('session_token')?.value
+    const sessionToken = cookie.get(SESSION_COOKIE_NAME)?.value
 
     if (!sessionToken) {
         return {
@@ -26,7 +28,7 @@ export async function logoutAction() {
         console.log('Error during logout:', error)
         // TODO: enviar para acompanhamento
     } finally {
-        cookie.delete('session_token')
+        cookie.delete(SESSION_COOKIE_NAME)
 
         return {
             success: true,

@@ -1,3 +1,5 @@
+import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
+
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
@@ -7,7 +9,7 @@ import { NextRequest } from 'next/server'
 export async function validateSessionToken(req?: NextRequest) {
     const cookieStore = await cookies()
 
-    const cookieToken = cookieStore.get('session_token')?.value
+    const cookieToken = cookieStore.get(SESSION_COOKIE_NAME)?.value
 
     // TODO: it seems like it is not passing session token through Authorization
     const authHeader = req?.headers.get('Authorization')
