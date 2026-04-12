@@ -25,6 +25,9 @@ export function Toast({ error }: ToastProps) {
             case 'user-not-found':
                 toast.error('Sessão inválida. Por favor, faça login novamente.')
                 break
+            case 'session-expired':
+                toast.error('Sessão expirada. Por favor, faça login novamente.')
+                break
             case 'unknown-error':
                 toast.error(
                     'Ocorreu um erro desconhecido durante o login. Por favor, tente novamente.',

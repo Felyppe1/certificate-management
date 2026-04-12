@@ -31,7 +31,7 @@ export async function validateSessionToken(req?: NextRequest) {
     }
 
     if (session.isExpired()) {
-        throw new AuthenticationError('session-not-found')
+        throw new AuthenticationError('session-expired')
     }
 
     return { userId: session.getUserId(), token: session.getToken() }

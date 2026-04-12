@@ -10,6 +10,7 @@ export type AuthenticationErrorType =
     | 'invalid-service-token'
     | 'missing-token'
     | 'invalid-token'
+    | 'session-expired'
 
 export class AuthenticationError extends AppError<AuthenticationErrorType> {
     constructor(type: AuthenticationErrorType, detail?: string) {
