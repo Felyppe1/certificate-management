@@ -25,7 +25,6 @@ export interface EnqueueSendCertificateEmailsInput {
     certificateEmissionId: string
     userId: string
     emailId: string
-    sender: string
     subject: string
     body: string
     recipients: { rowId: string; email: string }[]

@@ -1,7 +1,5 @@
 import base64
-import smtplib
 import os
-from email.message import EmailMessage
 from concurrent.futures import ThreadPoolExecutor
 from google.cloud import storage
 import requests
@@ -12,15 +10,11 @@ from google.oauth2.id_token import fetch_id_token
 from datetime import date
 from pydantic import BaseModel, ValidationError
 from typing import List
+import resend
 
 load_dotenv()
 
-# SMTP config (auhton Gmail ou SendGrid SMTP)
-SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT = 587
-SMTP_USER = os.getenv("SMTP_USER")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
-
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 ENV = os.getenv('ENV', 'production')
 APP_BASE_URL = os.getenv('APP_BASE_URL')
 AUDIENCE = os.getenv("TOKEN_AUDIENCE", APP_BASE_URL) # For local environments
@@ -29,12 +23,12 @@ CERTIFICATES_BUCKET = os.getenv('CERTIFICATES_BUCKET')
 for var_name, var_value in {
     "APP_BASE_URL": APP_BASE_URL,
     "CERTIFICATES_BUCKET": CERTIFICATES_BUCKET,
-    "SMTP_USER": SMTP_USER,
-    "SMTP_PASSWORD": SMTP_PASSWORD,
+    "RESEND_API_KEY": RESEND_API_KEY,
 }.items():
     if not var_value:
         raise ValueError(f"Environment variable '{var_name}' is not set.")
 
+resend.api_key = RESEND_API_KEY
 storage_client = storage.Client()
 
 class RecipientModel(BaseModel):
@@ -112,11 +106,6 @@ def main(request):
             path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{row_id}.pdf"
             pdf_bytes = get_from_bucket(path)
 
-            logo_path = os.path.join(os.path.dirname(__file__), "assets", "logo.png")
-
-            with open(logo_path, 'rb') as f:
-                logo_bytes = f.read()
-
             html_content = f"""
             <html>
                 <body style="font-family: sans-serif; color: #333;">
@@ -126,7 +115,7 @@ def main(request):
                     <div style="background-color: #26272B; padding: .75rem 1rem; max-width: 39rem; border-radius: .75rem; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: .75rem;">
                         <div style="background-color: #18191E; padding: 1rem 1rem; border-radius: .75rem; border: 2px solid #4A4A52; text-align: center;">
                             <div style="font-size: 1rem; font-weight: 600; color: white;">
-                                <img src="cid:logo_certifica" alt="Certifica" style="width: 1.5rem; height: 1.5rem; vertical-align: middle;">
+                                <img src="{APP_BASE_URL}/logo.png" alt="Certifica" style="width: 1.5rem; height: 1.5rem; vertical-align: middle;">
                                 <span style="vertical-align: middle;">
                                     Certifica
                                 </span>
@@ -135,7 +124,7 @@ def main(request):
                                 Este email foi enviado pela<br>plataforma de gerenciamento de certificados.
                             </p>
                             <p style="margin: 0; color: #71717a; text-align: center;">
-                                <a href="https://certificate-management-924358881315.us-central1.run.app/" target="_blank"
+                                <a href="{APP_BASE_URL}" target="_blank"
                                     style="color: #2563eb; text-decoration: underline;">Certifica</a>
                                 <span style="margin: 0 8px; color: #52525b;">|</span>
                                 <span>© {date.today().year}</span>
@@ -146,42 +135,27 @@ def main(request):
             </html>
             """
 
-            # 3. Cria a mensagem
-            msg = EmailMessage()
-            msg["Subject"] = subject
-            msg["From"] = sender
-            msg["To"] = recipient
-
-            msg.set_content(body)
-            msg.add_alternative(html_content, subtype="html")
-
-            # # A. Define o conteúdo em TEXTO PURO (fallback para emails antigos)
-            # msg.set_content(body) 
-
-            # # B. Adiciona a versão HTML como alternativa
-            # msg.add_alternative(html_content, subtype='html')
-
-            # C. O Pulo do Gato: Anexar a imagem "dentro" da parte HTML
-            # msg.get_payload()[1] pega a parte HTML que acabamos de criar acima
-            msg.get_payload()[1].add_related(
-                logo_bytes,
-                maintype='image',
-                subtype='png',
-                cid='<logo_certifica>'
-            )
-
-            msg.add_attachment(
-                pdf_bytes,
-                maintype="application",
-                subtype="pdf",
-                filename="certificado.pdf"
-            )
-
-            print('Sending email to', recipient)
-            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-                server.starttls()
-                server.login(SMTP_USER, SMTP_PASSWORD)
-                server.send_message(msg)
+            try:
+                params = {
+                    "from": "Certifica <nao-responda@certifica.felyppe.com.br>",
+                    "to": [recipient],
+                    "subject": subject,
+                    "text": body,
+                    "html": html_content,
+                    "attachments": [
+                        {
+                            "filename": "certificado.pdf",
+                            "content": list(pdf_bytes) 
+                        }
+                    ]
+                }
+                print(f"Sending email to {recipient} via Resend...")
+                response = resend.Emails.send(params)
+                print(f"Enviado com sucesso! ID: {response['id']}")
+                return True
+            except Exception as e:
+                print(f"Erro ao enviar e-mail: {e}")
+                return False
 
         with ThreadPoolExecutor(max_workers=5) as executor:
             futures = [

@@ -118,7 +118,6 @@ export class ResendEmailsUseCase {
             certificateEmissionId: data.certificateEmissionId,
             emailId: email.getId(),
             userId: data.userId,
-            sender: 'Gerenciador de Certificados',
             subject: subject!,
             body: body!,
             recipients,

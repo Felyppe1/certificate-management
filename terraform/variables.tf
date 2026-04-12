@@ -20,16 +20,22 @@ variable "branch" {
   type        = string
 }
 
-variable "smtp_user" {
-  description = "SMTP user for sending emails"
-  type        = string
-}
-
-variable "smtp_password" {
-  description = "SMTP password for sending emails"
+variable "resend_api_key" {
+  description = "Resend API key for sending emails"
   type        = string
   sensitive   = true
 }
+
+# variable "smtp_user" {
+#   description = "SMTP user for sending emails"
+#   type        = string
+# }
+
+# variable "smtp_password" {
+#   description = "SMTP password for sending emails"
+#   type        = string
+#   sensitive   = true
+# }
 
 # variable "google_api_key" {
 #   description = "Google API key for the cloud run service"

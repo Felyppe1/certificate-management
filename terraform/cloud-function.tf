@@ -157,8 +157,7 @@ resource "google_cloudfunctions2_function" "send_certificate_emails_function" {
     environment_variables = {
       APP_BASE_URL        = "https://${google_cloud_run_v2_service.app.name}-${data.google_project.project.number}.${google_cloud_run_v2_service.app.location}.run.app"
       CERTIFICATES_BUCKET = google_storage_bucket.certificates.name
-      SMTP_USER = var.smtp_user
-      SMTP_PASSWORD = var.smtp_password
+      RESEND_API_KEY = var.resend_api_key
     }
     
     service_account_email = google_service_account.app_service_account.email
