@@ -1,6 +1,6 @@
 import { GetMeControllerResponse } from '@/app/api/users/me/route'
 import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 
 export async function fetchMe(): Promise<GetMeControllerResponse> {
     const sessionToken = (await cookies()).get('session_token')?.value
@@ -18,8 +18,28 @@ export async function fetchMe(): Promise<GetMeControllerResponse> {
     )
 
     if (!response.ok) {
+        const errorData = await response.json()
+
+        const errorType =
+            errorData.type !== 'about:blank' ? errorData.type : null
+
+        if (response.status === 404) {
+            notFound()
+        }
+
+        if (response.status === 403) {
+            const query = errorType ? `?error=${errorType}` : ''
+            redirect(`/${query}`)
+        }
+
         if (response.status === 401) {
-            redirect('/entrar')
+            const query = errorType ? `?error=${errorType}` : ''
+            redirect(`/entrar${query}`)
+        }
+
+        throw {
+            statusCode: response.status,
+            body: errorData,
         }
     }
 

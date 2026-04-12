@@ -34,9 +34,15 @@ export async function fetchCertificateEmission(
             redirect(`/${query}`)
         }
 
-        throw new Error(
-            'Error getting certificate emission: ' + response.statusText,
-        )
+        if (response.status === 401) {
+            const query = errorType ? `?error=${errorType}` : ''
+            redirect(`/entrar${query}`)
+        }
+
+        throw {
+            statusCode: response.status,
+            body: errorData,
+        }
     }
 
     return await response.json()

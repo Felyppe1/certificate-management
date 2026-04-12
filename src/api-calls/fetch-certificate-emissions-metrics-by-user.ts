@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+import { notFound, redirect } from 'next/navigation'
 
 export async function fetchCertificateEmissionsMetricsByUser() {
     const sessionToken = (await cookies()).get('session_token')?.value
@@ -14,6 +15,32 @@ export async function fetchCertificateEmissionsMetricsByUser() {
             },
         },
     )
+
+    if (!response.ok) {
+        const errorData = await response.json()
+
+        const errorType =
+            errorData.type !== 'about:blank' ? errorData.type : null
+
+        if (response.status === 404) {
+            notFound()
+        }
+
+        if (response.status === 403) {
+            const query = errorType ? `?error=${errorType}` : ''
+            redirect(`/${query}`)
+        }
+
+        if (response.status === 401) {
+            const query = errorType ? `?error=${errorType}` : ''
+            redirect(`/entrar${query}`)
+        }
+
+        throw {
+            statusCode: response.status,
+            body: errorData,
+        }
+    }
 
     return await response.json()
 }

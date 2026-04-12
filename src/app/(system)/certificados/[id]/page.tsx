@@ -1,4 +1,3 @@
-import { fetchMe } from '@/api-calls/fetch-me'
 import { fetchCertificateEmission } from '@/api-calls/fetch-certificate-emission'
 import {
     dehydrate,
@@ -17,16 +16,16 @@ export default async function CertificatePage({
 
     const queryClient = new QueryClient()
 
-    await Promise.all([
-        queryClient.prefetchQuery({
-            queryKey: queryKeys.certificateEmission(certificateId),
-            queryFn: () => fetchCertificateEmission(certificateId),
-        }),
-        // queryClient.prefetchQuery({
-        //     queryKey: queryKeys.me(),
-        //     queryFn: fetchMe,
-        // }),
-    ])
+    await queryClient.prefetchQuery({
+        queryKey: queryKeys.certificateEmission(certificateId),
+        queryFn: () => fetchCertificateEmission(certificateId),
+    })
+    // await Promise.all([
+    //     // queryClient.prefetchQuery({
+    //     //     queryKey: queryKeys.me(),
+    //     //     queryFn: fetchMe,
+    //     // }),
+    // ])
 
     return (
         <HydrationBoundary state={dehydrate(queryClient)}>

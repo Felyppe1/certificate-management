@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { GoogleOAuthProvider } from '@react-oauth/google'
-import { fetchUserBySessionToken } from '@/api-calls/fetch-user-by-session-token'
-import { GoogleAnalytics } from './_components/GoogleAnalytics'
+// import { fetchUserBySessionToken } from '@/api-calls/fetch-user-by-session-token'
+// import { GoogleAnalytics } from './_components/GoogleAnalytics'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { Toaster } from '@/components/ui/sonner'
 import { Providers } from '@/app/_components/Providers'
@@ -28,13 +28,13 @@ export default async function RootLayout({
 }: Readonly<{
     children: React.ReactNode
 }>) {
-    const data = await fetchUserBySessionToken()
+    // const data = await fetchUserBySessionToken()
 
     return (
         <html lang="pt-BR" suppressHydrationWarning>
-            {process.env.NODE_ENV !== 'development' && process.env.GA_ID && (
+            {/* {process.env.NODE_ENV !== 'development' && process.env.GA_ID && (
                 <GoogleAnalytics userId={data?.userId} />
-            )}
+            )} */}
 
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}
