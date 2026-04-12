@@ -39,7 +39,6 @@ class SendCertificateEmailsInput(BaseModel):
     certificateEmissionId: str
     emailId: str
     userId: str
-    sender: str
     subject: str
     body: str
     recipients: List[RecipientModel]
