@@ -25,6 +25,7 @@ import z from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
+import { TemplateSyntaxCarousel } from '@/components/FileSelector/TemplateSyntaxCarousel'
 
 interface TemplateSectionProps {
     certificateId: string
@@ -202,7 +203,10 @@ export function TemplateSection({
             <Card>
                 <CardHeader className="flex flex-col xs:flex-row justify-between gap-4">
                     <div>
-                        <CardTitle>Selecionar Novo Template</CardTitle>
+                        <CardTitle className="flex items-center gap-2">
+                            Selecionar Novo Template
+                            <TemplateSyntaxCarousel />
+                        </CardTitle>
                         <CardDescription>
                             Selecione um novo template para substituir o atual
                         </CardDescription>
@@ -259,8 +263,11 @@ export function TemplateSection({
 
     return (
         <Card>
-            <CardHeader className="">
-                <CardTitle>Template do Certificado</CardTitle>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    Template do Certificado
+                    <TemplateSyntaxCarousel />
+                </CardTitle>
                 <CardDescription>
                     Selecione um template para gerar os certificados
                 </CardDescription>

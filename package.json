@@ -61,6 +61,7 @@
     "clsx": "^2.1.1",
     "csv-parse": "^6.1.0",
     "dotenv": "^17.2.3",
+    "embla-carousel-react": "^8.6.0",
     "file-type": "^21.3.2",
     "google-auth-library": "^10.2.1",
     "googleapis": "^159.0.0",
