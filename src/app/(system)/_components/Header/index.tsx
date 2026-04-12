@@ -29,7 +29,7 @@ export function Header() {
                         alt="Certifica"
                         className="w-8 sm:w-10"
                     />
-                    <span className="text-xl sm:text-2xl font-medium text-white">
+                    <span className="text-xl sm:text-2xl font-medium bg-linear-to-r from-white to-zinc-200 bg-clip-text text-transparent">
                         Certifica
                     </span>
                 </Link>
