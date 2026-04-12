@@ -7,7 +7,7 @@ import { prisma } from '../repository/prisma'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { logoutAction } from './logout-action'
 import { redirect } from 'next/navigation'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { cookies } from 'next/headers'
 
 export async function deleteAccountAction() {

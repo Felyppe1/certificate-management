@@ -1,6 +1,6 @@
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest, NextResponse } from 'next/server'
-import { handleError, HandleErrorResponse } from '@/utils/handle-error'
+import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import z from 'zod'
 import { sseBroker } from '@/backend/infrastructure/sse'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/email'
@@ -8,7 +8,7 @@ import { FinishCertificateEmailSendingProcessUseCase } from '@/backend/applicati
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { PrismaEmailsRepository } from '@/backend/infrastructure/repository/prisma/prisma-emails-repository'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
-import { validateServiceAccountToken } from '@/utils/middleware/validateServiceAccountToken'
+import { validateServiceAccountToken } from '@/app/api/_middleware/validateServiceAccountToken'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 
 const updateEmailSchema = z.object({

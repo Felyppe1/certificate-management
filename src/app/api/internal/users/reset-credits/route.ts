@@ -1,8 +1,8 @@
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { NextRequest, NextResponse } from 'next/server'
-import { handleError, HandleErrorResponse } from '@/utils/handle-error'
-import { validateServiceAccountToken } from '@/utils/middleware/validateServiceAccountToken'
+import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
+import { validateServiceAccountToken } from '@/app/api/_middleware/validateServiceAccountToken'
 
 export async function POST(
     request: NextRequest,

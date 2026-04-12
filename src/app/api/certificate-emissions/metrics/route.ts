@@ -4,8 +4,8 @@ import { GetCertificateEmissionsMetricsUseCase } from '@/backend/application/get
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 
-import { handleError, HandleErrorResponse } from '@/utils/handle-error'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { NextRequest, NextResponse } from 'next/server'
 
 export interface GetCertificateEmissionsMetricsControllerResponse {

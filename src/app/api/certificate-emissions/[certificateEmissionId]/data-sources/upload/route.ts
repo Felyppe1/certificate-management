@@ -9,9 +9,9 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { SpreadsheetContentExtractorFactory } from '@/backend/infrastructure/factory/spreadsheet-content-extractor-factory'
 import z from 'zod'
-import { handleError, HandleErrorResponse } from '@/utils/handle-error'
+import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 
 const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
 

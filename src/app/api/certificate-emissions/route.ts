@@ -4,8 +4,8 @@ import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/pr
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest, NextResponse } from 'next/server'
-import { handleError, HandleErrorResponse } from '@/utils/handle-error'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { createCertificateEmissionSchema } from '@/backend/infrastructure/server-actions/schemas'
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 

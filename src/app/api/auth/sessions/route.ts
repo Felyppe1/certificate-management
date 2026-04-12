@@ -6,8 +6,8 @@ import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/pr
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
-import { handleError, HandleErrorResponse } from '@/utils/handle-error'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { SESSION_EXPIRY_DAYS } from '@/backend/domain/session'
 
 export interface GetSessionControllerResponse {

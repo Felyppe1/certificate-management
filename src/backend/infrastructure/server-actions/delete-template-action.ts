@@ -8,7 +8,7 @@ import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { deleteTemplateSchema } from './schemas'
 import { redirect } from 'next/navigation'
 

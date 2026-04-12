@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { prisma } from '../repository/prisma'
 import { logoutAction } from './logout-action'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'

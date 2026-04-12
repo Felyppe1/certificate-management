@@ -8,7 +8,7 @@ import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certif
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { CloudTasksQueue } from '../cloud/gcp/cloud-tasks-queue'
 import { LocalQueue } from '../cloud/local/local-queue'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { retryCertificatesGenerationSchema } from './schemas'
 import { redirect } from 'next/navigation'
 

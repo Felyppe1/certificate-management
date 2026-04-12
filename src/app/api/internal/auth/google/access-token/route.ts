@@ -2,9 +2,9 @@ import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-g
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { handleError, HandleErrorResponse } from '@/utils/handle-error'
+import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import { NextRequest, NextResponse } from 'next/server'
-import { validateServiceAccountToken } from '@/utils/middleware/validateServiceAccountToken'
+import { validateServiceAccountToken } from '@/app/api/_middleware/validateServiceAccountToken'
 import z from 'zod'
 
 const bodySchema = z.object({

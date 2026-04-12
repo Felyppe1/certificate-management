@@ -4,7 +4,7 @@ import { DeleteCertificateEmissionUseCase } from '@/backend/application/delete-c
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { logoutAction } from './logout-action'
 import { deleteCertificateEmissionSchema } from './schemas'

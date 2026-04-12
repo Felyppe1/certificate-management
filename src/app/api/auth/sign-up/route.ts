@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { SignUpUseCase } from '@/backend/application/sign-up-use-case'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { handleError, HandleErrorResponse } from '@/utils/handle-error'
+import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import { signUpSchema } from '@/backend/infrastructure/server-actions/schemas'
 
 export async function POST(

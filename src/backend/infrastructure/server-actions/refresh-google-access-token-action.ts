@@ -6,7 +6,7 @@ import { prisma } from '../repository/prisma'
 import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-google-access-token-use-case'
 import { logoutAction } from './logout-action'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { redirect } from 'next/navigation'
 
 export async function refreshGoogleAccessTokenAction() {

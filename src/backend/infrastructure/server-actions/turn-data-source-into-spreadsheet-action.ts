@@ -11,7 +11,7 @@ import { GoogleDriveGateway } from '../gateway/google-drive-gateway'
 import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
 import { TurnDataSourceIntoSpreadsheetUseCase } from '@/backend/application/turn-data-source-into-spreadsheet-use-case'
 import { SpreadsheetGeneratorFactory } from '../factory/spreadsheet-generator-factory'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { turnDataSourceIntoSpreadsheetSchema } from './schemas'
 import { redirect } from 'next/navigation'
 

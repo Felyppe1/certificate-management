@@ -5,8 +5,8 @@ import { CreateWriteBucketSignedUrlUseCase } from '@/backend/application/create-
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
-import { handleError, HandleErrorResponse } from '@/utils/handle-error'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { createWriteBucketSignedUrlSchema } from '@/backend/infrastructure/server-actions/schemas'
 
 export interface CreateSignedUrlControllerResponse {

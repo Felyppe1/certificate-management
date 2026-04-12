@@ -11,7 +11,7 @@ import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-conte
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NotFoundError } from '@/backend/domain/error/not-found-error'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { refreshDataSourceSchema } from './schemas'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { redirect } from 'next/navigation'

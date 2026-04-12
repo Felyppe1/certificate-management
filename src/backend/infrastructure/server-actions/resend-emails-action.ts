@@ -2,7 +2,7 @@
 
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { logoutAction } from './logout-action'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { resendEmailsSchema } from './schemas/index'
 import { ResendEmailsUseCase } from '@/backend/application/resend-emails-use-case'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'

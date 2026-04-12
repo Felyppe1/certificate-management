@@ -6,7 +6,7 @@ import { PrismaCertificatesRepository } from '@/backend/infrastructure/repositor
 
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { logoutAction } from './logout-action'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { createCertificateEmissionSchema } from './schemas'
 import { redirect } from 'next/navigation'
 import {

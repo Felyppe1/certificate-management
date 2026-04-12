@@ -10,14 +10,14 @@ import { PrismaCertificatesRepository } from '@/backend/infrastructure/repositor
 import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest, NextResponse } from 'next/server'
-import { handleError, HandleErrorResponse } from '@/utils/handle-error'
+import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import {
     EMAIL_ERROR_TYPE_ENUM,
     PROCESSING_STATUS_ENUM as EMAIL_PROCESSING_STATUS_ENUM,
 } from '@/backend/domain/email'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { updateCertificateEmissionSchema } from '@/backend/infrastructure/server-actions/schemas'
 import { PROCESSING_STATUS_ENUM as DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
 

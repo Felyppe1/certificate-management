@@ -13,7 +13,7 @@ import { SpreadsheetContentExtractorFactory } from '../factory/spreadsheet-conte
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { addDataSourceByDrivePickerSchema } from './schemas'
 import { redirect } from 'next/navigation'
 

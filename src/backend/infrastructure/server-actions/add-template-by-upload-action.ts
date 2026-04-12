@@ -9,7 +9,7 @@ import { FileContentExtractorFactory } from '../factory/file-content-extractor-f
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { logoutAction } from './logout-action'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { addTemplateByUploadSchema } from './schemas'
 import { LiquidStringVariableExtractor } from '../string-variable-extractor/liquidjs'
 import { redirect } from 'next/navigation'

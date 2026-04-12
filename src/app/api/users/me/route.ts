@@ -3,8 +3,8 @@ import { Provider } from '@/backend/domain/external-account'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest, NextResponse } from 'next/server'
-import { handleError, HandleErrorResponse } from '@/utils/handle-error'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 
 export interface GetMeControllerResponse {
     user: {

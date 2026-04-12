@@ -11,7 +11,7 @@ import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 import { CloudTasksQueue } from '../cloud/gcp/cloud-tasks-queue'
 import { LocalQueue } from '../cloud/local/local-queue'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { generateCertificatesSchema } from './schemas'
 import { redirect } from 'next/navigation'
 

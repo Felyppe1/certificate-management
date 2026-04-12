@@ -6,7 +6,7 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { DownloadDataSourceUseCase } from '@/backend/application/download-data-source-use-case'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { downloadDataSourceSchema } from './schemas'
 import { redirect } from 'next/navigation'
 

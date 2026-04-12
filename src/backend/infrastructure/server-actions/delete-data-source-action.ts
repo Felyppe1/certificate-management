@@ -6,7 +6,7 @@ import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { logoutAction } from './logout-action'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { DeleteDataSourceUseCase } from '@/backend/application/delete-data-source-use-case'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { deleteDataSourceSchema } from './schemas'
 import { redirect } from 'next/navigation'
 

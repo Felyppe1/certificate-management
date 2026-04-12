@@ -8,7 +8,7 @@ import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data
 import { CloudTasksQueue } from '../cloud/gcp/cloud-tasks-queue'
 import { LocalQueue } from '../cloud/local/local-queue'
 import { RetryDataSourceRowUseCase } from '@/backend/application/generate-certificate-use-case'
-import { validateSessionToken } from '@/utils/middleware/validateSessionToken'
+import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { retryDataSourceRowSchema } from './schemas'
 import { redirect } from 'next/navigation'
 
