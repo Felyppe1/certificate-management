@@ -16,7 +16,7 @@ Dessa forma, a plataforma atende à necessidade de reduzir esforços manuais ou 
 - Tailwind CSS
 - Google Workspace (opcional, para login e upload no Drive)
 
-![alt text](architecture.jpeg)
+![alt text](assets/architecture.png)
 
 ## Configurando o Google Cloud
 
@@ -127,9 +127,9 @@ Antes de rodar o sistema pela primeira vez, é necessário configurar alguns rec
 
 A modelagem está normalizada até a **3FN**. Cada atributo armazena apenas dados atômicos e depende exclusivamente da chave primária de sua tabela, o que minimiza o custo de armazenamento e simplifica a lógica da aplicação.
 
-![Modelagem do banco de dados](db-modeling.png)
+![Modelagem do banco de dados](assets/db-modeling.png)
 
 ### Modelagem do domínio
 
-![Modelagem do domínio](context-mapping.png)
+![Modelagem do domínio](assets/context-mapping.png)
 
