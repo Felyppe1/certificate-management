@@ -102,54 +102,90 @@ class LiquidFloat(float):
 DIVIDED_BY_PRECISION = 8
 
 def make_math_filters(LF):
-    def _dec(val):
-        return val._decimal if isinstance(val, LF) else Decimal(str(val))
+
+    def _to_decimal(val):
+        """
+        Converte QUALQUER tipo de entrada para Decimal de forma segura.
+        Aceita: LiquidFloat, int, float, str numérica, Decimal, bool.
+        Retorna Decimal(0) se não for conversível (comportamento padrão do Liquid).
+        """
+        if isinstance(val, LF):
+            return val._decimal
+        if isinstance(val, bool):
+            # bool é subclasse de int em Python; True=1, False=0
+            return Decimal(int(val))
+        if isinstance(val, Decimal):
+            return val
+        try:
+            return Decimal(str(val).strip())
+        except Exception:
+            return Decimal(0)
+
+    def _output(original_val, result_decimal):
+        """
+        Decide o tipo de retorno baseado no valor ORIGINAL que entrou no filtro:
+
+        - LiquidFloat → preserva display + separadores via _reformat()
+        - qualquer outro → int se resultado for inteiro, float caso contrário
+
+        Isso garante que o valor de saída seja sempre compatível com o próximo
+        filtro na cadeia (ex: date aceita int mas não float).
+        """
+        if isinstance(original_val, LF):
+            return original_val._reformat(result_decimal)
+        # Para tipos nativos, preserva semântica: inteiro → int, decimal → float
+        if result_decimal == result_decimal.to_integral_value():
+            return int(result_decimal)
+        return float(result_decimal)
+
+    # ── Filtros ───────────────────────────────────────────────────────────────
 
     def plus(val, other=0):
-        return val._reformat(_dec(val) + _dec(other)) if isinstance(val, LF) else float(val) + float(other)
+        return _output(val, _to_decimal(val) + _to_decimal(other))
 
     def minus(val, other=0):
-        return val._reformat(_dec(val) - _dec(other)) if isinstance(val, LF) else float(val) - float(other)
+        return _output(val, _to_decimal(val) - _to_decimal(other))
 
     def times(val, other=1):
-        return val._reformat(_dec(val) * _dec(other)) if isinstance(val, LF) else float(val) * float(other)
+        return _output(val, _to_decimal(val) * _to_decimal(other))
 
     def divided_by(val, other=1):
-        if not isinstance(val, LF):
-            return float(val) / float(other)
-        # localcontext isola a precisão só aqui, sem afetar round/quantize
-        with localcontext() as ctx:
-            ctx.prec = len(str(abs(int(val)))) + DIVIDED_BY_PRECISION
-            result = _dec(val) / _dec(other)
-        return val._reformat(result)
+        d_val, d_other = _to_decimal(val), _to_decimal(other)
+        if isinstance(val, LF):
+            with localcontext() as ctx:
+                ctx.prec = len(str(abs(int(val)))) + DIVIDED_BY_PRECISION
+                result = d_val / d_other
+        else:
+            with localcontext() as ctx:
+                ctx.prec = DIVIDED_BY_PRECISION
+                result = d_val / d_other
+        return _output(val, result)
 
     def modulo(val, other=1):
-        return val._reformat(_dec(val) % _dec(other)) if isinstance(val, LF) else float(val) % float(other)
+        return _output(val, _to_decimal(val) % _to_decimal(other))
 
     def round_(val, ndigits=None):
-        if not isinstance(val, LF):
-            return round(float(val)) if ndigits is None else round(float(val), int(float(ndigits)))
-        d = _dec(val)
+        d = _to_decimal(val)
         if ndigits is None:
             result = d.to_integral_value(rounding=ROUND_HALF_UP)
         else:
             result = d.quantize(Decimal(10) ** -int(float(ndigits)), rounding=ROUND_HALF_UP)
-        return val._reformat(result)
+        return _output(val, result)
 
     def abs_(val):
-        return val._reformat(abs(_dec(val))) if isinstance(val, LF) else abs(float(val))
+        return _output(val, abs(_to_decimal(val)))
 
     def ceil_(val):
-        return val._reformat(_dec(val).to_integral_value(rounding=ROUND_CEILING)) if isinstance(val, LF) else float(val).__ceil__()
+        return _output(val, _to_decimal(val).to_integral_value(rounding=ROUND_CEILING))
 
     def floor_(val):
-        return val._reformat(_dec(val).to_integral_value(rounding=ROUND_FLOOR)) if isinstance(val, LF) else float(val).__floor__()
+        return _output(val, _to_decimal(val).to_integral_value(rounding=ROUND_FLOOR))
 
     def at_most(val, other=0):
-        return val._reformat(min(_dec(val), _dec(other))) if isinstance(val, LF) else min(float(val), float(other))
+        return _output(val, min(_to_decimal(val), _to_decimal(other)))
 
     def at_least(val, other=0):
-        return val._reformat(max(_dec(val), _dec(other))) if isinstance(val, LF) else max(float(val), float(other))
+        return _output(val, max(_to_decimal(val), _to_decimal(other)))
 
     return {
         'plus': plus, 'minus': minus, 'times': times,
