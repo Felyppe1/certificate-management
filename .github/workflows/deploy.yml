@@ -58,6 +58,7 @@ jobs:
           GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
         run: |
           echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "TF_VAR_region=${{ env.REGION }}" >> $GITHUB_ENV
@@ -86,7 +87,9 @@ jobs:
             GA_ID: env.GA_ID,
             SUFFIX: env.SUFFIX,
             NEXT_PUBLIC_BASE_URL: env.NEXT_PUBLIC_BASE_URL,
-            GEMINI_API_KEY: env.GEMINI_API_KEY
+            GEMINI_API_KEY: env.GEMINI_API_KEY,
+            RESEND_API_KEY: env.RESEND_API_KEY,
+            OWNER_EMAIL: env.OWNER_EMAIL
           }')
 
           echo "TF_VAR_environment_variables=$TF_ENV_VARS" >> $GITHUB_ENV
@@ -185,6 +188,7 @@ jobs:
           GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
         run: |
           echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
           echo "TF_VAR_region=${{ env.REGION }}" >> $GITHUB_ENV
@@ -213,7 +217,9 @@ jobs:
             GA_ID: env.GA_ID,
             SUFFIX: env.SUFFIX,
             NEXT_PUBLIC_BASE_URL: env.NEXT_PUBLIC_BASE_URL,
-            GEMINI_API_KEY: env.GEMINI_API_KEY
+            GEMINI_API_KEY: env.GEMINI_API_KEY,
+            RESEND_API_KEY: env.RESEND_API_KEY,
+            OWNER_EMAIL: env.OWNER_EMAIL
           }')
 
           echo "TF_VAR_environment_variables=$TF_ENV_VARS" >> $GITHUB_ENV
