@@ -24,7 +24,7 @@ export default async function UserConfigurationsPage() {
 
             <div className="max-w-3xl space-y-6">
                 {(data.user.email == 'felyppe.nunes1@gmail.com' ||
-                    data.user.email == 'luiz.felyppe@id.uff.br') && (
+                    data.user.email == 'luizfelyppe@id.uff.br') && (
                     <GrantAccess />
                 )}
                 {/* Change Password Card */}

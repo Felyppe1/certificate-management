@@ -29,7 +29,7 @@ export class GrantAccessUseCase {
 
         if (
             user.getEmail() !== 'felyppe.nunes1@gmail.com' &&
-            user.getEmail() !== 'luiz.felyppe@id.uff.br'
+            user.getEmail() !== 'luizfelyppe@id.uff.br'
         ) {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_ADMIN)
         }
