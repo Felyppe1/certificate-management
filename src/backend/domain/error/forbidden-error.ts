@@ -4,6 +4,7 @@ export enum FORBIDDEN_ERROR_TYPE {
     NOT_CERTIFICATE_OWNER = 'not-certificate-owner',
     GOOGLE_ACCOUNT_NOT_FOUND = 'google-account-not-found',
     GOOGLE_SESSION_EXPIRED = 'google-session-expired',
+    NOT_ADMIN = 'not-admin',
 }
 
 export class ForbiddenError extends AppError<FORBIDDEN_ERROR_TYPE> {

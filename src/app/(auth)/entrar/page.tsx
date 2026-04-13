@@ -3,6 +3,7 @@ import { GoogleButton } from '@/components/GoogleButton'
 import { ShieldCheck, Zap } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Toast } from './Toast'
+import { RequestAccessModal } from './RequestAccessModal'
 
 export default async function Entrar({
     searchParams,
@@ -18,15 +19,12 @@ export default async function Entrar({
 
             <div className="w-full max-w-md space-y-8">
                 <div className="text-center space-y-2">
-                    <div className="flex items-center justify-center mb-4">
+                    <div className="flex items-center justify-center sm:mb-4">
                         <img
                             src="/logo.png"
                             alt="Certifica"
-                            className="w-10 sm:w-12"
+                            className="w-34 sm:w-40 shrink-0"
                         />
-                        <span className="text-3xl sm:text-4xl font-medium ml-2 sm:ml-3">
-                            Certifica
-                        </span>
                     </div>
                     {/* <h1 className="text-4xl font-bold">Bem-vindo</h1> */}
                     <p className="text-muted-foreground">
@@ -35,7 +33,10 @@ export default async function Entrar({
                 </div>
 
                 <Card className="gap-8">
-                    <GoogleButton text="Entrar com Google" />
+                    <div className="flex flex-col items-center gap-3">
+                        <GoogleButton text="Entrar com Google" />
+                        <RequestAccessModal />
+                    </div>
 
                     <div className="relative mt-2">
                         <div className="absolute inset-0 flex items-center">

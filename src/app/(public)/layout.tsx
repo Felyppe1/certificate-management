@@ -11,16 +11,13 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 <div className="mb-8 sm:mb-10 flex items-center justify-center">
                     <Link
                         href="/"
-                        className="flex items-center gap-3 p-2 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md"
+                        className="flex items-center outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md"
                     >
                         <img
                             src="/logo.png"
                             alt="Certifica"
-                            className="w-12 sm:w-14"
+                            className="w-34 sm:w-40"
                         />
-                        <span className="text-3xl sm:text-4xl font-medium text-white">
-                            Certifica
-                        </span>
                     </Link>
                 </div>
 

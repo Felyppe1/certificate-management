@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { fetchMe } from '@/api-calls/fetch-me'
 import { DeleteAccount } from './_components/DeleteAccount'
+import { GrantAccess } from './_components/GrantAccess'
 import { GoBackButton } from '@/components/GoBackButton'
 
 export default async function UserConfigurationsPage() {
@@ -14,7 +15,7 @@ export default async function UserConfigurationsPage() {
                 <GoBackButton />
 
                 <h1 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
-                    Configurações da Conta
+                    Configurações
                 </h1>
                 {/* <p className="text-foreground/90 text-lg font-light">
                     Gerencie sua senha e contas conectadas
@@ -22,6 +23,10 @@ export default async function UserConfigurationsPage() {
             </div>
 
             <div className="max-w-3xl space-y-6">
+                {(data.user.email == 'felyppe.nunes1@gmail.com' ||
+                    data.user.email == 'luiz.felyppe@id.uff.br') && (
+                    <GrantAccess />
+                )}
                 {/* Change Password Card */}
                 {/* <Card>
                     <div className="flex items-start gap-4 mb-6">

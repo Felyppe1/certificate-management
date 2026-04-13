@@ -22,16 +22,13 @@ export function Header() {
             <nav className="max-w-7xl mx-auto px-[6vw] xs:px-10 py-4 flex items-center justify-between gap-8">
                 <Link
                     href="/"
-                    className="flex items-center gap-1 sm:gap-2 p-1 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md"
+                    className="flex items-center sm:gap-2 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md"
                 >
                     <img
                         src="/logo.png"
                         alt="Certifica"
-                        className="w-8 sm:w-10"
+                        className="w-30 sm:w-40 shrink-0"
                     />
-                    <span className="text-xl sm:text-2xl font-medium bg-linear-to-r from-white to-zinc-200 bg-clip-text text-transparent">
-                        Certifica
-                    </span>
                 </Link>
 
                 {/* <div className="hidden md:flex items-center gap-8">
