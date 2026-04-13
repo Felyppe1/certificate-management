@@ -16,9 +16,18 @@ import Image from 'next/image'
 import { Button } from '../ui/button'
 
 const EXAMPLE_IMAGES = [
-    { src: '/image1.png', alt: 'Exemplo de template 1' },
-    { src: '/image2.png', alt: 'Exemplo de template 2' },
-    { src: '/image3.png', alt: 'Exemplo de template 3' },
+    {
+        src: '/template1.png',
+        alt: 'Modelo de Certificado de Premiação da West Village High School. O design possui bordas geométricas em tons de azul e dourado sobre um fundo branco. O texto inclui campos dinâmicos para o nome do premiado, área de desempenho, ano, categoria e assinatura do responsável.',
+    },
+    {
+        src: '/template2.png',
+        alt: 'Modelo de certificado de conclusão com design elegante em fundo preto texturizado e detalhes em dourado. O layout apresenta formas geométricas em "V" nas laterais e contém variáveis de código para preenchimento automático do nome do aluno, nome do curso, data formatada e uma assinatura digitalizada.',
+    },
+    {
+        src: '/template3.png',
+        alt: 'Modelo de certificado minimalista em preto e branco. O design é focado em tipografia robusta e centralizada, com um ícone de louros na parte inferior. O texto contém diversas variáveis de código para manipulação de strings, incluindo a substituição de "Workshop" por "Treinamento Intensivo", capitalização do nome e cálculo automático de validade.',
+    },
 ]
 
 export function TemplateSyntaxCarousel() {
@@ -37,9 +46,6 @@ export function TemplateSyntaxCarousel() {
                     <h4 className="font-medium leading-none text-sm sm:text-lg">
                         Exemplos de Templates
                     </h4>
-                    {/* <p className="text-xs text-muted-foreground">
-                        Como usar as variáveis Liquid no seu documento
-                    </p> */}
                 </div>
                 <Carousel className="w-full mx-auto" opts={{ loop: true }}>
                     <CarouselContent>
