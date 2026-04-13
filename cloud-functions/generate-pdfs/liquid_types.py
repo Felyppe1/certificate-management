@@ -105,14 +105,14 @@ def make_math_filters(LF):
 
     def _to_decimal(val):
         """
-        Converte QUALQUER tipo de entrada para Decimal de forma segura.
-        Aceita: LiquidFloat, int, float, str numérica, Decimal, bool.
-        Retorna Decimal(0) se não for conversível (comportamento padrão do Liquid).
+        Convert any type to Decimal safely.
+        Accepts: LiquidFloat, int, float, numeric string, Decimal, bool.
+        Returns Decimal(0) if not convertible (default Liquid behavior).
         """
         if isinstance(val, LF):
             return val._decimal
         if isinstance(val, bool):
-            # bool é subclasse de int em Python; True=1, False=0
+            # bool is a subclass of int in Python; True=1, False=0
             return Decimal(int(val))
         if isinstance(val, Decimal):
             return val
@@ -123,22 +123,22 @@ def make_math_filters(LF):
 
     def _output(original_val, result_decimal):
         """
-        Decide o tipo de retorno baseado no valor ORIGINAL que entrou no filtro:
+        Decide the return type based on the ORIGINAL value that entered the filter:
 
-        - LiquidFloat → preserva display + separadores via _reformat()
-        - qualquer outro → int se resultado for inteiro, float caso contrário
+        - LiquidFloat → preserves display + separators via _reformat()
+        - any other → int if result is integer, float otherwise
 
-        Isso garante que o valor de saída seja sempre compatível com o próximo
-        filtro na cadeia (ex: date aceita int mas não float).
+        This ensures the output value is always compatible with the next
+        filter in the chain (e.g., date accepts int but not float).
         """
         if isinstance(original_val, LF):
             return original_val._reformat(result_decimal)
-        # Para tipos nativos, preserva semântica: inteiro → int, decimal → float
+        # For native types, preserve semantics: integer → int, decimal → float
         if result_decimal == result_decimal.to_integral_value():
             return int(result_decimal)
         return float(result_decimal)
 
-    # ── Filtros ───────────────────────────────────────────────────────────────
+    # ───────────────────────────────────────────────────────────────
 
     def plus(val, other=0):
         return _output(val, _to_decimal(val) + _to_decimal(other))

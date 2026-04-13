@@ -3,7 +3,12 @@ import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const publicRoutes = ['/entrar', '/cadastrar-se']
+const publicRoutes = [
+    '/entrar',
+    '/cadastrar-se',
+    '/politicas-de-privacidade',
+    '/termos-de-servico',
+]
 
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl
