@@ -2,21 +2,11 @@ import Link from 'next/link'
 import { GoogleButton } from '@/components/GoogleButton'
 import { ShieldCheck, Zap } from 'lucide-react'
 import { Card } from '@/components/ui/card'
-import { Toast } from './_components/Toast'
 import { RequestAccessModal } from './_components/RequestAccessModal'
 
-export default async function Entrar({
-    searchParams,
-}: {
-    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-}) {
-    const params = await searchParams
-    const error = params.error as string | undefined
-
+export default function Entrar() {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4">
-            {error && <Toast error={error} />}
-
             <div className="w-full max-w-md space-y-8">
                 <div className="text-center space-y-2">
                     <div className="flex items-center justify-center sm:mb-4">
