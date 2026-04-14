@@ -15,7 +15,7 @@ const accessGrantedEmailTemplate = `<!DOCTYPE html>
         .wrapper { width: 100%; table-layout: fixed; background-color: #0d1117; padding-bottom: 2.5rem; padding-top: 2.5rem; }
         .main { background-color: #1a1d24; margin: 0 auto; width: 100%; max-width: 37.5rem; border-radius: 0.75rem; border: 0.0625rem solid #2d3342; overflow: hidden; color: #e6edf3; }
         .header { padding: 2rem 2rem 1.25rem 2rem; text-align: center; }
-        .header img { width: 2.5rem; height: auto; vertical-align: middle; }
+        .header img { width: 10rem; height: auto; vertical-align: middle; }
         .header span { font-size: 1.5rem; font-weight: 600; color: #ffffff; margin-left: 0.25rem; vertical-align: middle; }
         .content { padding: 0 2rem 2rem 2rem; text-align: center; }
         .content h1 { font-size: 1.375rem; margin-bottom: 1rem; color: #ffffff; font-weight: 600; }
