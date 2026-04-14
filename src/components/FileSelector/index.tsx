@@ -25,7 +25,7 @@ import { DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
 import { TEMPLATE_FILE_MIME_TYPE } from '@/backend/domain/template'
 import { GoogleDriveIcon } from '../svg/GoogleDriveIcon'
 import { toast } from 'sonner'
-import { useGoogleRelogin } from '../useGoogleRelogin'
+import { useGoogleRelogin } from '../../custom-hooks/useGoogleRelogin'
 import { UseFormReturn } from 'react-hook-form'
 import { UrlForm, UrlFormValues } from './UrlForm'
 
