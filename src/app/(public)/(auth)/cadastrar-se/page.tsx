@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { SignUpForm } from './signup-form'
+import { SignUpForm } from './_components/signup-form'
 import { GoogleButton } from '@/components/GoogleButton'
 
 export default function SignUp() {

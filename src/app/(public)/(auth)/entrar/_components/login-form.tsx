@@ -9,8 +9,8 @@ import { AlertMessage } from '@/components/ui/alert-message'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { loginAction } from '../../../backend/infrastructure/server-actions/login-action'
 import { useState, useTransition } from 'react'
+import { loginAction } from '@/backend/infrastructure/server-actions/login-action'
 
 const loginSchema = z.object({
     email: z.email('Formato de email inválido'),

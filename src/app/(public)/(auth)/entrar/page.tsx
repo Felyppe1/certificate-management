@@ -2,8 +2,8 @@ import Link from 'next/link'
 import { GoogleButton } from '@/components/GoogleButton'
 import { ShieldCheck, Zap } from 'lucide-react'
 import { Card } from '@/components/ui/card'
-import { Toast } from './Toast'
-import { RequestAccessModal } from './RequestAccessModal'
+import { Toast } from './_components/Toast'
+import { RequestAccessModal } from './_components/RequestAccessModal'
 
 export default async function Entrar({
     searchParams,
