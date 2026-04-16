@@ -8,8 +8,8 @@ export interface DataSourceFileInput {
 
 export class DataSourceFile extends ValueObject<DataSourceFile> {
     private readonly fileName: string
-    private readonly _driveFileId: string | null
-    private readonly _storageFileUrl: string | null
+    private readonly driveFileId: string | null
+    private readonly storageFileUrl: string | null
 
     constructor(data: DataSourceFileInput) {
         super()
@@ -31,35 +31,35 @@ export class DataSourceFile extends ValueObject<DataSourceFile> {
         }
 
         this.fileName = data.fileName
-        this._driveFileId = data.driveFileId
-        this._storageFileUrl = data.storageFileUrl
+        this.driveFileId = data.driveFileId
+        this.storageFileUrl = data.storageFileUrl
     }
 
-    get name(): string {
+    getName(): string {
         return this.fileName
     }
 
-    get driveFileId(): string | null {
-        return this._driveFileId
+    getDriveFileId(): string | null {
+        return this.driveFileId
     }
 
-    get storageFileUrl(): string | null {
-        return this._storageFileUrl
+    getStorageFileUrl(): string | null {
+        return this.storageFileUrl
     }
 
     equals(other: DataSourceFile): boolean {
         return (
-            this.name === other.name &&
-            this.driveFileId === other.driveFileId &&
-            this.storageFileUrl === other.storageFileUrl
+            this.getName() === other.getName() &&
+            this.getDriveFileId() === other.getDriveFileId() &&
+            this.getStorageFileUrl() === other.getStorageFileUrl()
         )
     }
 
     serialize(): DataSourceFileInput {
         return {
-            fileName: this.name,
-            driveFileId: this.driveFileId,
-            storageFileUrl: this.storageFileUrl,
+            fileName: this.getName(),
+            driveFileId: this.getDriveFileId(),
+            storageFileUrl: this.getStorageFileUrl(),
         }
     }
 }

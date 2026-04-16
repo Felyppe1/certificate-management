@@ -182,7 +182,7 @@ export class DataSource extends ValueObject<DataSource> {
         const columns = columnsRaw.map(c => new DataSourceColumn(c))
 
         const allColumnsFound = columns.every(column =>
-            this.columns.find(c => c.name === column.name),
+            this.columns.find(c => c.getName() === column.getName()),
         )
 
         if (!allColumnsFound) {
@@ -200,25 +200,27 @@ export class DataSource extends ValueObject<DataSource> {
         }[] = []
 
         columns.forEach(newColumn => {
-            const oldColumn = this.columns.find(c => c.name === newColumn.name)!
+            const oldColumn = this.columns.find(
+                c => c.getName() === newColumn.getName(),
+            )!
 
             // TODO: removed it just because an easier logic for the array type is to always check it if it changes
-            // if (oldColumn.type === newColumn.type) {
+            // if (oldColumn.getType() === newColumn.getType()) {
             //     continue
             // }
 
-            const forbiddenTargets = FORBIDDEN_TYPE_CHANGE[oldColumn.type]
-            if (forbiddenTargets.includes(newColumn.type)) {
+            const forbiddenTargets = FORBIDDEN_TYPE_CHANGE[oldColumn.getType()]
+            if (forbiddenTargets.includes(newColumn.getType())) {
                 forbiddenColumns.push({
-                    name: newColumn.name,
-                    fromType: oldColumn.type,
-                    toType: newColumn.type,
+                    name: newColumn.getName(),
+                    fromType: oldColumn.getType(),
+                    toType: newColumn.getType(),
                 })
             }
 
-            const unsafeTargets = UNSAFE_TYPE_CHANGE[oldColumn.type]
-            if (unsafeTargets?.includes(newColumn.type)) {
-                unsafeColumnNames.push(newColumn.name)
+            const unsafeTargets = UNSAFE_TYPE_CHANGE[oldColumn.getType()]
+            if (unsafeTargets?.includes(newColumn.getType())) {
+                unsafeColumnNames.push(newColumn.getName())
             }
         })
 
@@ -249,24 +251,24 @@ export class DataSource extends ValueObject<DataSource> {
     }
 
     getDriveFileId(fileIndex = 0) {
-        return this.files[fileIndex]?.driveFileId ?? null
+        return this.files[fileIndex]?.getDriveFileId() ?? null
     }
 
     getDriveFileIds(): string[] {
         return this.files
-            .map(f => f.driveFileId)
+            .map(f => f.getDriveFileId())
             .filter((id): id is string => id !== null)
     }
 
     /** Returns the storage URL of the first file (used for download/refresh). */
     getStorageFileUrl(fileIndex = 0) {
-        return this.files[fileIndex]?.storageFileUrl ?? null
+        return this.files[fileIndex]?.getStorageFileUrl() ?? null
     }
 
     /** Returns all non-null storage URLs (used for bucket cleanup). */
     getStorageFileUrls(): string[] {
         return this.files
-            .map(f => f.storageFileUrl)
+            .map(f => f.getStorageFileUrl())
             .filter((url): url is string => url !== null)
     }
 
@@ -284,7 +286,7 @@ export class DataSource extends ValueObject<DataSource> {
     setStorageFileUrls(urls: string[]): DataSource {
         const updatedFiles = this.files.map((f, i) => ({
             ...f.serialize(),
-            storageFileUrl: urls[i] ?? f.storageFileUrl,
+            storageFileUrl: urls[i] ?? f.getStorageFileUrl(),
         }))
         return new DataSource({ ...this.serialize(), files: updatedFiles })
     }
@@ -301,7 +303,7 @@ export class DataSource extends ValueObject<DataSource> {
     }
 
     hasColumn(columnName: string): boolean {
-        return this.columns.some(column => column.name === columnName)
+        return this.columns.some(column => column.getName() === columnName)
     }
 
     getFileMimeType() {

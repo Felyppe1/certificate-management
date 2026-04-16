@@ -35,9 +35,9 @@ const VALID_ITEM_TYPES: ArrayItemType[] = [
 ]
 
 export class DataSourceColumn extends ValueObject<DataSourceColumn> {
-    private readonly _name: string
-    private readonly _type: ColumnType
-    private readonly _arrayMetadata: ArrayMetadata | null
+    private readonly name: string
+    private readonly type: ColumnType
+    private readonly arrayMetadata: ArrayMetadata | null
 
     constructor(data: DataSourceColumnInput) {
         super()
@@ -75,37 +75,37 @@ export class DataSourceColumn extends ValueObject<DataSourceColumn> {
             )
         }
 
-        this._name = data.name
-        this._type = data.type
-        this._arrayMetadata = data.arrayMetadata
+        this.name = data.name
+        this.type = data.type
+        this.arrayMetadata = data.arrayMetadata
     }
 
-    get name(): string {
-        return this._name
+    getName(): string {
+        return this.name
     }
 
-    get type(): ColumnType {
-        return this._type
+    getType(): ColumnType {
+        return this.type
     }
 
-    get arrayMetadata(): ArrayMetadata | null {
-        return this._arrayMetadata
+    getArrayMetadata(): ArrayMetadata | null {
+        return this.arrayMetadata
     }
 
     equals(other: DataSourceColumn): boolean {
         return (
-            this.name === other.name &&
-            this.type === other.type &&
-            JSON.stringify(this.arrayMetadata) ===
-                JSON.stringify(other.arrayMetadata)
+            this.getName() === other.getName() &&
+            this.getType() === other.getType() &&
+            JSON.stringify(this.getArrayMetadata()) ===
+                JSON.stringify(other.getArrayMetadata())
         )
     }
 
     serialize(): DataSourceColumnInput {
         return {
-            name: this.name,
-            type: this.type,
-            arrayMetadata: this.arrayMetadata,
+            name: this.getName(),
+            type: this.getType(),
+            arrayMetadata: this.getArrayMetadata(),
         }
     }
 
