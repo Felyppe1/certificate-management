@@ -20,8 +20,8 @@ interface CreateWriteBucketSignedUrlUseCaseInput {
 
 export class CreateWriteBucketSignedUrlUseCase {
     constructor(
-        private bucket: IBucket,
-        private certificateRepository: ICertificatesRepository,
+        private bucket: Pick<IBucket, 'generateSignedUrl'>,
+        private certificateRepository: Pick<ICertificatesRepository, 'getById'>,
     ) {}
 
     async execute(input: CreateWriteBucketSignedUrlUseCaseInput) {

@@ -39,7 +39,7 @@ export class CreateEmailUseCase {
         >,
         private emailsRepository: Pick<IEmailsRepository, 'save'>,
         private queue: Pick<IQueue, 'enqueueSendCertificateEmails'>,
-        private transactionManager: ITransactionManager,
+        private transactionManager: Pick<ITransactionManager, 'run'>,
     ) {}
 
     async execute(data: CreateEmailUseCaseInput) {

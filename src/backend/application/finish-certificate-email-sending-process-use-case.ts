@@ -23,7 +23,7 @@ export class FinishCertificateEmailSendingProcessUseCase {
             'checkIfExistsById'
         >,
         private usersRepository: Pick<IUsersRepository, 'upsertDailyUsage'>,
-        private transactionManager: ITransactionManager,
+        private transactionManager: Pick<ITransactionManager, 'run'>,
     ) {}
 
     async execute(input: FinishCertificateEmailSendingProcessUseCaseInput) {

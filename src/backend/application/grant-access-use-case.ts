@@ -16,8 +16,11 @@ interface GrantAccessInput {
 
 export class GrantAccessUseCase {
     constructor(
-        private notificationEmailGateway: INotificationEmailGateway,
-        private usersRepository: IUsersRepository,
+        private notificationEmailGateway: Pick<
+            INotificationEmailGateway,
+            'sendAccessGranted'
+        >,
+        private usersRepository: Pick<IUsersRepository, 'getById'>,
     ) {}
 
     async execute(data: GrantAccessInput) {

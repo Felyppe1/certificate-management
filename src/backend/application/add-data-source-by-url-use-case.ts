@@ -47,9 +47,12 @@ export class AddDataSourceByUrlUseCase {
             IGoogleDriveGateway,
             'getFileMetadata' | 'downloadFile'
         >,
-        private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
+        private spreadsheetContentExtractorFactory: Pick<
+            ISpreadsheetContentExtractorFactory,
+            'create'
+        >,
         private bucket: Pick<IBucket, 'deleteObject'>,
-        private transactionManager: ITransactionManager,
+        private transactionManager: Pick<ITransactionManager, 'run'>,
         private usersRepository: Pick<IUsersRepository, 'getById'>,
     ) {}
 

@@ -39,7 +39,7 @@ export class UpdateDataSourceRowsUseCase {
             | 'updateMany'
             | 'resetProcessingStatusByCertificateEmissionId'
         >,
-        private transactionManager: ITransactionManager,
+        private transactionManager: Pick<ITransactionManager, 'run'>,
     ) {}
 
     async execute(data: UpdateDataSourceRowsUseCaseInput): Promise<void> {

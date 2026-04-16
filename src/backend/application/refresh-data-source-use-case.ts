@@ -27,19 +27,28 @@ interface RefreshDataSourceUseCaseInput {
 
 export class RefreshDataSourceUseCase {
     constructor(
-        private certificateEmissionsRepository: ICertificatesRepository,
+        private certificateEmissionsRepository: Pick<
+            ICertificatesRepository,
+            'getById' | 'update'
+        >,
         private dataSourceRowsRepository: Pick<
             IDataSourceRowsRepository,
             'saveMany' | 'deleteManyByCertificateEmissionId'
         >,
-        private googleDriveGateway: IGoogleDriveGateway,
+        private googleDriveGateway: Pick<
+            IGoogleDriveGateway,
+            'getFileMetadata' | 'downloadFile'
+        >,
         private googleAuthGateway: Pick<
             IGoogleAuthGateway,
             'checkOrGetNewAccessToken'
         >,
-        private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
+        private spreadsheetContentExtractorFactory: Pick<
+            ISpreadsheetContentExtractorFactory,
+            'create'
+        >,
         private usersRepository: Pick<IUsersRepository, 'getById' | 'update'>,
-        private transactionManager: ITransactionManager,
+        private transactionManager: Pick<ITransactionManager, 'run'>,
     ) {}
 
     async execute(input: RefreshDataSourceUseCaseInput) {

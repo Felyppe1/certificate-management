@@ -22,7 +22,7 @@ export class LoginGoogleUseCase {
             IGoogleAuthGateway,
             'getToken' | 'getUserInfo'
         >,
-        private transactionManager: ITransactionManager,
+        private transactionManager: Pick<ITransactionManager, 'run'>,
     ) {}
 
     async execute({ code, reAuthenticate }: LoginGoogleUseCaseInput) {

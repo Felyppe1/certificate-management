@@ -5,7 +5,12 @@ interface AskForAccessInput {
 }
 
 export class AskForAccessUseCase {
-    constructor(private notificationEmailGateway: INotificationEmailGateway) {}
+    constructor(
+        private notificationEmailGateway: Pick<
+            INotificationEmailGateway,
+            'sendAccessRequest'
+        >,
+    ) {}
 
     async execute(data: AskForAccessInput) {
         await this.notificationEmailGateway.sendAccessRequest(data.email)

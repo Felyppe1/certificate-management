@@ -42,7 +42,7 @@ export class UpdateDataSourceColumnsUseCase {
             | 'getColumnValuesByCertificateEmissionId'
             | 'resetProcessingStatusByCertificateEmissionId'
         >,
-        private transactionManager: ITransactionManager,
+        private transactionManager: Pick<ITransactionManager, 'run'>,
     ) {}
 
     async execute(

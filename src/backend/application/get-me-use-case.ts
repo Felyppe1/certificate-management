@@ -6,7 +6,7 @@ interface GetMeUseCaseInput {
 }
 
 export class GetMeUseCase {
-    constructor(private usersRepository: IUsersRepository) {}
+    constructor(private usersRepository: Pick<IUsersRepository, 'getById'>) {}
 
     async execute(input: GetMeUseCaseInput) {
         const user = await this.usersRepository.getById(input.userId)

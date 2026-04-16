@@ -33,9 +33,18 @@ interface AddTemplateByDrivePickerUseCaseInput {
 
 export class AddTemplateByDrivePickerUseCase {
     constructor(
-        private certificateEmissionsRepository: ICertificatesRepository,
-        private googleDriveGateway: IGoogleDriveGateway,
-        private fileContentExtractorFactory: IFileContentExtractorFactory,
+        private certificateEmissionsRepository: Pick<
+            ICertificatesRepository,
+            'getById' | 'update'
+        >,
+        private googleDriveGateway: Pick<
+            IGoogleDriveGateway,
+            'getFileMetadata' | 'downloadFile'
+        >,
+        private fileContentExtractorFactory: Pick<
+            IFileContentExtractorFactory,
+            'create'
+        >,
         private usersRepository: Pick<IUsersRepository, 'getById' | 'update'>,
         private dataSourceRowsRepository: Pick<
             IDataSourceRowsRepository,
@@ -46,7 +55,7 @@ export class AddTemplateByDrivePickerUseCase {
             'checkOrGetNewAccessToken'
         >,
         private bucket: Pick<IBucket, 'uploadObject'>,
-        private transactionManager: ITransactionManager,
+        private transactionManager: Pick<ITransactionManager, 'run'>,
         private stringVariableExtractor: Pick<
             IStringVariableExtractor,
             'extractVariables'

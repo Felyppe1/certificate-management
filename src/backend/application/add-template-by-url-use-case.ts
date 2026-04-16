@@ -50,7 +50,7 @@ export class AddTemplateByUrlUseCase {
             'create'
         >,
         private bucket: Pick<IBucket, 'uploadObject'>,
-        private transactionManager: ITransactionManager,
+        private transactionManager: Pick<ITransactionManager, 'run'>,
         private stringVariableExtractor: Pick<
             IStringVariableExtractor,
             'extractVariables'

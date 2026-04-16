@@ -12,7 +12,10 @@ interface RefreshGoogleAccessTokenUseCaseInput {
 export class RefreshGoogleAccessTokenUseCase {
     constructor(
         private usersRepository: Pick<IUsersRepository, 'getById' | 'update'>,
-        private googleAuthGateway: IGoogleAuthGateway,
+        private googleAuthGateway: Pick<
+            IGoogleAuthGateway,
+            'checkOrGetNewAccessToken'
+        >,
     ) {}
 
     async execute({ userId }: RefreshGoogleAccessTokenUseCaseInput) {

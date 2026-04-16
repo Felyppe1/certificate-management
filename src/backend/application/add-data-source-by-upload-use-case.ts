@@ -32,14 +32,20 @@ interface AddDataSourceByUploadUseCaseInput {
 
 export class AddDataSourceByUploadUseCase {
     constructor(
-        private bucket: IBucket,
-        private certificatesRepository: ICertificatesRepository,
+        private bucket: Pick<IBucket, 'uploadObject' | 'deleteObject'>,
+        private certificatesRepository: Pick<
+            ICertificatesRepository,
+            'getById' | 'update'
+        >,
         private dataSourceRowsRepository: Pick<
             IDataSourceRowsRepository,
             'saveMany' | 'deleteManyByCertificateEmissionId'
         >,
-        private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
-        private transactionManager: ITransactionManager,
+        private spreadsheetContentExtractorFactory: Pick<
+            ISpreadsheetContentExtractorFactory,
+            'create'
+        >,
+        private transactionManager: Pick<ITransactionManager, 'run'>,
     ) {}
 
     async execute(input: AddDataSourceByUploadUseCaseInput) {

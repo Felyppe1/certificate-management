@@ -6,8 +6,8 @@ import { Session } from '../domain/session'
 
 export class LoginUseCase {
     constructor(
-        private usersRepository: IUsersRepository,
-        private sessionsRepository: ISessionsRepository,
+        private usersRepository: Pick<IUsersRepository, 'getByEmail'>,
+        private sessionsRepository: Pick<ISessionsRepository, 'save'>,
     ) {}
 
     async execute(email: string, password: string) {

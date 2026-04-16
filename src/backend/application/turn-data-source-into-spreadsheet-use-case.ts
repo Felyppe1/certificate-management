@@ -45,7 +45,10 @@ export class TurnDataSourceIntoSpreadsheetUseCase {
             'getAllRawByCertificateEmissionId'
         >,
         private bucket: Pick<IBucket, 'uploadObject' | 'deleteObject'>,
-        private spreadsheetGeneratorFactory: ISpreadsheetGeneratorFactory,
+        private spreadsheetGeneratorFactory: Pick<
+            ISpreadsheetGeneratorFactory,
+            'create'
+        >,
         private googleDriveGateway: Pick<IGoogleDriveGateway, 'uploadFile'>,
         private usersRepository: Pick<IUsersRepository, 'getById' | 'update'>,
         private googleAuthGateway: Pick<

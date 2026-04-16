@@ -32,19 +32,28 @@ interface RefreshTemplateUseCaseInput {
 
 export class RefreshTemplateUseCase {
     constructor(
-        private certificateEmissionsRepository: ICertificatesRepository,
+        private certificateEmissionsRepository: Pick<
+            ICertificatesRepository,
+            'getById' | 'update'
+        >,
         private dataSourceRowsRepository: Pick<
             IDataSourceRowsRepository,
             'resetProcessingStatusByCertificateEmissionId'
         >,
-        private googleDriveGateway: IGoogleDriveGateway,
+        private googleDriveGateway: Pick<
+            IGoogleDriveGateway,
+            'getFileMetadata' | 'downloadFile'
+        >,
         private googleAuthGateway: Pick<
             IGoogleAuthGateway,
             'checkOrGetNewAccessToken'
         >,
-        private fileContentExtractorFactory: IFileContentExtractorFactory,
+        private fileContentExtractorFactory: Pick<
+            IFileContentExtractorFactory,
+            'create'
+        >,
         private usersRepository: Pick<IUsersRepository, 'getById' | 'update'>,
-        private transactionManager: ITransactionManager,
+        private transactionManager: Pick<ITransactionManager, 'run'>,
         private bucket: Pick<IBucket, 'uploadObject'>,
         private stringVariableExtractor: Pick<
             IStringVariableExtractor,

@@ -6,7 +6,10 @@ interface GetCertificateEmissionsMetricsUseCaseInput {
 
 export class GetCertificateEmissionsMetricsUseCase {
     constructor(
-        private certificateEmissionsRepository: ICertificatesRepository,
+        private certificateEmissionsRepository: Pick<
+            ICertificatesRepository,
+            'getCertificateEmissionsMetricsByUserId'
+        >,
     ) {}
 
     async execute({ userId }: GetCertificateEmissionsMetricsUseCaseInput) {

@@ -27,7 +27,7 @@ export class UpdateCertificateEmissionUseCase {
             IDataSourceRowsRepository,
             'resetProcessingStatusByCertificateEmissionId'
         >,
-        private transactionManager: ITransactionManager,
+        private transactionManager: Pick<ITransactionManager, 'run'>,
     ) {}
 
     async execute(data: UpdateCertificateEmissionUseCaseInput) {

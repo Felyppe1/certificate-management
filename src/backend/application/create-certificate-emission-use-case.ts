@@ -8,7 +8,10 @@ interface CreateUseCaseEmissionUseCaseInput {
 
 export class CreateCertificateEmissionUseCase {
     constructor(
-        private certificateEmissionsRepository: ICertificatesRepository,
+        private certificateEmissionsRepository: Pick<
+            ICertificatesRepository,
+            'save'
+        >,
     ) {}
 
     async execute({ name, userId }: CreateUseCaseEmissionUseCaseInput) {

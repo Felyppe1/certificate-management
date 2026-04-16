@@ -31,7 +31,10 @@ interface AddTemplateByUploadUseCaseInput {
 export class AddTemplateByUploadUseCase {
     constructor(
         private bucket: Pick<IBucket, 'uploadObject'>,
-        private certificatesRepository: ICertificatesRepository,
+        private certificatesRepository: Pick<
+            ICertificatesRepository,
+            'getById' | 'update'
+        >,
         private dataSourceRowsRepository: Pick<
             IDataSourceRowsRepository,
             'resetProcessingStatusByCertificateEmissionId'
@@ -40,7 +43,7 @@ export class AddTemplateByUploadUseCase {
             IFileContentExtractorFactory,
             'create'
         >,
-        private transactionManager: ITransactionManager,
+        private transactionManager: Pick<ITransactionManager, 'run'>,
         private stringVariableExtractor: Pick<
             IStringVariableExtractor,
             'extractVariables'

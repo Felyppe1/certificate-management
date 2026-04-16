@@ -13,7 +13,9 @@ interface SignUpInput {
 }
 
 export class SignUpUseCase {
-    constructor(private usersRepository: IUsersRepository) {}
+    constructor(
+        private usersRepository: Pick<IUsersRepository, 'getByEmail' | 'save'>,
+    ) {}
 
     async execute(data: SignUpInput) {
         const userExists = await this.usersRepository.getByEmail(data.email)

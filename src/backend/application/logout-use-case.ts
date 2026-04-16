@@ -2,7 +2,12 @@ import { AuthenticationError } from '../domain/error/authentication-error'
 import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 
 export class LogoutUseCase {
-    constructor(private readonly sessionsRepository: ISessionsRepository) {}
+    constructor(
+        private readonly sessionsRepository: Pick<
+            ISessionsRepository,
+            'getById' | 'deleteById'
+        >,
+    ) {}
 
     async execute(tokenId: string) {
         const session = await this.sessionsRepository.getById(tokenId)

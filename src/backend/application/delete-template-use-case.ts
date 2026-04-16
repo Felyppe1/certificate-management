@@ -31,7 +31,7 @@ export class DeleteTemplateUseCase {
             'resetProcessingStatusByCertificateEmissionId'
         >,
         private bucket: Pick<IBucket, 'deleteObject'>,
-        private transactionManager: ITransactionManager,
+        private transactionManager: Pick<ITransactionManager, 'run'>,
     ) {}
 
     async execute({ certificateId, userId }: DeleteTemplateUseCaseInput) {

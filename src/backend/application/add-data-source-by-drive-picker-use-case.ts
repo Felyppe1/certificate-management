@@ -34,20 +34,29 @@ interface AddDataSourceByDrivePickerUseCaseInput {
 
 export class AddDataSourceByDrivePickerUseCase {
     constructor(
-        private certificateEmissionsRepository: ICertificatesRepository,
+        private certificateEmissionsRepository: Pick<
+            ICertificatesRepository,
+            'getById' | 'update'
+        >,
         private dataSourceRowsRepository: Pick<
             IDataSourceRowsRepository,
             'saveMany' | 'deleteManyByCertificateEmissionId'
         >,
-        private googleDriveGateway: IGoogleDriveGateway,
-        private spreadsheetContentExtractorFactory: ISpreadsheetContentExtractorFactory,
+        private googleDriveGateway: Pick<
+            IGoogleDriveGateway,
+            'getFileMetadata' | 'downloadFile'
+        >,
+        private spreadsheetContentExtractorFactory: Pick<
+            ISpreadsheetContentExtractorFactory,
+            'create'
+        >,
         private usersRepository: Pick<IUsersRepository, 'getById' | 'update'>,
         private googleAuthGateway: Pick<
             IGoogleAuthGateway,
             'checkOrGetNewAccessToken'
         >,
         private bucket: Pick<IBucket, 'deleteObject'>,
-        private transactionManager: ITransactionManager,
+        private transactionManager: Pick<ITransactionManager, 'run'>,
     ) {}
 
     async execute(input: AddDataSourceByDrivePickerUseCaseInput) {
