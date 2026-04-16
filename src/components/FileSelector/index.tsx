@@ -27,7 +27,7 @@ import { GoogleDriveIcon } from '../svg/GoogleDriveIcon'
 import { toast } from 'sonner'
 import { useGoogleRelogin } from '../../custom-hooks/useGoogleRelogin'
 import { UseFormReturn } from 'react-hook-form'
-import { UrlForm, UrlFormValues } from './UrlForm'
+import { UrlForm, UrlFormValues } from './components/UrlForm'
 
 export type SelectOption = 'upload' | 'link' | 'drive'
 

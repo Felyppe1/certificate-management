@@ -1,7 +1,7 @@
 'use client'
 
 import { FileSelector, SelectOption } from '@/components/FileSelector'
-import { UrlFormValues } from '@/components/FileSelector/UrlForm'
+import { UrlFormValues } from '@/components/FileSelector/components/UrlForm'
 import { startTransition, useState, useEffect } from 'react'
 import { TemplateDisplay } from './template-display'
 import {
@@ -25,7 +25,7 @@ import z from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
-import { TemplateSyntaxCarousel } from '@/components/FileSelector/TemplateSyntaxCarousel'
+import { TemplateSyntaxCarousel } from '@/app/(system)/certificados/[id]/_components/CertificatePageClient/components/TemplateSection/components/TemplateSyntaxCarousel'
 
 interface TemplateSectionProps {
     certificateId: string

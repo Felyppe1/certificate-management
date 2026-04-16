@@ -1,7 +1,7 @@
 import { UseFormReturn, useFieldArray } from 'react-hook-form'
-import { FileSelectorType } from '.'
-import { Input } from '../ui/input'
-import { Button } from '../ui/button'
+import { FileSelectorType } from '..'
+import { Input } from '../../ui/input'
+import { Button } from '../../ui/button'
 import { Plus, X } from 'lucide-react'
 
 export type UrlFormValues = { fileUrls: { value: string }[] }

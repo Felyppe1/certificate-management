@@ -1,7 +1,7 @@
 'use client'
 
 import { FileSelector, SelectOption } from '@/components/FileSelector'
-import { UrlFormValues } from '@/components/FileSelector/UrlForm'
+import { UrlFormValues } from '@/components/FileSelector/components/UrlForm'
 import { useState } from 'react'
 import { DataSourceDisplay } from './components/DataSourceDisplay'
 import {
