@@ -4,21 +4,16 @@ import { CertificateCreatedDomainEvent } from './events/certificate-created-doma
 import { Template, TemplateOutput, CreateTemplateInput } from './template'
 import { TemplateSetDomainEvent } from './events/template-set-domain-event'
 import { FORBIDDEN_ERROR_TYPE, ForbiddenError } from './error/forbidden-error'
-import { DomainEvent } from './primitives/domain-event'
 import {
     DataSource,
     DataSourceOutput,
     CreateDataSourceInput,
-    DataSourceColumn,
     DATA_SOURCE_MIME_TYPE,
     DataSourceFileReference,
 } from './data-source'
 import { NOT_FOUND_ERROR_TYPE, NotFoundError } from './error/not-found-error'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from './error/validation-error'
 import { DataSourceSetDomainEvent } from './events/data-source-set-domain-event'
+import { DataSourceColumnInput } from './data-source-column'
 // import { Email, EmailOutput } from './email'
 
 export enum INPUT_METHOD {
@@ -329,7 +324,7 @@ export class CertificateEmission extends AggregateRoot {
         this.registerDomainEvent(domainEvent)
     }
 
-    updateDataSourceColumns(columns: DataSourceColumn[]): string[] {
+    updateDataSourceColumns(columns: DataSourceColumnInput[]): string[] {
         if (!this.dataSource) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
         }
