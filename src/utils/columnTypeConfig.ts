@@ -1,4 +1,4 @@
-import { ColumnType } from '@/backend/domain/data-source'
+import { ColumnType } from '@/backend/domain/data-source-column'
 import { Calendar, Hash, List, ToggleLeft, Type } from 'lucide-react'
 
 export const columnTypeConfig: Record<

@@ -1,5 +1,5 @@
 import { CERTIFICATE_STATUS } from '../domain/certificate'
-import { ColumnType, DATA_SOURCE_MIME_TYPE } from '../domain/data-source'
+import { DATA_SOURCE_MIME_TYPE } from '../domain/data-source'
 import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
@@ -13,6 +13,7 @@ import { TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
 import { prisma } from '../infrastructure/repository/prisma'
 import { EMAIL_ERROR_TYPE_ENUM, PROCESSING_STATUS_ENUM } from '../domain/email'
 import { PROCESSING_STATUS_ENUM as DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM } from '../domain/data-source-row'
+import { ColumnType } from '../domain/data-source-column'
 
 interface GetCertificateEmissionUseCaseInput {
     certificateId: string

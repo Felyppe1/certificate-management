@@ -36,11 +36,11 @@ import {
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { WarningPopover } from '../../../../../../../../components/WarningPopover'
-import { ColumnType } from '@/backend/domain/data-source'
 import { columnTypeConfig } from '../../../../../../../../utils/columnTypeConfig'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { queryKeys } from '@/lib/query-keys'
+import { ColumnType } from '@/backend/domain/data-source-column'
 
 interface DataSourceColumn {
     name: string

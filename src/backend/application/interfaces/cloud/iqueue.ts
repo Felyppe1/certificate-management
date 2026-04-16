@@ -1,4 +1,4 @@
-import { DataSourceColumn } from '@/backend/domain/data-source'
+import { DataSourceColumnInput } from '@/backend/domain/data-source-column'
 import { TEMPLATE_FILE_MIME_TYPE } from '../../../domain/template'
 
 export interface EnqueueGenerateCertificatePDFInput {
@@ -12,7 +12,7 @@ export interface EnqueueGenerateCertificatePDFInput {
             variables: string[]
         }
         dataSource: {
-            columns: DataSourceColumn[]
+            columns: DataSourceColumnInput[]
         }
     }
     row: {

@@ -15,7 +15,6 @@ import { Button } from '@/components/ui/button'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import {
     DATA_SOURCE_MIME_TYPE,
-    ColumnType,
     MAX_DATA_SOURCE_ROWS,
     MAX_DATA_SOURCE_COLUMNS,
 } from '@/backend/domain/data-source'
@@ -33,6 +32,7 @@ import z from 'zod'
 import { addDataSourceByUrlAction } from '@/backend/infrastructure/server-actions/add-data-source-by-url-action'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { queryKeys } from '@/lib/query-keys'
+import { ColumnType } from '@/backend/domain/data-source-column'
 
 interface DataSourceSectionProps {
     certificateId: string

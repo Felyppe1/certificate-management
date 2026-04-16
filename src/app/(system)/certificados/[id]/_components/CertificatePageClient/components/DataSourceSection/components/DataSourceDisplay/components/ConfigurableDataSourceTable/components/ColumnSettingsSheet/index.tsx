@@ -16,9 +16,9 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet'
 import { Check, X } from 'lucide-react'
-import { ColumnType } from '@/backend/domain/data-source'
 import { columnTypeConfig } from '../../../../../../../../../../../../../../utils/columnTypeConfig'
 import { ColumnHeaderMenu } from './components/ColumnHeaderMenu'
+import { ColumnType } from '@/backend/domain/data-source-column'
 
 export interface ColumnSettingsSheetProps {
     column: {

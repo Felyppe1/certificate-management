@@ -1,12 +1,11 @@
 import { createId } from '@paralleldrive/cuid2'
+import { AggregateRoot } from './primitives/aggregate-root'
 import {
     ArrayMetadata,
     ColumnType,
-    DataSource,
     DataSourceColumn,
-} from './data-source'
-import z from 'zod'
-import { AggregateRoot } from './primitives/aggregate-root'
+    DataSourceColumnInput,
+} from './data-source-column'
 
 export enum PROCESSING_STATUS_ENUM {
     PENDING = 'PENDING',
@@ -27,7 +26,7 @@ interface DataSourceRowInput {
 
 interface DataSourceRowCreate
     extends Omit<DataSourceRowInput, 'id' | 'processingStatus' | 'fileBytes'> {
-    dataSourceColumns: DataSourceColumn[]
+    dataSourceColumns: DataSourceColumnInput[]
 }
 
 interface DataSourceRowOutput {
@@ -139,7 +138,7 @@ export class DataSourceRow extends AggregateRoot {
 
     updateData(
         newData: Record<string, string>,
-        dataSourceColumns: DataSourceColumn[],
+        dataSourceColumns: DataSourceColumnInput[],
     ) {
         Object.entries(newData).forEach(([columnName, value]) => {
             const dataSourceColumn = dataSourceColumns.find(
@@ -187,9 +186,9 @@ export class DataSourceRow extends AggregateRoot {
         arrayMetadata: ArrayMetadata | null,
     ): boolean {
         if (columnType === 'string') return true
-        if (columnType === 'number') return DataSource.isNumber(value)
-        if (columnType === 'boolean') return DataSource.isBoolean(value)
-        if (columnType === 'date') return DataSource.isDate(value)
+        if (columnType === 'number') return DataSourceColumn.isNumber(value)
+        if (columnType === 'boolean') return DataSourceColumn.isBoolean(value)
+        if (columnType === 'date') return DataSourceColumn.isDate(value)
 
         if (columnType === 'array') {
             if (!arrayMetadata)
@@ -203,17 +202,17 @@ export class DataSourceRow extends AggregateRoot {
             if (arrayMetadata.itemType === 'string') return true
             if (
                 arrayMetadata.itemType === 'boolean' &&
-                items.every(DataSource.isBoolean)
+                items.every(DataSourceColumn.isBoolean)
             )
                 return true
             if (
                 arrayMetadata.itemType === 'number' &&
-                items.every(DataSource.isNumber)
+                items.every(DataSourceColumn.isNumber)
             )
                 return true
             if (
                 arrayMetadata.itemType === 'date' &&
-                items.every(DataSource.isDate)
+                items.every(DataSourceColumn.isDate)
             )
                 return true
 

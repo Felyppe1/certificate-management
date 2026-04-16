@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Eye, Loader2, Download, Save, Mail, Pencil } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
-import { ColumnType, FORBIDDEN_TYPE_CHANGE } from '@/backend/domain/data-source'
+import { FORBIDDEN_TYPE_CHANGE } from '@/backend/domain/data-source'
 import { columnTypeConfig } from '../../../../../../../../../../../../utils/columnTypeConfig'
 import { toast } from 'sonner'
 import { updateDataSourceColumnsAction } from '@/backend/infrastructure/server-actions/update-data-source-columns-action'
@@ -26,6 +26,7 @@ import { EditableCell } from './components/EditableCell'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { queryKeys } from '@/lib/query-keys'
+import { ColumnType } from '@/backend/domain/data-source-column'
 
 interface ConfigurableDataSourceTableProps {
     certificateId: string

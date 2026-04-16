@@ -14,9 +14,9 @@ import { SpreadsheetContentExtractorFactory } from '@/backend/infrastructure/fac
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
-import { ColumnType } from '@/backend/domain/data-source'
 import { updateDataSourceColumnsSchema } from '@/backend/infrastructure/server-actions/schemas'
 import { UpdateDataSourceColumnsUseCase } from '@/backend/application/update-data-source-columns-use-case'
+import { ColumnType } from '@/backend/domain/data-source-column'
 
 export async function DELETE(
     request: NextRequest,

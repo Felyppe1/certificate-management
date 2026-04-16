@@ -1,9 +1,9 @@
 import {
     ArrayMetadata,
     ColumnType,
-    DataSource,
     DataSourceColumn,
-} from '../domain/data-source'
+    DataSourceColumnInput,
+} from '../domain/data-source-column'
 import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
@@ -23,7 +23,7 @@ import { ITransactionManager } from './interfaces/repository/itransaction-manage
 interface UpdateDataSourceColumnsUseCaseInput {
     userId: string
     certificateId: string
-    columns: DataSourceColumn[]
+    columns: DataSourceColumnInput[]
 }
 
 interface InvalidColumn {
@@ -151,17 +151,17 @@ export class UpdateDataSourceColumnsUseCase {
             if (arrayMetadata.itemType === 'string') return true
             if (
                 arrayMetadata.itemType === 'boolean' &&
-                items.every(DataSource.isBoolean)
+                items.every(DataSourceColumn.isBoolean)
             )
                 return true
             if (
                 arrayMetadata.itemType === 'number' &&
-                items.every(DataSource.isNumber)
+                items.every(DataSourceColumn.isNumber)
             )
                 return true
             if (
                 arrayMetadata.itemType === 'date' &&
-                items.every(DataSource.isDate)
+                items.every(DataSourceColumn.isDate)
             )
                 return true
 
@@ -169,11 +169,11 @@ export class UpdateDataSourceColumnsUseCase {
         } else {
             return nonEmpty.every(value => {
                 if (toType === 'number') {
-                    return DataSource.isNumber(value)
+                    return DataSourceColumn.isNumber(value)
                 } else if (toType === 'boolean') {
-                    return DataSource.isBoolean(value)
+                    return DataSourceColumn.isBoolean(value)
                 } else if (toType === 'date') {
-                    return DataSource.isDate(value)
+                    return DataSourceColumn.isDate(value)
                 }
             })
         }

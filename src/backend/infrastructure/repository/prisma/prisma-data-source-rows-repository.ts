@@ -1,4 +1,3 @@
-import { ColumnType } from '@/backend/domain/data-source'
 import { isPrismaClient, PrismaExecutor } from '.'
 import { transactionStorage } from './prisma-transaction-manager'
 import { IDataSourceRowsRepository } from '@/backend/application/interfaces/repository/idata-source-rows-repository'

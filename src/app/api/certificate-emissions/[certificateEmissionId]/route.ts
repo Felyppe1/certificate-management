@@ -2,7 +2,7 @@ import { GetCertificateEmissionUseCase } from '@/backend/application/get-certifi
 import { UpdateCertificateEmissionUseCase } from '@/backend/application/update-certificate-emission-use-case'
 import { DeleteCertificateEmissionUseCase } from '@/backend/application/delete-certificate-emission-use-case'
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
-import { ColumnType, DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
+import { DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import { TEMPLATE_FILE_MIME_TYPE } from '@/backend/domain/template'
 
@@ -20,6 +20,7 @@ import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { updateCertificateEmissionSchema } from '@/backend/infrastructure/server-actions/schemas'
 import { PROCESSING_STATUS_ENUM as DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
+import { ColumnType } from '@/backend/domain/data-source-column'
 
 export interface GetCertificateEmissionControllerResponse {
     certificateEmission: {

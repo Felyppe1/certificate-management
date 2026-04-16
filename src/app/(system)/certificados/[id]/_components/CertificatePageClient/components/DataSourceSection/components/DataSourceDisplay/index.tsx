@@ -9,31 +9,17 @@ import {
     CardTitle,
 } from '@/components/ui/card'
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table'
-import {
     RefreshCw,
     Edit3,
     Trash2,
-    Download,
-    Columns2,
     Table2,
     ALargeSmall,
-    Eye,
-    RotateCw,
     FileSpreadsheet,
 } from 'lucide-react'
-import { startTransition, useActionState, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import {
     DATA_SOURCE_MIME_TYPE,
-    DataSource,
-    ColumnType,
     MAX_DATA_SOURCE_ROWS,
     MAX_DATA_SOURCE_COLUMNS,
 } from '@/backend/domain/data-source'
@@ -51,8 +37,8 @@ import { ConfigurableDataSourceTable } from './components/ConfigurableDataSource
 import { ConvertToSpreadsheetDialog } from './components/ConvertToSpreadsheetDialog'
 import { useGoogleRelogin } from '@/custom-hooks/useGoogleRelogin'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
-import error from '@/app/(system)/error'
 import { queryKeys } from '@/lib/query-keys'
+import { ColumnType } from '@/backend/domain/data-source-column'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
