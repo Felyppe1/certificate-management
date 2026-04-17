@@ -104,10 +104,6 @@ export class Template extends ValueObject<Template> {
         return new Template({ ...this.serialize(), thumbnailUrl: url })
     }
 
-    update(data: Partial<TemplateInput>): Template {
-        return new Template({ ...this.serialize(), ...data })
-    }
-
     equals(other: Template): boolean {
         return (
             JSON.stringify(this.serialize()) ===
@@ -129,14 +125,6 @@ export class Template extends ValueObject<Template> {
     static getFileIdFromUrl(url: string): string | null {
         const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/)
         return match ? match[1] : null
-    }
-
-    static extractVariablesFromContent(content: string): string[] {
-        const matches = [...content.matchAll(/\{\{\s*([\w.-]+)\s*\}\}/g)]
-        const variables = matches.map(match => match[1])
-        const uniqueVariables = Array.from(new Set(variables))
-
-        return uniqueVariables
     }
 
     static isValidFileMimeType(
