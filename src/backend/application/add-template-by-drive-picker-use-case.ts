@@ -1,8 +1,5 @@
 import { INPUT_METHOD } from '../domain/certificate'
-import {
-    TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION,
-    Template,
-} from '../domain/template'
+import { Template } from '../domain/template'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor-factory'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
@@ -133,11 +130,8 @@ export class AddTemplateByDrivePickerUseCase {
         const uniqueVariables =
             this.stringVariableExtractor.extractVariables(content)
 
-        const path = `users/${input.userId}/certificates/${certificateEmission.getId()}/template.${TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
-
         const newTemplateInput = {
             driveFileId: input.fileId,
-            storageFileUrl: path,
             inputMethod: INPUT_METHOD.GOOGLE_DRIVE,
             fileName: name,
             variables: uniqueVariables,
@@ -150,7 +144,7 @@ export class AddTemplateByDrivePickerUseCase {
         await this.bucket.uploadObject({
             buffer,
             bucketName: process.env.CERTIFICATES_BUCKET!,
-            objectName: path,
+            objectName: certificateEmission.getTemplateStorageFileUrl(),
             mimeType: fileMimeType,
         })
 

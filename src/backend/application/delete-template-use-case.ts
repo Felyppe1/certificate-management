@@ -54,7 +54,7 @@ export class DeleteTemplateUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
         }
 
-        const storageFileUrl = certificateEmission.getTemplateStorageFileUrl()!
+        const storageFileUrl = certificateEmission.getTemplateStorageFileUrl()
 
         certificateEmission.removeTemplate(userId)
 

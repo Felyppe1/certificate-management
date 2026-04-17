@@ -1,7 +1,12 @@
 import { createId } from '@paralleldrive/cuid2'
 import { AggregateRoot } from './primitives/aggregate-root'
 import { CertificateCreatedDomainEvent } from './events/certificate-created-domain-event'
-import { Template, TemplateOutput, CreateTemplateInput } from './template'
+import {
+    Template,
+    TemplateOutput,
+    CreateTemplateInput,
+    TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION,
+} from './template'
 import { TemplateSetDomainEvent } from './events/template-set-domain-event'
 import { FORBIDDEN_ERROR_TYPE, ForbiddenError } from './error/forbidden-error'
 import {
@@ -232,8 +237,10 @@ export class CertificateEmission extends AggregateRoot {
         }
     }
 
-    setTemplate(data: CreateTemplateInput) {
-        const template = new Template(data)
+    setTemplate(data: Omit<CreateTemplateInput, 'storageFileUrl'>) {
+        const storageFileUrl = `users/${this.userId}/certificates/${this.getId()}/template.${TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION[data.fileMimeType]}`
+
+        const template = new Template({ ...data, storageFileUrl })
         this.template = template
 
         this.variableColumnMapping = CertificateEmission.mapVariablesToColumns(
@@ -304,7 +311,10 @@ export class CertificateEmission extends AggregateRoot {
     }
 
     getTemplateStorageFileUrl() {
-        return this.template?.getStorageFileUrl() ?? null
+        if (!this.template) {
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
+        }
+        return this.template.getStorageFileUrl()
     }
 
     setDataSource(data: CreateDataSourceInput) {

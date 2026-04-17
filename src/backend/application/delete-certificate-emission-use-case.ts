@@ -46,8 +46,9 @@ export class DeleteCertificateEmissionUseCase {
             throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
         }
 
-        const templateStorageFileUrl =
-            certificateEmission.getTemplateStorageFileUrl()
+        const templateStorageFileUrl = certificateEmission.hasTemplate()
+            ? certificateEmission.getTemplateStorageFileUrl()
+            : null
         const dataSourceStorageFileUrls =
             certificateEmission.getDataSourceStorageFileUrls()
 

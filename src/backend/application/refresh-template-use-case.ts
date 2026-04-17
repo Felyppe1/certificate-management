@@ -11,10 +11,7 @@ import {
     ValidationError,
 } from '../domain/error/validation-error'
 import { INPUT_METHOD } from '../domain/certificate'
-import {
-    TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION,
-    Template,
-} from '../domain/template'
+import { Template } from '../domain/template'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor-factory'
@@ -160,11 +157,8 @@ export class RefreshTemplateUseCase {
         const uniqueVariables =
             this.stringVariableExtractor.extractVariables(content)
 
-        const path = `users/${input.userId}/certificates/${certificateEmission.getId()}/template.${TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
-
         const newTemplateInput = {
             driveFileId,
-            storageFileUrl: path,
             fileMimeType: fileMimeType,
             inputMethod: certificateEmission.getTemplateInputMethod()!,
             fileName: name,
@@ -177,7 +171,7 @@ export class RefreshTemplateUseCase {
         await this.bucket.uploadObject({
             buffer,
             bucketName: process.env.CERTIFICATES_BUCKET!,
-            objectName: path,
+            objectName: certificateEmission.getTemplateStorageFileUrl(),
             mimeType: fileMimeType,
         })
 

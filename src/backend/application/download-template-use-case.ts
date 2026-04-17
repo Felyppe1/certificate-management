@@ -33,12 +33,12 @@ export class DownloadTemplateUseCase {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
-        const templateStorageFileUrl =
-            certificateEmission.getTemplateStorageFileUrl()
-
-        if (!templateStorageFileUrl) {
+        if (!certificateEmission.hasTemplate()) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
         }
+
+        const templateStorageFileUrl =
+            certificateEmission.getTemplateStorageFileUrl()
 
         const bucketName = process.env.CERTIFICATES_BUCKET!
 

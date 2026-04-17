@@ -1,8 +1,5 @@
 import { INPUT_METHOD } from '../domain/certificate'
-import {
-    TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION,
-    Template,
-} from '../domain/template'
+import { Template } from '../domain/template'
 import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
@@ -115,11 +112,8 @@ export class AddTemplateByUrlUseCase {
         const uniqueVariables =
             this.stringVariableExtractor.extractVariables(content)
 
-        const path = `users/${input.userId}/certificates/${certificateEmission.getId()}/template.${TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION[fileMimeType]}`
-
         const newTemplateInput = {
             driveFileId,
-            storageFileUrl: path,
             inputMethod: INPUT_METHOD.URL,
             fileName: name,
             variables: uniqueVariables,
@@ -132,7 +126,7 @@ export class AddTemplateByUrlUseCase {
         await this.bucket.uploadObject({
             buffer,
             bucketName: process.env.CERTIFICATES_BUCKET!,
-            objectName: path,
+            objectName: certificateEmission.getTemplateStorageFileUrl(),
             mimeType: fileMimeType,
         })
 
