@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { INotificationEmailGateway } from '@/backend/application/interfaces/inotification-email-gateway'
+import { env } from '@/env'
 
 const accessGrantedEmailTemplate = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -64,11 +65,11 @@ export class ResendNotificationEmailGateway
     private resend: Resend
 
     constructor() {
-        this.resend = new Resend(process.env.RESEND_API_KEY)
+        this.resend = new Resend(env.RESEND_API_KEY)
     }
 
     async sendAccessRequest(email: string): Promise<void> {
-        const ownerEmail = process.env.OWNER_EMAIL!
+        const ownerEmail = env.OWNER_EMAIL
 
         await this.resend.emails.send({
             from: 'Certifica <nao-responda@certifica.felyppe.com.br>',
@@ -83,7 +84,7 @@ export class ResendNotificationEmailGateway
     }
 
     async sendAccessGranted(email: string): Promise<void> {
-        const appUrl = process.env.NEXT_PUBLIC_BASE_URL!
+        const appUrl = env.NEXT_PUBLIC_BASE_URL
 
         await this.resend.emails.send({
             from: 'Certifica <nao-responda@certifica.felyppe.com.br>',

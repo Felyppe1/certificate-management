@@ -21,6 +21,7 @@ import {
     ForbiddenError,
 } from '../domain/error/forbidden-error'
 import { IStringVariableExtractor } from './interfaces/istring-variable-extractor'
+import { env } from '@/env'
 
 interface AddTemplateByDrivePickerUseCaseInput {
     certificateId: string
@@ -143,7 +144,7 @@ export class AddTemplateByDrivePickerUseCase {
 
         await this.bucket.uploadObject({
             buffer,
-            bucketName: process.env.CERTIFICATES_BUCKET!,
+            bucketName: env.CERTIFICATES_BUCKET,
             objectName: certificateEmission.getTemplateStorageFileUrl(),
             mimeType: fileMimeType,
         })

@@ -18,6 +18,7 @@ import { IFileContentExtractorFactory } from './interfaces/ifile-content-extract
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { IStringVariableExtractor } from './interfaces/istring-variable-extractor'
+import { env } from '@/env'
 
 interface AddTemplateByUploadUseCaseInput {
     file: File
@@ -96,7 +97,7 @@ export class AddTemplateByUploadUseCase {
 
         await this.bucket.uploadObject({
             buffer,
-            bucketName: process.env.CERTIFICATES_BUCKET!,
+            bucketName: env.CERTIFICATES_BUCKET,
             objectName: certificateEmission.getTemplateStorageFileUrl(),
             mimeType: fileMimeType,
         })

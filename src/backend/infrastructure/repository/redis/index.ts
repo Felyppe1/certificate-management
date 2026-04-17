@@ -1,7 +1,8 @@
 import { createClient } from 'redis'
+import { env } from '@/env'
 
 const redisClient = createClient({
-    url: process.env.REDIS_URL,
+    url: env.REDIS_URL,
     socket: {
         reconnectStrategy: retries => {
             if (retries > 10) {

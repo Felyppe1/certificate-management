@@ -23,6 +23,7 @@ import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { DataSourceDomainService } from '../domain/domain-service/data-source-domain-service'
+import { env } from '@/env'
 
 interface AddDataSourceByUploadUseCaseInput {
     files: File[]
@@ -128,7 +129,7 @@ export class AddDataSourceByUploadUseCase {
             fileBuffers.map((buffer, index) =>
                 this.bucket.uploadObject({
                     buffer,
-                    bucketName: process.env.CERTIFICATES_BUCKET!,
+                    bucketName: env.CERTIFICATES_BUCKET,
                     objectName: paths[index],
                     mimeType: fileMimeType,
                 }),
@@ -181,7 +182,7 @@ export class AddDataSourceByUploadUseCase {
         await Promise.all(
             previousDataSourceStorageFileUrls.map(url =>
                 this.bucket.deleteObject({
-                    bucketName: process.env.CERTIFICATES_BUCKET!,
+                    bucketName: env.CERTIFICATES_BUCKET,
                     objectName: url,
                 }),
             ),

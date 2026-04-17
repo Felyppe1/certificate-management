@@ -1,3 +1,4 @@
+import { env } from '@/env'
 import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
@@ -71,7 +72,7 @@ export class DeleteTemplateUseCase {
         })
 
         await this.bucket.deleteObject({
-            bucketName: process.env.CERTIFICATES_BUCKET!,
+            bucketName: env.CERTIFICATES_BUCKET,
             objectName: storageFileUrl,
         })
     }

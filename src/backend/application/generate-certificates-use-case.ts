@@ -17,6 +17,7 @@ import { IBucket } from './interfaces/cloud/ibucket'
 import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
 import { PROCESSING_STATUS_ENUM } from '../domain/data-source-row'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { env } from '@/env'
 
 interface GenerateCertificatesUseCaseInput {
     certificateEmissionId: string
@@ -107,7 +108,7 @@ export class GenerateCertificatesUseCase {
 
         // Delete old certificates before generating new ones
         await this.bucket.deleteObjectsWithPrefix({
-            bucketName: process.env.CERTIFICATES_BUCKET!,
+            bucketName: env.CERTIFICATES_BUCKET,
             prefix: `users/${userId}/certificates/${certificateEmissionId}/certificate`,
         })
 

@@ -1,3 +1,4 @@
+import { env } from '@/env'
 import { INPUT_METHOD } from '../domain/certificate'
 import { Template } from '../domain/template'
 import {
@@ -125,7 +126,7 @@ export class AddTemplateByUrlUseCase {
 
         await this.bucket.uploadObject({
             buffer,
-            bucketName: process.env.CERTIFICATES_BUCKET!,
+            bucketName: env.CERTIFICATES_BUCKET,
             objectName: certificateEmission.getTemplateStorageFileUrl(),
             mimeType: fileMimeType,
         })

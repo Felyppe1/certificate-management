@@ -25,6 +25,7 @@ import {
     ForbiddenError,
 } from '../domain/error/forbidden-error'
 import { DataSourceDomainService } from '../domain/domain-service/data-source-domain-service'
+import { env } from '@/env'
 
 interface AddDataSourceByDrivePickerUseCaseInput {
     certificateId: string
@@ -205,7 +206,7 @@ export class AddDataSourceByDrivePickerUseCase {
         await Promise.all(
             dataSourceStorageFileUrls.map(url =>
                 this.bucket.deleteObject({
-                    bucketName: process.env.CERTIFICATES_BUCKET!,
+                    bucketName: env.CERTIFICATES_BUCKET,
                     objectName: url,
                 }),
             ),

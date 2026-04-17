@@ -9,6 +9,7 @@ import {
     ForbiddenError,
 } from '../domain/error/forbidden-error'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { env } from '@/env'
 
 interface ViewCertificateEmissionUseCaseInput {
     userId: string
@@ -47,7 +48,7 @@ export class ViewCertificateEmissionUseCase {
         }
         // TODO: handle error
 
-        const bucketName = process.env.CERTIFICATES_BUCKET!
+        const bucketName = env.CERTIFICATES_BUCKET
 
         const filePath = `users/${input.userId}/certificates/${certificateEmission.getId()}/certificate-${dataSourceRow.getId()}.pdf`
 

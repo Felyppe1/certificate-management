@@ -9,6 +9,7 @@ import {
     ForbiddenError,
 } from '../domain/error/forbidden-error'
 import { TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
+import { env } from '@/env'
 
 interface CreateWriteBucketSignedUrlUseCaseInput {
     userId: string
@@ -44,7 +45,7 @@ export class CreateWriteBucketSignedUrlUseCase {
         const path = `users/${input.userId}/certificates/${certificateEmission.getId()}/original.${extension}`
 
         const signedUrl = await this.bucket.generateSignedUrl({
-            bucketName: process.env.CERTIFICATES_BUCKET!,
+            bucketName: env.CERTIFICATES_BUCKET,
             filePath: path,
             mimeType: input.mimeType,
             action: 'write',

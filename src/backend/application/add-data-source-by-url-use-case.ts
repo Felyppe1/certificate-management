@@ -1,3 +1,4 @@
+import { env } from '@/env'
 import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
@@ -194,7 +195,7 @@ export class AddDataSourceByUrlUseCase {
             await Promise.all(
                 dataSourceStorageFileUrls.map(url =>
                     this.bucket.deleteObject({
-                        bucketName: process.env.CERTIFICATES_BUCKET!,
+                        bucketName: env.CERTIFICATES_BUCKET,
                         objectName: url,
                     }),
                 ),

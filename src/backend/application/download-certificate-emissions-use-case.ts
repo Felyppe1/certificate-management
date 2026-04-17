@@ -12,6 +12,7 @@ import {
 import archiver from 'archiver' // TODO: dependency inversion
 import { PassThrough } from 'stream'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { env } from '@/env'
 
 interface DownloadCertificateEmissionsUseCaseInput {
     userId: string
@@ -48,7 +49,7 @@ export class DownloadCertificateEmissionsUseCase {
                 `users/${input.userId}/certificates/${certificateEmission.getId()}/certificate-${rowId}.pdf`,
         )
 
-        const bucketName = process.env.CERTIFICATES_BUCKET!
+        const bucketName = env.CERTIFICATES_BUCKET
 
         // Fetch all objects that match each specific file path by using their exact prefix
         const fileObjects = (

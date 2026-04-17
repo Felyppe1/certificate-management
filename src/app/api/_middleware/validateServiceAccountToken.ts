@@ -1,10 +1,11 @@
-import { NextRequest } from 'next/server'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
+import { env } from '@/env'
 import { LoginTicket } from 'google-auth-library'
+import { NextRequest } from 'next/server'
 
 export async function validateServiceAccountToken(req: NextRequest) {
-    if (process.env.NODE_ENV !== 'production') return
+    if (env.NODE_ENV !== 'production') return
 
     const googleAuthGateway = new GoogleAuthGateway()
     const oAuth2Client = googleAuthGateway.getOAuth2Client()
@@ -20,7 +21,7 @@ export async function validateServiceAccountToken(req: NextRequest) {
     try {
         ticket = await oAuth2Client.verifyIdToken({
             idToken: token,
-            audience: process.env.CLOUD_RUN_APP_URL,
+            audience: env.CLOUD_RUN_APP_URL,
         })
     } catch (err) {
         console.error('Error validating service token:', err)
@@ -28,7 +29,7 @@ export async function validateServiceAccountToken(req: NextRequest) {
     }
 
     const payload = ticket.getPayload()
-    const allowedServiceAccount = process.env.CLOUD_FUNCTIONS_SA_EMAIL
+    const allowedServiceAccount = env.CLOUD_FUNCTIONS_SA_EMAIL
 
     if (payload?.email !== allowedServiceAccount) {
         throw new AuthenticationError('invalid-service-account')

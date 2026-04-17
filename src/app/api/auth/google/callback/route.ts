@@ -1,7 +1,7 @@
 import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
-
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
+import { env } from '@/env'
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { LoginGoogleUseCase } from '@/backend/application/login-google-use-case'
@@ -17,9 +17,7 @@ export async function GET(request: Request) {
     const code = searchParams.get('code')
 
     if (!code) {
-        return NextResponse.redirect(
-            process.env.NEXT_PUBLIC_BASE_URL + '/entrar',
-        )
+        return NextResponse.redirect(env.NEXT_PUBLIC_BASE_URL + '/entrar')
     }
 
     const usersRepository = new PrismaUsersRepository(prisma)
@@ -50,12 +48,10 @@ export async function GET(request: Request) {
             // sameSite: "strict" // TODO: use sameSite
         })
 
-        return NextResponse.redirect(process.env.NEXT_PUBLIC_BASE_URL + '/')
+        return NextResponse.redirect(env.NEXT_PUBLIC_BASE_URL + '/')
     } catch (error) {
         console.error(error)
-        const redirectUrl = new URL(
-            process.env.NEXT_PUBLIC_BASE_URL + '/entrar',
-        )
+        const redirectUrl = new URL(env.NEXT_PUBLIC_BASE_URL + '/entrar')
 
         if (error instanceof AppError) {
             redirectUrl.searchParams.set('error', error.type)

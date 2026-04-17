@@ -11,6 +11,7 @@ import { LocalQueue } from '../cloud/local/local-queue'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { retryCertificatesGenerationSchema } from './schemas'
 import { redirect } from 'next/navigation'
+import { env } from '@/env'
 
 export async function retryCertificatesGenerationAction(
     _: unknown,
@@ -32,7 +33,7 @@ export async function retryCertificatesGenerationAction(
             prisma,
         )
         const queue =
-            process.env.NODE_ENV === 'development'
+            env.NODE_ENV === 'development'
                 ? new LocalQueue()
                 : new CloudTasksQueue()
 

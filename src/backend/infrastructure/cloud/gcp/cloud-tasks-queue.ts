@@ -4,6 +4,7 @@ import {
     IQueue,
 } from '@/backend/application/interfaces/cloud/iqueue'
 import { CloudTasksClient } from '@google-cloud/tasks'
+import { env } from '@/env'
 
 export class CloudTasksQueue implements IQueue {
     private queue: CloudTasksClient
@@ -15,9 +16,9 @@ export class CloudTasksQueue implements IQueue {
     async enqueueGenerateCertificatePDF(
         data: EnqueueGenerateCertificatePDFInput,
     ): Promise<void> {
-        const project = process.env.GCP_PROJECT_ID!
-        const location = process.env.GCP_REGION!
-        const queue = `generate-pdfs${process.env.SUFFIX || ''}`
+        const project = env.GCP_PROJECT_ID
+        const location = env.GCP_REGION
+        const queue = `generate-pdfs${env.SUFFIX}`
         // const url = this.getCloudFunctionUrl('generate-pdfs')
 
         try {
@@ -43,9 +44,9 @@ export class CloudTasksQueue implements IQueue {
     async enqueueSendCertificateEmails(
         data: EnqueueSendCertificateEmailsInput,
     ): Promise<void> {
-        const project = process.env.GCP_PROJECT_ID!
-        const location = process.env.GCP_REGION!
-        const queue = `send-certificate-emails${process.env.SUFFIX || ''}`
+        const project = env.GCP_PROJECT_ID
+        const location = env.GCP_REGION
+        const queue = `send-certificate-emails${env.SUFFIX}`
         // const url = this.getCloudFunctionUrl('send-certificate-emails', {
         //     entryPoint: 'main',
         // })
@@ -74,9 +75,9 @@ export class CloudTasksQueue implements IQueue {
         functionName: string,
         options?: { entryPoint?: string },
     ): string {
-        const projectNumber = process.env.GCP_PROJECT_NUMBER
-        const region = process.env.GCP_REGION
-        const suffix = process.env.SUFFIX || ''
+        const projectNumber = env.GCP_PROJECT_NUMBER
+        const region = env.GCP_REGION
+        const suffix = env.SUFFIX
 
         if (!projectNumber || !region) {
             throw new Error('GCP_PROJECT_NUMBER or GCP_REGION not set')

@@ -1,3 +1,4 @@
+import { env } from '@/env'
 import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
 
 import { GetCertificateEmissionControllerResponse } from '@/app/api/certificate-emissions/[certificateEmissionId]/route'
@@ -10,7 +11,7 @@ export async function fetchCertificateEmission(
     const sessionToken = (await cookies()).get(SESSION_COOKIE_NAME)?.value
 
     const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/certificate-emissions/${certificateId}`,
+        `${env.NEXT_PUBLIC_BASE_URL}/api/certificate-emissions/${certificateId}`,
         {
             headers: {
                 Cookie: `${SESSION_COOKIE_NAME}=${sessionToken}`,

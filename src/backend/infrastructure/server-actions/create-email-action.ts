@@ -13,6 +13,7 @@ import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data
 import { CloudTasksQueue } from '../cloud/gcp/cloud-tasks-queue'
 import { LocalQueue } from '../cloud/local/local-queue'
 import { redirect } from 'next/navigation'
+import { env } from '@/env'
 
 export async function createEmailAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -39,7 +40,7 @@ export async function createEmailAction(_: unknown, formData: FormData) {
         const emailsRepository = new PrismaEmailsRepository(prisma)
         const transactionManager = new PrismaTransactionManager(prisma)
         const queue =
-            process.env.NODE_ENV === 'development'
+            env.NODE_ENV === 'development'
                 ? new LocalQueue()
                 : new CloudTasksQueue()
 

@@ -16,6 +16,7 @@ import {
 import archiver from 'archiver' // TODO: dependency inversion
 import { PassThrough } from 'stream'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { env } from '@/env'
 
 interface DownloadAllCertificateEmissionsUseCaseInput {
     userId: string
@@ -56,7 +57,7 @@ export class DownloadAllCertificateEmissionsUseCase {
             )
         }
 
-        const bucketName = process.env.CERTIFICATES_BUCKET!
+        const bucketName = env.CERTIFICATES_BUCKET
 
         const prefix = `users/${input.userId}/certificates/${certificateEmission.getId()}/certificate`
 

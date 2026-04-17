@@ -23,6 +23,7 @@ import { ISpreadsheetGeneratorFactory } from './interfaces/ispreadsheet-content-
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { env } from '@/env'
 
 export type SpreadsheetFormat = 'csv' | 'xlsx'
 export type SpreadsheetDestination = 'local' | 'drive'
@@ -163,7 +164,7 @@ export class TurnDataSourceIntoSpreadsheetUseCase {
 
             await this.bucket.uploadObject({
                 buffer,
-                bucketName: process.env.CERTIFICATES_BUCKET!,
+                bucketName: env.CERTIFICATES_BUCKET,
                 objectName: filePath,
                 mimeType: newMimeType,
             })
@@ -201,7 +202,7 @@ export class TurnDataSourceIntoSpreadsheetUseCase {
         await Promise.all(
             oldImageUrls.map(url =>
                 this.bucket.deleteObject({
-                    bucketName: process.env.CERTIFICATES_BUCKET!,
+                    bucketName: env.CERTIFICATES_BUCKET,
                     objectName: url,
                 }),
             ),

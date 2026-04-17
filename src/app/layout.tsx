@@ -7,6 +7,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { Toaster } from '@/components/ui/sonner'
 import { Providers } from '@/app/_components/Providers'
+import { env } from '@/env'
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -46,7 +47,7 @@ export default async function RootLayout({
                     duration={10000}
                 />
 
-                <GoogleOAuthProvider clientId={process.env.GOOGLE_CLIENT_ID!}>
+                <GoogleOAuthProvider clientId={env.GOOGLE_CLIENT_ID}>
                     <Providers>
                         <ThemeProvider
                             attribute="class"

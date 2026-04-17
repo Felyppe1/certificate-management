@@ -11,6 +11,7 @@ import { RetryDataSourceRowUseCase } from '@/backend/application/generate-certif
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { retryDataSourceRowSchema } from './schemas'
 import { redirect } from 'next/navigation'
+import { env } from '@/env'
 
 export async function retryDataSourceRowAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -26,7 +27,7 @@ export async function retryDataSourceRowAction(_: unknown, formData: FormData) {
             prisma,
         )
         const queue =
-            process.env.NODE_ENV === 'development'
+            env.NODE_ENV === 'development'
                 ? new LocalQueue()
                 : new CloudTasksQueue()
 

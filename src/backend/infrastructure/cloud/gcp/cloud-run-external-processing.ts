@@ -3,6 +3,7 @@ import {
     TriggerGenerateCertificatePDFsInput,
 } from '@/backend/application/interfaces/cloud/iexternal-processing'
 import { IGoogleAuthGateway } from '@/backend/application/interfaces/igoogle-auth-gateway'
+import { env } from '@/env'
 
 export class CloudRunExternalProcessing
     implements Pick<IExternalProcessing, 'triggerGenerateCertificatePDFs'>
@@ -36,9 +37,9 @@ export class CloudRunExternalProcessing
     }
 
     private getCloudFunctionUrl(functionName: string): string {
-        const projectNumber = process.env.GCP_PROJECT_NUMBER
-        const region = process.env.GCP_REGION
-        const suffix = process.env.SUFFIX
+        const projectNumber = env.GCP_PROJECT_NUMBER
+        const region = env.GCP_REGION
+        const suffix = env.SUFFIX
 
         if (!projectNumber || !region) {
             throw new Error('GCP_PROJECT_NUMBER or GCP_REGION not set')
@@ -47,7 +48,7 @@ export class CloudRunExternalProcessing
         const functionFullName = `${functionName}${suffix}`
 
         const url =
-            process.env.NODE_ENV === 'development'
+            env.NODE_ENV === 'development'
                 ? 'http://localhost:8080'
                 : `https://${functionFullName}-${projectNumber}.${region}.run.app`
 

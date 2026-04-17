@@ -9,6 +9,7 @@ import {
     ForbiddenError,
 } from '../domain/error/forbidden-error'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { env } from '@/env'
 
 interface ViewCertificateEmissionsUseCaseInput {
     userId: string
@@ -52,7 +53,7 @@ export class ViewCertificateEmissionsUseCase {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
         }
 
-        const bucketName = process.env.CERTIFICATES_BUCKET!
+        const bucketName = env.CERTIFICATES_BUCKET
 
         const results = await Promise.all(
             dataSourceRows.map(async row => {

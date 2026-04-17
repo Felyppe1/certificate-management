@@ -1,6 +1,7 @@
-import { GenerateCertificatesUseCase } from '@/backend/application/generate-certificates-use-case'
-import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
+import { GenerateCertificatesUseCase } from '@/backend/application/generate-certificates-use-case'
+import { env } from '@/env'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
@@ -30,7 +31,7 @@ export async function POST(
         const usersRepository = new PrismaUsersRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
         const queue =
-            process.env.NODE_ENV === 'development'
+            env.NODE_ENV === 'development'
                 ? new LocalQueue()
                 : new CloudTasksQueue()
 

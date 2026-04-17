@@ -1,3 +1,4 @@
+import { env } from '@/env'
 import { google, Auth } from 'googleapis'
 import {
     CheckOrRefreshAccessTokenInput,
@@ -17,10 +18,9 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
 
     constructor() {
         this.oauth2Client = new google.auth.OAuth2({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            redirectUri:
-                process.env.NEXT_PUBLIC_BASE_URL + '/api/auth/google/callback',
+            clientId: env.GOOGLE_CLIENT_ID,
+            clientSecret: env.GOOGLE_CLIENT_SECRET,
+            redirectUri: env.NEXT_PUBLIC_BASE_URL + '/api/auth/google/callback',
         })
     }
 
@@ -112,7 +112,7 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
     async getUserInfo({ idToken }: GetUserInfoInput) {
         const ticket = await this.oauth2Client.verifyIdToken({
             idToken: idToken,
-            audience: process.env.GOOGLE_CLIENT_ID,
+            audience: env.GOOGLE_CLIENT_ID,
         })
 
         const payload = ticket.getPayload()

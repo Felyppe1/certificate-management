@@ -1,3 +1,4 @@
+import { env } from '@/env'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import {
@@ -55,7 +56,7 @@ export class DownloadCertificateEmissionUseCase {
             )
         }
 
-        const bucketName = process.env.CERTIFICATES_BUCKET!
+        const bucketName = env.CERTIFICATES_BUCKET
 
         const filePath = `users/${input.userId}/certificates/${certificateEmission.getId()}/certificate-${input.rowId}.pdf`
 

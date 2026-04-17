@@ -21,6 +21,7 @@ import { ITransactionManager } from './interfaces/repository/itransaction-manage
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { IStringVariableExtractor } from './interfaces/istring-variable-extractor'
+import { env } from '@/env'
 
 interface RefreshTemplateUseCaseInput {
     userId: string
@@ -170,7 +171,7 @@ export class RefreshTemplateUseCase {
 
         await this.bucket.uploadObject({
             buffer,
-            bucketName: process.env.CERTIFICATES_BUCKET!,
+            bucketName: env.CERTIFICATES_BUCKET,
             objectName: certificateEmission.getTemplateStorageFileUrl(),
             mimeType: fileMimeType,
         })

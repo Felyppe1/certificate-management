@@ -12,6 +12,7 @@ import {
 } from '../domain/error/validation-error'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { env } from '@/env'
 
 interface DeleteCertificateEmissionUseCaseInput {
     certificateId: string
@@ -58,7 +59,7 @@ export class DeleteCertificateEmissionUseCase {
 
         if (templateStorageFileUrl) {
             await this.bucket.deleteObject({
-                bucketName: process.env.CERTIFICATES_BUCKET!,
+                bucketName: env.CERTIFICATES_BUCKET,
                 objectName: templateStorageFileUrl,
             })
         }
@@ -66,7 +67,7 @@ export class DeleteCertificateEmissionUseCase {
         await Promise.all(
             dataSourceStorageFileUrls.map(url =>
                 this.bucket.deleteObject({
-                    bucketName: process.env.CERTIFICATES_BUCKET!,
+                    bucketName: env.CERTIFICATES_BUCKET,
                     objectName: url,
                 }),
             ),

@@ -1,3 +1,4 @@
+import { env } from '@/env'
 import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
 
 import { cookies } from 'next/headers'
@@ -7,7 +8,7 @@ export async function fetchUserBySessionToken() {
     const sessionToken = (await cookies()).get(SESSION_COOKIE_NAME)?.value
 
     const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/sessions`,
+        `${env.NEXT_PUBLIC_BASE_URL}/api/auth/sessions`,
         {
             headers: {
                 Cookie: `${SESSION_COOKIE_NAME}=${sessionToken}`,

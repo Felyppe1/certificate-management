@@ -12,6 +12,7 @@ import { prisma } from '../repository/prisma'
 import { CloudTasksQueue } from '../cloud/gcp/cloud-tasks-queue'
 import { LocalQueue } from '../cloud/local/local-queue'
 import { redirect } from 'next/navigation'
+import { env } from '@/env'
 
 export async function resendEmailsAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -31,7 +32,7 @@ export async function resendEmailsAction(_: unknown, formData: FormData) {
         )
         const emailsRepository = new PrismaEmailsRepository(prisma)
         const queue =
-            process.env.NODE_ENV === 'development'
+            env.NODE_ENV === 'development'
                 ? new LocalQueue()
                 : new CloudTasksQueue()
 

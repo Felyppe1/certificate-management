@@ -1,4 +1,5 @@
 import { Client } from 'pg'
+import { env } from '@/env'
 
 let client: Client | null = null
 
@@ -8,17 +9,13 @@ export async function getPostgresListener() {
     if (client) return client
 
     client = new Client({
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        host: process.env.DB_HOST,
-        port: Number(process.env.DB_PORT),
-        database: process.env.DB_NAME,
+        connectionString: env.DB_URL,
         application_name: 'certificate-management-listener',
-        // ...(process.env.NODE_ENV === 'production'
+        // ...(env.NODE_ENV === 'production'
         //     ? {
         //           ssl: {
         //               rejectUnauthorized: true,
-        //               ca: process.env.DB_CA?.replace(/\\n/g, '\n'),
+        //               ca: env.DB_CA.replace(/\\n/g, '\n'),
         //           },
         //       }
         //     : {}),

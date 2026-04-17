@@ -1,3 +1,4 @@
+import { env } from '@/env'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import {
@@ -40,7 +41,7 @@ export class DownloadTemplateUseCase {
         const templateStorageFileUrl =
             certificateEmission.getTemplateStorageFileUrl()
 
-        const bucketName = process.env.CERTIFICATES_BUCKET!
+        const bucketName = env.CERTIFICATES_BUCKET
 
         const signedUrl = await this.bucket.generateSignedUrl({
             bucketName,

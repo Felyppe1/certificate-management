@@ -17,6 +17,7 @@ import {
     PickerErrorEvent,
     PickerPickedEvent,
 } from '@googleworkspace/drive-picker-element'
+import { env } from '@/env'
 import { refreshGoogleAccessTokenAction } from '@/backend/infrastructure/server-actions/refresh-google-access-token-action'
 // import { createWriteBucketSignedUrlAction } from '@/backend/infrastructure/server-actions/create-write-bucket-signed-url-action'
 import { FileRejection, useDropzone } from 'react-dropzone'
@@ -440,8 +441,8 @@ export function FileSelector({
                 pickerIsReady && (
                     <drive-picker
                         ref={pickerRef}
-                        client-id={process.env.GOOGLE_CLIENT_ID}
-                        app-id={process.env.GCP_PROJECT_ID}
+                        client-id={env.GOOGLE_CLIENT_ID}
+                        app-id={env.GCP_PROJECT_ID}
                         oauth-token={googleOAuthToken!}
                         {...(type === 'data-source' && {
                             multiselect: true,

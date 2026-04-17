@@ -1,3 +1,4 @@
+import { env } from '@/env'
 import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
 
 import { GetMeControllerResponse } from '@/app/api/users/me/route'
@@ -7,17 +8,14 @@ import { notFound, redirect } from 'next/navigation'
 export async function fetchMe(): Promise<GetMeControllerResponse> {
     const sessionToken = (await cookies()).get(SESSION_COOKIE_NAME)?.value
 
-    const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/users/me`,
-        {
-            headers: {
-                Cookie: `${SESSION_COOKIE_NAME}=${sessionToken}`,
-            },
-            next: {
-                tags: ['me'],
-            },
+    const response = await fetch(`${env.NEXT_PUBLIC_BASE_URL}/api/users/me`, {
+        headers: {
+            Cookie: `${SESSION_COOKIE_NAME}=${sessionToken}`,
         },
-    )
+        next: {
+            tags: ['me'],
+        },
+    })
 
     if (!response.ok) {
         const errorData = await response.json()

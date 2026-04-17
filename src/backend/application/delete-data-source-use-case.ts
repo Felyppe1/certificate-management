@@ -12,6 +12,7 @@ import {
 } from '../domain/error/validation-error'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { env } from '@/env'
 
 interface DeleteDataSourceUseCaseInput {
     certificateId: string
@@ -54,7 +55,7 @@ export class DeleteDataSourceUseCase {
             storageFileUrls.map(url =>
                 // TODO: do this on outbox pattern?
                 this.bucket.deleteObject({
-                    bucketName: process.env.CERTIFICATES_BUCKET!,
+                    bucketName: env.CERTIFICATES_BUCKET,
                     objectName: url,
                 }),
             ),

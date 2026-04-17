@@ -11,6 +11,7 @@ import z from 'zod'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { logoutAction } from './logout-action'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
+import { env } from '@/env'
 
 const loginGoogleServerActionSchema = z.string().min(1, 'Código é obrigatório')
 
@@ -46,7 +47,7 @@ export async function loginGoogleServerAction(_: unknown, formData: FormData) {
             // sameSite: "strict" // TODO: use sameSite
         })
 
-        // return NextResponse.redirect(process.env.NEXT_PUBLIC_BASE_URL + '/')
+        // return NextResponse.redirect(env.NEXT_PUBLIC_BASE_URL + '/')
     } catch (error: any) {
         console.error(error)
         if (error instanceof AuthenticationError) {
