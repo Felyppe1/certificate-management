@@ -10,8 +10,11 @@ import {
     IFileContentExtractorStrategy,
 } from './interfaces/ifile-content-extractor-factory'
 import { IBucket } from './interfaces/cloud/ibucket'
+import { IStringVariableExtractor } from './interfaces/istring-variable-extractor'
 import { PrismaCertificatesRepository } from '../infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaSessionsRepository } from '../infrastructure/repository/prisma/prisma-sessions-repository'
+import { PrismaDataSourceRowsRepository } from '../infrastructure/repository/prisma/prisma-data-source-rows-repository'
+import { PrismaTransactionManager } from '../infrastructure/repository/prisma/prisma-transaction-manager'
+import { PrismaUsersRepository } from '../infrastructure/repository/prisma/prisma-users-repository'
 import { AddTemplateByUrlUseCase } from './add-template-by-url-use-case'
 import { prisma } from '@/tests/setup.integration'
 
@@ -26,22 +29,13 @@ describe('AddTemplateByUrlUseCase (Integration)', () => {
             },
         })
 
-        await prisma.session.create({
+        await prisma.certificateEmission.create({
             data: {
-                token: '1',
+                id: '1',
+                title: 'Name',
                 user_id: '1',
+                status: CERTIFICATE_STATUS.DRAFT,
             },
-        })
-
-        await prisma.certificateEmission.createMany({
-            data: [
-                {
-                    id: '1',
-                    title: 'Name',
-                    user_id: '1',
-                    status: CERTIFICATE_STATUS.DRAFT,
-                },
-            ],
         })
 
         class GoogleDriveGatewayStub
@@ -67,45 +61,47 @@ describe('AddTemplateByUrlUseCase (Integration)', () => {
             create(): IFileContentExtractorStrategy {
                 return {
                     async extractText(): Promise<string> {
-                        return 'file content'
+                        return '{{name}} {{email}}'
                     },
                 }
             }
         }
 
-        class BucketStub implements Pick<IBucket, 'deleteObject'> {
-            async deleteObject() {}
+        class BucketStub implements Pick<IBucket, 'uploadObject'> {
+            async uploadObject(): Promise<string> {
+                return ''
+            }
         }
 
-        const certificateEmissionsRepository = new PrismaCertificatesRepository(
-            prisma,
-        )
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
-        const googleDriveGatewayStub = new GoogleDriveGatewayStub()
-        const fileContentExtractorFactoryStub =
-            new FileContentExtractorFactoryStub()
-        const bucketStub = new BucketStub()
+        const stringVariableExtractorStub: Pick<
+            IStringVariableExtractor,
+            'extractVariables'
+        > = {
+            extractVariables: () => ['name', 'email'],
+        }
 
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
-            certificateEmissionsRepository,
-            sessionsRepository,
-            googleDriveGatewayStub,
-            fileContentExtractorFactoryStub,
-            bucketStub,
+            new PrismaCertificatesRepository(prisma),
+            new PrismaDataSourceRowsRepository(prisma),
+            new GoogleDriveGatewayStub(),
+            new FileContentExtractorFactoryStub(),
+            new BucketStub(),
+            new PrismaTransactionManager(prisma),
+            stringVariableExtractorStub,
+            new PrismaUsersRepository(prisma),
         )
 
         await addTemplateByUrlUseCase.execute({
             certificateId: '1',
-            sessionToken: '1',
-            fileUrl: 'https://drive.google.com/file/d/1/view?usp=sharing',
+            userId: '1',
+            fileUrl: 'https://drive.google.com/file/d/abc123/view',
         })
 
         const template = await prisma.template.findFirst({
-            where: {
-                certificate_emission_id: '1',
-            },
+            where: { certificate_emission_id: '1' },
         })
 
         expect(template).toBeDefined()
+        expect(template?.file_name).toBe('filename')
     })
 })

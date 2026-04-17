@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import { TEMPLATE_FILE_MIME_TYPE } from '@/backend/domain/template'
 import { IBucket } from '@/backend/application/interfaces/cloud/ibucket'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
+import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
+import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 import { DeleteTemplateUseCase } from '@/backend/application/delete-template-use-case'
 import { prisma } from '@/tests/setup.integration'
@@ -16,13 +17,6 @@ describe('DeleteTemplateUseCase (Integration)', () => {
                 email: 'user@gmail.com',
                 password_hash: 'password',
                 name: 'User',
-            },
-        })
-
-        await prisma.session.create({
-            data: {
-                token: '1',
-                user_id: '1',
             },
         })
 
@@ -39,7 +33,7 @@ describe('DeleteTemplateUseCase (Integration)', () => {
                         input_method: INPUT_METHOD.URL,
                         drive_file_id: '1',
                         thumbnail_url: null,
-                        storage_file_url: null,
+                        storage_file_url: 'https://storage-url',
                     },
                 },
             },
@@ -49,27 +43,20 @@ describe('DeleteTemplateUseCase (Integration)', () => {
             async deleteObject() {}
         }
 
-        const certificateEmissionsRepository = new PrismaCertificatesRepository(
-            prisma,
-        )
-        const sessionsRepository = new PrismaSessionsRepository(prisma)
-        const bucketStub = new BucketStub()
-
         const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepository,
-            sessionsRepository,
-            bucketStub,
+            new PrismaCertificatesRepository(prisma),
+            new PrismaDataSourceRowsRepository(prisma),
+            new BucketStub(),
+            new PrismaTransactionManager(prisma),
         )
 
         await deleteTemplateUseCase.execute({
             certificateId: '1',
-            sessionToken: '1',
+            userId: '1',
         })
 
         const template = await prisma.template.findFirst({
-            where: {
-                certificate_emission_id: '1',
-            },
+            where: { certificate_emission_id: '1' },
         })
 
         expect(template).toBeNull()
