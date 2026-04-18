@@ -79,6 +79,7 @@ export class ResendNotificationEmailGateway
                 <p>Uma nova solicitação de acesso foi recebida.</p>
                 <p><strong>Email do solicitante:</strong> ${email}</p>
                 <p>Acesse o painel de administração para conceder ou negar o acesso.</p>
+                <p><a href="https://console.cloud.google.com/auth/audience?project=${env.GCP_PROJECT_ID}" target="_blank" rel="noopener noreferrer">Acessar Painel de Administração</a></p>
             `,
         })
     }
