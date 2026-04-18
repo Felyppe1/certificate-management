@@ -55,7 +55,7 @@ resource "google_cloudfunctions2_function" "generate_certificates_function" {
     available_cpu = "1"
     
     environment_variables = {
-      APP_BASE_URL        = "https://${google_cloud_run_v2_service.app.name}-${data.google_project.project.number}.${google_cloud_run_v2_service.app.location}.run.app"
+      APP_BASE_URL        = "https://${google_cloud_run_v2_service.app.name}-${data.google_project.project.number}.${var.region}.run.app"
       # SOFFICE_PATH        = "/usr/bin/soffice"
       CERTIFICATES_BUCKET = google_storage_bucket.certificates.name
       GOOGLE_DRIVE_FOLDER_ID = var.google_drive_folder_id
