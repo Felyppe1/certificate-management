@@ -7,24 +7,26 @@ const serverSchema = z.object({
         .default('development'),
     NEXT_RUNTIME: z.enum(['nodejs', 'edge']).optional(),
 
-    DB_URL: z.string().min(1),
-    DB_DIRECT_URL: z.string(),
-    REDIS_URL: z.string().min(1),
-
-    GCP_PROJECT_ID: z.string().min(1),
-    GCP_PROJECT_NUMBER: z.string(),
-    GCP_REGION: z.string(),
+    CLOUD_RUN_APP_URL: z.string(),
     SUFFIX: z.string().default(''),
 
-    CLOUD_RUN_APP_URL: z.string(),
-    CLOUD_FUNCTIONS_SA_EMAIL: z.string(),
+    DB_URL: z.string().min(1),
+    DB_DIRECT_URL: z.string(),
+
     CERTIFICATES_BUCKET: z.string(),
+    CLOUD_FUNCTIONS_SA_EMAIL: z.string(),
+
+    REDIS_URL: z.string().optional(),
 
     GOOGLE_CLIENT_ID: z.string().min(1),
     GOOGLE_CLIENT_SECRET: z.string().min(1),
+    GCP_PROJECT_ID: z.string().min(1),
+    GCP_PROJECT_NUMBER: z.string(),
+    GCP_REGION: z.string(),
+    GEMINI_API_KEY: z.string(),
 
-    RESEND_API_KEY: z.string(),
     OWNER_EMAIL: z.string(),
+    RESEND_API_KEY: z.string(),
 
     // Test variables
     TEST_DB_USERNAME: z.string().optional(),
