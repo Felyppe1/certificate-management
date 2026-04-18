@@ -58,7 +58,6 @@ export async function addTemplateByDrivePickerAction(
                 stringVariableExtractor,
             )
 
-        throw new AuthenticationError('missing-session')
         await addTemplateByDrivePickerUseCase.execute({
             certificateId: rawData.certificateId,
             fileId: parsedData.fileId,
