@@ -69,11 +69,6 @@ resource "google_cloud_run_v2_service" "app" {
         value = google_service_account.app_service_account.email
         # value = google_cloud_run_v2_service.generate_pdfs.template[0].service_account # TODO
       }
-
-      env {
-        name  = "CLOUD_RUN_APP_URL"
-        value = "https://certificate-management${local.suffix}-${data.google_project.project.number}.${var.region}.run.app"
-      }
     }
 
     timeout = "1000s"

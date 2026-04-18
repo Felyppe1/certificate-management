@@ -326,7 +326,7 @@ jobs:
         run: |
           docker build \
             --build-arg DB_URL="${{ secrets.DB_URL }}" \
-            --build-arg NEXT_PUBLIC_BASE_URL=$CLOUD_RUN_APP_URL \
+            --build-arg CLOUD_RUN_APP_URL=$CLOUD_RUN_APP_URL \
             -t $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA .
 
       - name: Push image
