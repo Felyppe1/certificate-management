@@ -57,6 +57,7 @@ const serverEnvs = {
     GCP_REGION: process.env.GCP_REGION,
     SUFFIX: process.env.SUFFIX,
     CLOUD_RUN_APP_URL: process.env.CLOUD_RUN_APP_URL,
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
     CLOUD_FUNCTIONS_SA_EMAIL: process.env.CLOUD_FUNCTIONS_SA_EMAIL,
     CERTIFICATES_BUCKET: process.env.CERTIFICATES_BUCKET,
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
