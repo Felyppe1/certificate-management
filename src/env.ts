@@ -1,6 +1,8 @@
 import { z } from 'zod'
 import { validateData } from './utils/zod-validator'
 
+console.log('Loading environment variables...')
+
 const serverSchema = z.object({
     NODE_ENV: z
         .enum(['development', 'production', 'test'])
@@ -81,10 +83,11 @@ const parsed = isServer
       })
 
 if (!parsed.success) {
-    console.error('Invalid environment variables:', parsed.errors)
-
     if (!process.env.SKIP_ENV_VALIDATION) {
-        throw new Error('Invalid environment variables')
+        throw new Error(
+            'Invalid environment variables ' +
+                JSON.stringify(parsed.errors, null, 2),
+        )
     }
 }
 
