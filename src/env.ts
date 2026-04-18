@@ -79,7 +79,12 @@ const parsed = isServer
 
 if (!parsed.success) {
     console.error('Invalid environment variables:', parsed.errors)
-    throw new Error('Invalid environment variables')
+
+    if (!process.env.SKIP_ENV_VALIDATION) {
+        throw new Error('Invalid environment variables')
+    }
 }
 
-export const env = parsed.data as ServerEnv & ClientEnv
+// Use a ternary operator to handle the skipped validation scenario safely
+export const env = (parsed.success ? parsed.data : process.env) as ServerEnv &
+    ClientEnv

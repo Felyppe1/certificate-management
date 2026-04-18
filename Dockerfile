@@ -22,14 +22,14 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ARG DB_URL
-ARG CLOUD_RUN_APP_URL
+ARG NEXT_PUBLIC_BASE_URL
 
-# Garante que o build use variáveis adequadas de produção
-ENV NODE_ENV=production 
-ENV CLOUD_RUN_APP_URL=$CLOUD_RUN_APP_URL
+ENV NODE_ENV=production
 
-# Usei o DB_URL aqui para não precisar fazer ENV DB_URL=$DB_URL, que deixaria a variável disponível na imagem final
-RUN DB_URL=$DB_URL npm run build
+# SKIP_ENV_VALIDATION evita que o Zod valide vars de runtime durante o build.
+# NEXT_PUBLIC_BASE_URL precisa ser passada aqui pois é bakeada no bundle do cliente pelo Next.js.
+# DB_URL é necessária para o Prisma generate durante o build.
+RUN SKIP_ENV_VALIDATION=1 DB_URL=$DB_URL NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL npm run build
 
 # Etapa 3: Runner
 FROM node:20-slim AS runner
