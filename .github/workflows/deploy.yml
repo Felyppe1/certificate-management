@@ -141,7 +141,6 @@ jobs:
 
     outputs:
       artifact_path: ${{ steps.get_artifact_path.outputs.artifact_path }}
-      # cloud_run_app_url: ${{ steps.get_url.outputs.cloud_run_app_url }}
       cloud_run_name: ${{ steps.get_service_name.outputs.cloud_run_name }}
       generate_pdfs_cloud_run_name: ${{ steps.get_generate_pdfs_service_name.outputs.generate_pdfs_cloud_run_name }}
 
@@ -325,6 +324,7 @@ jobs:
         run: |
           docker build \
             --build-arg DB_URL="${{ secrets.DB_URL }}" \
+            --build-arg NEXT_PUBLIC_BASE_URL="${{ vars.NEXT_PUBLIC_BASE_URL }}" \
             -t $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA .
 
       - name: Push image

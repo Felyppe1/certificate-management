@@ -22,12 +22,13 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ARG DB_URL
+ARG NEXT_PUBLIC_BASE_URL
 
 # Garante que o build use variáveis adequadas de produção
 ENV NODE_ENV=production
 
 # Usei o DB_URL aqui para não precisar fazer ENV DB_URL=$DB_URL, que deixaria a variável disponível na imagem final
-RUN SKIP_ENV_VALIDATION=1 DB_URL=$DB_URL npm run build
+RUN SKIP_ENV_VALIDATION=1 DB_URL=$DB_URL NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL npm run build
 
 # Etapa 3: Runner
 FROM node:20-slim AS runner
