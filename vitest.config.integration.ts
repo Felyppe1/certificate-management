@@ -1,8 +1,5 @@
 import { defineConfig } from 'vitest/config'
 import path from 'path'
-import { loadEnvFile } from 'process'
-
-loadEnvFile('.env.test')
 
 export default defineConfig({
     resolve: {
