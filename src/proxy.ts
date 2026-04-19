@@ -15,12 +15,11 @@ export function proxy(request: NextRequest) {
     console.log('middleware triggered by request to:', pathname)
 
     const sessionToken = request.cookies.get(SESSION_COOKIE_NAME)?.value
-    console.log('Session token from cookie:', sessionToken)
 
     const isPublicRoute = publicRoutes.includes(pathname)
 
     if (sessionToken) {
-        if (isPublicRoute) {
+        if (pathname === '/entrar' || pathname === '/cadastrar-se') {
             return NextResponse.redirect(new URL('/', request.url))
         }
 
