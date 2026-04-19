@@ -53,10 +53,10 @@ GOOGLE_SLIDES_MIME_TYPE = 'application/vnd.google-apps.presentation'
 storage_client = storage.Client()
 
 BLOCK_START_TAGS = {
-    'if', 'unless', 'case', 'for', 'tablerow', 'capture', 'form', 'paginate'
+    'if', 'unless', 'case', 'for', 'tablerow', 'capture', 'form', 'paginate', 'raw', 'comment', 'liquid'
 }
 BLOCK_END_TAGS = {
-    'endif', 'endunless', 'endcase', 'endfor', 'endtablerow', 'endcapture', 'endform', 'endpaginate'
+    'endif', 'endunless', 'endcase', 'endfor', 'endtablerow', 'endcapture', 'endform', 'endpaginate', 'endraw', 'endcomment', 'endliquid'
 }
 
 # Regex to find opening tags: {% if, {%- if, {% endfor, etc.
