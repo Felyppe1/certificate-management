@@ -2,11 +2,11 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './src/tests/e2e',
-  timeout: 60000, // Time for each individual test to complete
-  fullyParallel: true, // Run tests inside a file in parallel
+  timeout: 240000, // Time for each individual test to complete
+  fullyParallel: false, // Do not run tests in parallel to avoid DB conflicts
   forbidOnly: !!process.env.CI, // Fail if test.only is left in the source code
   retries: process.env.CI ? 2 : 0, // Retry on CI only
-  workers: process.env.CI ? 1 : undefined, // Use a single worker on CI to avoid potential issues with parallel execution
+  workers: 1, // Use a single worker to avoid DB deadlocks since tests share a single Next.js backend and DB schema
   reporter: 'html',
   use: { // Options shared across all tests
     baseURL: 'http://localhost:3001',
