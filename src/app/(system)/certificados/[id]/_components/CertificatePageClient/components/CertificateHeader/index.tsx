@@ -58,10 +58,10 @@ export function CertificateHeader({
             return result
         },
         onSuccess: async () => {
+            toast.success('Nome atualizado com sucesso')
             await queryClient.invalidateQueries({
                 queryKey: queryKeys.certificateEmissions(),
             })
-            toast.success('Nome atualizado com sucesso')
             setIsEditing(false)
             setPreviousName(name)
         },
@@ -81,10 +81,10 @@ export function CertificateHeader({
             return result
         },
         onSuccess: async () => {
+            toast.success('Certificado excluído com sucesso')
             await queryClient.invalidateQueries({
                 queryKey: queryKeys.certificateEmissions(),
             })
-            toast.success('Certificado excluído com sucesso')
             startTransition(() => {
                 router.push('/')
             })
@@ -108,7 +108,7 @@ export function CertificateHeader({
         setIsEditing(false)
     }
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const validation = nameSchema.safeParse(name.trim())
 
         if (!validation.success) {
@@ -128,7 +128,7 @@ export function CertificateHeader({
         formData.append('name', validName)
         formData.append('variableColumnMapping', 'undefined')
 
-        updateMutation.mutate(formData)
+        await updateMutation.mutateAsync(formData)
     }
 
     const handleKeyDown = (e: React.KeyboardEvent) => {

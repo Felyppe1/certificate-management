@@ -1,5 +1,7 @@
 import { PostgreSqlContainer } from '@testcontainers/postgresql'
 import { execSync, spawn } from 'child_process'
+import fs from 'fs'
+import path from 'path'
 
 const HOST_PORT = 54332
 
@@ -33,16 +35,63 @@ async function startServer() {
         },
     )
 
-    console.log('Starting Next.js dev server on port 3001...')
+    // Defining env variables for both build and start commands
+    const environmentVariables = {
+        ...process.env,
+        NEXT_PUBLIC_BASE_URL: 'http://localhost:3001',
+        GOOGLE_CLIENT_ID: 'test-client-id',
+        GOOGLE_CLIENT_SECRET: 'test-client-secret',
+        GCP_PROJECT_ID: 'test-project',
+        GEMINI_API_KEY: 'test-key',
+        RESEND_API_KEY: 'test-key',
+        OWNER_EMAIL: 'test@test.com',
+        REDIS_URL: 'redis://localhost:6380',
+        LOKI_URL: 'http://localhost:3100',
+        OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: 'http://localhost:4318/v1/logs',
+        NODE_ENV: 'production',
+        PORT: '3001',
+    } as const
 
-    const nextProcess = spawn('npx', ['next', 'dev', '--port', '3001'], {
-        env: {
-            ...process.env,
-            NEXT_PUBLIC_BASE_URL: 'http://localhost:3001',
-            GOOGLE_CLIENT_ID: 'test-client-id',
-            GOOGLE_CLIENT_SECRET: 'test-client-secret',
-            NODE_ENV: 'development',
-        },
+    console.log('Building Next.js application for E2E tests...')
+    execSync('npm run build', {
+        stdio: 'inherit',
+        env: environmentVariables,
+    })
+
+    console.log('Copying static assets to standalone folder...')
+    const standaloneDir = path.join(process.cwd(), '.next/standalone')
+    const standaloneNextDir = path.join(standaloneDir, '.next')
+
+    // Guarantee the folder exists before copying
+    if (!fs.existsSync(standaloneNextDir)) {
+        fs.mkdirSync(standaloneNextDir, { recursive: true })
+    }
+
+    if (fs.existsSync(path.join(process.cwd(), 'public'))) {
+        fs.cpSync(
+            path.join(process.cwd(), 'public'),
+            path.join(standaloneDir, 'public'),
+            { recursive: true },
+        )
+    }
+
+    fs.cpSync(
+        path.join(process.cwd(), '.next/static'),
+        path.join(standaloneDir, '.next/static'),
+        { recursive: true },
+    )
+
+    if (fs.existsSync(path.join(process.cwd(), 'node_modules'))) {
+        fs.cpSync(
+            path.join(process.cwd(), 'node_modules'),
+            path.join(standaloneDir, 'node_modules'),
+            { recursive: true },
+        )
+    }
+
+    console.log('Starting Next.js production server on port 3001...')
+    const nextProcess = spawn('node', ['.next/standalone/server.js'], {
+        env: environmentVariables,
         stdio: 'inherit',
     })
 

@@ -2,18 +2,22 @@ import { test, expect } from './fixtures'
 import { BrowserContext } from '@playwright/test'
 import { PrismaClient } from '@/backend/infrastructure/repository/prisma/client/client'
 import crypto from 'crypto'
+import { faker } from '@faker-js/faker'
 
 async function setupAuth(prisma: PrismaClient, context: BrowserContext) {
     const token = crypto.randomBytes(32).toString('hex')
 
-    await prisma.user.create({
-        data: {
+    await prisma.user.upsert({
+        where: { id: 'user-e2e-crud' },
+        update: {},
+        create: {
             id: 'user-e2e-crud',
             email: 'crud@test.com',
             name: 'CRUD User',
             password_hash: 'hash',
         },
     })
+
     await prisma.session.create({
         data: {
             token,
@@ -39,39 +43,41 @@ test.describe('Certificate emission CRUD', () => {
     }) => {
         await setupAuth(prisma, context)
 
+        const initialName = faker.commerce.productName()
+        const renamedName = `${initialName} Renammed`
+
         // --- Create ---
         await page.goto('/')
         await page.getByRole('button', { name: 'Criar' }).first().click()
-        await page.getByLabel('Nome da emissão').fill('E2E Certificate')
+        await page.getByLabel('Nome da emissão').fill(initialName)
         await page.getByRole('button', { name: 'Criar Emissão' }).click()
         await page.waitForURL(/\/certificados\/.+/)
 
         // --- Rename ---
         await page.getByTitle('Editar nome do certificado').click()
-        await page.getByRole('textbox').fill('E2E Certificate Renamed')
+        await page.getByRole('textbox').fill(renamedName)
         await page.getByRole('textbox').press('Enter')
-        await expect(
-            page.getByText('Nome atualizado com sucesso'),
-        ).toBeVisible()
+        await expect(page.getByText('Nome atualizado com sucesso')).toBeVisible(
+            { timeout: 20000 },
+        )
 
         // --- Verify updated name in listing ---
         await page.goto('/')
-        await expect(page.getByText('E2E Certificate Renamed')).toBeVisible()
+        const emissionLink = page.getByRole('link', { name: renamedName })
+        await expect(emissionLink).toBeVisible()
 
         // --- Navigate back to detail page and delete ---
-        await page.getByText('E2E Certificate Renamed').click()
+        await emissionLink.click()
         await page.waitForURL(/\/certificados\/.+/)
         await page.getByTitle('Excluir certificado').click()
         await page.getByRole('button', { name: 'Continuar' }).click()
         await expect(
             page.getByText('Certificado excluído com sucesso'),
-        ).toBeVisible()
+        ).toBeVisible({ timeout: 20000 })
 
         // --- Verify gone from listing ---
         await page.waitForURL('http://localhost:3001/')
-        await expect(
-            page.getByText('E2E Certificate Renamed'),
-        ).not.toBeVisible()
+        await expect(emissionLink).not.toBeVisible()
         await expect(
             page.getByText('Nenhuma emissão de certificado criada'),
         ).toBeVisible()

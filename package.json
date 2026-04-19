@@ -24,6 +24,7 @@
     "src/**/*.{ts,tsx}": "prettier --write --ignore-unknown"
   },
   "dependencies": {
+    "@faker-js/faker": "^10.4.0",
     "@google-cloud/pubsub": "^5.2.0",
     "@google-cloud/storage": "^7.17.2",
     "@google-cloud/tasks": "^6.2.1",
