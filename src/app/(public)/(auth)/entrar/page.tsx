@@ -3,6 +3,11 @@ import { GoogleButton } from '@/components/GoogleButton'
 import { ShieldCheck, Zap } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { RequestAccessModal } from './_components/RequestAccessModal'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+    title: 'Entrar',
+}
 
 export default function Entrar() {
     return (

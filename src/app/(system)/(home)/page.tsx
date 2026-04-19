@@ -8,6 +8,11 @@ import {
 import { queryKeys } from '@/lib/query-keys'
 import { fetchCertificateEmissions } from '@/api-calls/fetch-certificate-emissions'
 import { fetchCertificateEmissionsMetricsByUser } from '@/api-calls/fetch-certificate-emissions-metrics-by-user'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+    title: 'Início',
+}
 
 export default async function Home() {
     const queryClient = new QueryClient()

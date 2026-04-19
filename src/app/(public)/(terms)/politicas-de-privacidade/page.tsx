@@ -1,3 +1,9 @@
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+    title: 'Política de Privacidade',
+}
+
 export default function PrivacyPolitics() {
     return (
         <>

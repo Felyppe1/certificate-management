@@ -1,10 +1,13 @@
-'use server'
-
 import Link from 'next/link'
 import { fetchMe } from '@/api-calls/fetch-me'
 import { DeleteAccount } from './_components/DeleteAccount'
 import { GrantAccess } from './_components/GrantAccess'
 import { GoBackButton } from '@/components/GoBackButton'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+    title: 'Configurações',
+}
 
 export default async function UserConfigurationsPage() {
     const data = await fetchMe()

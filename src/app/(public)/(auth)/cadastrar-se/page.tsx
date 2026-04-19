@@ -1,6 +1,11 @@
 import Link from 'next/link'
 import { SignUpForm } from './_components/signup-form'
 import { GoogleButton } from '@/components/GoogleButton'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+    title: 'Cadastrar-se',
+}
 
 export default function SignUp() {
     return (
