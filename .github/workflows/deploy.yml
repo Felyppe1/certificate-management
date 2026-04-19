@@ -11,9 +11,38 @@ permissions:
   contents: read
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Integration tests
+        run: npm run test:integration
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E tests
+        run: npm run test:e2e
+
   terraform-plan:
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
+    needs: test
 
     env:
       REGION: us-central1
@@ -24,85 +53,39 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Authenticate to GCP
-        uses: google-github-actions/auth@v2
+        uses: ./.github/actions/gcp-auth
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          wif_provider: ${{ secrets.GCP_WIF_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_NAME }}
-
-      - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v2
-        with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      # jq is a utilitary to handle JSON in bash
-      # -n is for creating new empty JSON
-      # -c is for compact output (no new lines)
-      - name: Export Terraform variables (TF_VAR_*)
-        env:
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_URL: ${{ secrets.DB_URL }}
-          DB_DIRECT_URL: ${{ secrets.DB_DIRECT_URL }}
-          REDIS_URL: ${{ secrets.REDIS_URL }}
-          LOKI_URL: ${{ secrets.LOKI_URL }}
-          OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: ${{ secrets.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT }}
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          GA_ID: ${{ secrets.GA_ID }}
-          SUFFIX: ${{ github.ref_name == 'main' && '' || format('-{0}', github.ref_name) }}
-          NEXT_PUBLIC_BASE_URL: ${{ vars.NEXT_PUBLIC_BASE_URL }}
-          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
-          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
-        run: |
-          echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
-          echo "TF_VAR_region=${{ env.REGION }}" >> $GITHUB_ENV
-          echo "TF_VAR_branch=${{ github.ref_name }}" >> $GITHUB_ENV
-          echo "TF_VAR_smtp_user=${{ secrets.SMTP_USER }}" >> $GITHUB_ENV
-          echo "TF_VAR_smtp_password=${{ secrets.SMTP_PASSWORD }}" >> $GITHUB_ENV
-          echo "TF_VAR_google_client_id=${{ secrets.GOOGLE_CLIENT_ID }}" >> $GITHUB_ENV
-          echo "TF_VAR_google_client_secret=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> $GITHUB_ENV
-          echo "TF_VAR_google_refresh_token=${{ secrets.GOOGLE_REFRESH_TOKEN }}" >> $GITHUB_ENV
-          echo "TF_VAR_google_drive_folder_id=${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}" >> $GITHUB_ENV
-          echo "TF_VAR_gemini_api_key=${{ secrets.GEMINI_API_KEY }}" >> $GITHUB_ENV
-          echo "TF_VAR_resend_api_key=${{ secrets.RESEND_API_KEY }}" >> $GITHUB_ENV
-          TF_ENV_VARS=$(jq -nc '{
-            DB_USER: env.DB_USER,
-            DB_PASSWORD: env.DB_PASSWORD,
-            DB_NAME: env.DB_NAME,
-            DB_PORT: env.DB_PORT,
-            DB_HOST: env.DB_HOST,
-            DB_URL: env.DB_URL,
-            DB_DIRECT_URL: env.DB_DIRECT_URL,
-            REDIS_URL: env.REDIS_URL,
-            LOKI_URL: env.LOKI_URL,
-            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: env.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
-            GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
-            GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
-            GA_ID: env.GA_ID,
-            SUFFIX: env.SUFFIX,
-            NEXT_PUBLIC_BASE_URL: env.NEXT_PUBLIC_BASE_URL,
-            GEMINI_API_KEY: env.GEMINI_API_KEY,
-            RESEND_API_KEY: env.RESEND_API_KEY,
-            OWNER_EMAIL: env.OWNER_EMAIL
-          }')
-
-          echo "TF_VAR_environment_variables=$TF_ENV_VARS" >> $GITHUB_ENV
-
-      - name: Export Terraform backend
-        working-directory: ./terraform
-        run: |
-          if [ "${{ github.ref_name }}" = "main" ]; then SUFFIX=""; else SUFFIX="-${{ github.ref_name }}"; fi
-          PROJECT_HASH=$(echo -n "${{ env.GCP_PROJECT_ID }}" | md5sum | cut -c1-8)
-          echo "TF_BACKEND_BUCKET=tf-state${SUFFIX}-${PROJECT_HASH}" >> $GITHUB_ENV
-
-      - name: Install Terraform
-        uses: hashicorp/setup-terraform@v3
+      - name: Setup Terraform environment
+        uses: ./.github/actions/terraform-env
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          region: ${{ env.REGION }}
+          branch: ${{ github.ref_name }}
+          smtp_user: ${{ secrets.SMTP_USER }}
+          smtp_password: ${{ secrets.SMTP_PASSWORD }}
+          google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
+          google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          google_refresh_token: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          google_drive_folder_id: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          resend_api_key: ${{ secrets.RESEND_API_KEY }}
+          db_user: ${{ secrets.DB_USER }}
+          db_password: ${{ secrets.DB_PASSWORD }}
+          db_name: ${{ secrets.DB_NAME }}
+          db_port: ${{ secrets.DB_PORT }}
+          db_host: ${{ secrets.DB_HOST }}
+          db_url: ${{ secrets.DB_URL }}
+          db_direct_url: ${{ secrets.DB_DIRECT_URL }}
+          redis_url: ${{ secrets.REDIS_URL }}
+          loki_url: ${{ secrets.LOKI_URL }}
+          otel_exporter_otlp_logs_endpoint: ${{ secrets.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT }}
+          ga_id: ${{ secrets.GA_ID }}
+          next_public_base_url: ${{ vars.NEXT_PUBLIC_BASE_URL }}
+          owner_email: ${{ secrets.OWNER_EMAIL }}
 
       - name: Create Terraform state bucket if not exists
         run: |
@@ -127,7 +110,7 @@ jobs:
         with:
           name: tfplan
           path: ./terraform/tfplan
-      
+
       - name: Upload Cloud Functions Build Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -153,85 +136,39 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Authenticate to GCP
-        uses: google-github-actions/auth@v2
+        uses: ./.github/actions/gcp-auth
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          wif_provider: ${{ secrets.GCP_WIF_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_NAME }}
-
-      - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v2
-        with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      # jq is a utilitary to handle JSON in bash
-      # -n is for creating new empty JSON
-      # -c is for compact output (no new lines)
-      - name: Export Terraform variables (TF_VAR_*)
-        env:
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_URL: ${{ secrets.DB_URL }}
-          DB_DIRECT_URL: ${{ secrets.DB_DIRECT_URL }}
-          REDIS_URL: ${{ secrets.REDIS_URL }}
-          LOKI_URL: ${{ secrets.LOKI_URL }}
-          OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: ${{ secrets.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT }}
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          GA_ID: ${{ secrets.GA_ID }}
-          SUFFIX: ${{ github.ref_name == 'main' && '' || format('-{0}', github.ref_name) }}
-          NEXT_PUBLIC_BASE_URL: ${{ vars.NEXT_PUBLIC_BASE_URL }}
-          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
-          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
-        run: |
-          echo "TF_VAR_project_id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_ENV
-          echo "TF_VAR_region=${{ env.REGION }}" >> $GITHUB_ENV
-          echo "TF_VAR_branch=${{ github.ref_name }}" >> $GITHUB_ENV
-          echo "TF_VAR_smtp_user=${{ secrets.SMTP_USER }}" >> $GITHUB_ENV
-          echo "TF_VAR_smtp_password=${{ secrets.SMTP_PASSWORD }}" >> $GITHUB_ENV
-          echo "TF_VAR_google_refresh_token=${{ secrets.GOOGLE_REFRESH_TOKEN }}" >> $GITHUB_ENV
-          echo "TF_VAR_google_drive_folder_id=${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}" >> $GITHUB_ENV
-          echo "TF_VAR_google_client_id=${{ secrets.GOOGLE_CLIENT_ID }}" >> $GITHUB_ENV
-          echo "TF_VAR_google_client_secret=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> $GITHUB_ENV
-          echo "TF_VAR_gemini_api_key=${{ secrets.GEMINI_API_KEY }}" >> $GITHUB_ENV
-          echo "TF_VAR_resend_api_key=${{ secrets.RESEND_API_KEY }}" >> $GITHUB_ENV
-          TF_ENV_VARS=$(jq -nc '{
-            DB_USER: env.DB_USER,
-            DB_PASSWORD: env.DB_PASSWORD,
-            DB_NAME: env.DB_NAME,
-            DB_PORT: env.DB_PORT,
-            DB_HOST: env.DB_HOST,
-            DB_URL: env.DB_URL,
-            DB_DIRECT_URL: env.DB_DIRECT_URL,
-            REDIS_URL: env.REDIS_URL,
-            LOKI_URL: env.LOKI_URL,
-            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: env.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
-            GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
-            GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
-            GA_ID: env.GA_ID,
-            SUFFIX: env.SUFFIX,
-            NEXT_PUBLIC_BASE_URL: env.NEXT_PUBLIC_BASE_URL,
-            GEMINI_API_KEY: env.GEMINI_API_KEY,
-            RESEND_API_KEY: env.RESEND_API_KEY,
-            OWNER_EMAIL: env.OWNER_EMAIL
-          }')
-
-          echo "TF_VAR_environment_variables=$TF_ENV_VARS" >> $GITHUB_ENV
-
-      - name: Export Terraform backend
-        working-directory: ./terraform
-        run: |
-          if [ "${{ github.ref_name }}" = "main" ]; then SUFFIX=""; else SUFFIX="-${{ github.ref_name }}"; fi
-          PROJECT_HASH=$(echo -n "${{ env.GCP_PROJECT_ID }}" | md5sum | cut -c1-8)
-          echo "TF_BACKEND_BUCKET=tf-state${SUFFIX}-${PROJECT_HASH}" >> $GITHUB_ENV
-
-      - name: Install Terraform
-        uses: hashicorp/setup-terraform@v3
+      - name: Setup Terraform environment
+        uses: ./.github/actions/terraform-env
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          region: ${{ env.REGION }}
+          branch: ${{ github.ref_name }}
+          smtp_user: ${{ secrets.SMTP_USER }}
+          smtp_password: ${{ secrets.SMTP_PASSWORD }}
+          google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
+          google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          google_refresh_token: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          google_drive_folder_id: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          resend_api_key: ${{ secrets.RESEND_API_KEY }}
+          db_user: ${{ secrets.DB_USER }}
+          db_password: ${{ secrets.DB_PASSWORD }}
+          db_name: ${{ secrets.DB_NAME }}
+          db_port: ${{ secrets.DB_PORT }}
+          db_host: ${{ secrets.DB_HOST }}
+          db_url: ${{ secrets.DB_URL }}
+          db_direct_url: ${{ secrets.DB_DIRECT_URL }}
+          redis_url: ${{ secrets.REDIS_URL }}
+          loki_url: ${{ secrets.LOKI_URL }}
+          otel_exporter_otlp_logs_endpoint: ${{ secrets.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT }}
+          ga_id: ${{ secrets.GA_ID }}
+          next_public_base_url: ${{ vars.NEXT_PUBLIC_BASE_URL }}
+          owner_email: ${{ secrets.OWNER_EMAIL }}
 
       - name: Terraform Init
         working-directory: ./terraform
@@ -242,7 +179,7 @@ jobs:
         with:
           name: tfplan
           path: ./terraform
-      
+
       - name: Download Cloud Functions Build Artifact
         uses: actions/download-artifact@v4
         with:
@@ -253,9 +190,8 @@ jobs:
         working-directory: ./terraform
         run: terraform apply -auto-approve tfplan
 
-      # Why save ${REPO_PATH}/certificate-management to a file and upload as artifact?
       - name: Get Artifact Registry Path from Terraform
-        id: get_artifact_registry_path
+        id: get_artifact_path
         working-directory: ./terraform
         run: |
           REPO_PATH=$(terraform output -raw artifact_registry_path)
@@ -267,12 +203,6 @@ jobs:
         with:
           name: artifact-registry-path
           path: ./terraform/artifact_registry_path.txt
-
-      # - name: Get Cloud Run App URL from Terraform
-      #   id: get_url
-      #   working-directory: ./terraform
-      #   run: |
-      #     echo "cloud_run_app_url=$(terraform output -raw cloud_run_app_url)" >> $GITHUB_OUTPUT
 
       - name: Get Service Name from Terraform
         id: get_service_name
@@ -300,16 +230,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Authenticate to GCP
-        uses: google-github-actions/auth@v2
+        uses: ./.github/actions/gcp-auth
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          wif_provider: ${{ secrets.GCP_WIF_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_NAME }}
-
-      - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v2
-        with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          export_default_credentials: true
+          export_default_credentials: 'true'
 
       - name: Download Artifact Path
         uses: actions/download-artifact@v4
@@ -334,12 +260,12 @@ jobs:
 
       - name: Run Database Migrations
         run: |
-            docker run --rm \
+          docker run --rm \
             -e DB_URL="${{ secrets.DB_DIRECT_URL }}" \
             $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA \
             npm run prisma:deploy
-        continue-on-error: false 
-        
+        continue-on-error: false
+
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy $CLOUD_RUN_NAME \
@@ -347,12 +273,6 @@ jobs:
             --region $REGION \
             --platform managed \
             --allow-unauthenticated
-
-    #   - name: Inject NEXT_PUBLIC_BASE_URL via gcloud
-    #     run: |
-    #       gcloud run services update $CLOUD_RUN_NAME \
-    #         --region $REGION \
-    #         --update-env-vars=NEXT_PUBLIC_BASE_URL=$CLOUD_RUN_URL
 
   # deploy-generate-pdfs:
   #   runs-on: ubuntu-latest
@@ -368,16 +288,12 @@ jobs:
   #       uses: actions/checkout@v4
 
   #     - name: Authenticate to GCP
-  #       uses: google-github-actions/auth@v2
+  #       uses: ./.github/actions/gcp-auth
   #       with:
-  #         workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+  #         wif_provider: ${{ secrets.GCP_WIF_PROVIDER }}
   #         service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_NAME }}
-
-  #     - name: Setup gcloud
-  #       uses: google-github-actions/setup-gcloud@v2
-  #       with:
   #         project_id: ${{ secrets.GCP_PROJECT_ID }}
-  #         export_default_credentials: true
+  #         export_default_credentials: 'true'
 
   #     - name: Download Artifact Path
   #       uses: actions/download-artifact@v4
@@ -406,4 +322,3 @@ jobs:
   #           --region $REGION \
   #           --platform managed \
   #           --no-allow-unauthenticated
-

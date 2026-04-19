@@ -1,0 +1,120 @@
+name: Terraform Environment Setup
+description: Export TF_VAR_* env vars, compute backend bucket, and install Terraform
+
+inputs:
+  project_id:
+    required: true
+  region:
+    required: true
+  branch:
+    required: true
+  smtp_user:
+    required: true
+  smtp_password:
+    required: true
+  google_client_id:
+    required: true
+  google_client_secret:
+    required: true
+  google_refresh_token:
+    required: true
+  google_drive_folder_id:
+    required: true
+  gemini_api_key:
+    required: true
+  resend_api_key:
+    required: true
+  db_user:
+    required: true
+  db_password:
+    required: true
+  db_name:
+    required: true
+  db_port:
+    required: true
+  db_host:
+    required: true
+  db_url:
+    required: true
+  db_direct_url:
+    required: true
+  redis_url:
+    required: true
+  loki_url:
+    required: true
+  otel_exporter_otlp_logs_endpoint:
+    required: true
+  ga_id:
+    required: true
+  next_public_base_url:
+    required: true
+  owner_email:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Export Terraform variables (TF_VAR_*)
+      shell: bash
+      env:
+        DB_USER: ${{ inputs.db_user }}
+        DB_PASSWORD: ${{ inputs.db_password }}
+        DB_NAME: ${{ inputs.db_name }}
+        DB_PORT: ${{ inputs.db_port }}
+        DB_HOST: ${{ inputs.db_host }}
+        DB_URL: ${{ inputs.db_url }}
+        DB_DIRECT_URL: ${{ inputs.db_direct_url }}
+        REDIS_URL: ${{ inputs.redis_url }}
+        LOKI_URL: ${{ inputs.loki_url }}
+        OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: ${{ inputs.otel_exporter_otlp_logs_endpoint }}
+        GOOGLE_CLIENT_ID: ${{ inputs.google_client_id }}
+        GOOGLE_CLIENT_SECRET: ${{ inputs.google_client_secret }}
+        GA_ID: ${{ inputs.ga_id }}
+        NEXT_PUBLIC_BASE_URL: ${{ inputs.next_public_base_url }}
+        GEMINI_API_KEY: ${{ inputs.gemini_api_key }}
+        RESEND_API_KEY: ${{ inputs.resend_api_key }}
+        OWNER_EMAIL: ${{ inputs.owner_email }}
+        SUFFIX: ${{ inputs.branch == 'main' && '' || format('-{0}', inputs.branch) }}
+      run: |
+        echo "TF_VAR_project_id=${{ inputs.project_id }}" >> $GITHUB_ENV
+        echo "TF_VAR_region=${{ inputs.region }}" >> $GITHUB_ENV
+        echo "TF_VAR_branch=${{ inputs.branch }}" >> $GITHUB_ENV
+        echo "TF_VAR_smtp_user=${{ inputs.smtp_user }}" >> $GITHUB_ENV
+        echo "TF_VAR_smtp_password=${{ inputs.smtp_password }}" >> $GITHUB_ENV
+        echo "TF_VAR_google_client_id=${{ inputs.google_client_id }}" >> $GITHUB_ENV
+        echo "TF_VAR_google_client_secret=${{ inputs.google_client_secret }}" >> $GITHUB_ENV
+        echo "TF_VAR_google_refresh_token=${{ inputs.google_refresh_token }}" >> $GITHUB_ENV
+        echo "TF_VAR_google_drive_folder_id=${{ inputs.google_drive_folder_id }}" >> $GITHUB_ENV
+        echo "TF_VAR_gemini_api_key=${{ inputs.gemini_api_key }}" >> $GITHUB_ENV
+        echo "TF_VAR_resend_api_key=${{ inputs.resend_api_key }}" >> $GITHUB_ENV
+        TF_ENV_VARS=$(jq -nc '{
+          DB_USER: env.DB_USER,
+          DB_PASSWORD: env.DB_PASSWORD,
+          DB_NAME: env.DB_NAME,
+          DB_PORT: env.DB_PORT,
+          DB_HOST: env.DB_HOST,
+          DB_URL: env.DB_URL,
+          DB_DIRECT_URL: env.DB_DIRECT_URL,
+          REDIS_URL: env.REDIS_URL,
+          LOKI_URL: env.LOKI_URL,
+          OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: env.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+          GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
+          GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
+          GA_ID: env.GA_ID,
+          SUFFIX: env.SUFFIX,
+          NEXT_PUBLIC_BASE_URL: env.NEXT_PUBLIC_BASE_URL,
+          GEMINI_API_KEY: env.GEMINI_API_KEY,
+          RESEND_API_KEY: env.RESEND_API_KEY,
+          OWNER_EMAIL: env.OWNER_EMAIL
+        }')
+        echo "TF_VAR_environment_variables=$TF_ENV_VARS" >> $GITHUB_ENV
+
+    - name: Export Terraform backend
+      shell: bash
+      run: |
+        if [ "${{ inputs.branch }}" = "main" ]; then SUFFIX=""; else SUFFIX="-${{ inputs.branch }}"; fi
+        PROJECT_HASH=$(echo -n "${{ inputs.project_id }}" | md5sum | cut -c1-8)
+        echo "TF_BACKEND_BUCKET=tf-state${SUFFIX}-${PROJECT_HASH}" >> $GITHUB_ENV
+
+    - name: Install Terraform
+      uses: hashicorp/setup-terraform@v3

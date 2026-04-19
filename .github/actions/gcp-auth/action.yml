@@ -1,0 +1,26 @@
+name: GCP Auth + gcloud
+description: Authenticate to GCP and set up gcloud CLI
+
+inputs:
+  wif_provider:
+    required: true
+  service_account:
+    required: true
+  project_id:
+    required: true
+  export_default_credentials:
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ inputs.wif_provider }}
+        service_account: ${{ inputs.service_account }}
+        export_environment_variables: true
+        export_default_credentials: ${{ inputs.export_default_credentials }}
+
+    - uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ inputs.project_id }}
