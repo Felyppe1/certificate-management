@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os
 from google.oauth2.credentials import Credentials
 import requests
-from io import BytesIO
+from io import BytesIO, StringIO
 from docx import Document
 from docx.text.paragraph import Paragraph
 from pptx import Presentation
@@ -13,15 +13,13 @@ from google.cloud.storage.blob import Blob
 import re
 import google.auth.transport.requests
 import google.oauth2.id_token
-import zipfile
+from liquid import RenderContext
 from liquid_types import LiquidDate, LiquidFloat, liquid_environment
 from pydantic import BaseModel, ValidationError
 from typing import List, Optional, Dict, Any
 from enum import Enum
 from datetime import datetime
 import re
-import tempfile
-import subprocess
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 
@@ -64,7 +62,7 @@ BLOCK_END_TAGS = {
 # Regex to find opening tags: {% if, {%- if, {% endfor, etc.
 TAG_REGEX = re.compile(r'{%-?\s*(\w+)')
 
-################################ Functions to process DOCX with Liquid ################################
+#################################### Functions to process DOCX with Liquid ####################################
 def paragraph_universal_iterator(doc):
     """Returns all body, table, and textbox paragraphs."""
     for p in doc.paragraphs:
@@ -123,14 +121,14 @@ def calculate_delta_blocks(text):
             delta -= 1
     return delta
 
-def process_buffer(paragraph_list, text_list, context):
-    """
+def process_buffer(paragraph_list, text_list, liquid_ctx):
+    '''
     Takes N paragraphs, joins the text, runs Liquid, and returns the result
     in the FIRST paragraph, deleting the others.
-    """
+    '''
     # Joins with line breaks to simulate the original document
     complete_text = "\n".join(text_list)
-    
+
     # If there is no liquid syntax, ignore
     if not ("{{" in complete_text or "{%" in complete_text):
         return
@@ -140,10 +138,12 @@ def process_buffer(paragraph_list, text_list, context):
                       .replace('‘', "'").replace('’', "'"))
     if "append" in sanitized_text:
         print(f"DEBUG LIQUID: {sanitized_text}")
-        
+
     try:
         template = liquid_environment.from_string(sanitized_text)
-        new_complete_text = template.render(**context)
+        buf = StringIO()
+        template.render_with_context(liquid_ctx, buf)
+        new_complete_text = buf.getvalue()
         # If the text did not change, do nothing (preserves original formatting)
         if new_complete_text == complete_text:
             return
@@ -178,57 +178,46 @@ def process_buffer(paragraph_list, text_list, context):
 def replace_variables_in_docx_liquid(in_buffer, context_data):
     in_buffer.seek(0)
     doc = Document(in_buffer)
-    
+
     # 1. Pre-processing: Consolidate runs (intra-line)
     # This ensures that '{% if' is not split across different runs in the same line
     all_paragraphs = list(paragraph_universal_iterator(doc))
     for p in all_paragraphs:
         consolidate_broken_runs(p)
 
-    # 2. Processing with Buffer (Inter-line)
-    buffer_paragraphs = [] # List of Paragraph objects
-    accumulated_text = []   # List of strings (paragraph texts)
-    block_level = 0        # 0 = no block open, >0 = inside block
+    # Shared context so {% assign %} variables persist across paragraph renders
+    liquid_ctx = RenderContext(liquid_environment.from_string(""), globals=context_data)
 
-    # We iterate over the list we already created to be able to skip indices if necessary
-    # but here we will use a continuous flow logic
-    
+    # 2. Processing with Buffer (Inter-line)
+    buffer_paragraphs = []
+    accumulated_text = []
+    block_level = 0
+
     idx = 0
     while idx < len(all_paragraphs):
         p = all_paragraphs[idx]
         paragraph_text = p.text
-        
-        # Calculate if this paragraph opens or closes blocks
+
         delta = calculate_delta_blocks(paragraph_text)
-        
-        # DECISION LOGIC
-        # If we have open blocks OR if this paragraph opens new blocks that do not close here
+
         if block_level > 0 or (delta > 0):
-            # We are inside a multi-line logic or starting one
             buffer_paragraphs.append(p)
             accumulated_text.append(paragraph_text)
-            block_level += delta # Update level
-            
-            # If we return to zero, it means the block closed in this paragraph.
-            # Time to process the entire buffer!
+            block_level += delta
+
             if block_level == 0:
-                process_buffer(buffer_paragraphs, accumulated_text, context_data)
-                # Clear buffer
+                process_buffer(buffer_paragraphs, accumulated_text, liquid_ctx)
                 buffer_paragraphs = []
                 accumulated_text = []
-                
+
         else:
-            # We are not in a multi-line block. 
-            # But there may be simple variables {{name}} or if/endif on the same line.
-            # We process individually.
-            process_buffer([p], [paragraph_text], context_data)
-        
+            process_buffer([p], [paragraph_text], liquid_ctx)
+
         idx += 1
 
-    # If something remains in the buffer (e.g., syntax error, if without endif at the end of the doc)
     if buffer_paragraphs:
         print("WARNING: Liquid block not closed at the end of the document.")
-        process_buffer(buffer_paragraphs, accumulated_text, context_data)
+        process_buffer(buffer_paragraphs, accumulated_text, liquid_ctx)
 
     # 3. Save
     out_buffer = BytesIO()
@@ -237,180 +226,7 @@ def replace_variables_in_docx_liquid(in_buffer, context_data):
     return out_buffer
 
 
-
-################################ Functions to use bucket ################################
-def upload_to_bucket(file_buffer, file_path):
-    bucket = storage_client.bucket(CERTIFICATES_BUCKET)
-    blob = bucket.blob(file_path)
-    blob.upload_from_file(file_buffer, rewind=True, content_type="application/pdf")
-    return blob
-
-def get_from_bucket(file_path) -> Blob:
-    bucket = storage_client.bucket(CERTIFICATES_BUCKET)
-    blob = bucket.blob(file_path)
-    return blob
-
-def delete_by_prefix(prefix: str):
-    bucket = storage_client.bucket(CERTIFICATES_BUCKET)
-
-    blobs = bucket.list_blobs(prefix=prefix)
-
-    deleted_files = []
-    for blob in blobs:
-        blob.delete()
-        deleted_files.append(blob.name)
-
-    return deleted_files
-
-
-
-
-
-################################ Functions to call backend endpoints ################################
-def finish_certificates_generation(data_source_row_id, success, total_bytes=None, user_id=None):
-    print('Inside update')
-    url = f"{APP_BASE_URL}/api/internal/data-source-rows/{data_source_row_id}/generations"
-
-    if ENV != 'local':
-        auth_req = google.auth.transport.requests.Request()
-        # Just works for service accounts or in the cloud. Locally, I need to login impersonating a service account.
-        id_token = google.oauth2.id_token.fetch_id_token(auth_req, AUDIENCE)
-
-        headers = {
-            "Authorization": f"Bearer {id_token}",
-            "Content-Type": "application/json",
-        }
-    else:
-        headers = {
-            "Content-Type": "application/json",
-        }
-    
-    body = {k: v for k, v in {
-        "success": success,
-        "totalBytes": total_bytes,
-        "userId": user_id,
-    }.items() if v is not None}
-
-    print('before sending patch')
-    response = requests.patch(url, json=body, headers=headers)
-    response.raise_for_status()
-
-def refresh_google_token(user_id):
-    print('Refreshing google token')
-
-    url = f"{APP_BASE_URL}/api/internal/auth/google/access-token"
-    auth_req = google.auth.transport.requests.Request()
-
-    id_token = google.oauth2.id_token.fetch_id_token(auth_req, AUDIENCE)
-
-    headers = {
-        "Authorization": f"Bearer {id_token}",
-        "Content-Type": "application/json",
-    }
-    
-    body = {
-        "userId": user_id
-    }
-
-    response = requests.post(url, json=body, headers=headers)
-    if response.status_code != 200:
-        raise Exception("Falha crítica ao renovar o token: " + response.text)
-
-    return response.json()["accessToken"]
-
-
-
-
-
-
-
-# def refresh_google_token(refresh_token: str) -> str:
-#     url = "https://oauth2.googleapis.com/token"
-#     data = {
-#         "client_id": GOOGLE_CLIENT_ID,
-#         "client_secret": GOOGLE_CLIENT_SECRET,
-#         "refresh_token": refresh_token,
-#         "grant_type": "refresh_token",
-#     }
-    
-#     response = requests.post(url, data=data)
-#     if response.status_code != 200:
-#         raise Exception("Falha crítica ao renovar o token: " + response.text)
-#     print(response.json())
-#     return response.json()["access_token"]
-
-def replace_variables_in_docx(template_buffer, variable_mapping):
-    pattern = re.compile(r"\{\{\s*(\w+)\s*\}\}")
-
-    with zipfile.ZipFile(template_buffer, 'r') as zin:
-        out_buffer = BytesIO()
-        with zipfile.ZipFile(out_buffer, 'w') as zout:
-            for item in zin.infolist():
-                data = zin.read(item.filename)
-                # Replace only on XML contents (document, headers, footers, drawings)
-                if item.filename.endswith(('.xml',)):
-                    text = data.decode('utf-8')
-                    def replacer(match):
-                        key = match.group(1)
-                        return str(variable_mapping.get(key, ''))
-                    text = pattern.sub(replacer, text)
-                    data = text.encode('utf-8')
-                zout.writestr(item, data)
-        out_buffer.seek(0)
-    return out_buffer
-
-def replace_variables_in_pptx(template_buffer, variable_mapping):
-    prs = Presentation(template_buffer)
-    pattern = re.compile(r"\{\{\s*(\w+)\s*\}\}")
-
-    def replace_in_text(text):
-        def replacer(match):
-            key = match.group(1)
-            return str(variable_mapping.get(key, ''))
-        return pattern.sub(replacer, text)
-
-    def process_shape(shape):
-        if hasattr(shape, "text_frame") and shape.text_frame:
-            for paragraph in shape.text_frame.paragraphs:
-                full_text = "".join(run.text for run in paragraph.runs)
-                new_text = replace_in_text(full_text)
-                for run in paragraph.runs:
-                    run.text = ""
-                if paragraph.runs:
-                    paragraph.runs[0].text = new_text
-                else:
-                    paragraph.add_run().text = new_text
-
-        if shape.has_table:
-            for row in shape.table.rows:
-                for cell in row.cells:
-                    for paragraph in cell.text_frame.paragraphs:
-                        full_text = "".join(run.text for run in paragraph.runs)
-                        new_text = replace_in_text(full_text)
-                        for run in paragraph.runs:
-                            run.text = ""
-                        if paragraph.runs:
-                            paragraph.runs[0].text = new_text
-                        else:
-                            paragraph.add_run().text = new_text
-
-        if shape.shape_type == 6:  # 6 == MSO_SHAPE_TYPE.GROUP
-            for subshape in shape.shapes:
-                process_shape(subshape)
-
-
-    # Percorre slides e shapes recursivamente
-    for slide in prs.slides:
-        for shape in slide.shapes:
-            process_shape(shape)
-
-    output_buffer = BytesIO()
-    prs.save(output_buffer)
-    output_buffer.seek(0)
-    return output_buffer
-
-
-################################ Functions to process PPTX with Liquid ################################
+#################################### Functions to process PPTX with Liquid ####################################
 def pptx_paragraph_iterator(prs):
     """
     Yields tuples of (paragraph, shape) for all paragraphs in the presentation.
@@ -462,26 +278,28 @@ def consolidate_broken_runs_pptx(paragraph):
         i += 1
 
 
-def process_buffer_pptx(paragraph_list, text_list, context):
+def process_buffer_pptx(paragraph_list, text_list, liquid_ctx):
     """
     Takes N paragraphs, joins the text, runs Liquid, and returns the result
     in the FIRST paragraph, clearing the others.
     """
     complete_text = "\n".join(text_list)
-    
+
     if not ("{{" in complete_text or "{%" in complete_text):
         return
 
     sanitized_text = (complete_text
                       .replace('“', '"').replace('”', '"')
                       .replace('‘', "'").replace('’', "'"))
-    
+
     if "append" in sanitized_text:
         print(f"DEBUG LIQUID PPTX: {sanitized_text}")
-        
+
     try:
         template = liquid_environment.from_string(sanitized_text)
-        new_complete_text = template.render(**context)
+        buf = StringIO()
+        template.render_with_context(liquid_ctx, buf)
+        new_complete_text = buf.getvalue()
         
         if new_complete_text == complete_text:
             return
@@ -507,11 +325,14 @@ def process_buffer_pptx(paragraph_list, text_list, context):
 def replace_variables_in_pptx_liquid(in_buffer, context_data):
     in_buffer.seek(0)
     prs = Presentation(in_buffer)
-    
+
     # 1. Pre-processing: Consolidate runs (intra-line)
     all_paragraphs = list(pptx_paragraph_iterator(prs))
     for p, _ in all_paragraphs:
         consolidate_broken_runs_pptx(p)
+
+    # Shared context so {% assign %} variables persist across paragraph renders
+    liquid_ctx = RenderContext(liquid_environment.from_string(""), globals=context_data)
 
     # 2. Processing with Buffer (Inter-line)
     buffer_paragraphs = []
@@ -522,27 +343,27 @@ def replace_variables_in_pptx_liquid(in_buffer, context_data):
     while idx < len(all_paragraphs):
         p, _ = all_paragraphs[idx]
         paragraph_text = "".join(run.text for run in p.runs)
-        
+
         delta = calculate_delta_blocks(paragraph_text)
-        
+
         if block_level > 0 or (delta > 0):
             buffer_paragraphs.append(p)
             accumulated_text.append(paragraph_text)
             block_level += delta
-            
+
             if block_level == 0:
-                process_buffer_pptx(buffer_paragraphs, accumulated_text, context_data)
+                process_buffer_pptx(buffer_paragraphs, accumulated_text, liquid_ctx)
                 buffer_paragraphs = []
                 accumulated_text = []
-                
+
         else:
-            process_buffer_pptx([p], [paragraph_text], context_data)
-        
+            process_buffer_pptx([p], [paragraph_text], liquid_ctx)
+
         idx += 1
 
     if buffer_paragraphs:
         print("WARNING: Liquid block not closed at the end of the presentation.")
-        process_buffer_pptx(buffer_paragraphs, accumulated_text, context_data)
+        process_buffer_pptx(buffer_paragraphs, accumulated_text, liquid_ctx)
 
     # 3. Save
     out_buffer = BytesIO()
@@ -550,35 +371,8 @@ def replace_variables_in_pptx_liquid(in_buffer, context_data):
     out_buffer.seek(0)
     return out_buffer
 
-def convert_to_pdf_with_libreoffice(input_bytes: BytesIO, input_ext: str) -> BytesIO:
-    with tempfile.TemporaryDirectory() as tmpdir:
-        input_path = os.path.join(tmpdir, f"input.{input_ext}")
-        output_path = os.path.join(tmpdir, f"input.pdf")
-        user_profile = os.path.join(tmpdir, "profile")
 
-        with open(input_path, "wb") as f:
-            f.write(input_bytes.read())
-
-        result = subprocess.run([
-            SOFFICE_PATH,
-            "--headless",
-            f"-env:UserInstallation=file://{user_profile}",
-            "--convert-to", "pdf",
-            "--outdir", tmpdir,
-            input_path
-        ], check=True)
-
-        if result.returncode != 0:
-            raise RuntimeError(
-                f"LibreOffice failed:\nSTDOUT={result.stdout.decode()}\nSTDERR={result.stderr.decode()}"
-            )
-
-        with open(output_path, "rb") as pdf_file:
-            pdf_bytes = BytesIO(pdf_file.read())
-
-    pdf_bytes.seek(0)
-    return pdf_bytes
-
+#################################### Function to convert certificate to pdf ####################################
 def convert_to_pdf_with_google_drive(input_bytes: BytesIO, input_ext: str) -> BytesIO:
     """
     Convert DOCX or PPTX to PDF using Google Drive API:
@@ -646,78 +440,18 @@ def convert_to_pdf_with_google_drive(input_bytes: BytesIO, input_ext: str) -> By
         print(f"Error converting with Google Drive: {e}")
         raise
 
-def save_to_local(buffer, file_path):
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    with open(file_path, 'wb') as f:
-        f.write(buffer.getvalue())
 
-def inspecionar_runs_docx(buffer):
-    buffer.seek(0)
-    doc = Document(buffer)
-    
-    print("--- INICIANDO INSPEÇÃO PROFUNDA ---\n")
+#################################### Functions to use bucket ####################################
+def upload_to_bucket(file_buffer, file_path):
+    bucket = storage_client.bucket(CERTIFICATES_BUCKET)
+    blob = bucket.blob(file_path)
+    blob.upload_from_file(file_buffer, rewind=True, content_type="application/pdf")
+    return blob
 
-    # 1. Verificar o Corpo Principal (o que você já fez)
-    print("📍 [ÁREA 1] CORPO DO DOCUMENTO (Main Body)")
-    tem_conteudo = False
-    for p in doc.paragraphs:
-        if p.text.strip():
-            tem_conteudo = True
-            print(f"   Parágrafo: '{p.text}'")
-    if not tem_conteudo:
-        print("   (Vazio)")
-
-    # 2. Verificar Tabelas (Muito comum em certificados para layout)
-    print("\n📍 [ÁREA 2] TABELAS")
-    total_tabelas = len(doc.tables)
-    print(f"   Encontradas {total_tabelas} tabelas.")
-    
-    celulas_processadas = set()
-
-    for i, table in enumerate(doc.tables):
-        print(f"📍 Tabela {i}")
-        for row in table.rows:
-            for cell in row.cells:
-                # Se já vimos esta célula (mesmo objeto), pula
-                if cell in celulas_processadas:
-                    continue
-                
-                # Marca como processada
-                celulas_processadas.add(cell)
-                
-                # Agora lemos os parágrafos dentro dessa célula única
-                texto_celula = cell.text.strip()
-                if texto_celula:
-                    print(f"   [Célula Única]: {texto_celula}") # Printando só o começo
-                    
-                    # Verificando a estrutura interna (runs) para o seu Liquid
-                    for p in cell.paragraphs:
-                        if "{%" in p.text or "{{" in p.text:
-                            print(f"      👉 Lógica encontrada: '{p.text}'")
-
-    # 3. Verificar Caixas de Texto / Shapes (O pesadelo do python-docx)
-    # python-docx não tem uma API fácil para isso, precisamos ir no XML
-    print("\n📍 [ÁREA 3] CAIXAS DE TEXTO / SHAPES")
-    
-    # Vamos iterar sobre o XML procurando tags de conteúdo de textbox (w:txbxContent)
-    # Isso é apenas para leitura; editar isso via python-docx é complexo.
-    ns = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
-    
-    # Procura todos os elementos de texto dentro do corpo
-    # Nota: Isso é uma busca 'bruta' no XML para te mostrar onde está o texto
-    text_boxes = doc.element.body.findall('.//w:txbxContent', ns)
-    
-    if text_boxes:
-        print(f"   Encontradas {len(text_boxes)} caixas de texto.")
-        for i, tb in enumerate(text_boxes):
-            # Tenta extrair o texto de dentro do XML da caixa
-            texts = tb.findall('.//w:t', ns)
-            conteudo = "".join([t.text for t in texts if t.text])
-            if conteudo.strip():
-                print(f"      Caixa {i}: '{conteudo}'")
-    else:
-        print("   Nenhuma caixa de texto detectada via XML padrão.")
-
+def get_from_bucket(file_path) -> Blob:
+    bucket = storage_client.bucket(CERTIFICATES_BUCKET)
+    blob = bucket.blob(file_path)
+    return blob
 
 CACHE = {}
 IN_FLIGHT = {}
@@ -774,6 +508,39 @@ def get_template_cached(storage_file_url: str) -> bytes:
 
     return template_bytes
 
+
+#################################### Functions to call backend endpoints ####################################
+def finish_certificates_generation(data_source_row_id, success, total_bytes=None, user_id=None):
+    print('Inside update')
+    url = f"{APP_BASE_URL}/api/internal/data-source-rows/{data_source_row_id}/generations"
+
+    if ENV != 'local':
+        auth_req = google.auth.transport.requests.Request()
+        # Just works for service accounts or in the cloud. Locally, I need to login impersonating a service account.
+        id_token = google.oauth2.id_token.fetch_id_token(auth_req, AUDIENCE)
+
+        headers = {
+            "Authorization": f"Bearer {id_token}",
+            "Content-Type": "application/json",
+        }
+    else:
+        headers = {
+            "Content-Type": "application/json",
+        }
+    
+    body = {k: v for k, v in {
+        "success": success,
+        "totalBytes": total_bytes,
+        "userId": user_id,
+    }.items() if v is not None}
+
+    print('before sending patch')
+    response = requests.patch(url, json=body, headers=headers)
+    response.raise_for_status()
+
+
+
+#################################### Input schemas ####################################
 class InputMethod(str, Enum):
     UPLOAD = "UPLOAD"
     URL = "URL"
@@ -841,25 +608,11 @@ def main(request):
     print('Generate PDFs function invoked via Pub/Sub Push')
     
     raw_data = request.get_json(silent=True)
-    data_source_row_id = raw_data.get('row', {}).get('id')
-    user_id = None
-
     if raw_data is None:
         return {"error": "JSON body is required"}, 400
 
-    # envelop = request.get_json()
-    # data_source_row_id = None
-
-    # try:
-    #     pubsub_message = envelop.get('message', {})
-    #     data_str = base64.b64decode(pubsub_message.get('data', '')).decode('utf-8')
-    #     raw_data = json.loads(data_str)
-
-    #     data_source_row_id = raw_data.get('row', {}).get('id')
-    # except Exception as e:
-    #     print(f"Error to decode message: {e}")
-
-    #     return "Invalid Pub/Sub format", 200
+    data_source_row_id = raw_data.get('row', {}).get('id')
+    user_id = None
     
     try:
         input_data = TriggerGenerateCertificatePDFsInput(**raw_data)
@@ -891,7 +644,6 @@ def main(request):
         template_bytes = get_template_cached(template.storageFileUrl)
         template_buffer = BytesIO(template_bytes)
 
-        # inspecionar_runs_docx(template_buffer)
         print(f'Generating certificate for row {data_source_row_id}: ', row)
         certificate_buffer = BytesIO(template_buffer.getvalue())
 
