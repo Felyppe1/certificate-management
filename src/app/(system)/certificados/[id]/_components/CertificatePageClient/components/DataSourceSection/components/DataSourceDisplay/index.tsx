@@ -114,11 +114,6 @@ export function DataSourceDisplay({
 
     const { login, isLoading: loginIsLoading } = useGoogleRelogin({
         userEmail,
-        onFinished: () => {
-            toast.success(
-                'Reautenticação bem-sucedida. Por favor, tente atualizar o template novamente.',
-            )
-        },
     })
 
     const refreshMutation = useMutation({

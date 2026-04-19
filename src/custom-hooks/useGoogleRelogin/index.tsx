@@ -5,7 +5,6 @@ import { toast } from 'sonner'
 
 interface UseGoogleReloginProps {
     userEmail: string
-    onFinished?: (success: boolean) => void | Promise<void>
     onError?: (
         errorResponse: Pick<
             CodeResponse,
@@ -21,7 +20,6 @@ type NonOAuthError = {
 
 export function useGoogleRelogin({
     userEmail,
-    onFinished: customOnFinished,
     onError: customOnError,
     onNonOAuthError: customOnNonOAuthError,
 }: UseGoogleReloginProps) {
@@ -48,19 +46,29 @@ export function useGoogleRelogin({
 
                 const result = await loginGoogleServerAction(null, formData)
 
-                if (result && !result.success) {
-                    if (
-                        result.errorType ===
-                        'insufficient-external-account-scopes'
-                    ) {
-                        toast.error(
-                            'Permissões insuficientes. Por favor, conceda todas as permissões solicitadas pelo Google.',
-                        )
+                if (result) {
+                    if (result.success) {
+                        toast.success('Reautenticado com sucesso!')
+                    } else {
+                        if (
+                            result.errorType ===
+                            'insufficient-external-account-scopes'
+                        ) {
+                            toast.error(
+                                'Permissões insuficientes. Por favor, conceda todas as permissões solicitadas pelo Google.',
+                            )
+                        } else if (
+                            result.errorType === 'google-account-email-mismatch'
+                        ) {
+                            toast.error(
+                                'Não é possível reautenticar-se com um e-mail diferente.',
+                            )
+                        } else {
+                            toast.error(
+                                'Falha ao reautenticar com o Google. Tente novamente.',
+                            )
+                        }
                     }
-                }
-
-                if (customOnFinished) {
-                    customOnFinished(result?.success === true)
                 }
             } finally {
                 setIsLoading(false)
