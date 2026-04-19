@@ -28,7 +28,9 @@ jobs:
         run: npm ci
       
       - name: Generate Prisma Client
-        run: npx prisma generate --schema=src/backend/infrastructure/repository/prisma/schema.prisma
+        run: npx prisma generate
+        env:
+          DB_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
 
       - name: Unit tests
         run: npm run test:unit
