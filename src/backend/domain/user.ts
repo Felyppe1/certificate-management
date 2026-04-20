@@ -196,7 +196,6 @@ export class User extends AggregateRoot {
     }
 
     async comparePassword(plainPassword: string): Promise<boolean> {
-        console.log(this.passwordHash, plainPassword)
         if (!this.passwordHash) return false
         return await bcrypt.compare(plainPassword, this.passwordHash)
     }

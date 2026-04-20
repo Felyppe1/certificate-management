@@ -129,13 +129,6 @@ export class PrismaUsersRepository implements IUsersRepository {
             verificationToken,
         } = user.serialize()
 
-        const verificationTokenData = verificationToken
-            ? {
-                  token: verificationToken.token,
-                  expires_at: verificationToken.expiresAt,
-              }
-            : null
-
         await this.prisma.user.create({
             data: {
                 id,
@@ -203,7 +196,7 @@ export class PrismaUsersRepository implements IUsersRepository {
                               },
                           },
                       }
-                    : { delete: true },
+                    : undefined,
                 ExternalUserAccount: {
                     deleteMany: {
                         user_id: id,

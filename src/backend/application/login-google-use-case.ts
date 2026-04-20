@@ -127,7 +127,7 @@ export class LoginGoogleUseCase {
                 })
             } else {
                 isNewUser = true
-                user = User.create({
+                user = await User.create({
                     email: null,
                     name: userInfo.name,
                     passwordHash: null,
