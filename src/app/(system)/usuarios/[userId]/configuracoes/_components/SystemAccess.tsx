@@ -8,14 +8,13 @@ import { Badge } from '@/components/ui/badge'
 import {
     KeyRound,
     Loader2,
-    MailCheck,
     CheckCircle2,
     Clock,
     ChevronDown,
     ChevronUp,
 } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
@@ -25,7 +24,7 @@ import { z } from 'zod'
 import { setSystemLoginAction } from '@/backend/infrastructure/server-actions/set-system-login-action'
 import { updateSystemEmailAction } from '@/backend/infrastructure/server-actions/update-system-email-action'
 import { updateSystemPasswordAction } from '@/backend/infrastructure/server-actions/update-system-password-action'
-import { resendVerificationEmailAction } from '@/backend/infrastructure/server-actions/resend-verification-email-action'
+import { VerifyEmailForm } from '@/components/VerifyEmailForm'
 
 const setupSchema = z
     .object({
@@ -79,6 +78,8 @@ export function SystemAccess({ email, isEmailVerified }: SystemAccessProps) {
 }
 
 function SetupSystemAccess({ onSuccess }: { onSuccess: () => void }) {
+    const [pendingEmail, setPendingEmail] = useState<string | null>(null)
+
     const {
         register,
         handleSubmit,
@@ -95,12 +96,9 @@ function SetupSystemAccess({ onSuccess }: { onSuccess: () => void }) {
             if (result?.success === false) throw result
             return result
         },
-        onSuccess: () => {
-            toast.success(
-                'Acesso configurado! Verifique seu e-mail para ativar o login.',
-            )
+        onSuccess: (_, variables) => {
             reset()
-            onSuccess()
+            setPendingEmail(variables.email)
         },
         onError: (error: any) => {
             if (isRedirectError(error)) return
@@ -129,69 +127,79 @@ function SetupSystemAccess({ onSuccess }: { onSuccess: () => void }) {
                 </div>
             </div>
 
-            <form
-                onSubmit={handleSubmit(data => mutation.mutate(data))}
-                className="space-y-4"
-            >
-                <div className="space-y-2">
-                    <Label htmlFor="setup-email">E-mail</Label>
-                    <Input
-                        id="setup-email"
-                        type="email"
-                        placeholder="nome@email.com"
-                        {...register('email')}
-                        aria-invalid={!!errors.email}
-                    />
-                    {errors.email && (
-                        <span className="text-sm text-destructive">
-                            {errors.email.message}
-                        </span>
-                    )}
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="setup-password">Senha</Label>
-                    <Input
-                        id="setup-password"
-                        type="password"
-                        placeholder="••••••••"
-                        {...register('password')}
-                        aria-invalid={!!errors.password}
-                    />
-                    {errors.password && (
-                        <span className="text-sm text-destructive">
-                            {errors.password.message}
-                        </span>
-                    )}
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="setup-confirm-password">
-                        Confirmar Senha
-                    </Label>
-                    <Input
-                        id="setup-confirm-password"
-                        type="password"
-                        placeholder="••••••••"
-                        {...register('confirmPassword')}
-                        aria-invalid={!!errors.confirmPassword}
-                    />
-                    {errors.confirmPassword && (
-                        <span className="text-sm text-destructive">
-                            {errors.confirmPassword.message}
-                        </span>
-                    )}
-                </div>
-
-                <div className="flex justify-end pt-2">
-                    <Button type="submit" disabled={mutation.isPending}>
-                        {mutation.isPending && (
-                            <Loader2 className="animate-spin" />
+            {pendingEmail ? (
+                <VerifyEmailForm
+                    email={pendingEmail}
+                    onSuccess={() => {
+                        setPendingEmail(null)
+                        onSuccess()
+                    }}
+                />
+            ) : (
+                <form
+                    onSubmit={handleSubmit(data => mutation.mutate(data))}
+                    className="space-y-4"
+                >
+                    <div className="space-y-2">
+                        <Label htmlFor="setup-email">E-mail</Label>
+                        <Input
+                            id="setup-email"
+                            type="email"
+                            placeholder="nome@email.com"
+                            {...register('email')}
+                            aria-invalid={!!errors.email}
+                        />
+                        {errors.email && (
+                            <span className="text-sm text-destructive">
+                                {errors.email.message}
+                            </span>
                         )}
-                        Configurar Acesso
-                    </Button>
-                </div>
-            </form>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="setup-password">Senha</Label>
+                        <Input
+                            id="setup-password"
+                            type="password"
+                            placeholder="••••••••"
+                            {...register('password')}
+                            aria-invalid={!!errors.password}
+                        />
+                        {errors.password && (
+                            <span className="text-sm text-destructive">
+                                {errors.password.message}
+                            </span>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="setup-confirm-password">
+                            Confirmar Senha
+                        </Label>
+                        <Input
+                            id="setup-confirm-password"
+                            type="password"
+                            placeholder="••••••••"
+                            {...register('confirmPassword')}
+                            aria-invalid={!!errors.confirmPassword}
+                        />
+                        {errors.confirmPassword && (
+                            <span className="text-sm text-destructive">
+                                {errors.confirmPassword.message}
+                            </span>
+                        )}
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                        <Button type="submit" disabled={mutation.isPending}>
+                            {mutation.isPending && (
+                                <Loader2 className="animate-spin" />
+                            )}
+                            Configurar Acesso
+                        </Button>
+                    </div>
+                </form>
+            )}
         </Card>
     )
 }
@@ -207,11 +215,7 @@ function ManageSystemAccess({
 }) {
     const [showChangeEmail, setShowChangeEmail] = useState(false)
     const [showChangePassword, setShowChangePassword] = useState(false)
-    const [emailChangeMessage, setEmailChangeMessage] = useState<string | null>(
-        null,
-    )
-    const [isResendPending, startResendTransition] = useTransition()
-    const [resendSuccess, setResendSuccess] = useState(false)
+    const [pendingNewEmail, setPendingNewEmail] = useState<string | null>(null)
 
     const emailForm = useForm<ChangeEmailData>({
         resolver: zodResolver(changeEmailSchema),
@@ -228,18 +232,11 @@ function ManageSystemAccess({
             if (result?.success === false) throw result
             return result
         },
-        onSuccess: result => {
-            if (result?.wasLoggedOut) {
-                // Server already called logoutAction; just navigate
-                return
-            }
-            toast.success('E-mail atualizado. Verifique sua caixa de entrada.')
-            setEmailChangeMessage(
-                'Verifique o novo e-mail para confirmar a alteração.',
-            )
+        onSuccess: (result, variables) => {
+            if (result?.wasLoggedOut) return
             setShowChangeEmail(false)
             emailForm.reset()
-            onSuccess()
+            setPendingNewEmail(variables.newEmail)
         },
         onError: (error: any) => {
             if (isRedirectError(error)) return
@@ -275,19 +272,7 @@ function ManageSystemAccess({
         },
     })
 
-    const handleResend = () => {
-        setResendSuccess(false)
-        startResendTransition(async () => {
-            const fd = new FormData()
-            fd.append('email', email)
-            const result = await resendVerificationEmailAction(null, fd)
-            if (result?.success) {
-                setResendSuccess(true)
-            } else {
-                toast.error('Erro ao reenviar. Tente novamente.')
-            }
-        })
-    }
+    const verifyingEmail = pendingNewEmail ?? (!isEmailVerified ? email : null)
 
     return (
         <Card>
@@ -313,9 +298,11 @@ function ManageSystemAccess({
                             <p className="text-xs text-muted-foreground mb-0.5">
                                 E-mail de login
                             </p>
-                            <p className="font-medium">{email}</p>
+                            <p className="font-medium">
+                                {pendingNewEmail ?? email}
+                            </p>
                         </div>
-                        {isEmailVerified ? (
+                        {isEmailVerified && !pendingNewEmail ? (
                             <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
                                 <CheckCircle2 className="size-3" />
                                 Verificado
@@ -331,34 +318,14 @@ function ManageSystemAccess({
                         )}
                     </div>
 
-                    {!isEmailVerified && (
-                        <div>
-                            {resendSuccess ? (
-                                <p className="text-sm text-emerald-700 dark:text-emerald-400">
-                                    E-mail de verificação reenviado!
-                                </p>
-                            ) : (
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleResend}
-                                    disabled={isResendPending}
-                                    className="border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-900/40"
-                                >
-                                    {isResendPending && (
-                                        <Loader2 className="size-3 animate-spin" />
-                                    )}
-                                    <MailCheck className="size-3" />
-                                    Reenviar verificação
-                                </Button>
-                            )}
-                        </div>
-                    )}
-
-                    {emailChangeMessage && (
-                        <p className="text-sm text-amber-700 dark:text-amber-400">
-                            {emailChangeMessage}
-                        </p>
+                    {verifyingEmail && (
+                        <VerifyEmailForm
+                            email={verifyingEmail}
+                            onSuccess={() => {
+                                setPendingNewEmail(null)
+                                onSuccess()
+                            }}
+                        />
                     )}
                 </div>
 

@@ -126,11 +126,13 @@ export class User extends AggregateRoot {
 
     async verifyEmail(tokenStr: string): Promise<void> {
         if (this.isEmailVerified) {
-            throw new ConflictError(CONFLICT_ERROR_TYPE.EMAIL_ALREADY_VERIFIED) // Add this typo in conflict error or reuse a general one
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.EMAIL_ALREADY_VERIFIED,
+            )
         }
 
         if (!this.verificationToken) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.TOKEN_EXPIRED) // Add correct error
+            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.TOKEN_EXPIRED)
         }
 
         if (this.verificationToken.getToken() !== tokenStr) {

@@ -4,14 +4,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Link from 'next/link'
-import { AlertCircle, ArrowRight, Loader2, MailCheck } from 'lucide-react'
+import { AlertCircle, ArrowRight } from 'lucide-react'
 import { AlertMessage } from '@/components/ui/alert-message'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { loginAction } from '@/backend/infrastructure/server-actions/login-action'
-import { resendVerificationEmailAction } from '@/backend/infrastructure/server-actions/resend-verification-email-action'
+import { VerifyEmailForm } from '@/components/VerifyEmailForm'
 
 const loginSchema = z.object({
     email: z.email('Formato de email inválido'),
@@ -24,11 +25,10 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 
 export function LoginForm() {
+    const router = useRouter()
     const [isPending, startTransition] = useTransition()
-    const [isResendPending, startResendTransition] = useTransition()
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const [emailNotVerified, setEmailNotVerified] = useState(false)
-    const [resendSuccess, setResendSuccess] = useState(false)
 
     const {
         register,
@@ -42,7 +42,6 @@ export function LoginForm() {
     const onSubmit = async (data: LoginFormData) => {
         setErrorMessage(null)
         setEmailNotVerified(false)
-        setResendSuccess(false)
 
         startTransition(async () => {
             const formData = new FormData()
@@ -65,16 +64,13 @@ export function LoginForm() {
         })
     }
 
-    const handleResendVerification = () => {
-        setResendSuccess(false)
-        startResendTransition(async () => {
-            const formData = new FormData()
-            formData.append('email', getValues('email'))
-            const result = await resendVerificationEmailAction(null, formData)
-            if (result?.success) {
-                setResendSuccess(true)
-            }
-        })
+    if (emailNotVerified) {
+        return (
+            <VerifyEmailForm
+                email={getValues('email')}
+                onSuccess={() => router.push('/')}
+            />
+        )
     }
 
     return (
@@ -85,37 +81,6 @@ export function LoginForm() {
                     text={errorMessage}
                     icon={<AlertCircle className="" />}
                 />
-            )}
-
-            {emailNotVerified && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-4 space-y-3">
-                    <div className="flex gap-2 items-start">
-                        <MailCheck className="size-4 mt-0.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-                        <p className="text-sm text-amber-800 dark:text-amber-300">
-                            Seu email ainda não foi verificado. Confira sua
-                            caixa de entrada ou clique abaixo para reenviar.
-                        </p>
-                    </div>
-                    {resendSuccess ? (
-                        <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
-                            Email de verificação reenviado!
-                        </p>
-                    ) : (
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={handleResendVerification}
-                            disabled={isResendPending}
-                            className="border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-900/40"
-                        >
-                            {isResendPending && (
-                                <Loader2 className="size-3 animate-spin" />
-                            )}
-                            Reenviar verificação
-                        </Button>
-                    )}
-                </div>
             )}
 
             <div className="space-y-2">

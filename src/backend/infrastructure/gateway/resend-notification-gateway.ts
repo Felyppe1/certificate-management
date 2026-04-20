@@ -18,9 +18,10 @@ const verificationEmailTemplate = `<!DOCTYPE html>
         .header img { width: 10rem; height: auto; vertical-align: middle; }
         .content { padding: 0 2rem 2rem 2rem; text-align: center; }
         .content h1 { font-size: 1.375rem; margin-bottom: 1rem; color: #ffffff; font-weight: 600; }
-        .content p { font-size: 1rem; line-height: 1.5; color: #9ca3af; margin-bottom: 2rem; }
-        .content .note { font-size: 0.875rem; color: #6b7280; margin-top: -1rem; margin-bottom: 1.5rem; }
-        .button { background-color: #005bcd; color: #ffffff; text-decoration: none; padding: 0.625rem 1.75rem; border-radius: 2rem; font-size: 1rem; font-weight: 600; display: inline-block; }
+        .content p { font-size: 1rem; line-height: 1.5; color: #9ca3af; margin-bottom: 1.5rem; }
+        .code-box { display: inline-block; background-color: #0d1117; border: 0.0625rem solid #2d3342; border-radius: 0.5rem; padding: 1rem 2rem; margin-bottom: 1.5rem; }
+        .code { font-size: 2.5rem; font-weight: 700; letter-spacing: 0.5rem; color: #ffffff; font-family: monospace; }
+        .note { font-size: 0.875rem; color: #6b7280; margin-top: 0; }
         .footer { background-color: #16181d; padding: 1.5rem 2rem; text-align: center; border-top: 0.0625rem solid #2d3342; font-size: 0.875rem; color: #8b949e; }
         .footer p { margin: 0 0 0.25rem 0; }
         .footer a { color: #005bcd; text-decoration: none; }
@@ -37,9 +38,11 @@ const verificationEmailTemplate = `<!DOCTYPE html>
             <tr>
                 <td class="content">
                     <h1>Verifique seu e-mail</h1>
-                    <p>Clique no botão abaixo para confirmar seu endereço de e-mail e ativar o acesso por senha à plataforma <strong>Certifica</strong>.</p>
-                    <a href="{{VERIFICATION_URL}}" target="_blank" rel="noopener noreferrer" class="button" style="color: #ffffff; text-decoration: none;">Verificar E-mail</a>
-                    <p class="note">Este link expira em 1 hora. Se você não solicitou isso, pode ignorar este e-mail.</p>
+                    <p>Use o código abaixo para confirmar seu endereço de e-mail na plataforma <strong>Certifica</strong>.</p>
+                    <div class="code-box">
+                        <div class="code">{{CODE}}</div>
+                    </div>
+                    <p class="note">Este código expira em 15 minutos. Se você não solicitou isso, pode ignorar este e-mail.</p>
                 </td>
             </tr>
             <tr>
@@ -117,17 +120,12 @@ export class ResendNotificationGateway implements INotificationGateway {
         this.resend = new Resend(env.RESEND_API_KEY)
     }
 
-    async sendEmailVerification(
-        email: string,
-        verificationToken: string,
-    ): Promise<void> {
+    async sendEmailVerification(email: string, code: string): Promise<void> {
         const appUrl = env.NEXT_PUBLIC_BASE_URL
-        console.log(appUrl)
-        const verificationUrl = `${appUrl}/api/auth/verify-email?token=${verificationToken}`
 
         const html = verificationEmailTemplate
             .replaceAll('{{APP_URL}}', appUrl)
-            .replace('{{VERIFICATION_URL}}', verificationUrl)
+            .replace('{{CODE}}', code)
 
         await this.resend.emails.send({
             from: 'Certifica <nao-responda@certifica.felyppe.com.br>',

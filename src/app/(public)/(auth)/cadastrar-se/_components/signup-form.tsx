@@ -11,6 +11,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation } from '@tanstack/react-query'
 import { signUpSchema } from '@/backend/infrastructure/server-actions/schemas'
+import { useRouter } from 'next/navigation'
+import { VerifyEmailForm } from '@/components/VerifyEmailForm'
 
 const formSchema = signUpSchema
     .extend({
@@ -26,11 +28,14 @@ const formSchema = signUpSchema
 type SignUpFormData = z.infer<typeof formSchema>
 
 export function SignUpForm() {
+    const router = useRouter()
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
+    const [pendingVerification, setPendingVerification] = useState(false)
 
     const {
         register,
         handleSubmit,
+        getValues,
         formState: { errors },
     } = useForm<SignUpFormData>({
         resolver: zodResolver(formSchema),
@@ -42,21 +47,29 @@ export function SignUpForm() {
             formData.append('name', data.name)
             formData.append('email', data.email)
             formData.append('password', data.password)
-
-            const result = await signUpAction(null, formData)
-
+            return signUpAction(null, formData)
+        },
+        onSuccess: result => {
             if (result?.success === false) {
-                console.log(result.errorType)
                 setErrorMessage(
                     result.errorType === 'user-already-exists'
                         ? 'Este e-mail já está em uso.'
                         : 'Ocorreu um erro ao realizar o cadastro. Tente novamente.',
                 )
+            } else {
+                setPendingVerification(true)
             }
-
-            return result
         },
     })
+
+    if (pendingVerification) {
+        return (
+            <VerifyEmailForm
+                email={getValues('email')}
+                onSuccess={() => router.push('/')}
+            />
+        )
+    }
 
     return (
         <form

@@ -1,7 +1,6 @@
-import { randomBytes } from 'crypto'
 import { ValueObject } from './primitives/value-object'
 
-const EXPIRY_HOURS = 1
+const EXPIRY_MINUTES = 15
 
 export interface VerificationTokenInput {
     token: string
@@ -15,9 +14,9 @@ export class VerificationToken extends ValueObject<VerificationToken> {
     private readonly expiresAt: Date
 
     static create(): VerificationToken {
-        const expiresAt = new Date(Date.now() + EXPIRY_HOURS * 60 * 60 * 1000)
+        const expiresAt = new Date(Date.now() + EXPIRY_MINUTES * 60 * 1000)
         return new VerificationToken({
-            token: randomBytes(32).toString('hex'),
+            token: Math.floor(100000 + Math.random() * 900000).toString(),
             expiresAt,
         })
     }

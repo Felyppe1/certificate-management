@@ -4,7 +4,6 @@ import { SignUpUseCase } from '@/backend/application/sign-up-use-case'
 import { ResendNotificationGateway } from '@/backend/infrastructure/gateway/resend-notification-gateway'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { redirect } from 'next/navigation'
 import { signUpSchema } from './schemas'
 
 export async function signUpAction(_: unknown, formData: FormData) {
@@ -30,14 +29,13 @@ export async function signUpAction(_: unknown, formData: FormData) {
             email: parsedData.email,
             password: parsedData.password,
         })
+        return { success: true as const }
     } catch (error: any) {
         console.log(error)
 
         return {
-            success: false,
+            success: false as const,
             errorType: error.type,
         }
     }
-
-    redirect('/entrar')
 }
