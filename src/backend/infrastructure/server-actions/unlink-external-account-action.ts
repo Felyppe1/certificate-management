@@ -8,6 +8,7 @@ import { prisma } from '../repository/prisma'
 import { logoutAction } from './logout-action'
 import { redirect } from 'next/navigation'
 import { unlinkExternalAccountSchema } from './schemas'
+import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
 
 export async function unlinkExternalAccountAction(
     _: unknown,
@@ -22,8 +23,12 @@ export async function unlinkExternalAccountAction(
 
         const parsed = unlinkExternalAccountSchema.parse(rawData)
 
+        const usersRepository = new PrismaUsersRepository(prisma)
+        const googleAuthGateway = new GoogleAuthGateway()
+
         const useCase = new UnlinkExternalAccountUseCase(
-            new PrismaUsersRepository(prisma),
+            usersRepository,
+            googleAuthGateway,
         )
 
         await useCase.execute({ userId, provider: parsed.provider })
