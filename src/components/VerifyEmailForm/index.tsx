@@ -42,11 +42,13 @@ export function VerifyEmailForm({ email, onSuccess }: VerifyEmailFormProps) {
             fd.append('code', code)
             const result = await verifyEmailAction(null, fd)
             if (result?.success) {
-                onSuccess ? onSuccess() : router.push('/')
-            } else if (result?.errorType === 'verification-token-expired') {
+                onSuccess?.()
+            } else if (result?.errorType === 'verification-code-expired') {
                 setError('Código expirado. Reenvie um novo código.')
+            } else if (result?.errorType === 'verification-code-invalid') {
+                setError('Código errado. Tente novamente.')
             } else {
-                setError('Código inválido.')
+                setError('Ocorreu um erro.')
             }
         })
     }

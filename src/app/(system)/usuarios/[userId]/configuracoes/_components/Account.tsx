@@ -3,30 +3,21 @@
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Loader2, Mail, Plus, Trash2 } from 'lucide-react'
-import { useMutation } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { unlinkExternalAccountAction } from '@/backend/infrastructure/server-actions/unlink-external-account-action'
 import { Provider } from '@/backend/domain/external-account'
+import { useMe } from '@/custom-hooks/use-me'
+import { useGoogleRelogin } from '@/custom-hooks/useGoogleRelogin'
+import { queryKeys } from '@/lib/query-keys'
 
-interface ExternalAccount {
-    provider: Provider
-    email: string
-}
+export function Account() {
+    const queryClient = useQueryClient()
+    const { data } = useMe()
+    const { externalAccounts, email, isEmailVerified } = data.user
 
-interface AccountProps {
-    externalAccounts: ExternalAccount[]
-    email: string | null
-    isEmailVerified: boolean
-}
-
-export function Account({
-    externalAccounts,
-    email,
-    isEmailVerified,
-}: AccountProps) {
-    const router = useRouter()
+    const hasGoogleAccount = externalAccounts.some(a => a.provider === 'GOOGLE')
 
     const canUnlink = (provider: Provider) => {
         const hasVerifiedSystemLogin = !!email && isEmailVerified
@@ -45,7 +36,7 @@ export function Account({
         },
         onSuccess: () => {
             toast.success('Conta desvinculada com sucesso.')
-            router.refresh()
+            queryClient.invalidateQueries({ queryKey: queryKeys.me() })
         },
         onError: (error: any) => {
             if (isRedirectError(error)) return
@@ -58,6 +49,13 @@ export function Account({
             }
         },
     })
+
+    const { login: addGoogleLogin, isLoading: isAddingGoogle } =
+        useGoogleRelogin({
+            onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: queryKeys.me() })
+            },
+        })
 
     return (
         <Card>
@@ -144,14 +142,23 @@ export function Account({
                     </div>
                 )}
 
-                <div className="pt-2">
-                    <a href="/api/auth/google?reAuthenticate=true">
-                        <Button variant="outline" className="gap-2">
-                            <Plus className="size-4" />
+                {!hasGoogleAccount && (
+                    <div className="pt-2">
+                        <Button
+                            variant="outline"
+                            className="gap-2"
+                            onClick={() => addGoogleLogin()}
+                            disabled={isAddingGoogle}
+                        >
+                            {isAddingGoogle ? (
+                                <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                                <Plus className="size-4" />
+                            )}
                             Adicionar Conta Google
                         </Button>
-                    </a>
-                </div>
+                    </div>
+                )}
             </div>
         </Card>
     )

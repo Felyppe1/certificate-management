@@ -131,15 +131,21 @@ export class User extends AggregateRoot {
         }
 
         if (!this.verificationToken) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.TOKEN_EXPIRED)
+            throw new ForbiddenError(
+                FORBIDDEN_ERROR_TYPE.VERIFICATION_CODE_EXPIRED,
+            )
         }
 
         if (this.verificationToken.getToken() !== tokenStr) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.TOKEN_INVALID)
+            throw new ForbiddenError(
+                FORBIDDEN_ERROR_TYPE.VERIFICATION_CODE_INVALID,
+            )
         }
 
         if (this.verificationToken.isExpired()) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.TOKEN_EXPIRED)
+            throw new ForbiddenError(
+                FORBIDDEN_ERROR_TYPE.VERIFICATION_CODE_EXPIRED,
+            )
         }
 
         this.isEmailVerified = true

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 
 interface UseGoogleReloginProps {
-    userEmail: string
+    userEmail?: string
     onError?: (
         errorResponse: Pick<
             CodeResponse,
@@ -12,6 +12,7 @@ interface UseGoogleReloginProps {
         >,
     ) => void
     onNonOAuthError?: (nonOAuthError: NonOAuthError) => void
+    onSuccess?: () => void
 }
 
 type NonOAuthError = {
@@ -22,6 +23,7 @@ export function useGoogleRelogin({
     userEmail,
     onError: customOnError,
     onNonOAuthError: customOnNonOAuthError,
+    onSuccess: customOnSuccess,
 }: UseGoogleReloginProps) {
     const [isLoading, setIsLoading] = useState(false)
 
@@ -34,7 +36,7 @@ export function useGoogleRelogin({
             'https://www.googleapis.com/auth/drive.file',
             'https://www.googleapis.com/auth/drive.readonly',
         ].join(' '),
-        hint: userEmail,
+        ...(userEmail ? { hint: userEmail } : {}),
         onSuccess: async codeResponse => {
             console.log(codeResponse)
 
@@ -49,6 +51,7 @@ export function useGoogleRelogin({
                 if (result) {
                     if (result.success) {
                         toast.success('Reautenticado com sucesso!')
+                        customOnSuccess?.()
                     } else {
                         if (
                             result.errorType ===

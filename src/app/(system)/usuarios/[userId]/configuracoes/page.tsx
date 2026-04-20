@@ -35,11 +35,7 @@ export default async function UserConfigurationsPage() {
                     isEmailVerified={data.user.isEmailVerified}
                 />
 
-                <Account
-                    externalAccounts={data.user.externalAccounts}
-                    email={data.user.email}
-                    isEmailVerified={data.user.isEmailVerified}
-                />
+                <Account />
 
                 <DeleteAccount userEmail={data.user.email ?? ''} />
 

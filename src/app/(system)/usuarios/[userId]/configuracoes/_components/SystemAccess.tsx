@@ -308,11 +308,8 @@ function ManageSystemAccess({
                                 Verificado
                             </Badge>
                         ) : (
-                            <Badge
-                                variant="outline"
-                                className="text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700"
-                            >
-                                <Clock className="size-3" />
+                            <Badge variant="orange">
+                                <Clock />
                                 Aguardando verificação
                             </Badge>
                         )}

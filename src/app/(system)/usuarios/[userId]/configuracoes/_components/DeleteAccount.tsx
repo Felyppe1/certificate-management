@@ -128,41 +128,54 @@ export function DeleteAccount({}: DeleteAccountProps) {
                                     excluirá sua conta e todos os seus dados.
                                 </DialogDescription>
                             </DialogHeader>
-                            <div className="py-4">
-                                <Label htmlFor="confirm-text" className="mb-2">
-                                    Por favor, digite CONFIRMAR para prosseguir:
-                                </Label>
-                                <Input
-                                    id="confirm-text"
-                                    value={confirmText}
-                                    onChange={e =>
-                                        setConfirmText(e.target.value)
-                                    }
-                                    placeholder="Digite aqui"
-                                    className="mt-2"
-                                />
-                            </div>
-                            <DialogFooter className="flex-row justify-end gap-2 flex-wrap-reverse">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                        setIsOpen(false)
-                                        setConfirmText('')
-                                    }}
-                                >
-                                    Cancelar
-                                </Button>
-                                <Button
-                                    variant="destructive"
-                                    disabled={!isConfirmValid || isPending}
-                                    onClick={() => mutation.mutate()}
-                                >
-                                    {isPending && (
-                                        <Loader2 className="animate-spin" />
-                                    )}
-                                    Excluir Permanentemente
-                                </Button>
-                            </DialogFooter>
+                            <form
+                                onSubmit={e => {
+                                    e.preventDefault()
+                                    if (isConfirmValid && !isPending)
+                                        mutation.mutate()
+                                }}
+                            >
+                                <div className="py-4">
+                                    <Label
+                                        htmlFor="confirm-text"
+                                        className="mb-2"
+                                    >
+                                        Por favor, digite CONFIRMAR para
+                                        prosseguir:
+                                    </Label>
+                                    <Input
+                                        id="confirm-text"
+                                        value={confirmText}
+                                        onChange={e =>
+                                            setConfirmText(e.target.value)
+                                        }
+                                        placeholder="Digite aqui"
+                                        className="mt-2"
+                                    />
+                                </div>
+                                <DialogFooter className="flex-row justify-end gap-2 flex-wrap-reverse">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setIsOpen(false)
+                                            setConfirmText('')
+                                        }}
+                                    >
+                                        Cancelar
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        variant="destructive"
+                                        disabled={!isConfirmValid || isPending}
+                                    >
+                                        {isPending && (
+                                            <Loader2 className="animate-spin" />
+                                        )}
+                                        Excluir Permanentemente
+                                    </Button>
+                                </DialogFooter>
+                            </form>
                         </DialogContent>
                     </Dialog>
                 </div>
