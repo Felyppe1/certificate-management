@@ -121,6 +121,11 @@ export function DataSourceDisplay({
 
     const { login, isLoading: loginIsLoading } = useGoogleRelogin({
         userEmail,
+        onSuccess: () => {
+            toast.success(
+                'Reautenticado com sucesso! Tente atualizar a fonte de dados novamente.',
+            )
+        },
     })
 
     const refreshMutation = useMutation({

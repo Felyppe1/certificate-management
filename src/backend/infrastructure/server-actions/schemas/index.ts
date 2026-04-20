@@ -226,3 +226,5 @@ export const updateUserBasicDataSchema = z.object({
         .max(50)
         .regex(/^[\p{L} ]+$/u),
 })
+
+export const loginGoogleServerActionSchema = z.string().min(1)

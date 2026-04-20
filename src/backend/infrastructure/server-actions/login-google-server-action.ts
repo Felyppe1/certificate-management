@@ -8,13 +8,10 @@ import { LoginGoogleUseCase } from '@/backend/application/login-google-use-case'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
-import z from 'zod'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { logoutAction } from './logout-action'
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
-import { env } from '@/env'
-
-const loginGoogleServerActionSchema = z.string().min(1, 'Código é obrigatório')
+import { loginGoogleServerActionSchema } from './schemas'
 
 export async function loginGoogleServerAction(_: unknown, formData: FormData) {
     const code = formData.get('code') as string

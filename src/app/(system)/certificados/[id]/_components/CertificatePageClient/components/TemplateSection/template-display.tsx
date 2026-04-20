@@ -162,6 +162,11 @@ export function TemplateDisplay({
 
     const { login, isLoading: loginIsLoading } = useGoogleRelogin({
         userEmail,
+        onSuccess: () => {
+            toast.success(
+                'Reautenticado com sucesso! Tente selecionar o template novamente.',
+            )
+        },
     })
 
     const handleRefresh = () => {

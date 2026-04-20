@@ -66,9 +66,15 @@ export function useGoogleRelogin({
                             toast.error(
                                 'Não é possível reautenticar-se com um e-mail diferente.',
                             )
+                        } else if (
+                            result.errorType === 'account-already-linked'
+                        ) {
+                            toast.error(
+                                'Esta conta já está vinculada a outro usuário.',
+                            )
                         } else {
                             toast.error(
-                                'Falha ao reautenticar com o Google. Tente novamente.',
+                                'Falha ao autenticar com o Google. Tente novamente.',
                             )
                         }
                     }

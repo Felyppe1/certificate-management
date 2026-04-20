@@ -344,7 +344,7 @@ function ManageSystemAccess({
                             onSubmit={emailForm.handleSubmit(data =>
                                 changeEmailMutation.mutate(data),
                             )}
-                            className="px-4 pb-4 pt-1 space-y-4 border-t"
+                            className="p-4 space-y-4 border-t"
                         >
                             <div className="space-y-2">
                                 <Label htmlFor="new-email">Novo E-mail</Label>
@@ -408,7 +408,7 @@ function ManageSystemAccess({
                             onSubmit={passwordForm.handleSubmit(data =>
                                 changePasswordMutation.mutate(data),
                             )}
-                            className="px-4 pb-4 pt-1 space-y-4 border-t"
+                            className="p-4 space-y-4 border-t"
                         >
                             <div className="space-y-2">
                                 <Label htmlFor="current-password">

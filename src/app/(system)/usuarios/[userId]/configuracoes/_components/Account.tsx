@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Loader2, Mail, Plus, Trash2 } from 'lucide-react'
+import { Link, Loader2, Plus, Trash2 } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
@@ -53,6 +53,7 @@ export function Account() {
     const { login: addGoogleLogin, isLoading: isAddingGoogle } =
         useGoogleRelogin({
             onSuccess: () => {
+                toast.success('Conta Google vinculada com sucesso!')
                 queryClient.invalidateQueries({ queryKey: queryKeys.me() })
             },
         })
@@ -61,7 +62,7 @@ export function Account() {
         <Card>
             <div className="flex items-start gap-4 mb-6">
                 <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center">
-                    <Mail className="w-6 h-6 text-blue-500" />
+                    <Link className="w-6 h-6 text-blue-500" />
                 </div>
                 <div className="flex-1">
                     <h2 className="text-xl font-semibold mb-1">
@@ -89,16 +90,16 @@ export function Account() {
                             return (
                                 <div
                                     key={account.provider}
-                                    className="flex items-center justify-between p-4 bg-muted/40 dark:bg-muted/20 rounded-2xl border"
+                                    className="flex items-center justify-between p-4 bg-muted/40 dark:bg-muted/20 rounded-2xl border flex-wrap gap-4"
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                    <div className="flex items-center gap-3 flex-1 min-w-50">
+                                        <div className="w-10 h-10 shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                                             {account.provider === 'GOOGLE'
                                                 ? 'G'
                                                 : account.provider[0]}
                                         </div>
-                                        <div>
-                                            <p className="font-medium">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium truncate">
                                                 {account.email}
                                             </p>
                                             <p className="text-sm text-muted-foreground">
