@@ -1,9 +1,10 @@
+import { VerificationToken } from '@/backend/domain/verification-token'
 import {
     IUsersRepository,
     USER_CREDITS,
 } from '@/backend/application/interfaces/repository/iusers-repository'
 import { User } from '@/backend/domain/user'
-import { Provider } from '@/backend/domain/external-account'
+import { ExternalAccount, Provider } from '@/backend/domain/external-account'
 import { PrismaExecutor } from '.'
 import { transactionStorage } from './prisma-transaction-manager'
 
@@ -14,76 +15,139 @@ export class PrismaUsersRepository implements IUsersRepository {
         return transactionStorage.getStore() || this.defaultPrisma
     }
 
+    private mapUser(user: {
+        id: string
+        email: string | null
+        is_email_verified: boolean
+        name: string
+        password_hash: string | null
+        credits: number
+        ExternalUserAccount: {
+            provider: string
+            provider_user_id: string
+            email: string
+            access_token: string
+            refresh_token: string | null
+            access_token_expiry_datetime: Date | null
+            refresh_token_expiry_datetime: Date | null
+        }[]
+        VerificationToken?: {
+            token: string
+            expires_at: Date
+        } | null
+    }): User {
+        return new User({
+            id: user.id,
+            email: user.email,
+            isEmailVerified: user.is_email_verified,
+            name: user.name,
+            passwordHash: user.password_hash,
+            credits: user.credits,
+            externalAccounts: user.ExternalUserAccount.map(
+                a =>
+                    new ExternalAccount({
+                        provider: a.provider as Provider,
+                        providerUserId: a.provider_user_id,
+                        email: a.email,
+                        accessToken: a.access_token,
+                        refreshToken: a.refresh_token,
+                        accessTokenExpiryDateTime:
+                            a.access_token_expiry_datetime,
+                        refreshTokenExpiryDateTime:
+                            a.refresh_token_expiry_datetime,
+                    }),
+            ),
+            verificationToken: user.VerificationToken
+                ? new VerificationToken({
+                      token: user.VerificationToken.token,
+                      expiresAt: user.VerificationToken.expires_at,
+                  })
+                : null,
+        })
+    }
+
     async getByEmail(email: string) {
         const user = await this.prisma.user.findUnique({
-            where: {
-                email,
-            },
-            include: { ExternalUserAccount: true },
+            where: { email },
+            include: { ExternalUserAccount: true, VerificationToken: true },
         })
 
         if (!user) return null
 
-        return new User({
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            passwordHash: user.password_hash,
-            credits: user.credits,
-            externalAccounts: user.ExternalUserAccount.map(a => ({
-                userId: a.user_id,
-                provider: a.provider as Provider,
-                providerUserId: a.provider_user_id,
-                accessToken: a.access_token,
-                refreshToken: a.refresh_token,
-                accessTokenExpiryDateTime: a.access_token_expiry_datetime,
-                refreshTokenExpiryDateTime: a.refresh_token_expiry_datetime,
-            })),
-        })
+        return this.mapUser(user)
     }
 
     async getById(id: string) {
         const user = await this.prisma.user.findUnique({
-            where: {
-                id,
-            },
-            include: { ExternalUserAccount: true },
+            where: { id },
+            include: { ExternalUserAccount: true, VerificationToken: true },
         })
 
         if (!user) return null
 
-        return new User({
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            passwordHash: user.password_hash,
-            credits: user.credits,
-            externalAccounts: user.ExternalUserAccount.map(a => ({
-                userId: a.user_id,
-                provider: a.provider as Provider,
-                providerUserId: a.provider_user_id,
-                accessToken: a.access_token,
-                refreshToken: a.refresh_token,
-                accessTokenExpiryDateTime: a.access_token_expiry_datetime,
-                refreshTokenExpiryDateTime: a.refresh_token_expiry_datetime,
-            })),
+        return this.mapUser(user)
+    }
+
+    async getByExternalAccount(provider: Provider, providerUserId: string) {
+        const user = await this.prisma.user.findFirst({
+            where: {
+                ExternalUserAccount: {
+                    some: { provider, provider_user_id: providerUserId },
+                },
+            },
+            include: { ExternalUserAccount: true, VerificationToken: true },
         })
+
+        if (!user) return null
+
+        return this.mapUser(user)
+    }
+
+    async getByVerificationToken(token: string) {
+        const user = await this.prisma.user.findFirst({
+            where: {
+                VerificationToken: {
+                    token: token,
+                },
+            },
+            include: { ExternalUserAccount: true, VerificationToken: true },
+        })
+
+        if (!user) return null
+
+        return this.mapUser(user)
     }
 
     async save(user: User) {
-        const { id, name, email, credits, passwordHash, externalAccounts } =
-            user.serialize()
+        const {
+            id,
+            email,
+            isEmailVerified,
+            name,
+            passwordHash,
+            externalAccounts,
+            verificationToken,
+        } = user.serialize()
+
+        const verificationTokenData = verificationToken
+            ? {
+                  token: verificationToken.token,
+                  expires_at: verificationToken.expiresAt,
+              }
+            : null
 
         await this.prisma.user.create({
             data: {
                 id,
                 email,
+                is_email_verified: isEmailVerified,
                 name,
                 password_hash: passwordHash,
                 ExternalUserAccount: {
                     create: externalAccounts.map(account => ({
                         provider: account.provider,
                         provider_user_id: account.providerUserId,
+                        email: account.email,
                         access_token: account.accessToken,
                         refresh_token: account.refreshToken,
                         access_token_expiry_datetime:
@@ -92,20 +156,59 @@ export class PrismaUsersRepository implements IUsersRepository {
                             account.refreshTokenExpiryDateTime,
                     })),
                 },
+                ...(verificationToken
+                    ? {
+                          VerificationToken: {
+                              create: {
+                                  token: verificationToken.token,
+                                  expires_at: verificationToken.expiresAt,
+                              },
+                          },
+                      }
+                    : {}),
             },
         })
     }
 
     async update(user: User) {
-        const { id, email, name, passwordHash, credits, externalAccounts } =
-            user.serialize()
+        const {
+            id,
+            email,
+            isEmailVerified,
+            name,
+            passwordHash,
+            externalAccounts,
+            verificationToken,
+        } = user.serialize()
+
+        const currentProviders = externalAccounts.map(a => a.provider)
+
         await this.prisma.user.update({
             where: { id },
             data: {
                 email,
+                is_email_verified: isEmailVerified,
                 name,
                 password_hash: passwordHash,
+                VerificationToken: verificationToken
+                    ? {
+                          upsert: {
+                              create: {
+                                  token: verificationToken.token,
+                                  expires_at: verificationToken.expiresAt,
+                              },
+                              update: {
+                                  token: verificationToken.token,
+                                  expires_at: verificationToken.expiresAt,
+                              },
+                          },
+                      }
+                    : { delete: true },
                 ExternalUserAccount: {
+                    deleteMany: {
+                        user_id: id,
+                        provider: { notIn: currentProviders },
+                    },
                     upsert: externalAccounts.map(a => ({
                         where: {
                             user_id_provider: {
@@ -116,6 +219,7 @@ export class PrismaUsersRepository implements IUsersRepository {
                         create: {
                             provider: a.provider,
                             provider_user_id: a.providerUserId,
+                            email: a.email,
                             access_token: a.accessToken,
                             refresh_token: a.refreshToken,
                             access_token_expiry_datetime:
@@ -125,6 +229,7 @@ export class PrismaUsersRepository implements IUsersRepository {
                         },
                         update: {
                             provider_user_id: a.providerUserId,
+                            email: a.email,
                             access_token: a.accessToken,
                             refresh_token: a.refreshToken,
                             access_token_expiry_datetime:
@@ -139,11 +244,7 @@ export class PrismaUsersRepository implements IUsersRepository {
     }
 
     async delete(id: string): Promise<void> {
-        await this.prisma.user.delete({
-            where: {
-                id,
-            },
-        })
+        await this.prisma.user.delete({ where: { id } })
     }
 
     async deductCredits(userId: string, amount: number): Promise<boolean> {

@@ -132,7 +132,7 @@ export default async function UserConfigurationsPage() {
                 {/* <Account /> */}
 
                 {/* Danger Zone Card */}
-                <DeleteAccount userEmail={data.user.email} />
+                <DeleteAccount userEmail={data.user.email ?? ''} />
 
                 {/* Legal Links */}
                 <div className="text-center text-sm text-muted-foreground">

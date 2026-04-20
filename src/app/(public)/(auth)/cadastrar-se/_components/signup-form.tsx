@@ -3,30 +3,71 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useActionState, useState } from 'react'
+import { useState } from 'react'
 import { signUpAction } from '@/backend/infrastructure/server-actions/sign-up-action'
 import { ArrowRight } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { useMutation } from '@tanstack/react-query'
+import { signUpSchema } from '@/backend/infrastructure/server-actions/schemas'
+
+const formSchema = signUpSchema
+    .extend({
+        confirmPassword: z
+            .string()
+            .min(1, 'A confirmação de senha é obrigatória'),
+    })
+    .refine(data => data.password === data.confirmPassword, {
+        message: 'As senhas não coincidem',
+        path: ['confirmPassword'],
+    })
+
+type SignUpFormData = z.infer<typeof formSchema>
 
 export function SignUpForm() {
-    const [state, action, isPending] = useActionState(signUpAction, null)
-    const [password, setPassword] = useState('')
-    const [confirmPassword, setConfirmPassword] = useState('')
-    const [passwordError, setPasswordError] = useState('')
+    const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-    const validatePasswords = () => {
-        if (password && confirmPassword && password !== confirmPassword) {
-            setPasswordError('As senhas não coincidem')
-            return false
-        }
-        setPasswordError('')
-        return true
-    }
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<SignUpFormData>({
+        resolver: zodResolver(formSchema),
+    })
+
+    const mutation = useMutation({
+        mutationFn: async (data: SignUpFormData) => {
+            const formData = new FormData()
+            formData.append('name', data.name)
+            formData.append('email', data.email)
+            formData.append('password', data.password)
+
+            const result = await signUpAction(null, formData)
+
+            if (result?.success === false) {
+                setErrorMessage(
+                    result.errorType === 'conflict'
+                        ? 'Este e-mail já está em uso.'
+                        : 'Ocorreu um erro ao realizar o cadastro. Tente novamente.',
+                )
+            }
+
+            return result
+        },
+    })
 
     return (
-        <form action={action} className="space-y-4">
-            {state?.success === false && state?.message && (
+        <form
+            onSubmit={handleSubmit(data => {
+                setErrorMessage(null)
+                mutation.mutate(data)
+            })}
+            className="space-y-4"
+        >
+            {errorMessage && (
                 <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive rounded-md">
-                    {state.message}
+                    {errorMessage}
                 </div>
             )}
 
@@ -37,15 +78,13 @@ export function SignUpForm() {
                 <Input
                     type="text"
                     id="name"
-                    name="name"
                     placeholder="João Silva"
-                    defaultValue={state?.inputs?.name}
-                    required
-                    className={`${state?.errors?.name ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    {...register('name')}
+                    className={`${errors.name ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 />
-                {state?.errors?.name && (
+                {errors.name && (
                     <span className="text-sm text-destructive">
-                        {state?.errors.name}
+                        {errors.name.message}
                     </span>
                 )}
             </div>
@@ -57,15 +96,13 @@ export function SignUpForm() {
                 <Input
                     type="email"
                     id="email"
-                    name="email"
                     placeholder="nome@email.com"
-                    defaultValue={state?.inputs?.email}
-                    required
-                    className={`${state?.errors?.email ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    {...register('email')}
+                    className={`${errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 />
-                {state?.errors?.email && (
+                {errors.email && (
                     <span className="text-sm text-destructive">
-                        {state?.errors.email}
+                        {errors.email.message}
                     </span>
                 )}
             </div>
@@ -77,20 +114,13 @@ export function SignUpForm() {
                 <Input
                     type="password"
                     id="password"
-                    name="password"
                     placeholder="••••••••"
-                    value={password}
-                    onChange={e => {
-                        setPassword(e.target.value)
-                        setPasswordError('')
-                    }}
-                    onBlur={validatePasswords}
-                    required
-                    className={`${state?.errors?.password || passwordError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    {...register('password')}
+                    className={`${errors.password ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 />
-                {state?.errors?.password && (
+                {errors.password && (
                     <span className="text-sm text-destructive">
-                        {state?.errors.password}
+                        {errors.password.message}
                     </span>
                 )}
             </div>
@@ -105,34 +135,24 @@ export function SignUpForm() {
                 <Input
                     type="password"
                     id="confirmPassword"
-                    name="confirmPassword"
                     placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={e => {
-                        setConfirmPassword(e.target.value)
-                        setPasswordError('')
-                    }}
-                    onBlur={validatePasswords}
-                    required
-                    className={`${passwordError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    {...register('confirmPassword')}
+                    className={`${errors.confirmPassword ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 />
-                {passwordError && (
+                {errors.confirmPassword && (
                     <span className="text-sm text-destructive">
-                        {passwordError}
+                        {errors.confirmPassword.message}
                     </span>
                 )}
             </div>
 
             <Button
                 type="submit"
-                disabled={
-                    isPending ||
-                    (password !== confirmPassword && confirmPassword !== '')
-                }
+                disabled={mutation.isPending}
                 className="w-full"
                 size="lg"
             >
-                Cadastrar
+                {mutation.isPending ? 'Cadastrando...' : 'Cadastrar'}
                 <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
         </form>

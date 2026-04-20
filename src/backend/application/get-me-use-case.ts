@@ -18,11 +18,13 @@ export class GetMeUseCase {
         return {
             id: user.getId(),
             email: user.getEmail(),
+            isEmailVerified: user.getIsEmailVerified(),
             name: user.getName(),
             credits: user.getCredits(),
             externalAccounts: user.getExternalAccounts().map(account => ({
                 provider: account.getProvider(),
                 providerUserId: account.getProviderUserId(),
+                email: account.getEmail(),
                 accessToken: account.getAccessToken(),
                 accessTokenExpiryDateTime:
                     account.getAccessTokenExpiryDateTime(),

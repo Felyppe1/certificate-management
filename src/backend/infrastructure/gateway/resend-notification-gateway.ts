@@ -1,6 +1,57 @@
 import { Resend } from 'resend'
-import { INotificationEmailGateway } from '@/backend/application/interfaces/inotification-email-gateway'
+import { INotificationGateway } from '@/backend/application/interfaces/inotification-gateway'
 import { env } from '@/env'
+
+const verificationEmailTemplate = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificação de E-mail - Certifica</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #0d1117; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+        table { border-spacing: 0; border-collapse: collapse; }
+        td { padding: 0; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #0d1117; padding-bottom: 2.5rem; padding-top: 2.5rem; }
+        .main { background-color: #1a1d24; margin: 0 auto; width: 100%; max-width: 37.5rem; border-radius: 0.75rem; border: 0.0625rem solid #2d3342; overflow: hidden; color: #e6edf3; }
+        .header { padding: 2rem 2rem 1.25rem 2rem; text-align: center; }
+        .header img { width: 10rem; height: auto; vertical-align: middle; }
+        .content { padding: 0 2rem 2rem 2rem; text-align: center; }
+        .content h1 { font-size: 1.375rem; margin-bottom: 1rem; color: #ffffff; font-weight: 600; }
+        .content p { font-size: 1rem; line-height: 1.5; color: #9ca3af; margin-bottom: 2rem; }
+        .content .note { font-size: 0.875rem; color: #6b7280; margin-top: -1rem; margin-bottom: 1.5rem; }
+        .button { background-color: #005bcd; color: #ffffff; text-decoration: none; padding: 0.625rem 1.75rem; border-radius: 2rem; font-size: 1rem; font-weight: 600; display: inline-block; }
+        .footer { background-color: #16181d; padding: 1.5rem 2rem; text-align: center; border-top: 0.0625rem solid #2d3342; font-size: 0.875rem; color: #8b949e; }
+        .footer p { margin: 0 0 0.25rem 0; }
+        .footer a { color: #005bcd; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <center class="wrapper">
+        <table class="main" width="100%">
+            <tr>
+                <td class="header">
+                    <img src="{{APP_URL}}/logo.png" alt="Certifica Logo">
+                </td>
+            </tr>
+            <tr>
+                <td class="content">
+                    <h1>Verifique seu e-mail</h1>
+                    <p>Clique no botão abaixo para confirmar seu endereço de e-mail e ativar o acesso por senha à plataforma <strong>Certifica</strong>.</p>
+                    <a href="{{VERIFICATION_URL}}" target="_blank" rel="noopener noreferrer" class="button" style="color: #ffffff; text-decoration: none;">Verificar E-mail</a>
+                    <p class="note">Este link expira em 1 hora. Se você não solicitou isso, pode ignorar este e-mail.</p>
+                </td>
+            </tr>
+            <tr>
+                <td class="footer">
+                    <p>Este email foi enviado pelo <a href="{{APP_URL}}" target="_blank" rel="noopener noreferrer">Certifica</a>.</p>
+                    <p>&nbsp; &copy; 2026</p>
+                </td>
+            </tr>
+        </table>
+    </center>
+</body>
+</html>`
 
 const accessGrantedEmailTemplate = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -59,13 +110,30 @@ const accessGrantedEmailTemplate = `<!DOCTYPE html>
 </body>
 </html>`
 
-export class ResendNotificationEmailGateway
-    implements INotificationEmailGateway
-{
+export class ResendNotificationGateway implements INotificationGateway {
     private resend: Resend
 
     constructor() {
         this.resend = new Resend(env.RESEND_API_KEY)
+    }
+
+    async sendEmailVerification(
+        email: string,
+        verificationToken: string,
+    ): Promise<void> {
+        const appUrl = env.NEXT_PUBLIC_BASE_URL
+        const verificationUrl = `${appUrl}/verificar-email?token=${verificationToken}`
+
+        const html = verificationEmailTemplate
+            .replaceAll('{{APP_URL}}', appUrl)
+            .replace('{{VERIFICATION_URL}}', verificationUrl)
+
+        await this.resend.emails.send({
+            from: 'Certifica <nao-responda@certifica.felyppe.com.br>',
+            to: email,
+            subject: 'Verifique seu e-mail no Certifica',
+            html,
+        })
     }
 
     async sendAccessRequest(email: string): Promise<void> {

@@ -7,6 +7,7 @@ import { ITransactionManager } from './interfaces/repository/itransaction-manage
 import { IStringVariableExtractor } from './interfaces/istring-variable-extractor'
 import { CertificateEmission, CERTIFICATE_STATUS } from '../domain/certificate'
 import { User } from '../domain/user'
+import { ExternalAccount } from '../domain/external-account'
 import {
     GetFileMetadataOutput,
     IGoogleDriveGateway,
@@ -45,20 +46,23 @@ describe('AddTemplateByUrlUseCase', () => {
     function createUser() {
         return new User({
             id: USER_ID,
-            email: 'user@test.com',
+            email: null,
+            isEmailVerified: false,
             name: 'User',
             passwordHash: null,
             credits: 300,
             externalAccounts: [
-                {
+                new ExternalAccount({
                     provider: 'GOOGLE',
                     providerUserId: 'google-user-id',
+                    email: 'user@test.com',
                     accessToken: 'access-token',
                     refreshToken: 'refresh-token',
                     accessTokenExpiryDateTime: new Date(Date.now() + 3_600_000),
                     refreshTokenExpiryDateTime: null,
-                },
+                }),
             ],
+            verificationToken: null,
         })
     }
 

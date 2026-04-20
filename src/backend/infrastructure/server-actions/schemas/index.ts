@@ -153,12 +153,12 @@ export const loginSchema = z.object({
 })
 
 export const signUpSchema = z.object({
-    email: z.email('Invalid email format'),
-    name: z.string().min(1, 'Name is required'),
+    name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+    email: z.string().email('Formato de email inválido'),
     password: z
         .string()
-        .min(6, 'Password must have at least 6 characters')
-        .max(100, 'Password must have at most 100 characters'),
+        .min(6, 'Senha deve ter pelo menos 6 caracteres')
+        .max(100, 'Senha deve ter no máximo 100 caracteres'),
 })
 
 // Utility
@@ -198,4 +198,23 @@ export const updateDataSourceRowsSchema = z.object({
             ),
         }),
     ),
+})
+
+// Auth — System Credentials
+export const setupSystemCredentialsSchema = z.object({
+    email: z.string().email(),
+    passwordPlain: z.string().min(6).max(100),
+})
+
+export const updateSystemEmailSchema = z.object({
+    newEmail: z.string().email(),
+})
+
+export const updateSystemPasswordSchema = z.object({
+    currentPassword: z.string().min(1),
+    newPassword: z.string().min(6).max(100),
+})
+
+export const unlinkExternalAccountSchema = z.object({
+    provider: z.enum(['GOOGLE']),
 })

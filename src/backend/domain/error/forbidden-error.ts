@@ -6,6 +6,10 @@ export enum FORBIDDEN_ERROR_TYPE {
     GOOGLE_SESSION_EXPIRED = 'google-session-expired',
     GOOGLE_ACCOUNT_EMAIL_MISMATCH = 'google-account-email-mismatch',
     NOT_ADMIN = 'not-admin',
+    EMAIL_NOT_VERIFIED = 'email-not-verified',
+    NO_SYSTEM_EMAIL_CONFIGURED = 'no-system-email-configured',
+    TOKEN_EXPIRED = 'token-expired',
+    TOKEN_INVALID = 'token-invalid',
 }
 
 export class ForbiddenError extends AppError<FORBIDDEN_ERROR_TYPE> {

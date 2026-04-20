@@ -2,9 +2,9 @@ import { ISessionsRepository } from './interfaces/repository/isessions-repositor
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { AuthenticationError } from '../domain/error/authentication-error'
 import {
-    ForbiddenError,
-    FORBIDDEN_ERROR_TYPE,
-} from '../domain/error/forbidden-error'
+    ConflictError,
+    CONFLICT_ERROR_TYPE,
+} from '../domain/error/conflict-error'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { User } from '../domain/user'
@@ -20,7 +20,11 @@ export class LoginGoogleUseCase {
     constructor(
         private usersRepository: Pick<
             IUsersRepository,
-            'save' | 'update' | 'getByEmail' | 'getById'
+            | 'save'
+            | 'update'
+            | 'getByEmail'
+            | 'getById'
+            | 'getByExternalAccount'
         >,
         private sessionsRepository: Pick<ISessionsRepository, 'save'>,
         private googleAuthGateway: Pick<
@@ -64,9 +68,19 @@ export class LoginGoogleUseCase {
         let isNewUser = false
 
         if (authenticatedUser) {
-            if (userInfo.email !== authenticatedUser.getEmail()) {
-                throw new ForbiddenError(
-                    FORBIDDEN_ERROR_TYPE.GOOGLE_ACCOUNT_EMAIL_MISMATCH,
+            // Re-auth: linking Google to an already authenticated user
+            const existingOwner =
+                await this.usersRepository.getByExternalAccount(
+                    'GOOGLE',
+                    userInfo.providerUserId,
+                )
+
+            if (
+                existingOwner &&
+                existingOwner.getId() !== authenticatedUser.getId()
+            ) {
+                throw new ConflictError(
+                    CONFLICT_ERROR_TYPE.ACCOUNT_ALREADY_LINKED,
                 )
             }
 
@@ -76,6 +90,7 @@ export class LoginGoogleUseCase {
                 user.addExternalAccount({
                     provider: 'GOOGLE',
                     providerUserId: userInfo.providerUserId,
+                    email: userInfo.email,
                     accessToken: tokenData.accessToken,
                     refreshToken: tokenData.refreshToken,
                     accessTokenExpiryDateTime:
@@ -93,49 +108,40 @@ export class LoginGoogleUseCase {
                 })
             }
         } else {
-            const userExists = await this.usersRepository.getByEmail(
-                userInfo.email,
-            )
+            // Login flow: look up by (provider, providerUserId) — the stable identifier
+            const existingUser =
+                await this.usersRepository.getByExternalAccount(
+                    'GOOGLE',
+                    userInfo.providerUserId,
+                )
 
-            if (!userExists) {
+            if (existingUser) {
+                user = existingUser
+                user.updateExternalAccount('GOOGLE', {
+                    accessToken: tokenData.accessToken,
+                    accessTokenExpiryDateTime:
+                        tokenData.accessTokenExpiryDateTime,
+                    refreshToken:
+                        tokenData.refreshToken ??
+                        user.getExternalAccount('GOOGLE')!.getRefreshToken(),
+                })
+            } else {
                 isNewUser = true
                 user = User.create({
-                    email: userInfo.email,
+                    email: null,
                     name: userInfo.name,
                     passwordHash: null,
                 })
                 user.addExternalAccount({
                     provider: 'GOOGLE',
                     providerUserId: userInfo.providerUserId,
+                    email: userInfo.email,
                     accessToken: tokenData.accessToken,
                     refreshToken: tokenData.refreshToken,
                     accessTokenExpiryDateTime:
                         tokenData.accessTokenExpiryDateTime,
-                    refreshTokenExpiryDateTime: null, // Not necessary because Google refresh tokens don't expire in Published mode
+                    refreshTokenExpiryDateTime: null,
                 })
-            } else {
-                user = userExists
-                const externalAccount = user.getExternalAccount('GOOGLE')
-                if (!externalAccount) {
-                    user.addExternalAccount({
-                        provider: 'GOOGLE',
-                        providerUserId: userInfo.providerUserId,
-                        accessToken: tokenData.accessToken,
-                        refreshToken: tokenData.refreshToken,
-                        accessTokenExpiryDateTime:
-                            tokenData.accessTokenExpiryDateTime,
-                        refreshTokenExpiryDateTime: null,
-                    })
-                } else {
-                    user.updateExternalAccount('GOOGLE', {
-                        accessToken: tokenData.accessToken,
-                        accessTokenExpiryDateTime:
-                            tokenData.accessTokenExpiryDateTime,
-                        refreshToken:
-                            tokenData.refreshToken ??
-                            externalAccount.getRefreshToken(),
-                    })
-                }
             }
         }
 

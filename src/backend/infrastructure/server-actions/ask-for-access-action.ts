@@ -1,7 +1,7 @@
 'use server'
 
 import { AskForAccessUseCase } from '@/backend/application/ask-for-access-use-case'
-import { ResendNotificationEmailGateway } from '@/backend/infrastructure/gateway/resend-notification-email-gateway'
+import { ResendNotificationGateway } from '@/backend/infrastructure/gateway/resend-notification-gateway'
 import { ActionResponse } from '@/types'
 import z from 'zod'
 
@@ -24,7 +24,7 @@ export async function askForAccessAction(
     try {
         const parsedData = askForAccessSchema.parse(rawData)
 
-        const notificationEmailGateway = new ResendNotificationEmailGateway()
+        const notificationEmailGateway = new ResendNotificationGateway()
         const useCase = new AskForAccessUseCase(notificationEmailGateway)
 
         await useCase.execute({ email: parsedData.email })
