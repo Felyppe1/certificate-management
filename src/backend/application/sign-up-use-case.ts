@@ -28,7 +28,7 @@ export class SignUpUseCase {
             throw new ConflictError(CONFLICT_ERROR_TYPE.USER)
         }
 
-        const user = User.create({
+        const user = await User.create({
             name: data.name,
             email: data.email,
             passwordHash: data.password,

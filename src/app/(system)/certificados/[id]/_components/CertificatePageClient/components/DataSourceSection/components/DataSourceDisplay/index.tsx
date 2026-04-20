@@ -15,6 +15,7 @@ import {
     Table2,
     ALargeSmall,
     FileSpreadsheet,
+    AlertTriangle,
 } from 'lucide-react'
 import { useState } from 'react'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
@@ -29,6 +30,11 @@ import { retryDataSourceRowAction } from '@/backend/infrastructure/server-action
 import { SourceIcon } from '@/components/svg/SourceIcon'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
 import { WarningPopover } from '../../../../../../../../../../components/WarningPopover'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover'
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -81,6 +87,7 @@ interface DataSourceDisplayProps {
             arraySeparator: string | null
         }[]
         thumbnailUrl: string | null
+        googleAccountEmail: string | null
         rows: {
             id: string
             processingStatus: PROCESSING_STATUS_ENUM
@@ -451,24 +458,68 @@ export function DataSourceDisplay({
                                                             : 'Baixar'}
                                                     </Button>
                                                 ) : (
-                                                    <Button
-                                                        variant="default"
-                                                        size="sm"
-                                                        onClick={() =>
-                                                            handleViewFile(i)
-                                                        }
-                                                    >
-                                                        <svg
-                                                            className=""
-                                                            viewBox="0 0 24 24"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            strokeWidth="2"
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Button
+                                                            variant="default"
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                handleViewFile(
+                                                                    i,
+                                                                )
+                                                            }
                                                         >
-                                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
-                                                        </svg>
-                                                        Abrir
-                                                    </Button>
+                                                            <svg
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                strokeWidth="2"
+                                                            >
+                                                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
+                                                            </svg>
+                                                            Abrir
+                                                        </Button>
+                                                        {dataSource.googleAccountEmail &&
+                                                            userEmail &&
+                                                            dataSource.googleAccountEmail !==
+                                                                userEmail && (
+                                                                <Popover>
+                                                                    <PopoverTrigger
+                                                                        asChild
+                                                                    >
+                                                                        <button
+                                                                            type="button"
+                                                                            className="text-amber-500 hover:text-amber-600 transition-colors"
+                                                                            aria-label="Aviso de conta Google"
+                                                                        >
+                                                                            <AlertTriangle className="size-4" />
+                                                                        </button>
+                                                                    </PopoverTrigger>
+                                                                    <PopoverContent className="max-w-xs text-sm">
+                                                                        Este
+                                                                        arquivo
+                                                                        foi
+                                                                        adicionado
+                                                                        com a
+                                                                        conta{' '}
+                                                                        <span className="font-medium">
+                                                                            {
+                                                                                dataSource.googleAccountEmail
+                                                                            }
+                                                                        </span>
+                                                                        . Como
+                                                                        você
+                                                                        está
+                                                                        usando
+                                                                        outra
+                                                                        conta
+                                                                        Google,
+                                                                        o link
+                                                                        pode não
+                                                                        funcionar.
+                                                                    </PopoverContent>
+                                                                </Popover>
+                                                            )}
+                                                    </div>
                                                 )}
                                             </div>
                                         ))}

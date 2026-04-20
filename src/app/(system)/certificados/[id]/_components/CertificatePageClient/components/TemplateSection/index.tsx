@@ -37,6 +37,7 @@ interface TemplateSectionProps {
         fileMimeType: TEMPLATE_FILE_MIME_TYPE
         variables: string[]
         thumbnailUrl: string | null
+        googleAccountEmail: string | null
     } | null
     userEmail: string
     googleOAuthToken: string | null

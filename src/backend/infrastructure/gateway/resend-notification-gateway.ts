@@ -122,7 +122,8 @@ export class ResendNotificationGateway implements INotificationGateway {
         verificationToken: string,
     ): Promise<void> {
         const appUrl = env.NEXT_PUBLIC_BASE_URL
-        const verificationUrl = `${appUrl}/verificar-email?token=${verificationToken}`
+        console.log(appUrl)
+        const verificationUrl = `${appUrl}/api/auth/verify-email?token=${verificationToken}`
 
         const html = verificationEmailTemplate
             .replaceAll('{{APP_URL}}', appUrl)

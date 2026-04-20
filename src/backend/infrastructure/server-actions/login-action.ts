@@ -40,6 +40,7 @@ export async function loginAction(_: unknown, formData: FormData) {
             // sameSite: "strict"
         })
     } catch (error: any) {
+        console.log(error)
         return {
             success: false,
             errorType: error.type,

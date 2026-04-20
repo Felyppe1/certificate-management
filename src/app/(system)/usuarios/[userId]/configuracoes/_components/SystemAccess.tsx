@@ -1,0 +1,548 @@
+'use client'
+
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import {
+    KeyRound,
+    Loader2,
+    MailCheck,
+    CheckCircle2,
+    Clock,
+    ChevronDown,
+    ChevronUp,
+} from 'lucide-react'
+import { useMutation } from '@tanstack/react-query'
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { setSystemLoginAction } from '@/backend/infrastructure/server-actions/set-system-login-action'
+import { updateSystemEmailAction } from '@/backend/infrastructure/server-actions/update-system-email-action'
+import { updateSystemPasswordAction } from '@/backend/infrastructure/server-actions/update-system-password-action'
+import { resendVerificationEmailAction } from '@/backend/infrastructure/server-actions/resend-verification-email-action'
+
+const setupSchema = z
+    .object({
+        email: z.string().email('Formato de e-mail inválido'),
+        password: z.string().min(6, 'Mínimo de 6 caracteres').max(100),
+        confirmPassword: z.string(),
+    })
+    .refine(d => d.password === d.confirmPassword, {
+        message: 'As senhas não coincidem',
+        path: ['confirmPassword'],
+    })
+
+const changeEmailSchema = z.object({
+    newEmail: z.string().email('Formato de e-mail inválido'),
+})
+
+const changePasswordSchema = z
+    .object({
+        currentPassword: z.string().min(1, 'Campo obrigatório'),
+        newPassword: z.string().min(6, 'Mínimo de 6 caracteres').max(100),
+        confirmNewPassword: z.string(),
+    })
+    .refine(d => d.newPassword === d.confirmNewPassword, {
+        message: 'As senhas não coincidem',
+        path: ['confirmNewPassword'],
+    })
+
+type SetupData = z.infer<typeof setupSchema>
+type ChangeEmailData = z.infer<typeof changeEmailSchema>
+type ChangePasswordData = z.infer<typeof changePasswordSchema>
+
+interface SystemAccessProps {
+    email: string | null
+    isEmailVerified: boolean
+}
+
+export function SystemAccess({ email, isEmailVerified }: SystemAccessProps) {
+    const router = useRouter()
+
+    if (email === null) {
+        return <SetupSystemAccess onSuccess={() => router.refresh()} />
+    }
+
+    return (
+        <ManageSystemAccess
+            email={email}
+            isEmailVerified={isEmailVerified}
+            onSuccess={() => router.refresh()}
+        />
+    )
+}
+
+function SetupSystemAccess({ onSuccess }: { onSuccess: () => void }) {
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        reset,
+    } = useForm<SetupData>({ resolver: zodResolver(setupSchema) })
+
+    const mutation = useMutation({
+        mutationFn: async (data: SetupData) => {
+            const fd = new FormData()
+            fd.append('email', data.email)
+            fd.append('password', data.password)
+            const result = await setSystemLoginAction(null, fd)
+            if (result?.success === false) throw result
+            return result
+        },
+        onSuccess: () => {
+            toast.success(
+                'Acesso configurado! Verifique seu e-mail para ativar o login.',
+            )
+            reset()
+            onSuccess()
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+            if (error?.errorType === 'email-unavailable') {
+                toast.error('Este e-mail já está em uso.')
+            } else {
+                toast.error('Ocorreu um erro. Tente novamente.')
+            }
+        },
+    })
+
+    return (
+        <Card>
+            <div className="flex items-start gap-4 mb-6">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                    <KeyRound className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                    <h2 className="text-xl font-semibold mb-1">
+                        Acesso ao Sistema
+                    </h2>
+                    <p className="text-muted-foreground font-light">
+                        Configure um e-mail e senha para entrar sem usar o
+                        Google
+                    </p>
+                </div>
+            </div>
+
+            <form
+                onSubmit={handleSubmit(data => mutation.mutate(data))}
+                className="space-y-4"
+            >
+                <div className="space-y-2">
+                    <Label htmlFor="setup-email">E-mail</Label>
+                    <Input
+                        id="setup-email"
+                        type="email"
+                        placeholder="nome@email.com"
+                        {...register('email')}
+                        aria-invalid={!!errors.email}
+                    />
+                    {errors.email && (
+                        <span className="text-sm text-destructive">
+                            {errors.email.message}
+                        </span>
+                    )}
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="setup-password">Senha</Label>
+                    <Input
+                        id="setup-password"
+                        type="password"
+                        placeholder="••••••••"
+                        {...register('password')}
+                        aria-invalid={!!errors.password}
+                    />
+                    {errors.password && (
+                        <span className="text-sm text-destructive">
+                            {errors.password.message}
+                        </span>
+                    )}
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="setup-confirm-password">
+                        Confirmar Senha
+                    </Label>
+                    <Input
+                        id="setup-confirm-password"
+                        type="password"
+                        placeholder="••••••••"
+                        {...register('confirmPassword')}
+                        aria-invalid={!!errors.confirmPassword}
+                    />
+                    {errors.confirmPassword && (
+                        <span className="text-sm text-destructive">
+                            {errors.confirmPassword.message}
+                        </span>
+                    )}
+                </div>
+
+                <div className="flex justify-end pt-2">
+                    <Button type="submit" disabled={mutation.isPending}>
+                        {mutation.isPending && (
+                            <Loader2 className="animate-spin" />
+                        )}
+                        Configurar Acesso
+                    </Button>
+                </div>
+            </form>
+        </Card>
+    )
+}
+
+function ManageSystemAccess({
+    email,
+    isEmailVerified,
+    onSuccess,
+}: {
+    email: string
+    isEmailVerified: boolean
+    onSuccess: () => void
+}) {
+    const [showChangeEmail, setShowChangeEmail] = useState(false)
+    const [showChangePassword, setShowChangePassword] = useState(false)
+    const [emailChangeMessage, setEmailChangeMessage] = useState<string | null>(
+        null,
+    )
+    const [isResendPending, startResendTransition] = useTransition()
+    const [resendSuccess, setResendSuccess] = useState(false)
+
+    const emailForm = useForm<ChangeEmailData>({
+        resolver: zodResolver(changeEmailSchema),
+    })
+    const passwordForm = useForm<ChangePasswordData>({
+        resolver: zodResolver(changePasswordSchema),
+    })
+
+    const changeEmailMutation = useMutation({
+        mutationFn: async (data: ChangeEmailData) => {
+            const fd = new FormData()
+            fd.append('newEmail', data.newEmail)
+            const result = await updateSystemEmailAction(null, fd)
+            if (result?.success === false) throw result
+            return result
+        },
+        onSuccess: result => {
+            if (result?.wasLoggedOut) {
+                // Server already called logoutAction; just navigate
+                return
+            }
+            toast.success('E-mail atualizado. Verifique sua caixa de entrada.')
+            setEmailChangeMessage(
+                'Verifique o novo e-mail para confirmar a alteração.',
+            )
+            setShowChangeEmail(false)
+            emailForm.reset()
+            onSuccess()
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+            if (error?.errorType === 'email-unavailable') {
+                toast.error('Este e-mail já está em uso.')
+            } else {
+                toast.error('Ocorreu um erro. Tente novamente.')
+            }
+        },
+    })
+
+    const changePasswordMutation = useMutation({
+        mutationFn: async (data: ChangePasswordData) => {
+            const fd = new FormData()
+            fd.append('currentPassword', data.currentPassword)
+            fd.append('newPassword', data.newPassword)
+            const result = await updateSystemPasswordAction(null, fd)
+            if (result?.success === false) throw result
+            return result
+        },
+        onSuccess: () => {
+            toast.success('Senha atualizada com sucesso.')
+            setShowChangePassword(false)
+            passwordForm.reset()
+        },
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+            if (error?.errorType === 'incorrect-credentials') {
+                toast.error('Senha atual incorreta.')
+            } else {
+                toast.error('Ocorreu um erro. Tente novamente.')
+            }
+        },
+    })
+
+    const handleResend = () => {
+        setResendSuccess(false)
+        startResendTransition(async () => {
+            const fd = new FormData()
+            fd.append('email', email)
+            const result = await resendVerificationEmailAction(null, fd)
+            if (result?.success) {
+                setResendSuccess(true)
+            } else {
+                toast.error('Erro ao reenviar. Tente novamente.')
+            }
+        })
+    }
+
+    return (
+        <Card>
+            <div className="flex items-start gap-4 mb-6">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                    <KeyRound className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                    <h2 className="text-xl font-semibold mb-1">
+                        Acesso ao Sistema
+                    </h2>
+                    <p className="text-muted-foreground font-light">
+                        Gerencie seu e-mail e senha de login
+                    </p>
+                </div>
+            </div>
+
+            <div className="space-y-6">
+                {/* Email atual + status */}
+                <div className="p-4 bg-muted/40 dark:bg-muted/20 rounded-2xl border space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <p className="text-xs text-muted-foreground mb-0.5">
+                                E-mail de login
+                            </p>
+                            <p className="font-medium">{email}</p>
+                        </div>
+                        {isEmailVerified ? (
+                            <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
+                                <CheckCircle2 className="size-3" />
+                                Verificado
+                            </Badge>
+                        ) : (
+                            <Badge
+                                variant="outline"
+                                className="text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700"
+                            >
+                                <Clock className="size-3" />
+                                Aguardando verificação
+                            </Badge>
+                        )}
+                    </div>
+
+                    {!isEmailVerified && (
+                        <div>
+                            {resendSuccess ? (
+                                <p className="text-sm text-emerald-700 dark:text-emerald-400">
+                                    E-mail de verificação reenviado!
+                                </p>
+                            ) : (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleResend}
+                                    disabled={isResendPending}
+                                    className="border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-900/40"
+                                >
+                                    {isResendPending && (
+                                        <Loader2 className="size-3 animate-spin" />
+                                    )}
+                                    <MailCheck className="size-3" />
+                                    Reenviar verificação
+                                </Button>
+                            )}
+                        </div>
+                    )}
+
+                    {emailChangeMessage && (
+                        <p className="text-sm text-amber-700 dark:text-amber-400">
+                            {emailChangeMessage}
+                        </p>
+                    )}
+                </div>
+
+                {/* Alterar E-mail */}
+                <div className="border rounded-2xl overflow-hidden">
+                    <button
+                        type="button"
+                        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/40 transition-colors"
+                        onClick={() => setShowChangeEmail(v => !v)}
+                    >
+                        <span className="font-medium">Alterar E-mail</span>
+                        {showChangeEmail ? (
+                            <ChevronUp className="size-4 text-muted-foreground" />
+                        ) : (
+                            <ChevronDown className="size-4 text-muted-foreground" />
+                        )}
+                    </button>
+
+                    {showChangeEmail && (
+                        <form
+                            onSubmit={emailForm.handleSubmit(data =>
+                                changeEmailMutation.mutate(data),
+                            )}
+                            className="px-4 pb-4 pt-1 space-y-4 border-t"
+                        >
+                            <div className="space-y-2">
+                                <Label htmlFor="new-email">Novo E-mail</Label>
+                                <Input
+                                    id="new-email"
+                                    type="email"
+                                    placeholder="nome@email.com"
+                                    {...emailForm.register('newEmail')}
+                                    aria-invalid={
+                                        !!emailForm.formState.errors.newEmail
+                                    }
+                                />
+                                {emailForm.formState.errors.newEmail && (
+                                    <span className="text-sm text-destructive">
+                                        {
+                                            emailForm.formState.errors.newEmail
+                                                .message
+                                        }
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() => setShowChangeEmail(false)}
+                                >
+                                    Cancelar
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    disabled={changeEmailMutation.isPending}
+                                >
+                                    {changeEmailMutation.isPending && (
+                                        <Loader2 className="animate-spin" />
+                                    )}
+                                    Salvar
+                                </Button>
+                            </div>
+                        </form>
+                    )}
+                </div>
+
+                {/* Alterar Senha */}
+                <div className="border rounded-2xl overflow-hidden">
+                    <button
+                        type="button"
+                        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/40 transition-colors"
+                        onClick={() => setShowChangePassword(v => !v)}
+                    >
+                        <span className="font-medium">Alterar Senha</span>
+                        {showChangePassword ? (
+                            <ChevronUp className="size-4 text-muted-foreground" />
+                        ) : (
+                            <ChevronDown className="size-4 text-muted-foreground" />
+                        )}
+                    </button>
+
+                    {showChangePassword && (
+                        <form
+                            onSubmit={passwordForm.handleSubmit(data =>
+                                changePasswordMutation.mutate(data),
+                            )}
+                            className="px-4 pb-4 pt-1 space-y-4 border-t"
+                        >
+                            <div className="space-y-2">
+                                <Label htmlFor="current-password">
+                                    Senha Atual
+                                </Label>
+                                <Input
+                                    id="current-password"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    {...passwordForm.register(
+                                        'currentPassword',
+                                    )}
+                                    aria-invalid={
+                                        !!passwordForm.formState.errors
+                                            .currentPassword
+                                    }
+                                />
+                                {passwordForm.formState.errors
+                                    .currentPassword && (
+                                    <span className="text-sm text-destructive">
+                                        {
+                                            passwordForm.formState.errors
+                                                .currentPassword.message
+                                        }
+                                    </span>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="new-password">Nova Senha</Label>
+                                <Input
+                                    id="new-password"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    {...passwordForm.register('newPassword')}
+                                    aria-invalid={
+                                        !!passwordForm.formState.errors
+                                            .newPassword
+                                    }
+                                />
+                                {passwordForm.formState.errors.newPassword && (
+                                    <span className="text-sm text-destructive">
+                                        {
+                                            passwordForm.formState.errors
+                                                .newPassword.message
+                                        }
+                                    </span>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="confirm-new-password">
+                                    Confirmar Nova Senha
+                                </Label>
+                                <Input
+                                    id="confirm-new-password"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    {...passwordForm.register(
+                                        'confirmNewPassword',
+                                    )}
+                                    aria-invalid={
+                                        !!passwordForm.formState.errors
+                                            .confirmNewPassword
+                                    }
+                                />
+                                {passwordForm.formState.errors
+                                    .confirmNewPassword && (
+                                    <span className="text-sm text-destructive">
+                                        {
+                                            passwordForm.formState.errors
+                                                .confirmNewPassword.message
+                                        }
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() => setShowChangePassword(false)}
+                                >
+                                    Cancelar
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    disabled={changePasswordMutation.isPending}
+                                >
+                                    {changePasswordMutation.isPending && (
+                                        <Loader2 className="animate-spin" />
+                                    )}
+                                    Salvar
+                                </Button>
+                            </div>
+                        </form>
+                    )}
+                </div>
+            </div>
+        </Card>
+    )
+}

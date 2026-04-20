@@ -25,11 +25,17 @@ export async function updateSystemEmailAction(_: unknown, formData: FormData) {
             new ResendNotificationGateway(),
         )
 
-        await useCase.execute({ userId, ...parsed })
+        const { hasOtherLoginMethod } = await useCase.execute({
+            userId,
+            ...parsed,
+        })
 
-        await logoutAction()
+        if (!hasOtherLoginMethod) {
+            await logoutAction()
+            return { success: true, wasLoggedOut: true }
+        }
 
-        return { success: true }
+        return { success: true, wasLoggedOut: false }
     } catch (error: any) {
         if (error instanceof AuthenticationError) {
             await logoutAction()

@@ -65,10 +65,13 @@ export function FileSelector({
 
     const [isRefreshTokenLoading, startRefreshTokenTransition] = useTransition()
     const [pickerIsReady, setPickerIsReady] = useState(false)
+    const [pickerOpenRequested, setPickerOpenRequested] = useState(false)
     const pickerRef = useRef<any>(null)
 
     const handleOptionSelect = async (value: SelectOption) => {
         setSelectedOption(value)
+        setPickerOpenRequested(false)
+        setPickerIsReady(false)
 
         if (value !== 'link') {
             urlForm.reset()
@@ -116,6 +119,7 @@ export function FileSelector({
 
         setSelectedOption(null)
         setPickerIsReady(false)
+        setPickerOpenRequested(false)
     }
 
     const handlePickerError = (event: PickerErrorEvent) => {
@@ -123,6 +127,7 @@ export function FileSelector({
 
         setSelectedOption(null)
         setPickerIsReady(false)
+        setPickerOpenRequested(false)
     }
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -214,7 +219,7 @@ export function FileSelector({
     useEffect(() => {
         setPickerIsReady(false)
 
-        if (selectedOption !== 'drive' || !googleOAuthToken) return
+        if (!pickerOpenRequested || !googleOAuthToken) return
 
         const manageAuthFlow = async () => {
             // Just to verify if the token is valid
@@ -256,7 +261,7 @@ export function FileSelector({
         }
 
         manageAuthFlow()
-    }, [selectedOption, googleOAuthToken, login])
+    }, [pickerOpenRequested, googleOAuthToken, login])
 
     useEffect(() => {
         if (!pickerIsReady || !pickerRef.current) return
@@ -359,10 +364,7 @@ export function FileSelector({
                                 </p>
                             </div>
                         </Card>
-                        {(isDriveLoading ||
-                            isRefreshTokenLoading ||
-                            googleReloginIsLoading ||
-                            (selectedOption === 'drive' && !pickerIsReady)) && (
+                        {isDriveLoading && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 <div className="bg-background/80 rounded-full p-2">
                                     <Loader2 className="size-6 sm:size-10 animate-spin text-foreground" />
@@ -436,39 +438,86 @@ export function FileSelector({
                 )}
             </div> */}
 
-            {selectedOption === 'drive' &&
-                googleOAuthToken &&
-                pickerIsReady && (
-                    <drive-picker
-                        ref={pickerRef}
-                        client-id={env.GOOGLE_CLIENT_ID}
-                        app-id={env.GCP_PROJECT_ID}
-                        oauth-token={googleOAuthToken!}
-                        {...(type === 'data-source' && {
-                            multiselect: true,
-                        })}
-                    >
-                        <drive-picker-docs-view
-                            mime-types={(type === 'template'
-                                ? [
-                                      TEMPLATE_FILE_MIME_TYPE.GOOGLE_DOCS,
-                                      TEMPLATE_FILE_MIME_TYPE.GOOGLE_SLIDES,
-                                      TEMPLATE_FILE_MIME_TYPE.DOCX,
-                                      TEMPLATE_FILE_MIME_TYPE.PPTX,
-                                  ]
-                                : [
-                                      DATA_SOURCE_MIME_TYPE.CSV,
-                                      DATA_SOURCE_MIME_TYPE.XLSX,
-                                      DATA_SOURCE_MIME_TYPE.GOOGLE_SHEETS,
-                                      DATA_SOURCE_MIME_TYPE.PNG,
-                                      DATA_SOURCE_MIME_TYPE.JPEG,
-                                  ]
-                            ).join(',')}
-                        ></drive-picker-docs-view>
-                    </drive-picker>
+            <div className="mt-6">
+                {/* Drive Sub-panel */}
+                {selectedOption === 'drive' && (
+                    <Card className="max-sm:px-3 max-sm:py-4">
+                        <CardHeader>
+                            <CardTitle>Google Drive</CardTitle>
+                            <CardDescription>
+                                {googleOAuthToken
+                                    ? 'Abra o seletor para escolher um arquivo do seu Drive'
+                                    : 'Vincule uma conta Google para selecionar arquivos do Drive'}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {googleOAuthToken ? (
+                                <Button
+                                    type="button"
+                                    onClick={() => setPickerOpenRequested(true)}
+                                    disabled={
+                                        pickerOpenRequested ||
+                                        isRefreshTokenLoading ||
+                                        googleReloginIsLoading
+                                    }
+                                >
+                                    {(pickerOpenRequested && !pickerIsReady) ||
+                                    isRefreshTokenLoading ? (
+                                        <Loader2 className="animate-spin" />
+                                    ) : (
+                                        <GoogleDriveIcon className="size-4" />
+                                    )}
+                                    Abrir Google Drive
+                                </Button>
+                            ) : (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => login()}
+                                    disabled={googleReloginIsLoading}
+                                >
+                                    {googleReloginIsLoading ? (
+                                        <Loader2 className="animate-spin" />
+                                    ) : (
+                                        <GoogleDriveIcon className="size-4" />
+                                    )}
+                                    Vincular Conta Google
+                                </Button>
+                            )}
+
+                            {googleOAuthToken && pickerIsReady && (
+                                <drive-picker
+                                    ref={pickerRef}
+                                    client-id={env.GOOGLE_CLIENT_ID}
+                                    app-id={env.GCP_PROJECT_ID}
+                                    oauth-token={googleOAuthToken}
+                                    {...(type === 'data-source' && {
+                                        multiselect: true,
+                                    })}
+                                >
+                                    <drive-picker-docs-view
+                                        mime-types={(type === 'template'
+                                            ? [
+                                                  TEMPLATE_FILE_MIME_TYPE.GOOGLE_DOCS,
+                                                  TEMPLATE_FILE_MIME_TYPE.GOOGLE_SLIDES,
+                                                  TEMPLATE_FILE_MIME_TYPE.DOCX,
+                                                  TEMPLATE_FILE_MIME_TYPE.PPTX,
+                                              ]
+                                            : [
+                                                  DATA_SOURCE_MIME_TYPE.CSV,
+                                                  DATA_SOURCE_MIME_TYPE.XLSX,
+                                                  DATA_SOURCE_MIME_TYPE.GOOGLE_SHEETS,
+                                                  DATA_SOURCE_MIME_TYPE.PNG,
+                                                  DATA_SOURCE_MIME_TYPE.JPEG,
+                                              ]
+                                        ).join(',')}
+                                    ></drive-picker-docs-view>
+                                </drive-picker>
+                            )}
+                        </CardContent>
+                    </Card>
                 )}
 
-            <div className="mt-6">
                 {/* Link Input Form */}
                 {selectedOption === 'link' && (
                     <Card className="max-sm:px-3 max-sm:py-4">

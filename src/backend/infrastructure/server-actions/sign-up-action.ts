@@ -31,6 +31,8 @@ export async function signUpAction(_: unknown, formData: FormData) {
             password: parsedData.password,
         })
     } catch (error: any) {
+        console.log(error)
+
         return {
             success: false,
             errorType: error.type,

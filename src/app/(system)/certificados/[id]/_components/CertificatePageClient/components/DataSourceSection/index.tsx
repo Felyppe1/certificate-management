@@ -51,6 +51,7 @@ interface DataSourceSectionProps {
             arraySeparator: string | null
         }[]
         thumbnailUrl: string | null
+        googleAccountEmail: string | null
         rows: {
             id: string
             processingStatus: PROCESSING_STATUS_ENUM

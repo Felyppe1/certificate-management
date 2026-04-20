@@ -59,13 +59,19 @@ export class User extends AggregateRoot {
     private externalAccounts: ExternalAccount[]
     private verificationToken: VerificationToken | null
 
-    static create(data: CreateUserInput): User {
+    static async create(data: CreateUserInput): Promise<User> {
+        let passwordHash: string | null = null
+
+        if (data.passwordHash) {
+            passwordHash = await bcrypt.hash(data.passwordHash, 10)
+        }
+
         return new User({
             id: createId(),
             email: data.email,
             isEmailVerified: false,
             name: data.name,
-            passwordHash: data.passwordHash,
+            passwordHash,
             credits: USER_CREDITS,
             verificationToken:
                 data.email && data.passwordHash
@@ -76,6 +82,7 @@ export class User extends AggregateRoot {
     }
 
     constructor(data: UserInput) {
+        console.log(data)
         super(data.id)
 
         if (!data.id) {
@@ -187,6 +194,7 @@ export class User extends AggregateRoot {
     }
 
     async comparePassword(plainPassword: string): Promise<boolean> {
+        console.log(this.passwordHash, plainPassword)
         if (!this.passwordHash) return false
         return await bcrypt.compare(plainPassword, this.passwordHash)
     }

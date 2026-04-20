@@ -145,6 +145,8 @@ export class GetCertificateEmissionUseCase {
                               variable => variable.name,
                           ),
                       thumbnailUrl: certificateEmission.Template.thumbnail_url,
+                      googleAccountEmail:
+                          certificateEmission.Template.google_account_email,
                   }
                 : null,
             dataSource: certificateEmission.DataSource
@@ -173,6 +175,8 @@ export class GetCertificateEmissionUseCase {
                           ),
                       thumbnailUrl:
                           certificateEmission.DataSource.thumbnail_url,
+                      googleAccountEmail:
+                          certificateEmission.DataSource.google_account_email,
                       rows,
                   }
                 : null,

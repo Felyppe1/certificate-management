@@ -4,6 +4,9 @@ import {
     NotFoundError,
     NOT_FOUND_ERROR_TYPE,
 } from '../domain/error/not-found-error'
+import { Session } from '../domain/session'
+import { ITransactionManager } from './interfaces/repository/itransaction-manager'
+import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 
 interface Input {
     token: string
@@ -15,6 +18,8 @@ export class VerifyEmailUseCase {
             IUsersRepository,
             'getByVerificationToken' | 'update'
         >,
+        private sessionsRepository: Pick<ISessionsRepository, 'save'>,
+        private transactionManager: Pick<ITransactionManager, 'run'>,
     ) {}
 
     async execute({ token }: Input) {
@@ -25,7 +30,15 @@ export class VerifyEmailUseCase {
         }
 
         await user.verifyEmail(token)
+        const session = Session.create(user.getId())
 
-        await this.usersRepository.update(user)
+        this.transactionManager.run(async () => {
+            await this.usersRepository.update(user)
+            await this.sessionsRepository.save(session)
+        })
+
+        return {
+            sessionToken: session.getToken(),
+        }
     }
 }

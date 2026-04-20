@@ -46,8 +46,9 @@ export function SignUpForm() {
             const result = await signUpAction(null, formData)
 
             if (result?.success === false) {
+                console.log(result.errorType)
                 setErrorMessage(
-                    result.errorType === 'conflict'
+                    result.errorType === 'user-already-exists'
                         ? 'Este e-mail já está em uso.'
                         : 'Ocorreu um erro ao realizar o cadastro. Tente novamente.',
                 )
@@ -73,7 +74,7 @@ export function SignUpForm() {
 
             <div className="space-y-2">
                 <Label htmlFor="name" className="text-sm font-medium">
-                    Nome completo
+                    Nome
                 </Label>
                 <Input
                     type="text"

@@ -220,8 +220,7 @@ model DailyUsage {
 }
 
 model VerificationToken {
-    id         String   @id @default(cuid())
-    user_id    String   @unique
+    user_id    String   @id
     token      String   @unique
     expires_at DateTime
 
