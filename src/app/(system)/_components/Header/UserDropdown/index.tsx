@@ -39,8 +39,6 @@ export function UserDropdown({ name, userId }: UserDropdownProps) {
         mutation.mutate()
     }
 
-    const firstAndLastName = name.split(' ').slice(0, 2).join(' ')
-
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -49,8 +47,8 @@ export function UserDropdown({ name, userId }: UserDropdownProps) {
                     className="flex items-center gap-2"
                     disabled={isPending}
                 >
-                    <span className="text-card-foreground">
-                        {firstAndLastName}
+                    <span className="text-card-foreground truncate inline-block max-w-56 sm:max-w-80">
+                        {name}
                     </span>
                     <ChevronDown className="w-4 h-4 text-muted-foreground" />
                 </Button>

@@ -176,6 +176,21 @@ export class User extends AggregateRoot {
         }
     }
 
+    updateName(name: string): void {
+        const trimmed = name.trim()
+        if (
+            trimmed.length < 3 ||
+            trimmed.length > 50 ||
+            !/^[\p{L} ]+$/u.test(trimmed)
+        ) {
+            throw new Error(
+                'Invalid name: min 3 chars, max 50 chars, letters only',
+            )
+        }
+
+        this.name = trimmed
+    }
+
     async updatePassword(
         newPassword: string,
         currentPassword: string,

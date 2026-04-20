@@ -66,7 +66,6 @@ export function Header() {
     if (!meResponse) return null
 
     const { name, id: userId, credits } = meResponse.user
-
     return (
         <header className="fixed top-0 w-full z-51 bg-card/80 backdrop-blur-md border-b border-input/30 shadow-lg shadow-black/20 border-b-input">
             <nav className="max-w-7xl mx-auto px-[6vw] xs:px-10 py-4 flex items-center justify-between gap-8">

@@ -25,6 +25,7 @@ import { setSystemLoginAction } from '@/backend/infrastructure/server-actions/se
 import { updateSystemEmailAction } from '@/backend/infrastructure/server-actions/update-system-email-action'
 import { updateSystemPasswordAction } from '@/backend/infrastructure/server-actions/update-system-password-action'
 import { VerifyEmailForm } from '@/components/VerifyEmailForm'
+import { useMe } from '@/custom-hooks/use-me'
 
 const setupSchema = z
     .object({
@@ -56,13 +57,10 @@ type SetupData = z.infer<typeof setupSchema>
 type ChangeEmailData = z.infer<typeof changeEmailSchema>
 type ChangePasswordData = z.infer<typeof changePasswordSchema>
 
-interface SystemAccessProps {
-    email: string | null
-    isEmailVerified: boolean
-}
-
-export function SystemAccess({ email, isEmailVerified }: SystemAccessProps) {
+export function SystemAccess() {
     const router = useRouter()
+    const { data } = useMe()
+    const { email, isEmailVerified } = data.user
 
     if (email === null) {
         return <SetupSystemAccess onSuccess={() => router.refresh()} />

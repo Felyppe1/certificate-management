@@ -11,6 +11,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import { grantAccessAction } from '@/backend/infrastructure/server-actions/grant-access-action'
+import { useMe } from '@/custom-hooks/use-me'
+
+const ADMIN_EMAILS = ['felyppe.nunes1@gmail.com', 'luizfelyppe@id.uff.br']
 
 const grantAccessSchema = z.object({
     email: z.email('Formato de email inválido'),
@@ -19,6 +22,14 @@ const grantAccessSchema = z.object({
 type GrantAccessFormData = z.infer<typeof grantAccessSchema>
 
 export function GrantAccess() {
+    const { data } = useMe()
+
+    if (!ADMIN_EMAILS.includes(data.user.email ?? '')) return null
+
+    return <GrantAccessForm />
+}
+
+function GrantAccessForm() {
     const {
         register,
         handleSubmit,

@@ -218,3 +218,11 @@ export const updateSystemPasswordSchema = z.object({
 export const unlinkExternalAccountSchema = z.object({
     provider: z.enum(['GOOGLE']),
 })
+
+export const updateUserBasicDataSchema = z.object({
+    name: z
+        .string()
+        .min(3)
+        .max(50)
+        .regex(/^[\p{L} ]+$/u),
+})

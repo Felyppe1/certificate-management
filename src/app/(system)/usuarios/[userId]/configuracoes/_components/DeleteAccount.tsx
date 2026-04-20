@@ -21,11 +21,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
 
-interface DeleteAccountProps {
-    userEmail: string
-}
-
-export function DeleteAccount({}: DeleteAccountProps) {
+export function DeleteAccount() {
     const [isOpen, setIsOpen] = useState(false)
     const [confirmText, setConfirmText] = useState('')
 
