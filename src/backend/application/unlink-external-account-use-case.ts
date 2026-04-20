@@ -1,10 +1,7 @@
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { AuthenticationError } from '../domain/error/authentication-error'
 import { Provider } from '../domain/external-account'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
+import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 
 interface Input {
     userId: string
@@ -14,6 +11,7 @@ interface Input {
 export class UnlinkExternalAccountUseCase {
     constructor(
         private usersRepository: Pick<IUsersRepository, 'getById' | 'update'>,
+        private googleAuthGateway: IGoogleAuthGateway,
     ) {}
 
     async execute({ userId, provider }: Input) {
@@ -23,11 +21,13 @@ export class UnlinkExternalAccountUseCase {
             throw new AuthenticationError('user-not-found')
         }
 
-        if (!user.canRemoveExternalAccount(provider)) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.LAST_LOGIN_METHOD)
-        }
+        const removedExternalAccount = user.removeExternalAccount(provider)
 
-        user.removeExternalAccount(provider)
+        if (provider === 'GOOGLE' && removedExternalAccount) {
+            await this.googleAuthGateway.revokeRefreshToken(
+                removedExternalAccount.refreshToken!,
+            )
+        }
 
         await this.usersRepository.update(user)
     }

@@ -12,13 +12,12 @@ import {
     VerificationTokenInput,
     VerificationTokenOutput,
 } from './verification-token'
-import { ConflictError, CONFLICT_ERROR_TYPE } from './error/conflict-error'
 import { ForbiddenError, FORBIDDEN_ERROR_TYPE } from './error/forbidden-error'
-import { AuthenticationError } from './error/authentication-error'
 import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
 } from './error/validation-error'
+import { NOT_FOUND_ERROR_TYPE, NotFoundError } from './error/not-found-error'
 
 export const USER_CREDITS = 300
 
@@ -225,10 +224,24 @@ export class User extends AggregateRoot {
         )
     }
 
-    removeExternalAccount(provider: Provider): void {
+    removeExternalAccount(provider: Provider): ExternalAccountOutput {
+        const externalAccount = this.getExternalAccount(provider)
+
+        if (!externalAccount) {
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.EXTERNAL_ACCOUNT)
+        }
+
+        const canRemove = this.canRemoveExternalAccount(provider)
+
+        if (!canRemove) {
+            throw new ValidationError(VALIDATION_ERROR_TYPE.LAST_LOGIN_METHOD)
+        }
+
         this.externalAccounts = this.externalAccounts.filter(
             a => a.getProvider() !== provider,
         )
+
+        return externalAccount.serialize()
     }
 
     hasVerifiedEmailAccess(): boolean {

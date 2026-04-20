@@ -10,6 +10,7 @@ export enum NOT_FOUND_ERROR_TYPE {
     DRIVE_FILE = 'drive-file-not-found',
     EMAIL = 'email-not-found',
     VERIFICATION_TOKEN = 'verification-token-not-found',
+    EXTERNAL_ACCOUNT = 'external-account-not-found',
 }
 
 export class NotFoundError extends AppError<NOT_FOUND_ERROR_TYPE> {
