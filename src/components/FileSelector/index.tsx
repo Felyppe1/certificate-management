@@ -215,9 +215,6 @@ export function FileSelector({
         onNonOAuthError: err => {
             setSelectedOption(null)
         },
-        onSuccess: () => {
-            toast.success('Reautenticado com sucesso!')
-        },
     })
 
     useEffect(() => {
