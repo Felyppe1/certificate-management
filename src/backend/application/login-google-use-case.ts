@@ -85,8 +85,7 @@ export class LoginGoogleUseCase {
             }
 
             user = authenticatedUser
-            const externalAccount = user.getExternalAccount('GOOGLE')
-            if (!externalAccount) {
+            if (!user.hasGoogleAccount()) {
                 user.addExternalAccount({
                     provider: 'GOOGLE',
                     providerUserId: userInfo.providerUserId,
@@ -103,8 +102,7 @@ export class LoginGoogleUseCase {
                     accessTokenExpiryDateTime:
                         tokenData.accessTokenExpiryDateTime,
                     refreshToken:
-                        tokenData.refreshToken ??
-                        externalAccount.getRefreshToken(),
+                        tokenData.refreshToken ?? user.getGoogleRefreshToken(),
                 })
             }
         } else {
@@ -122,8 +120,7 @@ export class LoginGoogleUseCase {
                     accessTokenExpiryDateTime:
                         tokenData.accessTokenExpiryDateTime,
                     refreshToken:
-                        tokenData.refreshToken ??
-                        user.getExternalAccount('GOOGLE')!.getRefreshToken(),
+                        tokenData.refreshToken ?? user.getGoogleRefreshToken(),
                 })
             } else {
                 isNewUser = true

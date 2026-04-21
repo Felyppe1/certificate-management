@@ -283,12 +283,33 @@ export class User extends AggregateRoot {
         )
     }
 
-    getExternalAccount(provider: Provider): ExternalAccount | undefined {
+    private getExternalAccount(
+        provider: Provider,
+    ): ExternalAccount | undefined {
         return this.externalAccounts.find(a => a.getProvider() === provider)
     }
 
-    getExternalAccounts(): ExternalAccount[] {
-        return [...this.externalAccounts]
+    hasGoogleAccount(): boolean {
+        return !!this.getExternalAccount('GOOGLE')
+    }
+
+    hasExternalAccounts(): boolean {
+        return this.externalAccounts.length > 0
+    }
+
+    getGoogleAccessToken(): string | null {
+        return this.getExternalAccount('GOOGLE')?.getAccessToken() ?? null
+    }
+
+    getGoogleRefreshToken(): string | null {
+        return this.getExternalAccount('GOOGLE')?.getRefreshToken() ?? null
+    }
+
+    getGoogleAccessTokenExpiryDateTime(): Date | null {
+        return (
+            this.getExternalAccount('GOOGLE')?.getAccessTokenExpiryDateTime() ??
+            null
+        )
     }
 
     getEmail(): string | null {

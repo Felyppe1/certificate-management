@@ -21,31 +21,29 @@ export class RefreshGoogleAccessTokenUseCase {
     async execute({ userId }: RefreshGoogleAccessTokenUseCaseInput) {
         const user = await this.usersRepository.getById(userId)
 
-        const externalAccount = user?.getExternalAccount('GOOGLE')
-
-        if (!externalAccount) {
+        if (!user?.hasGoogleAccount()) {
             throw new ForbiddenError(
                 FORBIDDEN_ERROR_TYPE.GOOGLE_ACCOUNT_NOT_FOUND,
             )
         }
 
         const newToken = await this.googleAuthGateway.checkOrGetNewAccessToken({
-            accessToken: externalAccount.getAccessToken(),
-            refreshToken: externalAccount.getRefreshToken()!,
+            accessToken: user.getGoogleAccessToken()!,
+            refreshToken: user.getGoogleRefreshToken()!,
             accessTokenExpiryDateTime:
-                externalAccount.getAccessTokenExpiryDateTime()!,
+                user.getGoogleAccessTokenExpiryDateTime()!,
         })
 
         if (newToken) {
-            user!.updateExternalAccount('GOOGLE', {
+            user.updateExternalAccount('GOOGLE', {
                 accessToken: newToken.newAccessToken,
                 accessTokenExpiryDateTime:
                     newToken.newAccessTokenExpiryDateTime,
             })
 
-            await this.usersRepository.update(user!)
+            await this.usersRepository.update(user)
         }
 
-        return externalAccount.getAccessToken()
+        return user.getGoogleAccessToken()!
     }
 }
