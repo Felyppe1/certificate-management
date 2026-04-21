@@ -14,6 +14,7 @@ import { SpreadsheetGeneratorFactory } from '../factory/spreadsheet-generator-fa
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { turnDataSourceIntoSpreadsheetSchema } from './schemas'
 import { redirect } from 'next/navigation'
+import { gcpStorage } from '../cloud/gcp'
 
 export async function turnDataSourceIntoSpreadsheetAction(
     _: unknown,
@@ -34,7 +35,7 @@ export async function turnDataSourceIntoSpreadsheetAction(
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,
         )
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
 
         const googleAuthGateway = new GoogleAuthGateway()
         const driveGateway = new GoogleDriveGateway(googleAuthGateway)

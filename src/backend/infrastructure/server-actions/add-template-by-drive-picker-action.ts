@@ -16,6 +16,7 @@ import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken
 import { addTemplateByDrivePickerSchema } from './schemas'
 import { LiquidStringVariableExtractor } from '../string-variable-extractor/liquidjs'
 import { redirect } from 'next/navigation'
+import { gcpStorage } from '../cloud/gcp'
 
 export async function addTemplateByDrivePickerAction(
     _: unknown,
@@ -41,7 +42,7 @@ export async function addTemplateByDrivePickerAction(
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const usersRepository = new PrismaUsersRepository(prisma)
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const transactionManager = new PrismaTransactionManager(prisma)
         const stringVariableExtractor = new LiquidStringVariableExtractor()
 

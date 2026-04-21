@@ -13,6 +13,7 @@ import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken
 import { addTemplateByUploadSchema } from './schemas'
 import { LiquidStringVariableExtractor } from '../string-variable-extractor/liquidjs'
 import { redirect } from 'next/navigation'
+import { gcpStorage } from '../cloud/gcp'
 
 export async function addTemplateByUploadAction(
     _: unknown,
@@ -28,7 +29,7 @@ export async function addTemplateByUploadAction(
 
         const parsedData = addTemplateByUploadSchema.parse(rawData)
 
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,

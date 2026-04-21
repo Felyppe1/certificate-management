@@ -21,6 +21,7 @@ import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken
 import { updateCertificateEmissionSchema } from '@/backend/infrastructure/server-actions/schemas'
 import { PROCESSING_STATUS_ENUM as DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
 import { ColumnType } from '@/backend/domain/data-source-column'
+import { gcpStorage } from '@/backend/infrastructure/cloud/gcp'
 
 export interface GetCertificateEmissionControllerResponse {
     certificateEmission: {
@@ -145,7 +146,7 @@ export async function DELETE(
         const { userId } = await validateSessionToken(request)
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
 
         const deleteCertificateEmissionUseCase =
             new DeleteCertificateEmissionUseCase(certificatesRepository, bucket)

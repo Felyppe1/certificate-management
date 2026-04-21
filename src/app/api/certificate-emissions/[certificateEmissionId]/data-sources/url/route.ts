@@ -15,6 +15,7 @@ import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { gcpStorage } from '@/backend/infrastructure/cloud/gcp'
 
 const addDataSourceByUrlBodySchema = z.object({
     fileUrls: z.array(z.url('Invalid file URL')).min(1).max(4),
@@ -42,7 +43,7 @@ export async function PUT(
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const transactionManager = new PrismaTransactionManager(prisma)
         const usersRepository = new PrismaUsersRepository(prisma)
 

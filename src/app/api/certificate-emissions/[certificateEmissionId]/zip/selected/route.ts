@@ -9,6 +9,7 @@ import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken
 import { NextRequest, NextResponse } from 'next/server'
 import { Readable } from 'stream'
 import { downloadCertificateEmissionsSchema } from '@/backend/infrastructure/server-actions/schemas'
+import { gcpStorage } from '@/backend/infrastructure/cloud/gcp'
 
 export async function POST(
     request: NextRequest,
@@ -26,7 +27,7 @@ export async function POST(
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,
         )
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
 
         const downloadCertificateEmissionsUseCase =
             new DownloadCertificateEmissionsUseCase(

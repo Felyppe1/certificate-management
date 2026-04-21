@@ -9,6 +9,7 @@ import { DownloadDataSourceUseCase } from '@/backend/application/download-data-s
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { downloadDataSourceSchema } from './schemas'
 import { redirect } from 'next/navigation'
+import { gcpStorage } from '../cloud/gcp'
 
 export async function downloadDataSourceAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -21,7 +22,7 @@ export async function downloadDataSourceAction(_: unknown, formData: FormData) {
         const parsedData = downloadDataSourceSchema.parse(rawData)
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
 
         const downloadDataSourceUseCase = new DownloadDataSourceUseCase(
             bucket,

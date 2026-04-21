@@ -14,6 +14,7 @@ import z from 'zod'
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
+import { gcpStorage } from '@/backend/infrastructure/cloud/gcp'
 
 const addDataSourceByDrivePickerBodySchema = z.object({
     fileIds: z.array(z.string().min(1)).min(1).max(4),
@@ -42,7 +43,7 @@ export async function PUT(
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
         const usersRepository = new PrismaUsersRepository(prisma)
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const transactionManager = new PrismaTransactionManager(prisma)
 
         const addDataSourceByDrivePickerUseCase =

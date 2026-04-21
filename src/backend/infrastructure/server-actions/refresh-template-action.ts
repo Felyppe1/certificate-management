@@ -17,6 +17,7 @@ import { refreshTemplateSchema } from './schemas'
 import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { LiquidStringVariableExtractor } from '../string-variable-extractor/liquidjs'
 import { redirect } from 'next/navigation'
+import { gcpStorage } from '../cloud/gcp'
 
 export async function refreshTemplateAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -37,7 +38,7 @@ export async function refreshTemplateAction(_: unknown, formData: FormData) {
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const usersRepository = new PrismaUsersRepository(prisma)
         const transactionManager = new PrismaTransactionManager(prisma)
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const stringVariableExtractor = new LiquidStringVariableExtractor()
 
         const refreshTemplateUseCase = new RefreshTemplateUseCase(

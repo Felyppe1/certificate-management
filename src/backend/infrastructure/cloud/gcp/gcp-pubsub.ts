@@ -2,11 +2,7 @@ import { IPubSub } from '@/backend/application/interfaces/cloud/ipubsub'
 import { PubSub } from '@google-cloud/pubsub'
 
 export class GcpPubSub implements IPubSub {
-    private pubsub: PubSub
-
-    constructor() {
-        this.pubsub = new PubSub()
-    }
+    constructor(private pubsub: PubSub) {}
 
     async publish(
         topicName: string,

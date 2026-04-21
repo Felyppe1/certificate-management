@@ -16,6 +16,7 @@ import { addDataSourceByUrlSchema } from './schemas'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
 import { redirect } from 'next/navigation'
+import { gcpStorage } from '../cloud/gcp'
 
 export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -38,7 +39,7 @@ export async function addDataSourceByUrlAction(_: unknown, formData: FormData) {
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const transactionManager = new PrismaTransactionManager(prisma)
         const usersRepository = new PrismaUsersRepository(prisma)
 

@@ -13,6 +13,7 @@ import { CloudTasksQueue } from '../cloud/gcp/cloud-tasks-queue'
 import { LocalQueue } from '../cloud/local/local-queue'
 import { redirect } from 'next/navigation'
 import { env } from '@/env'
+import { gcpCloudTasks } from '../cloud/gcp'
 
 export async function resendEmailsAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -34,7 +35,7 @@ export async function resendEmailsAction(_: unknown, formData: FormData) {
         const queue =
             env.NODE_ENV === 'development'
                 ? new LocalQueue()
-                : new CloudTasksQueue()
+                : new CloudTasksQueue(gcpCloudTasks)
 
         const resendEmailsUseCase = new ResendEmailsUseCase(
             certificateEmissionsRepository,

@@ -15,6 +15,7 @@ import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken
 import { generateCertificatesSchema } from './schemas'
 import { redirect } from 'next/navigation'
 import { env } from '@/env'
+import { gcpCloudTasks, gcpStorage } from '../cloud/gcp'
 
 export async function generateCertificatesAction(
     _: unknown,
@@ -29,7 +30,7 @@ export async function generateCertificatesAction(
 
         const parsedData = generateCertificatesSchema.parse(rawData)
 
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
@@ -41,7 +42,7 @@ export async function generateCertificatesAction(
         const queue =
             env.NODE_ENV === 'development'
                 ? new LocalQueue()
-                : new CloudTasksQueue()
+                : new CloudTasksQueue(gcpCloudTasks)
 
         const generateCertificatesUseCase = new GenerateCertificatesUseCase(
             bucket,

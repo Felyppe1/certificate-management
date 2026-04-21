@@ -11,6 +11,7 @@ import { CloudTasksQueue } from '@/backend/infrastructure/cloud/gcp/cloud-tasks-
 import { LocalQueue } from '@/backend/infrastructure/cloud/local/local-queue'
 import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { gcpCloudTasks, gcpStorage } from '@/backend/infrastructure/cloud/gcp'
 
 export async function POST(
     request: NextRequest,
@@ -21,7 +22,7 @@ export async function POST(
     try {
         const { userId } = await validateSessionToken(request)
 
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
@@ -33,7 +34,7 @@ export async function POST(
         const queue =
             env.NODE_ENV === 'development'
                 ? new LocalQueue()
-                : new CloudTasksQueue()
+                : new CloudTasksQueue(gcpCloudTasks)
 
         const generateCertificatesUseCase = new GenerateCertificatesUseCase(
             bucket,

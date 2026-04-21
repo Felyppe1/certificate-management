@@ -11,6 +11,7 @@ import { PrismaTransactionManager } from '../repository/prisma/prisma-transactio
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { deleteTemplateSchema } from './schemas'
 import { redirect } from 'next/navigation'
+import { gcpStorage } from '../cloud/gcp'
 
 export async function deleteTemplateAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -26,7 +27,7 @@ export async function deleteTemplateAction(_: unknown, formData: FormData) {
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,
         )
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const transactionManager = new PrismaTransactionManager(prisma)
 
         const deleteTemplateUseCase = new DeleteTemplateUseCase(

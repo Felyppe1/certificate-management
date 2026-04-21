@@ -17,6 +17,7 @@ import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken
 import { updateDataSourceColumnsSchema } from '@/backend/infrastructure/server-actions/schemas'
 import { UpdateDataSourceColumnsUseCase } from '@/backend/application/update-data-source-columns-use-case'
 import { ColumnType } from '@/backend/domain/data-source-column'
+import { gcpStorage } from '@/backend/infrastructure/cloud/gcp'
 
 export async function DELETE(
     request: NextRequest,
@@ -30,7 +31,7 @@ export async function DELETE(
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
 
         const deleteDataSourceUseCase = new DeleteDataSourceUseCase(
             certificateEmissionsRepository,

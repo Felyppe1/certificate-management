@@ -12,6 +12,7 @@ import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken
 import { retryDataSourceRowSchema } from './schemas'
 import { redirect } from 'next/navigation'
 import { env } from '@/env'
+import { gcpCloudTasks } from '../cloud/gcp'
 
 export async function retryDataSourceRowAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -29,7 +30,7 @@ export async function retryDataSourceRowAction(_: unknown, formData: FormData) {
         const queue =
             env.NODE_ENV === 'development'
                 ? new LocalQueue()
-                : new CloudTasksQueue()
+                : new CloudTasksQueue(gcpCloudTasks)
 
         const retryDataSourceRowUseCase = new RetryDataSourceRowUseCase(
             certificatesRepository,

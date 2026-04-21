@@ -8,6 +8,7 @@ import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { createWriteBucketSignedUrlSchema } from '@/backend/infrastructure/server-actions/schemas'
+import { gcpStorage } from '@/backend/infrastructure/cloud/gcp'
 
 export interface CreateSignedUrlControllerResponse {
     signedUrl: string
@@ -24,7 +25,7 @@ export async function POST(
         const body = await request.json()
         const parsed = createWriteBucketSignedUrlSchema.parse(body)
 
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
 
         const createWriteBucketSignedUrlUseCase =

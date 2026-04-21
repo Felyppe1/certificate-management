@@ -8,7 +8,7 @@ import {
 } from '@/backend/application/interfaces/cloud/ibucket'
 
 export class GcpBucket implements IBucket {
-    private storage = new Storage()
+    constructor(private storage: Storage) {}
 
     async generateSignedUrl(input: GenerateSignedUrlInput): Promise<string> {
         const bucket = this.storage.bucket(input.bucketName)

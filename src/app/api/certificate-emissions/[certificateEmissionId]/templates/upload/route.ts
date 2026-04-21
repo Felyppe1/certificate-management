@@ -13,6 +13,7 @@ import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/reposit
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { LiquidStringVariableExtractor } from '@/backend/infrastructure/string-variable-extractor/liquidjs'
+import { gcpStorage } from '@/backend/infrastructure/cloud/gcp'
 
 const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
 
@@ -36,7 +37,7 @@ export async function PUT(
 
         const parsed = addTemplateByUploadBodySchema.parse({ file })
 
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,

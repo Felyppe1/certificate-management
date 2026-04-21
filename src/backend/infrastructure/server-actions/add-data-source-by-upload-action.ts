@@ -12,6 +12,7 @@ import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken
 import { logoutAction } from './logout-action'
 import { addDataSourceByUploadSchema } from './schemas'
 import { redirect } from 'next/navigation'
+import { gcpStorage } from '../cloud/gcp'
 
 export async function addDataSourceByUploadAction(
     _: unknown,
@@ -27,7 +28,7 @@ export async function addDataSourceByUploadAction(
 
         const parsedData = addDataSourceByUploadSchema.parse(rawData)
 
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,

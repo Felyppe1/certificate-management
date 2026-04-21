@@ -16,6 +16,7 @@ import { PrismaTransactionManager } from '../repository/prisma/prisma-transactio
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { addDataSourceByDrivePickerSchema } from './schemas'
 import { redirect } from 'next/navigation'
+import { gcpStorage } from '../cloud/gcp'
 
 export async function addDataSourceByDrivePickerAction(
     _: unknown,
@@ -42,7 +43,7 @@ export async function addDataSourceByDrivePickerAction(
         const spreadsheetContentExtractorFactory =
             new SpreadsheetContentExtractorFactory()
         const usersRepository = new PrismaUsersRepository(prisma)
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const transactionManager = new PrismaTransactionManager(prisma)
 
         const addDataSourceByDrivePickerUseCase =

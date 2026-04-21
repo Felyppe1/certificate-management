@@ -10,6 +10,7 @@ import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken
 import { viewCertificateEmissionsSchema } from './schemas'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { redirect } from 'next/navigation'
+import { gcpStorage } from '../cloud/gcp'
 
 export async function viewCertificatesAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -22,7 +23,7 @@ export async function viewCertificatesAction(_: unknown, formData: FormData) {
         const parsedData = viewCertificateEmissionsSchema.parse(rawData)
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,
         )

@@ -9,6 +9,7 @@ import { DeleteDataSourceUseCase } from '@/backend/application/delete-data-sourc
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { deleteDataSourceSchema } from './schemas'
 import { redirect } from 'next/navigation'
+import { gcpStorage } from '../cloud/gcp'
 
 export async function deleteDataSourceAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -23,7 +24,7 @@ export async function deleteDataSourceAction(_: unknown, formData: FormData) {
         const certificateEmissionsRepository = new PrismaCertificatesRepository(
             prisma,
         )
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
 
         const deleteDataSourceUseCase = new DeleteDataSourceUseCase(
             certificateEmissionsRepository,

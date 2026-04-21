@@ -15,6 +15,7 @@ import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/reposit
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { LiquidStringVariableExtractor } from '@/backend/infrastructure/string-variable-extractor/liquidjs'
+import { gcpStorage } from '@/backend/infrastructure/cloud/gcp'
 
 const addTemplateByDrivePickerBodySchema = z.object({
     fileId: z.string().min(1, 'File ID is required'),
@@ -42,7 +43,7 @@ export async function PUT(
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const usersRepository = new PrismaUsersRepository(prisma)
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const transactionManager = new PrismaTransactionManager(prisma)
         const stringVariableExtractor = new LiquidStringVariableExtractor()
 

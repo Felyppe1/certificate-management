@@ -12,6 +12,7 @@ import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken
 import { retryCertificatesGenerationSchema } from './schemas'
 import { redirect } from 'next/navigation'
 import { env } from '@/env'
+import { gcpCloudTasks } from '../cloud/gcp'
 
 export async function retryCertificatesGenerationAction(
     _: unknown,
@@ -35,7 +36,7 @@ export async function retryCertificatesGenerationAction(
         const queue =
             env.NODE_ENV === 'development'
                 ? new LocalQueue()
-                : new CloudTasksQueue()
+                : new CloudTasksQueue(gcpCloudTasks)
 
         const retryCertificatesGenerationUseCase =
             new RetryCertificatesGenerationUseCase(

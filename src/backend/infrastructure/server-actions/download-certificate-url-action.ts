@@ -10,6 +10,7 @@ import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken
 import { downloadCertificateUrlSchema } from './schemas'
 import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
 import { redirect } from 'next/navigation'
+import { gcpStorage } from '../cloud/gcp'
 
 export async function downloadCertificateUrlAction(
     _: unknown,
@@ -28,7 +29,7 @@ export async function downloadCertificateUrlAction(
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,
         )
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
 
         const downloadCertificateUseCase =
             new DownloadCertificateEmissionUseCase(

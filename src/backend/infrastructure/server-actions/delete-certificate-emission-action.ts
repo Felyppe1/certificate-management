@@ -9,6 +9,7 @@ import { GcpBucket } from '../cloud/gcp/gcp-bucket'
 import { logoutAction } from './logout-action'
 import { deleteCertificateEmissionSchema } from './schemas'
 import { redirect } from 'next/navigation'
+import { gcpStorage } from '../cloud/gcp'
 
 export async function deleteCertificateEmissionAction(
     _: unknown,
@@ -23,7 +24,7 @@ export async function deleteCertificateEmissionAction(
         const parsedData = deleteCertificateEmissionSchema.parse(rawData)
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
 
         const deleteCertificateEmissionUseCase =
             new DeleteCertificateEmissionUseCase(certificatesRepository, bucket)

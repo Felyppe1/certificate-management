@@ -16,6 +16,7 @@ import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken
 import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
 import { LiquidStringVariableExtractor } from '@/backend/infrastructure/string-variable-extractor/liquidjs'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { gcpStorage } from '@/backend/infrastructure/cloud/gcp'
 
 const addTemplateByUrlBodySchema = z.object({
     fileUrl: z.url('File URL is invalid'),
@@ -42,7 +43,7 @@ export async function PUT(
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const transactionManager = new PrismaTransactionManager(prisma)
         const stringVariableExtractor = new LiquidStringVariableExtractor()
         const usersRepository = new PrismaUsersRepository(prisma)

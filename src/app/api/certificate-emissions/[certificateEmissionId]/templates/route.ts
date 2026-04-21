@@ -15,6 +15,7 @@ import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/reposit
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { LiquidStringVariableExtractor } from '@/backend/infrastructure/string-variable-extractor/liquidjs'
+import { gcpStorage } from '@/backend/infrastructure/cloud/gcp'
 
 export async function DELETE(
     request: NextRequest,
@@ -31,7 +32,7 @@ export async function DELETE(
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,
         )
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const transactionManager = new PrismaTransactionManager(prisma)
 
         const deleteTemplateUseCase = new DeleteTemplateUseCase(
@@ -71,7 +72,7 @@ export async function PATCH(
         const usersRepository = new PrismaUsersRepository(prisma)
         const transactionManager = new PrismaTransactionManager(prisma)
 
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const stringVariableExtractor = new LiquidStringVariableExtractor()
 
         const refreshTemplateUseCase = new RefreshTemplateUseCase(

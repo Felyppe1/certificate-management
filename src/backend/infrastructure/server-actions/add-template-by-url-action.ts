@@ -17,6 +17,7 @@ import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data
 import { LiquidStringVariableExtractor } from '../string-variable-extractor/liquidjs'
 import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
 import { redirect } from 'next/navigation'
+import { gcpStorage } from '../cloud/gcp'
 
 export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
     // add delay
@@ -40,7 +41,7 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
         const googleAuthGateway = new GoogleAuthGateway()
         const googleDriveGateway = new GoogleDriveGateway(googleAuthGateway)
         const fileContentExtractorFactory = new FileContentExtractorFactory()
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const transactionManager = new PrismaTransactionManager(prisma)
         const stringVariableExtractor = new LiquidStringVariableExtractor()
         const usersRepository = new PrismaUsersRepository(prisma)

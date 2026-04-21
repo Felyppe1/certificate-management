@@ -12,6 +12,7 @@ import z from 'zod'
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
+import { gcpStorage } from '@/backend/infrastructure/cloud/gcp'
 
 const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
 
@@ -39,7 +40,7 @@ export async function PUT(
 
         const parsed = addDataSourceByUploadBodySchema.parse({ files })
 
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
         const dataSourceRowsRepository = new PrismaDataSourceRowsRepository(
             prisma,

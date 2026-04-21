@@ -9,6 +9,7 @@ import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken
 import { logoutAction } from './logout-action'
 import { createWriteBucketSignedUrlSchema } from './schemas'
 import { redirect } from 'next/navigation'
+import { gcpStorage } from '../cloud/gcp'
 
 export async function createWriteBucketSignedUrlAction(
     _: unknown,
@@ -26,7 +27,7 @@ export async function createWriteBucketSignedUrlAction(
 
         const parsedData = createWriteBucketSignedUrlSchema.parse(rawData)
 
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
 
         const createWriteBucketSignedUrlUseCase =
