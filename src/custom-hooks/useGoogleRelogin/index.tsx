@@ -50,7 +50,6 @@ export function useGoogleRelogin({
 
                 if (result) {
                     if (result.success) {
-                        toast.success('Reautenticado com sucesso!')
                         customOnSuccess?.()
                     } else {
                         if (

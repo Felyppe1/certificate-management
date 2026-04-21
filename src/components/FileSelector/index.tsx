@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils'
 import { DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
 import { TEMPLATE_FILE_MIME_TYPE } from '@/backend/domain/template'
 import { GoogleDriveIcon } from '../svg/GoogleDriveIcon'
+import { GoogleButton } from '../GoogleButton'
 import { toast } from 'sonner'
 import { useGoogleRelogin } from '../../custom-hooks/useGoogleRelogin'
 import { UseFormReturn } from 'react-hook-form'
@@ -214,6 +215,9 @@ export function FileSelector({
         },
         onNonOAuthError: err => {
             setSelectedOption(null)
+        },
+        onSuccess: () => {
+            toast.success('Reautenticado com sucesso!')
         },
     })
 
@@ -472,19 +476,13 @@ export function FileSelector({
                                 </Button>
                             ) : (
                                 <div className="flex flex-col items-start gap-3">
-                                    <Button
+                                    <GoogleButton
+                                        text="Vincular Conta Google"
                                         type="button"
-                                        variant="outline"
                                         onClick={() => login()}
-                                        disabled={googleReloginIsLoading}
-                                    >
-                                        {googleReloginIsLoading ? (
-                                            <Loader2 className="animate-spin" />
-                                        ) : (
-                                            <GoogleDriveIcon className="size-4" />
-                                        )}
-                                        Vincular Conta Google
-                                    </Button>
+                                        isLoading={googleReloginIsLoading}
+                                        className="w-auto"
+                                    />
                                     <RequestAccessModal />
                                 </div>
                             )}

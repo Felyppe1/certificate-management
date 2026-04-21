@@ -14,6 +14,7 @@ import { queryKeys } from '@/lib/query-keys'
 import { getAvatarInitials } from '@/lib/utils'
 import { WarningPopover } from '@/components/WarningPopover'
 import { RequestAccessModal } from '@/components/RequestAccessModal'
+import { GoogleButton } from '@/components/GoogleButton'
 import { useState } from 'react'
 
 export function Account() {
@@ -206,19 +207,12 @@ export function Account() {
 
                 {!hasGoogleAccount && (
                     <div className="pt-2 flex flex-col items-start gap-3">
-                        <Button
-                            variant="outline"
-                            className="gap-2"
+                        <GoogleButton
+                            text="Adicionar Conta Google"
                             onClick={() => addGoogleLogin()}
-                            disabled={isAddingGoogle}
-                        >
-                            {isAddingGoogle ? (
-                                <Loader2 className="size-4 animate-spin" />
-                            ) : (
-                                <Plus className="size-4" />
-                            )}
-                            Adicionar Conta Google
-                        </Button>
+                            isLoading={isAddingGoogle}
+                            className="w-auto"
+                        />
                         <RequestAccessModal />
                     </div>
                 )}

@@ -199,7 +199,7 @@ export function TemplateSection({
         userEmail,
         onSuccess: () => {
             toast.success(
-                'Reautenticado com sucesso! Tente atualizar o template novamente.',
+                'Reautenticado com sucesso! Tente selecionar o template novamente.',
             )
         },
     })

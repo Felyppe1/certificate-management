@@ -45,6 +45,7 @@ import { useGoogleRelogin } from '@/custom-hooks/useGoogleRelogin'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { queryKeys } from '@/lib/query-keys'
 import { ColumnType } from '@/backend/domain/data-source-column'
+import { GoogleAccountWarningPopover } from '@/components/GoogleAccountWarningPopover'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -324,36 +325,14 @@ export function DataSourceDisplay({
                         {dataSource.inputMethod !== INPUT_METHOD.UPLOAD &&
                             !isImageDataSource && (
                                 <div className="flex items-center gap-1">
-                                    {dataSource.googleAccountEmail &&
-                                        userEmail &&
-                                        dataSource.googleAccountEmail !==
-                                            userEmail && (
-                                            <Popover>
-                                                <PopoverTrigger asChild>
-                                                    <button
-                                                        type="button"
-                                                        className="text-amber-500 hover:text-amber-600 transition-colors"
-                                                        aria-label="Aviso de conta Google"
-                                                    >
-                                                        <AlertTriangle className="size-4" />
-                                                    </button>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="max-w-xs text-sm z-52 bg-blue-800 text-zinc-100 border-none shadow-xl">
-                                                    Esta fonte de dados foi
-                                                    adicionada com a conta{' '}
-                                                    <span className="font-medium text-white">
-                                                        {
-                                                            dataSource.googleAccountEmail
-                                                        }
-                                                    </span>
-                                                    . Como você está usando
-                                                    outra conta Google, a
-                                                    atualização e a abertura do
-                                                    link podem não funcionar se
-                                                    você não tiver acesso.
-                                                </PopoverContent>
-                                            </Popover>
-                                        )}
+                                    {dataSource.googleAccountEmail !==
+                                        userEmail && (
+                                        <GoogleAccountWarningPopover
+                                            email={
+                                                dataSource.googleAccountEmail
+                                            }
+                                        />
+                                    )}
                                     <WarningPopover
                                         open={showRefreshWarning}
                                         onOpenChange={setShowRefreshWarning}

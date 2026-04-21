@@ -28,7 +28,10 @@ export default function Entrar() {
 
                 <Card className="gap-6">
                     <div className="flex flex-col items-center gap-3">
-                        <GoogleButton text="Entrar com Google" />
+                        <GoogleButton
+                            text="Entrar com Google"
+                            href="/api/auth/google"
+                        />
                         <RequestAccessModal />
                     </div>
 

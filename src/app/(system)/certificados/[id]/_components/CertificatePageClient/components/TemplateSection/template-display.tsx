@@ -34,6 +34,7 @@ import { useGoogleRelogin } from '@/custom-hooks/useGoogleRelogin'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { queryKeys } from '@/lib/query-keys'
+import { GoogleAccountWarningPopover } from '@/components/GoogleAccountWarningPopover'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -164,7 +165,7 @@ export function TemplateDisplay({
         userEmail,
         onSuccess: () => {
             toast.success(
-                'Reautenticado com sucesso! Tente selecionar o template novamente.',
+                'Reautenticado com sucesso! Tente atualizar o template novamente.',
             )
         },
     })
@@ -221,38 +222,12 @@ export function TemplateDisplay({
                         <div className="flex flex-wrap justify-start sm:justify-end gap-2 min-w-[15rem] items-center">
                             {template.inputMethod !== 'UPLOAD' && (
                                 <div className="flex items-center gap-1">
-                                    {template.googleAccountEmail &&
-                                        userEmail &&
-                                        template.googleAccountEmail !==
-                                            userEmail && (
-                                            <Popover>
-                                                <PopoverTrigger asChild>
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon-sm"
-                                                        className="text-amber-500 hover:text-amber-600 transition-colors"
-                                                        aria-label="Aviso de conta Google"
-                                                    >
-                                                        <AlertTriangle className="size-4" />
-                                                    </Button>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="max-w-xs text-sm z-52 bg-blue-800 text-zinc-100 border-none shadow-xl">
-                                                    Este template foi adicionado
-                                                    com a conta{' '}
-                                                    <span className="font-medium text-white">
-                                                        {
-                                                            template.googleAccountEmail
-                                                        }
-                                                    </span>
-                                                    . Como você está usando
-                                                    outra conta Google, a
-                                                    atualização e a abertura do
-                                                    link podem não funcionar se
-                                                    você não tiver acesso.
-                                                </PopoverContent>
-                                            </Popover>
-                                        )}
+                                    {template.googleAccountEmail !==
+                                        userEmail && (
+                                        <GoogleAccountWarningPopover
+                                            email={template.googleAccountEmail}
+                                        />
+                                    )}
                                     <WarningPopover
                                         open={showRefreshWarning}
                                         onOpenChange={setShowRefreshWarning}
