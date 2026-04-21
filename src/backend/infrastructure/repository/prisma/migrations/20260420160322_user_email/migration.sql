@@ -13,9 +13,6 @@ WHERE ea.user_id = u.id;
 -- Make email NOT NULL after data migration
 ALTER TABLE "external_user_accounts" ALTER COLUMN "email" SET NOT NULL;
 
--- Set users email to NULL after migrating to external_user_accounts
-UPDATE "users" SET email = NULL;
-
 -- AlterTable
 ALTER TABLE "templates" ADD COLUMN     "google_account_email" TEXT;
 
