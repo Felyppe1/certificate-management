@@ -9,6 +9,7 @@ import { DownloadTemplateUseCase } from '@/backend/application/download-template
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { downloadTemplateSchema } from './schemas'
 import { redirect } from 'next/navigation'
+import { gcpStorage } from '../cloud/gcp'
 
 export async function downloadTemplateAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -20,7 +21,7 @@ export async function downloadTemplateAction(_: unknown, formData: FormData) {
         const parsedData = downloadTemplateSchema.parse(rawData)
 
         const certificatesRepository = new PrismaCertificatesRepository(prisma)
-        const bucket = new GcpBucket()
+        const bucket = new GcpBucket(gcpStorage)
 
         const downloadTemplateUseCase = new DownloadTemplateUseCase(
             bucket,
