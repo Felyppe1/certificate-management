@@ -218,33 +218,67 @@ export function TemplateDisplay({
                             </CardDescription>
                         </div>
 
-                        <div className="flex flex-wrap justify-start sm:justify-end gap-2 min-w-[15rem]">
+                        <div className="flex flex-wrap justify-start sm:justify-end gap-2 min-w-[15rem] items-center">
                             {template.inputMethod !== 'UPLOAD' && (
-                                <WarningPopover
-                                    open={showRefreshWarning}
-                                    onOpenChange={setShowRefreshWarning}
-                                    onConfirm={handleRefresh}
-                                    title="Atualizar template?"
-                                    description="Você precisará gerar os certificados novamente após esta ação."
-                                >
-                                    <Button
-                                        variant="outline"
-                                        onClick={handleRefreshClick}
-                                        disabled={
-                                            isRefreshing ||
-                                            isDeleting ||
-                                            isDisabled ||
-                                            loginIsLoading
-                                        }
+                                <div className="flex items-center gap-1">
+                                    {template.googleAccountEmail &&
+                                        userEmail &&
+                                        template.googleAccountEmail !==
+                                            userEmail && (
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon-sm"
+                                                        className="text-amber-500 hover:text-amber-600 transition-colors"
+                                                        aria-label="Aviso de conta Google"
+                                                    >
+                                                        <AlertTriangle className="size-4" />
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="max-w-xs text-sm z-52 bg-blue-800 text-zinc-100 border-none shadow-xl">
+                                                    Este template foi adicionado
+                                                    com a conta{' '}
+                                                    <span className="font-medium text-white">
+                                                        {
+                                                            template.googleAccountEmail
+                                                        }
+                                                    </span>
+                                                    . Como você está usando
+                                                    outra conta Google, a
+                                                    atualização e a abertura do
+                                                    link podem não funcionar se
+                                                    você não tiver acesso.
+                                                </PopoverContent>
+                                            </Popover>
+                                        )}
+                                    <WarningPopover
+                                        open={showRefreshWarning}
+                                        onOpenChange={setShowRefreshWarning}
+                                        onConfirm={handleRefresh}
+                                        title="Atualizar template?"
+                                        description="Você precisará gerar os certificados novamente após esta ação."
                                     >
-                                        <RefreshCw
-                                            className={`scale-80 ${isRefreshing ? 'animate-spin' : ''}`}
-                                        />
-                                        {isRefreshing
-                                            ? 'Atualizando...'
-                                            : 'Atualizar'}
-                                    </Button>
-                                </WarningPopover>
+                                        <Button
+                                            variant="outline"
+                                            onClick={handleRefreshClick}
+                                            disabled={
+                                                isRefreshing ||
+                                                isDeleting ||
+                                                isDisabled ||
+                                                loginIsLoading
+                                            }
+                                        >
+                                            <RefreshCw
+                                                className={`scale-80 ${isRefreshing ? 'animate-spin' : ''}`}
+                                            />
+                                            {isRefreshing
+                                                ? 'Atualizando...'
+                                                : 'Atualizar'}
+                                        </Button>
+                                    </WarningPopover>
+                                </div>
                             )}
 
                             <WarningPopover
@@ -367,42 +401,6 @@ export function TemplateDisplay({
                                                         </svg>
                                                         Abrir
                                                     </Button>
-                                                    {template.googleAccountEmail &&
-                                                        userEmail &&
-                                                        template.googleAccountEmail !==
-                                                            userEmail && (
-                                                            <Popover>
-                                                                <PopoverTrigger
-                                                                    asChild
-                                                                >
-                                                                    <button
-                                                                        type="button"
-                                                                        className="text-amber-500 hover:text-amber-600 transition-colors"
-                                                                        aria-label="Aviso de conta Google"
-                                                                    >
-                                                                        <AlertTriangle className="size-4" />
-                                                                    </button>
-                                                                </PopoverTrigger>
-                                                                <PopoverContent className="max-w-xs text-sm">
-                                                                    Este arquivo
-                                                                    foi
-                                                                    adicionado
-                                                                    com a conta{' '}
-                                                                    <span className="font-medium">
-                                                                        {
-                                                                            template.googleAccountEmail
-                                                                        }
-                                                                    </span>
-                                                                    . Como você
-                                                                    está usando
-                                                                    outra conta
-                                                                    Google, o
-                                                                    link pode
-                                                                    não
-                                                                    funcionar.
-                                                                </PopoverContent>
-                                                            </Popover>
-                                                        )}
                                                 </div>
                                             )}
                                         </div>

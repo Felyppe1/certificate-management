@@ -320,34 +320,66 @@ export function DataSourceDisplay({
                         </CardDescription>
                     </div>
 
-                    <div className="flex flex-wrap justify-start sm:justify-end gap-2 min-w-[15rem]">
+                    <div className="flex flex-wrap justify-start sm:justify-end gap-2 min-w-[15rem] items-center">
                         {dataSource.inputMethod !== INPUT_METHOD.UPLOAD &&
                             !isImageDataSource && (
-                                <WarningPopover
-                                    open={showRefreshWarning}
-                                    onOpenChange={setShowRefreshWarning}
-                                    onConfirm={handleRefresh}
-                                    description="Você precisará gerar os certificados novamente após esta ação."
-                                    title="Atualizar fonte de dados?"
-                                >
-                                    <Button
-                                        variant="outline"
-                                        onClick={handleRefreshClick}
-                                        disabled={
-                                            refreshMutation.isPending ||
-                                            deleteMutation.isPending ||
-                                            isDisabled ||
-                                            loginIsLoading
-                                        }
+                                <div className="flex items-center gap-1">
+                                    {dataSource.googleAccountEmail &&
+                                        userEmail &&
+                                        dataSource.googleAccountEmail !==
+                                            userEmail && (
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <button
+                                                        type="button"
+                                                        className="text-amber-500 hover:text-amber-600 transition-colors"
+                                                        aria-label="Aviso de conta Google"
+                                                    >
+                                                        <AlertTriangle className="size-4" />
+                                                    </button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="max-w-xs text-sm z-52 bg-blue-800 text-zinc-100 border-none shadow-xl">
+                                                    Esta fonte de dados foi
+                                                    adicionada com a conta{' '}
+                                                    <span className="font-medium text-white">
+                                                        {
+                                                            dataSource.googleAccountEmail
+                                                        }
+                                                    </span>
+                                                    . Como você está usando
+                                                    outra conta Google, a
+                                                    atualização e a abertura do
+                                                    link podem não funcionar se
+                                                    você não tiver acesso.
+                                                </PopoverContent>
+                                            </Popover>
+                                        )}
+                                    <WarningPopover
+                                        open={showRefreshWarning}
+                                        onOpenChange={setShowRefreshWarning}
+                                        onConfirm={handleRefresh}
+                                        description="Você precisará gerar os certificados novamente após esta ação."
+                                        title="Atualizar fonte de dados?"
                                     >
-                                        <RefreshCw
-                                            className={`scale-80 ${refreshMutation.isPending ? 'animate-spin' : ''}`}
-                                        />
-                                        {refreshMutation.isPending
-                                            ? 'Atualizando...'
-                                            : 'Atualizar'}
-                                    </Button>
-                                </WarningPopover>
+                                        <Button
+                                            variant="outline"
+                                            onClick={handleRefreshClick}
+                                            disabled={
+                                                refreshMutation.isPending ||
+                                                deleteMutation.isPending ||
+                                                isDisabled ||
+                                                loginIsLoading
+                                            }
+                                        >
+                                            <RefreshCw
+                                                className={`scale-80 ${refreshMutation.isPending ? 'animate-spin' : ''}`}
+                                            />
+                                            {refreshMutation.isPending
+                                                ? 'Atualizando...'
+                                                : 'Atualizar'}
+                                        </Button>
+                                    </WarningPopover>
+                                </div>
                             )}
 
                         {isImageDataSource && (
@@ -483,47 +515,6 @@ export function DataSourceDisplay({
                                                             </svg>
                                                             Abrir
                                                         </Button>
-                                                        {dataSource.googleAccountEmail &&
-                                                            userEmail &&
-                                                            dataSource.googleAccountEmail !==
-                                                                userEmail && (
-                                                                <Popover>
-                                                                    <PopoverTrigger
-                                                                        asChild
-                                                                    >
-                                                                        <button
-                                                                            type="button"
-                                                                            className="text-amber-500 hover:text-amber-600 transition-colors"
-                                                                            aria-label="Aviso de conta Google"
-                                                                        >
-                                                                            <AlertTriangle className="size-4" />
-                                                                        </button>
-                                                                    </PopoverTrigger>
-                                                                    <PopoverContent className="max-w-xs text-sm">
-                                                                        Este
-                                                                        arquivo
-                                                                        foi
-                                                                        adicionado
-                                                                        com a
-                                                                        conta{' '}
-                                                                        <span className="font-medium">
-                                                                            {
-                                                                                dataSource.googleAccountEmail
-                                                                            }
-                                                                        </span>
-                                                                        . Como
-                                                                        você
-                                                                        está
-                                                                        usando
-                                                                        outra
-                                                                        conta
-                                                                        Google,
-                                                                        o link
-                                                                        pode não
-                                                                        funcionar.
-                                                                    </PopoverContent>
-                                                                </Popover>
-                                                            )}
                                                     </div>
                                                 )}
                                             </div>

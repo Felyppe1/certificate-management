@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { GoogleButton } from '@/components/GoogleButton'
 import { Card } from '@/components/ui/card'
-import { RequestAccessModal } from './_components/RequestAccessModal'
+import { RequestAccessModal } from '@/components/RequestAccessModal'
 import { LoginForm } from './_components/login-form'
 import { Metadata } from 'next'
 
@@ -45,6 +45,18 @@ export default function Entrar() {
 
                     <LoginForm />
                 </Card>
+
+                <div className="text-center text-sm">
+                    <span className="text-muted-foreground">
+                        Ainda não tem uma conta?{' '}
+                    </span>
+                    <Link
+                        href="/cadastrar-se"
+                        className="text-primary font-semibold hover:underline"
+                    >
+                        Cadastrar-se
+                    </Link>
+                </div>
             </div>
 
             <div className="mt-8 text-center text-sm text-muted-foreground">

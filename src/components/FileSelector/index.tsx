@@ -28,6 +28,7 @@ import { GoogleDriveIcon } from '../svg/GoogleDriveIcon'
 import { toast } from 'sonner'
 import { useGoogleRelogin } from '../../custom-hooks/useGoogleRelogin'
 import { UseFormReturn } from 'react-hook-form'
+import { RequestAccessModal } from '@/components/RequestAccessModal'
 import { UrlForm, UrlFormValues } from './components/UrlForm'
 
 export type SelectOption = 'upload' | 'link' | 'drive'
@@ -473,19 +474,22 @@ export function FileSelector({
                                     Abrir Google Drive
                                 </Button>
                             ) : (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => login()}
-                                    disabled={googleReloginIsLoading}
-                                >
-                                    {googleReloginIsLoading ? (
-                                        <Loader2 className="animate-spin" />
-                                    ) : (
-                                        <GoogleDriveIcon className="size-4" />
-                                    )}
-                                    Vincular Conta Google
-                                </Button>
+                                <div className="flex flex-col items-start gap-3">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => login()}
+                                        disabled={googleReloginIsLoading}
+                                    >
+                                        {googleReloginIsLoading ? (
+                                            <Loader2 className="animate-spin" />
+                                        ) : (
+                                            <GoogleDriveIcon className="size-4" />
+                                        )}
+                                        Vincular Conta Google
+                                    </Button>
+                                    <RequestAccessModal />
+                                </div>
                             )}
 
                             {googleOAuthToken && pickerIsReady && (

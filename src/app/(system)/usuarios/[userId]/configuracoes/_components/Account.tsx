@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Link, Loader2, Plus, Trash2 } from 'lucide-react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { unlinkExternalAccountAction } from '@/backend/infrastructure/server-actions/unlink-external-account-action'
@@ -11,8 +11,14 @@ import { Provider } from '@/backend/domain/external-account'
 import { useMe } from '@/custom-hooks/use-me'
 import { useGoogleRelogin } from '@/custom-hooks/useGoogleRelogin'
 import { queryKeys } from '@/lib/query-keys'
+import { getAvatarInitials } from '@/lib/utils'
+import { WarningPopover } from '@/components/WarningPopover'
+import { RequestAccessModal } from '@/components/RequestAccessModal'
+import { useState } from 'react'
 
 export function Account() {
+    const [warnDeleteProvider, setWarnDeleteProvider] =
+        useState<Provider | null>(null)
     const queryClient = useQueryClient()
     const { data } = useMe()
     const { externalAccounts, email, isEmailVerified } = data.user
@@ -94,8 +100,10 @@ export function Account() {
                                 >
                                     <div className="flex items-center gap-3 flex-1 min-w-50">
                                         <div className="w-10 h-10 shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                            {account.provider === 'GOOGLE'
-                                                ? 'G'
+                                            {account.email
+                                                ? getAvatarInitials(
+                                                      account.email,
+                                                  )
                                                 : account.provider[0]}
                                         </div>
                                         <div className="flex-1 min-w-0">
@@ -109,34 +117,87 @@ export function Account() {
                                             </p>
                                         </div>
                                     </div>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={
-                                            !unlinkAllowed ||
-                                            unlinkMutation.isPending
-                                        }
-                                        onClick={() =>
-                                            unlinkMutation.mutate(
-                                                account.provider,
-                                            )
-                                        }
-                                        className="text-destructive hover:text-destructive hover:bg-destructive/10 disabled:opacity-40"
-                                        title={
-                                            !unlinkAllowed
-                                                ? 'Configure outro método de login antes de desvincular'
-                                                : undefined
-                                        }
-                                    >
-                                        {isUnlinking ? (
-                                            <Loader2 className="size-4 animate-spin" />
-                                        ) : (
-                                            <Trash2 className="size-4" />
-                                        )}
-                                        {isUnlinking
-                                            ? 'Removendo...'
-                                            : 'Remover'}
-                                    </Button>
+                                    {account.provider === 'GOOGLE' ? (
+                                        <WarningPopover
+                                            open={
+                                                warnDeleteProvider ===
+                                                account.provider
+                                            }
+                                            onOpenChange={open =>
+                                                setWarnDeleteProvider(
+                                                    open
+                                                        ? account.provider
+                                                        : null,
+                                                )
+                                            }
+                                            onConfirm={() => {
+                                                unlinkMutation.mutate(
+                                                    account.provider,
+                                                )
+                                                setWarnDeleteProvider(null)
+                                            }}
+                                            title="Remover conta externa?"
+                                            description="Você poderá não conseguir mais atualizar o conteúdo de fontes de dados ou templates que dependam dessa conta."
+                                        >
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={
+                                                    !unlinkAllowed ||
+                                                    unlinkMutation.isPending
+                                                }
+                                                onClick={() =>
+                                                    setWarnDeleteProvider(
+                                                        account.provider,
+                                                    )
+                                                }
+                                                className="text-destructive hover:text-destructive hover:bg-destructive/10 disabled:opacity-40"
+                                                title={
+                                                    !unlinkAllowed
+                                                        ? 'Configure outro método de login antes de desvincular'
+                                                        : undefined
+                                                }
+                                            >
+                                                {isUnlinking ? (
+                                                    <Loader2 className="size-4 animate-spin" />
+                                                ) : (
+                                                    <Trash2 className="size-4" />
+                                                )}
+                                                {isUnlinking
+                                                    ? 'Removendo...'
+                                                    : 'Remover'}
+                                            </Button>
+                                        </WarningPopover>
+                                    ) : (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={
+                                                !unlinkAllowed ||
+                                                unlinkMutation.isPending
+                                            }
+                                            onClick={() =>
+                                                unlinkMutation.mutate(
+                                                    account.provider,
+                                                )
+                                            }
+                                            className="text-destructive hover:text-destructive hover:bg-destructive/10 disabled:opacity-40"
+                                            title={
+                                                !unlinkAllowed
+                                                    ? 'Configure outro método de login antes de desvincular'
+                                                    : undefined
+                                            }
+                                        >
+                                            {isUnlinking ? (
+                                                <Loader2 className="size-4 animate-spin" />
+                                            ) : (
+                                                <Trash2 className="size-4" />
+                                            )}
+                                            {isUnlinking
+                                                ? 'Removendo...'
+                                                : 'Remover'}
+                                        </Button>
+                                    )}
                                 </div>
                             )
                         })}
@@ -144,7 +205,7 @@ export function Account() {
                 )}
 
                 {!hasGoogleAccount && (
-                    <div className="pt-2">
+                    <div className="pt-2 flex flex-col items-start gap-3">
                         <Button
                             variant="outline"
                             className="gap-2"
@@ -158,6 +219,7 @@ export function Account() {
                             )}
                             Adicionar Conta Google
                         </Button>
+                        <RequestAccessModal />
                     </div>
                 )}
             </div>
