@@ -77,7 +77,7 @@ export function CertificatePageClient({
 
             <div className="flex flex-col gap-2 sm:gap-5 md:gap-8 mt-4 xs:mt-6 md:mt-8 mb-12">
                 <TemplateSection
-                    userEmail={meResponse.user.email}
+                    userEmail={googleAccount?.email ?? ''}
                     googleOAuthToken={googleAccount?.accessToken || null}
                     googleOAuthTokenExpiry={
                         googleAccount?.accessTokenExpiryDateTime || null
@@ -91,7 +91,7 @@ export function CertificatePageClient({
                 />
 
                 <DataSourceSection
-                    userEmail={meResponse.user.email}
+                    userEmail={googleAccount?.email ?? ''}
                     googleOAuthToken={googleAccount?.accessToken || null}
                     googleOAuthTokenExpiry={
                         googleAccount?.accessTokenExpiryDateTime || null

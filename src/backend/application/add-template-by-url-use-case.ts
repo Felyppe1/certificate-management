@@ -83,14 +83,12 @@ export class AddTemplateByUrlUseCase {
         }
 
         const user = await this.usersRepository.getById(input.userId)
-        const externalAccount = user?.getExternalAccount('GOOGLE')
 
         const { name, fileMimeType, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
-                userAccessToken: externalAccount?.getAccessToken(),
-                userRefreshToken:
-                    externalAccount?.getRefreshToken() || undefined,
+                userAccessToken: user?.getGoogleAccessToken() ?? undefined,
+                userRefreshToken: user?.getGoogleRefreshToken() ?? undefined,
             })
 
         if (!Template.isValidFileMimeType(fileMimeType)) {
@@ -102,7 +100,7 @@ export class AddTemplateByUrlUseCase {
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
             fileMimeType: fileMimeType,
-            accessToken: externalAccount?.getAccessToken(),
+            accessToken: user?.getGoogleAccessToken() ?? undefined,
         })
 
         const contentExtractor =

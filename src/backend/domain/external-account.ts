@@ -5,6 +5,7 @@ export type Provider = 'GOOGLE'
 export interface ExternalAccountInput {
     provider: Provider
     providerUserId: string
+    email: string
     accessToken: string
     refreshToken: string | null
     accessTokenExpiryDateTime: Date | null
@@ -14,6 +15,7 @@ export interface ExternalAccountInput {
 export interface ExternalAccountOutput {
     provider: Provider
     providerUserId: string
+    email: string
     accessToken: string
     refreshToken: string | null
     accessTokenExpiryDateTime: Date | null
@@ -22,6 +24,7 @@ export interface ExternalAccountOutput {
 
 export class ExternalAccount extends Entity {
     private provider: Provider
+    private email: string
     private accessToken: string
     private refreshToken: string | null
     private accessTokenExpiryDateTime: Date | null
@@ -50,13 +53,10 @@ export class ExternalAccount extends Entity {
                     'Access token expiry date time is required for Google ExternalAccount',
                 )
             }
-
-            // if (!data.refreshTokenExpiryDateTime) {
-            //     throw new Error('Refresh token expiry date time is required for Google ExternalAccount')
-            // }
         }
 
         this.provider = data.provider
+        this.email = data.email
         this.accessToken = data.accessToken
         this.refreshToken = data.refreshToken
         this.accessTokenExpiryDateTime = data.accessTokenExpiryDateTime
@@ -99,10 +99,15 @@ export class ExternalAccount extends Entity {
         return this.refreshTokenExpiryDateTime
     }
 
+    getEmail(): string {
+        return this.email
+    }
+
     serialize(): ExternalAccountOutput {
         return {
             providerUserId: this.getId(),
             provider: this.provider,
+            email: this.email,
             accessToken: this.accessToken,
             refreshToken: this.refreshToken,
             accessTokenExpiryDateTime: this.accessTokenExpiryDateTime,

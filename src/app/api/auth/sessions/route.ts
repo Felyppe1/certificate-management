@@ -28,7 +28,7 @@ export async function GET(
 
 export interface LoginSessionControllerResponse {
     id: string
-    email: string
+    email: string | null
     name: string
 }
 

@@ -15,18 +15,15 @@ export class GetMeUseCase {
             throw new AuthenticationError('user-not-found')
         }
 
+        const serializedUser = user.serialize()
+
         return {
-            id: user.getId(),
-            email: user.getEmail(),
-            name: user.getName(),
-            credits: user.getCredits(),
-            externalAccounts: user.getExternalAccounts().map(account => ({
-                provider: account.getProvider(),
-                providerUserId: account.getProviderUserId(),
-                accessToken: account.getAccessToken(),
-                accessTokenExpiryDateTime:
-                    account.getAccessTokenExpiryDateTime(),
-            })),
+            id: serializedUser.id,
+            email: serializedUser.email,
+            isEmailVerified: serializedUser.isEmailVerified,
+            name: serializedUser.name,
+            credits: serializedUser.credits,
+            externalAccounts: serializedUser.externalAccounts,
         }
     }
 }

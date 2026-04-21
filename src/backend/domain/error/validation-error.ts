@@ -36,6 +36,10 @@ export enum VALIDATION_ERROR_TYPE {
     DATA_SOURCE_IMAGE_FILES_EXCEEDED = 'data-source-image-files-exceeded',
     DATA_SOURCE_IMAGE_REFRESH_NOT_ALLOWED = 'data-source-image-refresh-not-allowed',
     DATA_SOURCE_NOT_IMAGE = 'data-source-not-image',
+    CURRENT_PASSWORD_INCORRECT = 'current-password-incorrect',
+    SYSTEM_LOGIN_NOT_ENABLED = 'system-login-not-enabled',
+    LAST_LOGIN_METHOD = 'last-login-method',
+    EMAIL_ALREADY_VERIFIED = 'email-already-verified',
 }
 
 export class ValidationError extends AppError<VALIDATION_ERROR_TYPE> {

@@ -10,7 +10,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { loginAction } from '@/backend/infrastructure/server-actions/login-action'
+import { VerifyEmailForm } from '@/components/VerifyEmailForm'
 
 const loginSchema = z.object({
     email: z.email('Formato de email inválido'),
@@ -23,12 +25,15 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 
 export function LoginForm() {
+    const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
+    const [emailNotVerified, setEmailNotVerified] = useState(false)
 
     const {
         register,
         handleSubmit,
+        getValues,
         formState: { errors },
     } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
@@ -36,6 +41,7 @@ export function LoginForm() {
 
     const onSubmit = async (data: LoginFormData) => {
         setErrorMessage(null)
+        setEmailNotVerified(false)
 
         startTransition(async () => {
             const formData = new FormData()
@@ -45,8 +51,10 @@ export function LoginForm() {
             const result = await loginAction(null, formData)
 
             if (result?.success === false) {
-                if (result.errorType === 'invalid-credentials') {
+                if (result.errorType === 'incorrect-credentials') {
                     setErrorMessage('Email ou senha incorretos.')
+                } else if (result.errorType === 'email-not-verified') {
+                    setEmailNotVerified(true)
                 } else {
                     setErrorMessage(
                         'Ocorreu um erro inesperado. Tente novamente.',
@@ -54,6 +62,15 @@ export function LoginForm() {
                 }
             }
         })
+    }
+
+    if (emailNotVerified) {
+        return (
+            <VerifyEmailForm
+                email={getValues('email')}
+                onSuccess={() => router.push('/')}
+            />
+        )
     }
 
     return (

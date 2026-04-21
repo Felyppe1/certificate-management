@@ -98,8 +98,6 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
             ...(reAuthenticate ? { redirect_uri: 'postmessage' } : {}),
         })
 
-        console.log('tokens', tokens)
-
         return {
             accessToken: tokens.access_token!,
             refreshToken: tokens.refresh_token ?? null,

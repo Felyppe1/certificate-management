@@ -37,6 +37,7 @@ interface TemplateSectionProps {
         fileMimeType: TEMPLATE_FILE_MIME_TYPE
         variables: string[]
         thumbnailUrl: string | null
+        googleAccountEmail: string | null
     } | null
     userEmail: string
     googleOAuthToken: string | null
@@ -194,7 +195,14 @@ export function TemplateSection({
     const handleEdit = () => setIsEditing(true)
     const handleCancelEdit = () => setIsEditing(false)
 
-    const { login, isLoading: loginIsLoading } = useGoogleRelogin({ userEmail })
+    const { login, isLoading: loginIsLoading } = useGoogleRelogin({
+        userEmail,
+        onSuccess: () => {
+            toast.success(
+                'Reautenticado com sucesso! Tente atualizar o template novamente.',
+            )
+        },
+    })
 
     const radioGroupName = 'template'
 

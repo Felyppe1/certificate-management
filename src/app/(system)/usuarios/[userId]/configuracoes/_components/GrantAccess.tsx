@@ -4,13 +4,16 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation } from '@tanstack/react-query'
-import { ShieldCheck, Loader2 } from 'lucide-react'
+import { Loader2, Megaphone } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import { grantAccessAction } from '@/backend/infrastructure/server-actions/grant-access-action'
+import { useMe } from '@/custom-hooks/use-me'
+
+const ADMIN_EMAILS = ['felyppe.nunes1@gmail.com', 'luizfelyppe@id.uff.br']
 
 const grantAccessSchema = z.object({
     email: z.email('Formato de email inválido'),
@@ -19,6 +22,14 @@ const grantAccessSchema = z.object({
 type GrantAccessFormData = z.infer<typeof grantAccessSchema>
 
 export function GrantAccess() {
+    const { data } = useMe()
+
+    if (!ADMIN_EMAILS.includes(data.user.email ?? '')) return null
+
+    return <GrantAccessForm />
+}
+
+function GrantAccessForm() {
     const {
         register,
         handleSubmit,
@@ -55,7 +66,7 @@ export function GrantAccess() {
         <Card>
             <div className="flex items-start gap-4 mb-6">
                 <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center">
-                    <ShieldCheck className="w-6 h-6 text-emerald-500" />
+                    <Megaphone className="w-6 h-6 text-emerald-500" />
                 </div>
                 <div className="flex-1">
                     <h2 className="text-xl font-semibold mb-1">

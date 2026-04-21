@@ -9,12 +9,14 @@ import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken
 export interface GetMeControllerResponse {
     user: {
         id: string
-        email: string
+        email: string | null
+        isEmailVerified: boolean
         name: string
         credits: number
         externalAccounts: {
             provider: Provider
             providerUserId: string
+            email: string
             accessToken: string
             accessTokenExpiryDateTime: Date | null
         }[]

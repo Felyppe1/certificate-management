@@ -3,8 +3,8 @@ import {
     ConflictError,
 } from '../domain/error/conflict-error'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { INotificationGateway } from './interfaces/inotification-gateway'
 import { User } from '../domain/user'
-import bcrypt from 'bcrypt'
 
 interface SignUpInput {
     name: string
@@ -15,6 +15,10 @@ interface SignUpInput {
 export class SignUpUseCase {
     constructor(
         private usersRepository: Pick<IUsersRepository, 'getByEmail' | 'save'>,
+        private notificationGateway: Pick<
+            INotificationGateway,
+            'sendEmailVerification'
+        >,
     ) {}
 
     async execute(data: SignUpInput) {
@@ -24,15 +28,18 @@ export class SignUpUseCase {
             throw new ConflictError(CONFLICT_ERROR_TYPE.USER)
         }
 
-        const passwordHash = await bcrypt.hash(data.password, 10)
-
-        const user = User.create({
+        const user = await User.create({
             name: data.name,
             email: data.email,
-            passwordHash,
+            passwordHash: data.password,
         })
 
         await this.usersRepository.save(user)
+
+        await this.notificationGateway.sendEmailVerification(
+            data.email,
+            user.getVerificationToken()!,
+        )
 
         return { userId: user.getId() }
     }

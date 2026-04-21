@@ -1,4 +1,4 @@
-import { INotificationEmailGateway } from './interfaces/inotification-email-gateway'
+import { INotificationGateway } from './interfaces/inotification-gateway'
 
 interface AskForAccessInput {
     email: string
@@ -7,7 +7,7 @@ interface AskForAccessInput {
 export class AskForAccessUseCase {
     constructor(
         private notificationEmailGateway: Pick<
-            INotificationEmailGateway,
+            INotificationGateway,
             'sendAccessRequest'
         >,
     ) {}

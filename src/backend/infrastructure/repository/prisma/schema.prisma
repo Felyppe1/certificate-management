@@ -23,14 +23,16 @@ enum ARRAY_ITEM_TYPE {
 }
 
 model User {
-    id            String  @id @default(cuid())
-    email         String  @unique
-    name          String
-    password_hash String?
-    credits       Int     @default(300)
+    id                String  @id @default(cuid())
+    email             String? @unique
+    is_email_verified Boolean @default(false)
+    name              String
+    password_hash     String?
+    credits           Int     @default(300)
 
     Session             Session[]
     ExternalUserAccount ExternalUserAccount[]
+    VerificationToken   VerificationToken?
 
     CertificateEmission CertificateEmission[]
     DailyUsage          DailyUsage[]
@@ -52,6 +54,7 @@ model ExternalUserAccount {
     user_id          String
     provider         String // "GOOGLE" | "GITHUB" | "FACEBOOK" | ...
     provider_user_id String
+    email            String
 
     access_token                  String
     refresh_token                 String?
@@ -73,10 +76,10 @@ model CertificateEmission {
 
     user_id String
 
-    User                         User                           @relation(fields: [user_id], references: [id], onDelete: Cascade)
-    Template                     Template?
-    DataSource                   DataSource?
-    Email                        Email?
+    User       User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+    Template   Template?
+    DataSource DataSource?
+    Email      Email?
 
     @@map("certificate_emissions")
 }
@@ -84,12 +87,13 @@ model CertificateEmission {
 model Template {
     certificate_emission_id String @id
 
-    drive_file_id    String?
-    storage_file_url String?
-    thumbnail_url    String?
-    file_name        String
-    input_method     String // "URL" | "GOOGLE_DRIVE" | "UPLOAD"
-    file_extension   String
+    drive_file_id        String?
+    storage_file_url     String?
+    thumbnail_url        String?
+    file_name            String
+    input_method         String // "URL" | "GOOGLE_DRIVE" | "UPLOAD"
+    file_extension       String
+    google_account_email String?
 
     TemplateVariable    TemplateVariable[]
     CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id], onDelete: Cascade)
@@ -115,9 +119,10 @@ model TemplateVariable {
 model DataSource {
     certificate_emission_id String @id
 
-    thumbnail_url  String?
-    input_method   String // "URL" | "GOOGLE_DRIVE" | "UPLOAD"
-    file_extension String
+    thumbnail_url        String?
+    input_method         String // "URL" | "GOOGLE_DRIVE" | "UPLOAD"
+    file_extension       String
+    google_account_email String?
 
     DataSourceColumn    DataSourceColumn[]
     DataSourceRow       DataSourceRow[]
@@ -150,7 +155,7 @@ model DataSourceColumn {
     DataSource       DataSource        @relation(fields: [data_source_id], references: [certificate_emission_id], onDelete: Cascade)
     TemplateVariable TemplateVariable?
     DataSourceValue  DataSourceValue[]
-    Email Email?
+    Email            Email?
 
     @@id([name, data_source_id])
     @@map("data_source_columns")
@@ -186,17 +191,17 @@ model DataSourceRow {
 }
 
 model Email {
-    id               String    @id @default(cuid())
-    certificate_emission_id String  @unique
-    subject          String
-    body             String
+    id                      String    @id @default(cuid())
+    certificate_emission_id String    @unique
+    subject                 String
+    body                    String
     email_column            String
-    scheduled_at     DateTime?
-    status           String // "PENDING" | "RUNNING" | "COMPLETED" | "FAILED"
-    email_error_type String?
+    scheduled_at            DateTime?
+    status                  String // "PENDING" | "RUNNING" | "COMPLETED" | "FAILED"
+    email_error_type        String?
 
-    CertificateEmission    CertificateEmission      @relation(fields: [certificate_emission_id], references: [id], onDelete: Cascade)
-    DataSourceColumn        DataSourceColumn   @relation(fields: [email_column, certificate_emission_id], references: [name, data_source_id])
+    CertificateEmission CertificateEmission @relation(fields: [certificate_emission_id], references: [id], onDelete: Cascade)
+    DataSourceColumn    DataSourceColumn    @relation(fields: [email_column, certificate_emission_id], references: [name, data_source_id])
 
     @@unique([email_column, certificate_emission_id])
     @@map("emails")
@@ -212,6 +217,16 @@ model DailyUsage {
 
     @@id([user_id, date])
     @@map("daily_usages")
+}
+
+model VerificationToken {
+    user_id    String   @id
+    token      String   @unique
+    expires_at DateTime
+
+    User User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    @@map("verification_tokens")
 }
 
 model Outbox {

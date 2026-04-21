@@ -65,8 +65,7 @@ export function Header() {
 
     if (!meResponse) return null
 
-    const { email: userName, id: userId, credits } = meResponse.user
-
+    const { name, id: userId, credits } = meResponse.user
     return (
         <header className="fixed top-0 w-full z-51 bg-card/80 backdrop-blur-md border-b border-input/30 shadow-lg shadow-black/20 border-b-input">
             <nav className="max-w-7xl mx-auto px-[6vw] xs:px-10 py-4 flex items-center justify-between gap-8">
@@ -85,7 +84,7 @@ export function Header() {
                 <div className="hidden xs:flex items-center gap-x-4 flex-wrap justify-end">
                     {/* <ThemeToggle /> */}
                     <CreditsPopover credits={credits} />
-                    <UserDropdown name={userName} userId={userId} />
+                    <UserDropdown name={name} userId={userId} />
                 </div>
 
                 {/* Mobile: hamburger button (hidden above xs) */}
@@ -110,9 +109,7 @@ export function Header() {
             >
                 <div className="px-[6vw] pb-4 pt-2 flex flex-col gap-3 border-t border-input/20">
                     <div className="flex items-center justify-between flex-wrap-reverse gap-2">
-                        <span className="text-sm truncate pr-3">
-                            {userName}
-                        </span>
+                        <span className="text-sm truncate pr-3">{name}</span>
                         <CreditsPopover credits={credits} />
                     </div>
                     <div className="h-px bg-input/20" />

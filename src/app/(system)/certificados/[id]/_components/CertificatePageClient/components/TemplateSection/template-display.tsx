@@ -9,7 +9,18 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
-import { RefreshCw, Edit3, Trash2, ALargeSmall } from 'lucide-react'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+    RefreshCw,
+    Edit3,
+    Trash2,
+    ALargeSmall,
+    AlertTriangle,
+} from 'lucide-react'
 import { useState } from 'react'
 import { refreshTemplateAction } from '@/backend/infrastructure/server-actions/refresh-template-action'
 import { deleteTemplateAction } from '@/backend/infrastructure/server-actions/delete-template-action'
@@ -46,6 +57,7 @@ interface TemplateDisplayProps {
         fileMimeType: TEMPLATE_FILE_MIME_TYPE
         variables: string[]
         thumbnailUrl: string | null
+        googleAccountEmail: string | null
     }
     certificateId: string
     onEdit: () => void
@@ -150,6 +162,11 @@ export function TemplateDisplay({
 
     const { login, isLoading: loginIsLoading } = useGoogleRelogin({
         userEmail,
+        onSuccess: () => {
+            toast.success(
+                'Reautenticado com sucesso! Tente selecionar o template novamente.',
+            )
+        },
     })
 
     const handleRefresh = () => {
@@ -201,33 +218,67 @@ export function TemplateDisplay({
                             </CardDescription>
                         </div>
 
-                        <div className="flex flex-wrap justify-start sm:justify-end gap-2 min-w-[15rem]">
+                        <div className="flex flex-wrap justify-start sm:justify-end gap-2 min-w-[15rem] items-center">
                             {template.inputMethod !== 'UPLOAD' && (
-                                <WarningPopover
-                                    open={showRefreshWarning}
-                                    onOpenChange={setShowRefreshWarning}
-                                    onConfirm={handleRefresh}
-                                    title="Atualizar template?"
-                                    description="Você precisará gerar os certificados novamente após esta ação."
-                                >
-                                    <Button
-                                        variant="outline"
-                                        onClick={handleRefreshClick}
-                                        disabled={
-                                            isRefreshing ||
-                                            isDeleting ||
-                                            isDisabled ||
-                                            loginIsLoading
-                                        }
+                                <div className="flex items-center gap-1">
+                                    {template.googleAccountEmail &&
+                                        userEmail &&
+                                        template.googleAccountEmail !==
+                                            userEmail && (
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon-sm"
+                                                        className="text-amber-500 hover:text-amber-600 transition-colors"
+                                                        aria-label="Aviso de conta Google"
+                                                    >
+                                                        <AlertTriangle className="size-4" />
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="max-w-xs text-sm z-52 bg-blue-800 text-zinc-100 border-none shadow-xl">
+                                                    Este template foi adicionado
+                                                    com a conta{' '}
+                                                    <span className="font-medium text-white">
+                                                        {
+                                                            template.googleAccountEmail
+                                                        }
+                                                    </span>
+                                                    . Como você está usando
+                                                    outra conta Google, a
+                                                    atualização e a abertura do
+                                                    link podem não funcionar se
+                                                    você não tiver acesso.
+                                                </PopoverContent>
+                                            </Popover>
+                                        )}
+                                    <WarningPopover
+                                        open={showRefreshWarning}
+                                        onOpenChange={setShowRefreshWarning}
+                                        onConfirm={handleRefresh}
+                                        title="Atualizar template?"
+                                        description="Você precisará gerar os certificados novamente após esta ação."
                                     >
-                                        <RefreshCw
-                                            className={`scale-80 ${isRefreshing ? 'animate-spin' : ''}`}
-                                        />
-                                        {isRefreshing
-                                            ? 'Atualizando...'
-                                            : 'Atualizar'}
-                                    </Button>
-                                </WarningPopover>
+                                        <Button
+                                            variant="outline"
+                                            onClick={handleRefreshClick}
+                                            disabled={
+                                                isRefreshing ||
+                                                isDeleting ||
+                                                isDisabled ||
+                                                loginIsLoading
+                                            }
+                                        >
+                                            <RefreshCw
+                                                className={`scale-80 ${isRefreshing ? 'animate-spin' : ''}`}
+                                            />
+                                            {isRefreshing
+                                                ? 'Atualizando...'
+                                                : 'Atualizar'}
+                                        </Button>
+                                    </WarningPopover>
+                                </div>
                             )}
 
                             <WarningPopover
@@ -305,7 +356,7 @@ export function TemplateDisplay({
                                         <p className="text-muted-foreground mb-1">
                                             Fonte
                                         </p>
-                                        <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-4 flex-wrap">
                                             <p className="font-medium">
                                                 {getInputMethodLabel(
                                                     template.inputMethod,
@@ -334,22 +385,23 @@ export function TemplateDisplay({
                                                         : 'Baixar'}
                                                 </Button>
                                             ) : (
-                                                <Button
-                                                    variant="default"
-                                                    size="sm"
-                                                    onClick={handleViewFile}
-                                                >
-                                                    <svg
-                                                        className=""
-                                                        viewBox="0 0 24 24"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        strokeWidth="2"
+                                                <div className="flex items-center gap-1.5">
+                                                    <Button
+                                                        variant="default"
+                                                        size="sm"
+                                                        onClick={handleViewFile}
                                                     >
-                                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
-                                                    </svg>
-                                                    Abrir
-                                                </Button>
+                                                        <svg
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="2"
+                                                        >
+                                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
+                                                        </svg>
+                                                        Abrir
+                                                    </Button>
+                                                </div>
                                             )}
                                         </div>
                                     </div>

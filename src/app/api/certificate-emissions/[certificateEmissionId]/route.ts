@@ -38,6 +38,7 @@ export interface GetCertificateEmissionControllerResponse {
             fileMimeType: TEMPLATE_FILE_MIME_TYPE
             variables: string[]
             thumbnailUrl: string | null
+            googleAccountEmail: string | null
         } | null
         dataSource: {
             files: {
@@ -53,6 +54,7 @@ export interface GetCertificateEmissionControllerResponse {
                 arraySeparator: string | null
             }[]
             thumbnailUrl: string | null
+            googleAccountEmail: string | null
             rows: {
                 id: string
                 processingStatus: DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM

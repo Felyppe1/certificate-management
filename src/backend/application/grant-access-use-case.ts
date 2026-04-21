@@ -6,7 +6,7 @@ import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
 } from '../domain/error/not-found-error'
-import { INotificationEmailGateway } from './interfaces/inotification-email-gateway'
+import { INotificationGateway } from './interfaces/inotification-gateway'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
 
 interface GrantAccessInput {
@@ -17,7 +17,7 @@ interface GrantAccessInput {
 export class GrantAccessUseCase {
     constructor(
         private notificationEmailGateway: Pick<
-            INotificationEmailGateway,
+            INotificationGateway,
             'sendAccessGranted'
         >,
         private usersRepository: Pick<IUsersRepository, 'getById'>,

@@ -51,6 +51,7 @@ interface DataSourceSectionProps {
             arraySeparator: string | null
         }[]
         thumbnailUrl: string | null
+        googleAccountEmail: string | null
         rows: {
             id: string
             processingStatus: PROCESSING_STATUS_ENUM
@@ -147,7 +148,14 @@ export function DataSourceSection({
         setIsEditing(false)
     }
 
-    const { login, isLoading: loginIsLoading } = useGoogleRelogin({ userEmail })
+    const { login, isLoading: loginIsLoading } = useGoogleRelogin({
+        userEmail,
+        onSuccess: () => {
+            toast.success(
+                'Reautenticado com sucesso! Tente selecionar a fonte de dados novamente.',
+            )
+        },
+    })
 
     const drivePickerMutation = useMutation({
         mutationFn: async (formData: FormData) => {

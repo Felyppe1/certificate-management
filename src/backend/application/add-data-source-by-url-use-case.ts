@@ -88,15 +88,14 @@ export class AddDataSourceByUrlUseCase {
         })
 
         const user = await this.usersRepository.getById(input.userId)
-        const externalAccount = user?.getExternalAccount('GOOGLE')
 
         const filesMetadata = await Promise.all(
             driveFileIds.map(fileId =>
                 this.googleDriveGateway.getFileMetadata({
                     fileId,
-                    userAccessToken: externalAccount?.getAccessToken(),
+                    userAccessToken: user?.getGoogleAccessToken() ?? undefined,
                     userRefreshToken:
-                        externalAccount?.getRefreshToken() || undefined,
+                        user?.getGoogleRefreshToken() ?? undefined,
                 }),
             ),
         )
@@ -143,7 +142,7 @@ export class AddDataSourceByUrlUseCase {
                 this.googleDriveGateway.downloadFile({
                     driveFileId,
                     fileMimeType: filesMetadata[index].fileMimeType,
-                    accessToken: externalAccount?.getAccessToken(),
+                    accessToken: user?.getGoogleAccessToken() ?? undefined,
                 }),
             ),
         )

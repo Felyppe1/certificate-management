@@ -75,9 +75,8 @@ export class AddDataSourceByDrivePickerUseCase {
         }
 
         const user = await this.usersRepository.getById(input.userId)
-        const externalAccount = user?.getExternalAccount('GOOGLE')
 
-        if (!externalAccount) {
+        if (!user?.hasGoogleAccount()) {
             throw new ForbiddenError(
                 FORBIDDEN_ERROR_TYPE.GOOGLE_ACCOUNT_NOT_FOUND,
             )
@@ -88,28 +87,27 @@ export class AddDataSourceByDrivePickerUseCase {
         }
 
         const newData = await this.googleAuthGateway.checkOrGetNewAccessToken({
-            accessToken: externalAccount.getAccessToken(),
-            refreshToken: externalAccount.getRefreshToken()!,
+            accessToken: user.getGoogleAccessToken()!,
+            refreshToken: user.getGoogleRefreshToken()!,
             accessTokenExpiryDateTime:
-                externalAccount.getAccessTokenExpiryDateTime()!,
+                user.getGoogleAccessTokenExpiryDateTime()!,
         })
 
         if (newData) {
-            user!.updateExternalAccount('GOOGLE', {
+            user.updateExternalAccount('GOOGLE', {
                 accessToken: newData.newAccessToken,
                 accessTokenExpiryDateTime: newData.newAccessTokenExpiryDateTime,
             })
 
-            await this.usersRepository.update(user!)
+            await this.usersRepository.update(user)
         }
 
         const filesMetadata = await Promise.all(
             input.fileIds.map(fileId =>
                 this.googleDriveGateway.getFileMetadata({
                     fileId,
-                    userAccessToken: externalAccount.getAccessToken(),
-                    userRefreshToken:
-                        externalAccount.getRefreshToken() || undefined,
+                    userAccessToken: user.getGoogleAccessToken() ?? undefined,
+                    userRefreshToken: user.getGoogleRefreshToken() ?? undefined,
                 }),
             ),
         )
@@ -156,7 +154,7 @@ export class AddDataSourceByDrivePickerUseCase {
                 this.googleDriveGateway.downloadFile({
                     driveFileId: fileId,
                     fileMimeType: filesMetadata[index].fileMimeType,
-                    accessToken: externalAccount.getAccessToken(),
+                    accessToken: user.getGoogleAccessToken() ?? undefined,
                 }),
             ),
         )

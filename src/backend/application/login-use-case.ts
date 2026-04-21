@@ -1,7 +1,10 @@
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import bcrypt from 'bcrypt'
 import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 import { AuthenticationError } from '../domain/error/authentication-error'
+import {
+    ForbiddenError,
+    FORBIDDEN_ERROR_TYPE,
+} from '../domain/error/forbidden-error'
 import { Session } from '../domain/session'
 
 export class LoginUseCase {
@@ -10,21 +13,21 @@ export class LoginUseCase {
         private sessionsRepository: Pick<ISessionsRepository, 'save'>,
     ) {}
 
-    async execute(email: string, password: string) {
+    async execute(email: string, passwordPlain: string) {
         const user = await this.usersRepository.getByEmail(email)
 
         if (!user) {
             throw new AuthenticationError('incorrect-credentials')
         }
 
-        // TODO: check if ''compared to '' passes
-        const isPasswordValid = await bcrypt.compare(
-            password,
-            user.getPasswordHash() ?? '',
-        )
+        const isPasswordValid = await user.comparePassword(passwordPlain)
 
         if (!isPasswordValid) {
             throw new AuthenticationError('incorrect-credentials')
+        }
+
+        if (!user.hasVerifiedEmailAccess()) {
+            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.EMAIL_NOT_VERIFIED)
         }
 
         const session = Session.create(user.getId())

@@ -92,13 +92,11 @@ export class RefreshTemplateUseCase {
         const user = await this.usersRepository.getById(
             certificateEmission.getUserId(),
         )
-        const externalAccount = user?.getExternalAccount('GOOGLE')
-
         if (
             certificateEmission.isTemplateFromGoogleDrive() ||
             certificateEmission.isTemplateFromUrl()
         ) {
-            if (!externalAccount) {
+            if (!user?.hasGoogleAccount()) {
                 throw new ForbiddenError(
                     FORBIDDEN_ERROR_TYPE.GOOGLE_ACCOUNT_NOT_FOUND,
                 )
@@ -106,20 +104,20 @@ export class RefreshTemplateUseCase {
 
             const newData =
                 await this.googleAuthGateway.checkOrGetNewAccessToken({
-                    accessToken: externalAccount.getAccessToken(),
-                    refreshToken: externalAccount.getRefreshToken()!,
+                    accessToken: user.getGoogleAccessToken()!,
+                    refreshToken: user.getGoogleRefreshToken()!,
                     accessTokenExpiryDateTime:
-                        externalAccount.getAccessTokenExpiryDateTime()!,
+                        user.getGoogleAccessTokenExpiryDateTime()!,
                 })
 
             if (newData) {
-                user!.updateExternalAccount('GOOGLE', {
+                user.updateExternalAccount('GOOGLE', {
                     accessToken: newData.newAccessToken,
                     accessTokenExpiryDateTime:
                         newData.newAccessTokenExpiryDateTime,
                 })
 
-                await this.usersRepository.update(user!)
+                await this.usersRepository.update(user)
             }
         }
 
@@ -129,9 +127,9 @@ export class RefreshTemplateUseCase {
                 fileId: driveFileId,
                 ...((certificateEmission.isTemplateFromGoogleDrive() ||
                     certificateEmission.isTemplateFromUrl()) && {
-                    userAccessToken: externalAccount?.getAccessToken(),
+                    userAccessToken: user?.getGoogleAccessToken() ?? undefined,
                     userRefreshToken:
-                        externalAccount?.getRefreshToken() ?? undefined,
+                        user?.getGoogleRefreshToken() ?? undefined,
                 }),
             })
 
@@ -146,7 +144,7 @@ export class RefreshTemplateUseCase {
             fileMimeType: fileMimeType,
             ...((certificateEmission.isTemplateFromGoogleDrive() ||
                 certificateEmission.isTemplateFromUrl()) && {
-                accessToken: externalAccount?.getAccessToken(),
+                accessToken: user?.getGoogleAccessToken() ?? undefined,
             }),
         })
 
