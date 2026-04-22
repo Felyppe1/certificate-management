@@ -40,7 +40,7 @@ export function GoogleButton({
                     href={href}
                     className="flex items-center justify-center gap-3"
                 >
-                    <GoogleIcon className="size-5" />
+                    <GoogleIcon />
                     <span>{text}</span>
                 </a>
             </Button>
@@ -55,14 +55,12 @@ export function GoogleButton({
             disabled={disabled || isLoading}
             {...props}
         >
-            <div className="flex items-center justify-center gap-3">
-                {isLoading ? (
-                    <Loader2 className="size-5 animate-spin text-muted-foreground" />
-                ) : (
-                    <GoogleIcon className="size-5" />
-                )}
-                <span>{text}</span>
-            </div>
+            {isLoading ? (
+                <Loader2 className="animate-spin text-muted-foreground" />
+            ) : (
+                <GoogleIcon />
+            )}
+            <span>{text}</span>
         </Button>
     )
 }
