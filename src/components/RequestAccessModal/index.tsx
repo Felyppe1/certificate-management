@@ -65,7 +65,7 @@ export function RequestAccessModal() {
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
-                <button className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4 cursor-pointer">
+                <button className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-xl underline underline-offset-4 cursor-pointer outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]">
                     Não tem acesso? Solicite aqui
                 </button>
             </DialogTrigger>

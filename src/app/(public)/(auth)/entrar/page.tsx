@@ -27,7 +27,7 @@ export default function Entrar() {
                 </div>
 
                 <Card className="gap-6">
-                    <div className="flex flex-col items-center gap-3">
+                    <div className="flex flex-col items-center gap-2 sm:gap-3">
                         <GoogleButton
                             size="lg"
                             text="Entrar com Google"

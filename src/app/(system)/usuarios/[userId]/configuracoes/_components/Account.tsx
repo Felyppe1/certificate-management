@@ -206,7 +206,7 @@ export function Account() {
                 )}
 
                 {!hasGoogleAccount && (
-                    <div className="pt-2 flex flex-col items-start gap-3">
+                    <div className="pt-2 flex flex-col items-start gap-1 sm:gap-3">
                         <GoogleButton
                             text="Adicionar Conta Google"
                             onClick={() => addGoogleLogin()}
