@@ -5,7 +5,6 @@ import { ConflictError } from '@/backend/domain/error/conflict-error'
 import { ForbiddenError } from '@/backend/domain/error/forbidden-error'
 import { NotFoundError } from '@/backend/domain/error/not-found-error'
 import { ValidationError } from '@/backend/domain/error/validation-error'
-import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import z from 'zod'
 
@@ -42,12 +41,16 @@ export async function handleError(error: any) {
         )
     }
     if (error instanceof AuthenticationError) {
-        ;(await cookies()).delete(SESSION_COOKIE_NAME)
-
-        return NextResponse.json(
+        const response = NextResponse.json(
             { type: error.type, title: error.title, detail: error.detail },
             { status: 401 },
         )
+        response.cookies.delete({
+            name: SESSION_COOKIE_NAME,
+            path: '/',
+            httpOnly: true,
+        })
+        return response
     }
     if (error instanceof ForbiddenError) {
         return NextResponse.json(

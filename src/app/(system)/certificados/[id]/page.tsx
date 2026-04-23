@@ -7,6 +7,7 @@ import {
 import { queryKeys } from '@/lib/query-keys'
 import { CertificatePageClient } from './_components/CertificatePageClient'
 import { Metadata } from 'next'
+import { prefetchOrRedirect } from '@/utils/prefetchOrRedirect'
 
 export const metadata: Metadata = {
     title: 'Detalhes da Emissão',
@@ -21,16 +22,10 @@ export default async function CertificatePage({
 
     const queryClient = new QueryClient()
 
-    await queryClient.prefetchQuery({
+    await prefetchOrRedirect(queryClient, {
         queryKey: queryKeys.certificateEmission(certificateId),
         queryFn: () => fetchCertificateEmission(certificateId),
     })
-    // await Promise.all([
-    //     // queryClient.prefetchQuery({
-    //     //     queryKey: queryKeys.me(),
-    //     //     queryFn: fetchMe,
-    //     // }),
-    // ])
 
     return (
         <HydrationBoundary state={dehydrate(queryClient)}>

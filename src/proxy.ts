@@ -8,12 +8,10 @@ const publicRoutes = [
     '/cadastrar-se',
     '/politicas-de-privacidade',
     '/termos-de-servico',
-    '/verify-email',
 ]
 
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl
-    console.log('middleware triggered by request to:', pathname)
 
     const isServerAction = request.headers.has('next-action')
     if (isServerAction) {
@@ -21,11 +19,22 @@ export function proxy(request: NextRequest) {
         return NextResponse.next()
     }
 
-    const sessionToken = request.cookies.get(SESSION_COOKIE_NAME)?.value
+    const clearSession = request.nextUrl.searchParams.get('clearSession')
+    const errorType = request.nextUrl.searchParams.get('error')
 
+    const sessionToken = request.cookies.get(SESSION_COOKIE_NAME)?.value
     const isPublicRoute = publicRoutes.includes(pathname)
 
     if (sessionToken) {
+        if (clearSession) {
+            const url = new URL('/entrar', request.url)
+            if (errorType) url.searchParams.set('error', errorType)
+
+            const response = NextResponse.redirect(url)
+            response.cookies.delete(SESSION_COOKIE_NAME)
+            return response
+        }
+
         if (pathname === '/entrar' || pathname === '/cadastrar-se') {
             return NextResponse.redirect(new URL('/', request.url))
         }

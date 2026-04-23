@@ -9,6 +9,7 @@ import { queryKeys } from '@/lib/query-keys'
 import { fetchCertificateEmissions } from '@/api-calls/fetch-certificate-emissions'
 import { fetchCertificateEmissionsMetricsByUser } from '@/api-calls/fetch-certificate-emissions-metrics-by-user'
 import { Metadata } from 'next'
+import { prefetchOrRedirect } from '@/utils/prefetchOrRedirect'
 
 export const metadata: Metadata = {
     title: 'Início',
@@ -18,11 +19,11 @@ export default async function Home() {
     const queryClient = new QueryClient()
 
     await Promise.all([
-        queryClient.prefetchQuery({
+        prefetchOrRedirect(queryClient, {
             queryKey: queryKeys.certificateEmissions(),
             queryFn: fetchCertificateEmissions,
         }),
-        queryClient.prefetchQuery({
+        prefetchOrRedirect(queryClient, {
             queryKey: queryKeys.certificateEmissionsMetrics(),
             queryFn: fetchCertificateEmissionsMetricsByUser,
         }),

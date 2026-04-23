@@ -2,9 +2,10 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
 import { GetMeControllerResponse } from '@/app/api/users/me/route'
 import { notFound, redirect } from 'next/navigation'
+import { env } from '@/env'
 
 async function fetchMeClient(): Promise<GetMeControllerResponse> {
-    const response = await fetch('/api/users/me')
+    const response = await fetch(`${env.NEXT_PUBLIC_BASE_URL}/api/users/me`)
 
     if (!response.ok) {
         const errorData = await response.json()

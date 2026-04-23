@@ -8,6 +8,7 @@ import {
     QueryClient,
 } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
+import { prefetchOrRedirect } from '@/utils/prefetchOrRedirect'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,7 +19,7 @@ interface SystemLayoutProps {
 export default async function Layout({ children }: SystemLayoutProps) {
     const queryClient = new QueryClient()
 
-    await queryClient.prefetchQuery({
+    await prefetchOrRedirect(queryClient, {
         queryKey: queryKeys.me(),
         queryFn: fetchMe,
     })

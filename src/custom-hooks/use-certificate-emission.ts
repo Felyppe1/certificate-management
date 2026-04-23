@@ -2,11 +2,14 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
 import { GetCertificateEmissionControllerResponse } from '@/app/api/certificate-emissions/[certificateEmissionId]/route'
 import { notFound, redirect } from 'next/navigation'
+import { env } from '@/env'
 
 async function fetchCertificateEmissionClient(
     certificateId: string,
 ): Promise<GetCertificateEmissionControllerResponse> {
-    const response = await fetch(`/api/certificate-emissions/${certificateId}`)
+    const response = await fetch(
+        `${env.NEXT_PUBLIC_BASE_URL}/api/certificate-emissions/${certificateId}`,
+    )
 
     if (!response.ok) {
         const errorData = await response.json()
