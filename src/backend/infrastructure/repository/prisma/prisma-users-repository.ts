@@ -5,8 +5,9 @@ import {
 } from '@/backend/application/interfaces/repository/iusers-repository'
 import { User } from '@/backend/domain/user'
 import { ExternalAccount, Provider } from '@/backend/domain/external-account'
-import { PrismaExecutor } from '.'
+import { isPrismaClient, PrismaExecutor, TRANSACTION_OPTIONS } from '.'
 import { transactionStorage } from './prisma-transaction-manager'
+import { Prisma } from './client/browser'
 
 export class PrismaUsersRepository implements IUsersRepository {
     constructor(private readonly defaultPrisma: PrismaExecutor) {}
@@ -190,65 +191,79 @@ export class PrismaUsersRepository implements IUsersRepository {
         } = user.serialize()
 
         const currentProviders = externalAccounts.map(a => a.provider)
-        console.log(externalAccounts)
-        await this.prisma.user.update({
-            where: { id },
-            data: {
-                email,
-                is_email_verified: isEmailVerified,
-                name,
-                password_hash: passwordHash,
-                VerificationToken: verificationToken
-                    ? {
-                          upsert: {
-                              create: {
-                                  token: verificationToken.token,
-                                  expires_at: verificationToken.expiresAt,
+
+        const execute = async (tx: Prisma.TransactionClient) => {
+            if (!verificationToken) {
+                await tx.verificationToken.deleteMany({
+                    where: { user_id: id },
+                })
+            }
+
+            await tx.user.update({
+                where: { id },
+                data: {
+                    email,
+                    is_email_verified: isEmailVerified,
+                    name,
+                    password_hash: passwordHash,
+                    VerificationToken: verificationToken
+                        ? {
+                              upsert: {
+                                  create: {
+                                      token: verificationToken.token,
+                                      expires_at: verificationToken.expiresAt,
+                                  },
+                                  update: {
+                                      token: verificationToken.token,
+                                      expires_at: verificationToken.expiresAt,
+                                  },
                               },
-                              update: {
-                                  token: verificationToken.token,
-                                  expires_at: verificationToken.expiresAt,
-                              },
-                          },
-                      }
-                    : undefined,
-                ExternalUserAccount: {
-                    deleteMany: {
-                        user_id: id,
-                        provider: { notIn: currentProviders },
-                    },
-                    upsert: externalAccounts.map(a => ({
-                        where: {
-                            user_id_provider: {
-                                user_id: id,
-                                provider: a.provider,
+                          }
+                        : undefined,
+                    ExternalUserAccount: {
+                        deleteMany: {
+                            user_id: id,
+                            provider: { notIn: currentProviders },
+                        },
+                        upsert: externalAccounts.map(a => ({
+                            where: {
+                                user_id_provider: {
+                                    user_id: id,
+                                    provider: a.provider,
+                                },
                             },
-                        },
-                        create: {
-                            provider: a.provider,
-                            provider_user_id: a.providerUserId,
-                            email: a.email,
-                            access_token: a.accessToken,
-                            refresh_token: a.refreshToken,
-                            access_token_expiry_datetime:
-                                a.accessTokenExpiryDateTime,
-                            refresh_token_expiry_datetime:
-                                a.refreshTokenExpiryDateTime,
-                        },
-                        update: {
-                            provider_user_id: a.providerUserId,
-                            email: a.email,
-                            access_token: a.accessToken,
-                            refresh_token: a.refreshToken,
-                            access_token_expiry_datetime:
-                                a.accessTokenExpiryDateTime,
-                            refresh_token_expiry_datetime:
-                                a.refreshTokenExpiryDateTime,
-                        },
-                    })),
+                            create: {
+                                provider: a.provider,
+                                provider_user_id: a.providerUserId,
+                                email: a.email,
+                                access_token: a.accessToken,
+                                refresh_token: a.refreshToken,
+                                access_token_expiry_datetime:
+                                    a.accessTokenExpiryDateTime,
+                                refresh_token_expiry_datetime:
+                                    a.refreshTokenExpiryDateTime,
+                            },
+                            update: {
+                                provider_user_id: a.providerUserId,
+                                email: a.email,
+                                access_token: a.accessToken,
+                                refresh_token: a.refreshToken,
+                                access_token_expiry_datetime:
+                                    a.accessTokenExpiryDateTime,
+                                refresh_token_expiry_datetime:
+                                    a.refreshTokenExpiryDateTime,
+                            },
+                        })),
+                    },
                 },
-            },
-        })
+            })
+        }
+
+        if (isPrismaClient(this.prisma)) {
+            await this.prisma.$transaction(execute, TRANSACTION_OPTIONS)
+        } else {
+            await execute(this.prisma)
+        }
     }
 
     async delete(id: string): Promise<void> {

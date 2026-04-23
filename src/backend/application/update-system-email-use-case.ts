@@ -37,8 +37,6 @@ export class UpdateSystemEmailUseCase {
             throw new ConflictError(CONFLICT_ERROR_TYPE.EMAIL_UNAVAILABLE)
         }
 
-        const hasOtherLoginMethod = user.hasExternalAccounts()
-
         user.changeEmail(newEmail)
 
         await this.usersRepository.update(user)
@@ -51,6 +49,7 @@ export class UpdateSystemEmailUseCase {
             )
         }
 
+        const hasOtherLoginMethod = user.hasExternalAccounts()
         return { hasOtherLoginMethod }
     }
 }

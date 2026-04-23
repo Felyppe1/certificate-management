@@ -62,20 +62,36 @@ export function SystemAccess() {
     const { data } = useMe()
     const { email, isEmailVerified } = data.user
 
+    const googleEmail =
+        data.user.externalAccounts.find(acc => acc.provider === 'GOOGLE')
+            ?.email ?? null
+
     if (email === null) {
-        return <SetupSystemAccess onSuccess={() => router.refresh()} />
+        return (
+            <SetupSystemAccess
+                googleEmail={googleEmail}
+                onSuccess={() => router.refresh()}
+            />
+        )
     }
 
     return (
         <ManageSystemAccess
             email={email}
             isEmailVerified={isEmailVerified}
+            googleEmail={googleEmail}
             onSuccess={() => router.refresh()}
         />
     )
 }
 
-function SetupSystemAccess({ onSuccess }: { onSuccess: () => void }) {
+function SetupSystemAccess({
+    googleEmail,
+    onSuccess,
+}: {
+    googleEmail: string | null
+    onSuccess: () => void
+}) {
     const [pendingEmail, setPendingEmail] = useState<string | null>(null)
 
     const {
@@ -96,7 +112,11 @@ function SetupSystemAccess({ onSuccess }: { onSuccess: () => void }) {
         },
         onSuccess: (_, variables) => {
             reset()
-            setPendingEmail(variables.email)
+            if (variables.email === googleEmail) {
+                onSuccess()
+            } else {
+                setPendingEmail(variables.email)
+            }
         },
         onError: (error: any) => {
             if (isRedirectError(error)) return
@@ -205,10 +225,12 @@ function SetupSystemAccess({ onSuccess }: { onSuccess: () => void }) {
 function ManageSystemAccess({
     email,
     isEmailVerified,
+    googleEmail,
     onSuccess,
 }: {
     email: string
     isEmailVerified: boolean
+    googleEmail: string | null
     onSuccess: () => void
 }) {
     const [showChangeEmail, setShowChangeEmail] = useState(false)
@@ -234,7 +256,11 @@ function ManageSystemAccess({
             if (result?.wasLoggedOut) return
             setShowChangeEmail(false)
             emailForm.reset()
-            setPendingNewEmail(variables.newEmail)
+            if (variables.newEmail === googleEmail) {
+                onSuccess()
+            } else {
+                setPendingNewEmail(variables.newEmail)
+            }
         },
         onError: (error: any) => {
             if (isRedirectError(error)) return
@@ -341,9 +367,14 @@ function ManageSystemAccess({
 
                     {showChangeEmail && (
                         <form
-                            onSubmit={emailForm.handleSubmit(data =>
-                                changeEmailMutation.mutate(data),
-                            )}
+                            onSubmit={emailForm.handleSubmit(data => {
+                                if (email === data.newEmail) {
+                                    toast.error('Novo e-mail é igual ao atual')
+                                    return
+                                }
+
+                                changeEmailMutation.mutate(data)
+                            })}
                             className="p-4 space-y-4 border-t"
                         >
                             <div className="space-y-2">

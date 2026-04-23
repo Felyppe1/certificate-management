@@ -182,19 +182,21 @@ export class User extends AggregateRoot {
     }
 
     changeEmail(email: string) {
-        this.email = email
-
         const isEmailFromExternalAccount = this.externalAccounts.some(
             acc => acc.getEmail() === email,
         )
 
-        if (isEmailFromExternalAccount) {
+        const isEmailTheSame = email === this.email
+
+        if (isEmailFromExternalAccount || isEmailTheSame) {
             this.isEmailVerified = true
             this.verificationToken = null
         } else {
             this.isEmailVerified = false
             this.generateVerificationToken()
         }
+
+        this.email = email
     }
 
     updateName(name: string): void {
