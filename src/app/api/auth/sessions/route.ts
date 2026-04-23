@@ -1,13 +1,11 @@
-import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
 import { LoginUseCase } from '@/backend/application/login-use-case'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
-import { SESSION_EXPIRY_DAYS } from '@/backend/domain/session'
+import { setSessionCookie } from '@/app/api/_utils/set-session-cookie'
 
 export interface GetSessionControllerResponse {
     token: string
@@ -48,15 +46,7 @@ export async function POST(
 
         const result = await loginUseCase.execute(email, password)
 
-        const cookie = await cookies()
-
-        cookie.set(SESSION_COOKIE_NAME, result.token, {
-            // secure: true,
-            httpOnly: true,
-            path: '/',
-            maxAge: SESSION_EXPIRY_DAYS * 24 * 60 * 60,
-            // sameSite: "strict"
-        })
+        await setSessionCookie(result.token)
 
         return NextResponse.json(result.user)
     } catch (error: unknown) {

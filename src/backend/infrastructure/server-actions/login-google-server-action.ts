@@ -1,10 +1,9 @@
 'use server'
 
-import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { cookies } from 'next/headers'
 import { LoginGoogleUseCase } from '@/backend/application/login-google-use-case'
+import { setSessionCookie } from '@/app/api/_utils/set-session-cookie'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
@@ -39,14 +38,7 @@ export async function loginGoogleServerAction(_: unknown, formData: FormData) {
             userId,
         })
 
-        const cookie = await cookies()
-
-        cookie.set(SESSION_COOKIE_NAME, sessionToken, {
-            httpOnly: true,
-            path: '/',
-            // secure: true,
-            // sameSite: "strict" // TODO: use sameSite
-        })
+        await setSessionCookie(sessionToken)
 
         return {
             success: true,

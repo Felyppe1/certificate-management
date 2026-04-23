@@ -1,13 +1,12 @@
 'use server'
 
-import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
 import { LoginUseCase } from '@/backend/application/login-use-case'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { loginSchema } from './schemas'
+import { setSessionCookie } from '@/app/api/_utils/set-session-cookie'
 
 export async function loginAction(_: unknown, formData: FormData) {
     const rawData = {
@@ -31,14 +30,7 @@ export async function loginAction(_: unknown, formData: FormData) {
             parsedData.password,
         )
 
-        const cookie = await cookies()
-
-        cookie.set(SESSION_COOKIE_NAME, result.token, {
-            httpOnly: true,
-            path: '/',
-            // secure: true,
-            // sameSite: "strict"
-        })
+        await setSessionCookie(result.token)
     } catch (error: any) {
         console.log(error)
         return {

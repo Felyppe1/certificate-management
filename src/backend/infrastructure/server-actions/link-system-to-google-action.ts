@@ -5,10 +5,8 @@ import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prism
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
-import { SESSION_EXPIRY_DAYS } from '@/backend/domain/session'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
-import { cookies } from 'next/headers'
+import { setSessionCookie } from '@/app/api/_utils/set-session-cookie'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { logoutAction } from './logout-action'
 import { redirect } from 'next/navigation'
@@ -26,12 +24,7 @@ export async function linkSystemToGoogleAction() {
 
         const sessionToken = await useCase.execute({ currentUserId: userId })
 
-        const cookie = await cookies()
-        cookie.set(SESSION_COOKIE_NAME, sessionToken, {
-            httpOnly: true,
-            path: '/',
-            maxAge: SESSION_EXPIRY_DAYS * 24 * 60 * 60,
-        })
+        await setSessionCookie(sessionToken)
 
         return { success: true as const }
     } catch (error: any) {
