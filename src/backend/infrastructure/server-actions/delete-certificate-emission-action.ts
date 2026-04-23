@@ -42,6 +42,7 @@ export async function deleteCertificateEmissionAction(
             if (
                 error.type === 'missing-session' ||
                 error.type === 'session-not-found' ||
+                error.type === 'session-expired' ||
                 error.type === 'user-not-found'
             ) {
                 await logoutAction()
