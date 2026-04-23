@@ -25,7 +25,7 @@ export default function SignUp() {
 
                 <Card className="gap-6">
                     <div className="flex flex-col items-center gap-2 sm:gap-3">
-                        <GoogleButton text="Cadastrar com Google" />
+                        <GoogleButton size="lg" text="Cadastrar com Google" />
                         <RequestAccessModal />
                     </div>
 

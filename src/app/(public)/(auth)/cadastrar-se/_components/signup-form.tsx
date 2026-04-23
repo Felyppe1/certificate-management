@@ -5,18 +5,24 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useState } from 'react'
 import { signUpAction } from '@/backend/infrastructure/server-actions/sign-up-action'
-import { ArrowRight } from 'lucide-react'
+import { AlertCircle, ArrowRight } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation } from '@tanstack/react-query'
-import { signUpSchema } from '@/backend/infrastructure/server-actions/schemas'
 import { useRouter } from 'next/navigation'
 import { VerifyEmailForm } from '@/components/VerifyEmailForm'
 import { LinkSystemToGoogleModal } from './link-system-to-google-modal'
+import { AlertMessage } from '@/components/ui/alert-message'
 
-const formSchema = signUpSchema
-    .extend({
+const signUpSchema = z
+    .object({
+        name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+        email: z.string().email('Formato de email inválido'),
+        password: z
+            .string()
+            .min(6, 'Senha deve ter pelo menos 6 caracteres')
+            .max(100, 'Senha deve ter no máximo 100 caracteres'),
         confirmPassword: z
             .string()
             .min(1, 'A confirmação de senha é obrigatória'),
@@ -26,7 +32,7 @@ const formSchema = signUpSchema
         path: ['confirmPassword'],
     })
 
-type SignUpFormData = z.infer<typeof formSchema>
+type SignUpFormData = z.infer<typeof signUpSchema>
 
 export function SignUpForm() {
     const router = useRouter()
@@ -42,7 +48,7 @@ export function SignUpForm() {
         getValues,
         formState: { errors },
     } = useForm<SignUpFormData>({
-        resolver: zodResolver(formSchema),
+        resolver: zodResolver(signUpSchema),
     })
 
     const mutation = useMutation({
@@ -102,9 +108,11 @@ export function SignUpForm() {
             className="space-y-4"
         >
             {errorMessage && (
-                <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive rounded-md">
-                    {errorMessage}
-                </div>
+                <AlertMessage
+                    variant={'error'}
+                    text={errorMessage}
+                    icon={<AlertCircle />}
+                />
             )}
 
             <div className="space-y-2">

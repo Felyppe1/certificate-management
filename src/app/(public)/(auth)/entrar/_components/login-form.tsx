@@ -79,7 +79,7 @@ export function LoginForm() {
                 <AlertMessage
                     variant={'error'}
                     text={errorMessage}
-                    icon={<AlertCircle className="" />}
+                    icon={<AlertCircle />}
                 />
             )}
 
