@@ -2,6 +2,7 @@ import { AsyncLocalStorage } from 'async_hooks'
 import { ITransactionManager } from '@/backend/application/interfaces/repository/itransaction-manager'
 import { PrismaClient } from './client/client'
 import { TransactionClient } from './client/internal/prismaNamespace'
+import { TRANSACTION_OPTIONS } from '.'
 
 export const transactionStorage = new AsyncLocalStorage<TransactionClient>()
 
@@ -11,6 +12,6 @@ export class PrismaTransactionManager implements ITransactionManager {
     async run<T>(work: () => Promise<T>): Promise<T> {
         return await this.prisma.$transaction(async (tx: TransactionClient) => {
             return await transactionStorage.run(tx, work)
-        })
+        }, TRANSACTION_OPTIONS)
     }
 }

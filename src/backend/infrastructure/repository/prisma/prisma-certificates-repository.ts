@@ -8,7 +8,7 @@ import { COLUMN_TYPE, Prisma } from './client/client'
 import { Template, TEMPLATE_FILE_MIME_TYPE } from '@/backend/domain/template'
 import { DATA_SOURCE_MIME_TYPE, DataSource } from '@/backend/domain/data-source'
 import { TransactionClient } from './client/internal/prismaNamespace'
-import { isPrismaClient, PrismaExecutor } from '.'
+import { isPrismaClient, PrismaExecutor, TRANSACTION_OPTIONS } from '.'
 import { transactionStorage } from './prisma-transaction-manager'
 
 const COLUMN_TYPE_TO_SQL_MAPPER = {
@@ -187,7 +187,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         }
 
         if (isPrismaClient(this.prisma)) {
-            await this.prisma.$transaction(execute)
+            await this.prisma.$transaction(execute, TRANSACTION_OPTIONS)
         } else {
             await execute(this.prisma)
         }
@@ -277,28 +277,27 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
 
         const domainEvents = certificate.pullDomainEvents()
 
-        const previousCertificate =
-            await this.prisma.certificateEmission.findUnique({
-                where: { id },
-                include: {
-                    Template: true,
-                    DataSource: {
-                        include: {
-                            DataSourceColumn: true,
+        const execute = async (tx: TransactionClient) => {
+            const previousCertificate = await tx.certificateEmission.findUnique(
+                {
+                    where: { id },
+                    select: {
+                        Template: { select: { certificate_emission_id: true } },
+                        DataSource: {
+                            select: {
+                                DataSourceColumn: { select: { name: true } },
+                            },
                         },
                     },
                 },
-            })
+            )
 
-        const execute = async (tx: TransactionClient) => {
             const deletePromises = []
 
             if (!template && previousCertificate?.Template) {
                 deletePromises.push(
                     tx.template.delete({
-                        where: {
-                            certificate_emission_id: previousCertificate.id,
-                        },
+                        where: { certificate_emission_id: id },
                     }),
                 )
             }
@@ -306,9 +305,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
             if (!dataSource && previousCertificate?.DataSource) {
                 deletePromises.push(
                     tx.dataSource.delete({
-                        where: {
-                            certificate_emission_id: previousCertificate.id,
-                        },
+                        where: { certificate_emission_id: id },
                     }),
                 )
             }
@@ -512,7 +509,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         }
 
         if (isPrismaClient(this.prisma)) {
-            await this.prisma.$transaction(execute)
+            await this.prisma.$transaction(execute, TRANSACTION_OPTIONS)
         } else {
             await execute(this.prisma)
         }
@@ -660,7 +657,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         }
 
         if (isPrismaClient(this.prisma)) {
-            await this.prisma.$transaction(execute)
+            await this.prisma.$transaction(execute, TRANSACTION_OPTIONS)
         } else {
             await execute(this.prisma)
         }
@@ -682,7 +679,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
         }
 
         if (isPrismaClient(this.prisma)) {
-            await this.prisma.$transaction(execute)
+            await this.prisma.$transaction(execute, TRANSACTION_OPTIONS)
         } else {
             await execute(this.prisma)
         }

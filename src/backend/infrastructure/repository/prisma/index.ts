@@ -13,3 +13,8 @@ export type PrismaExecutor = PrismaClient | Prisma.TransactionClient
 export function isPrismaClient(client: PrismaExecutor): client is PrismaClient {
     return '$transaction' in client
 }
+
+export const TRANSACTION_OPTIONS = {
+    timeout: 15000,
+    maxWait: 5000,
+}

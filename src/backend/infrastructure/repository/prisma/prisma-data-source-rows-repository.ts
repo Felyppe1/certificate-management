@@ -1,4 +1,4 @@
-import { isPrismaClient, PrismaExecutor } from '.'
+import { isPrismaClient, PrismaExecutor, TRANSACTION_OPTIONS } from '.'
 import { transactionStorage } from './prisma-transaction-manager'
 import { IDataSourceRowsRepository } from '@/backend/application/interfaces/repository/idata-source-rows-repository'
 import {
@@ -61,7 +61,7 @@ export class PrismaDataSourceRowsRepository
         }
 
         if (isPrismaClient(this.prisma)) {
-            await this.prisma.$transaction(execute)
+            await this.prisma.$transaction(execute, TRANSACTION_OPTIONS)
         } else {
             await execute(this.prisma)
         }
@@ -162,7 +162,7 @@ export class PrismaDataSourceRowsRepository
         }
 
         if (isPrismaClient(this.prisma)) {
-            await this.prisma.$transaction(execute)
+            await this.prisma.$transaction(execute, TRANSACTION_OPTIONS)
         } else {
             await execute(this.prisma)
         }
@@ -207,7 +207,7 @@ export class PrismaDataSourceRowsRepository
         }
 
         if (isPrismaClient(this.prisma)) {
-            await this.prisma.$transaction(execute)
+            await this.prisma.$transaction(execute, TRANSACTION_OPTIONS)
         } else {
             await execute(this.prisma)
         }
@@ -311,7 +311,7 @@ export class PrismaDataSourceRowsRepository
         }
 
         if (isPrismaClient(this.prisma)) {
-            await this.prisma.$transaction(execute)
+            await this.prisma.$transaction(execute, TRANSACTION_OPTIONS)
         } else {
             await execute(this.prisma)
         }
@@ -353,7 +353,7 @@ export class PrismaDataSourceRowsRepository
         }
 
         if (isPrismaClient(this.prisma)) {
-            await this.prisma.$transaction(execute)
+            await this.prisma.$transaction(execute, TRANSACTION_OPTIONS)
         } else {
             await execute(this.prisma)
         }
