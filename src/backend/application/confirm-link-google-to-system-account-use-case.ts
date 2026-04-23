@@ -32,7 +32,7 @@ export class ConfirmLinkGoogleToSystemAccountUseCase {
 
     async execute({ userId }: ConfirmLinkGoogleToSystemAccountInput) {
         const googleUser = await this.usersRepository.getById(userId)
-        console.log(111)
+
         if (!googleUser) {
             throw new AuthenticationError('user-not-found')
         }
@@ -70,14 +70,12 @@ export class ConfirmLinkGoogleToSystemAccountUseCase {
         })
 
         const session = Session.create(systemUser.getId())
-        console.log(222)
+
         await this.transactionManager.run(async () => {
             await this.usersRepository.delete(googleUser.getId())
             await this.usersRepository.update(systemUser)
             await this.sessionsRepository.save(session)
         })
-
-        console.log('oi')
 
         return session.getToken()
     }

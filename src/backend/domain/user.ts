@@ -82,7 +82,6 @@ export class User extends AggregateRoot {
     }
 
     constructor(data: UserInput) {
-        console.log(data)
         super(data.id)
 
         if (!data.id) {
