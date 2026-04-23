@@ -1,4 +1,4 @@
-import { VerificationToken } from '@/backend/domain/verification-token'
+import { EmailVerificationCode } from '@/backend/domain/email-verification-code'
 import {
     IUsersRepository,
     USER_CREDITS,
@@ -32,8 +32,8 @@ export class PrismaUsersRepository implements IUsersRepository {
             access_token_expiry_datetime: Date | null
             refresh_token_expiry_datetime: Date | null
         }[]
-        VerificationToken?: {
-            token: string
+        EmailVerificationCode?: {
+            code: string
             expires_at: Date
         } | null
     }): User {
@@ -58,10 +58,10 @@ export class PrismaUsersRepository implements IUsersRepository {
                             a.refresh_token_expiry_datetime,
                     }),
             ),
-            verificationToken: user.VerificationToken
-                ? new VerificationToken({
-                      token: user.VerificationToken.token,
-                      expiresAt: user.VerificationToken.expires_at,
+            emailVerificationCode: user.EmailVerificationCode
+                ? new EmailVerificationCode({
+                      code: user.EmailVerificationCode.code,
+                      expiresAt: user.EmailVerificationCode.expires_at,
                   })
                 : null,
         })
@@ -70,7 +70,7 @@ export class PrismaUsersRepository implements IUsersRepository {
     async getByEmail(email: string) {
         const user = await this.prisma.user.findUnique({
             where: { email },
-            include: { ExternalUserAccount: true, VerificationToken: true },
+            include: { ExternalUserAccount: true, EmailVerificationCode: true },
         })
 
         if (!user) return null
@@ -81,7 +81,7 @@ export class PrismaUsersRepository implements IUsersRepository {
     async getById(id: string) {
         const user = await this.prisma.user.findUnique({
             where: { id },
-            include: { ExternalUserAccount: true, VerificationToken: true },
+            include: { ExternalUserAccount: true, EmailVerificationCode: true },
         })
 
         if (!user) return null
@@ -96,7 +96,7 @@ export class PrismaUsersRepository implements IUsersRepository {
                     some: { provider, provider_user_id: providerUserId },
                 },
             },
-            include: { ExternalUserAccount: true, VerificationToken: true },
+            include: { ExternalUserAccount: true, EmailVerificationCode: true },
         })
 
         if (!user) return null
@@ -111,7 +111,7 @@ export class PrismaUsersRepository implements IUsersRepository {
                     some: { provider, email },
                 },
             },
-            include: { ExternalUserAccount: true, VerificationToken: true },
+            include: { ExternalUserAccount: true, EmailVerificationCode: true },
         })
 
         if (!user) return null
@@ -119,14 +119,14 @@ export class PrismaUsersRepository implements IUsersRepository {
         return this.mapUser(user)
     }
 
-    async getByVerificationToken(token: string) {
+    async getByEmailVerificationCode(code: string) {
         const user = await this.prisma.user.findFirst({
             where: {
-                VerificationToken: {
-                    token: token,
+                EmailVerificationCode: {
+                    code: code,
                 },
             },
-            include: { ExternalUserAccount: true, VerificationToken: true },
+            include: { ExternalUserAccount: true, EmailVerificationCode: true },
         })
 
         if (!user) return null
@@ -142,7 +142,7 @@ export class PrismaUsersRepository implements IUsersRepository {
             name,
             passwordHash,
             externalAccounts,
-            verificationToken,
+            emailVerificationCode,
         } = user.serialize()
         console.log('external accounts', externalAccounts)
         await this.prisma.user.create({
@@ -165,12 +165,12 @@ export class PrismaUsersRepository implements IUsersRepository {
                             account.refreshTokenExpiryDateTime,
                     })),
                 },
-                ...(verificationToken
+                ...(emailVerificationCode
                     ? {
-                          VerificationToken: {
+                          EmailVerificationCode: {
                               create: {
-                                  token: verificationToken.token,
-                                  expires_at: verificationToken.expiresAt,
+                                  code: emailVerificationCode.code,
+                                  expires_at: emailVerificationCode.expiresAt,
                               },
                           },
                       }
@@ -187,14 +187,14 @@ export class PrismaUsersRepository implements IUsersRepository {
             name,
             passwordHash,
             externalAccounts,
-            verificationToken,
+            emailVerificationCode,
         } = user.serialize()
 
         const currentProviders = externalAccounts.map(a => a.provider)
 
         const execute = async (tx: Prisma.TransactionClient) => {
-            if (!verificationToken) {
-                await tx.verificationToken.deleteMany({
+            if (!emailVerificationCode) {
+                await tx.emailVerificationCode.deleteMany({
                     where: { user_id: id },
                 })
             }
@@ -206,16 +206,18 @@ export class PrismaUsersRepository implements IUsersRepository {
                     is_email_verified: isEmailVerified,
                     name,
                     password_hash: passwordHash,
-                    VerificationToken: verificationToken
+                    EmailVerificationCode: emailVerificationCode
                         ? {
                               upsert: {
                                   create: {
-                                      token: verificationToken.token,
-                                      expires_at: verificationToken.expiresAt,
+                                      code: emailVerificationCode.code,
+                                      expires_at:
+                                          emailVerificationCode.expiresAt,
                                   },
                                   update: {
-                                      token: verificationToken.token,
-                                      expires_at: verificationToken.expiresAt,
+                                      code: emailVerificationCode.code,
+                                      expires_at:
+                                          emailVerificationCode.expiresAt,
                                   },
                               },
                           }

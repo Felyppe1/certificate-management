@@ -26,7 +26,9 @@ export class VerifyEmailUseCase {
         const user = await this.usersRepository.getByEmail(email)
 
         if (!user) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.VERIFICATION_TOKEN)
+            throw new NotFoundError(
+                NOT_FOUND_ERROR_TYPE.EMAIL_VERIFICATION_CODE,
+            )
         }
 
         await user.verifyEmail(code)

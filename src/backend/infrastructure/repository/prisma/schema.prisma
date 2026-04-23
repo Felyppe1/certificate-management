@@ -32,7 +32,7 @@ model User {
 
     Session             Session[]
     ExternalUserAccount ExternalUserAccount[]
-    VerificationToken   VerificationToken?
+    EmailVerificationCode   EmailVerificationCode?
 
     CertificateEmission CertificateEmission[]
     DailyUsage          DailyUsage[]
@@ -219,14 +219,14 @@ model DailyUsage {
     @@map("daily_usages")
 }
 
-model VerificationToken {
+model EmailVerificationCode {
     user_id    String   @id
-    token      String   @unique
+    code       String   @unique
     expires_at DateTime
 
     User User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-    @@map("verification_tokens")
+    @@map("email_verification_codes")
 }
 
 model Outbox {

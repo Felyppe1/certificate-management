@@ -62,7 +62,7 @@ describe('AddTemplateByUrlUseCase', () => {
                     refreshTokenExpiryDateTime: null,
                 }),
             ],
-            verificationToken: null,
+            emailVerificationCode: null,
         })
     }
 

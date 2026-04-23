@@ -8,10 +8,9 @@ import {
     Provider,
 } from './external-account'
 import {
-    VerificationToken,
-    VerificationTokenInput,
-    VerificationTokenOutput,
-} from './verification-token'
+    EmailVerificationCode,
+    EmailVerificationCodeOutput,
+} from './email-verification-code'
 import { ForbiddenError, FORBIDDEN_ERROR_TYPE } from './error/forbidden-error'
 import {
     VALIDATION_ERROR_TYPE,
@@ -30,7 +29,7 @@ export interface UserInput {
     passwordHash: string | null
     credits: number
     externalAccounts: ExternalAccount[]
-    verificationToken: VerificationToken | null
+    emailVerificationCode: EmailVerificationCode | null
 }
 
 interface CreateUserInput {
@@ -47,7 +46,7 @@ export interface UserOutput {
     passwordHash: string | null
     credits: number
     externalAccounts: ExternalAccountOutput[]
-    verificationToken: VerificationTokenOutput | null
+    emailVerificationCode: EmailVerificationCodeOutput | null
 }
 
 export class User extends AggregateRoot {
@@ -57,7 +56,7 @@ export class User extends AggregateRoot {
     private passwordHash: string | null
     private credits: number
     private externalAccounts: ExternalAccount[]
-    private verificationToken: VerificationToken | null
+    private emailVerificationCode: EmailVerificationCode | null
 
     static async create(data: CreateUserInput): Promise<User> {
         let passwordHash: string | null = null
@@ -73,9 +72,9 @@ export class User extends AggregateRoot {
             name: data.name,
             passwordHash,
             credits: USER_CREDITS,
-            verificationToken:
+            emailVerificationCode:
                 data.email && data.passwordHash
-                    ? VerificationToken.create()
+                    ? EmailVerificationCode.create()
                     : null,
             externalAccounts: [],
         })
@@ -114,7 +113,7 @@ export class User extends AggregateRoot {
         this.passwordHash = data.passwordHash
         this.credits = data.credits
         this.externalAccounts = data.externalAccounts
-        this.verificationToken = data.verificationToken
+        this.emailVerificationCode = data.emailVerificationCode
     }
 
     async setSystemLogin(email: string, plainPassword: string): Promise<void> {
@@ -151,34 +150,34 @@ export class User extends AggregateRoot {
             )
         }
 
-        if (!this.verificationToken) {
+        if (!this.emailVerificationCode) {
             throw new ForbiddenError(
                 FORBIDDEN_ERROR_TYPE.VERIFICATION_CODE_EXPIRED,
             )
         }
 
-        if (this.verificationToken.getToken() !== tokenStr) {
+        if (this.emailVerificationCode.getCode() !== tokenStr) {
             throw new ForbiddenError(
                 FORBIDDEN_ERROR_TYPE.VERIFICATION_CODE_INVALID,
             )
         }
 
-        if (this.verificationToken.isExpired()) {
+        if (this.emailVerificationCode.isExpired()) {
             throw new ForbiddenError(
                 FORBIDDEN_ERROR_TYPE.VERIFICATION_CODE_EXPIRED,
             )
         }
 
         this.isEmailVerified = true
-        this.verificationToken = null
+        this.emailVerificationCode = null
     }
 
-    generateVerificationToken(): void {
-        this.verificationToken = VerificationToken.create()
+    generateEmailVerificationCode(): void {
+        this.emailVerificationCode = EmailVerificationCode.create()
     }
 
-    getVerificationToken(): string | null {
-        return this.verificationToken?.getToken() ?? null
+    getEmailVerificationCode(): string | null {
+        return this.emailVerificationCode?.getCode() ?? null
     }
 
     changeEmail(email: string) {
@@ -190,10 +189,10 @@ export class User extends AggregateRoot {
 
         if (isEmailFromExternalAccount || isEmailTheSame) {
             this.isEmailVerified = true
-            this.verificationToken = null
+            this.emailVerificationCode = null
         } else {
             this.isEmailVerified = false
-            this.generateVerificationToken()
+            this.generateEmailVerificationCode()
         }
 
         this.email = email
@@ -266,7 +265,7 @@ export class User extends AggregateRoot {
         }
 
         if (!this.isEmailVerified) {
-            this.generateVerificationToken()
+            this.generateEmailVerificationCode()
         }
 
         this.externalAccounts.push(
@@ -401,7 +400,8 @@ export class User extends AggregateRoot {
             externalAccounts: this.externalAccounts.map(account =>
                 account.serialize(),
             ),
-            verificationToken: this.verificationToken?.serialize() ?? null,
+            emailVerificationCode:
+                this.emailVerificationCode?.serialize() ?? null,
         }
     }
 }

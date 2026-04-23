@@ -9,7 +9,7 @@ export enum NOT_FOUND_ERROR_TYPE {
     USER = 'user-not-found',
     DRIVE_FILE = 'drive-file-not-found',
     EMAIL = 'email-not-found',
-    VERIFICATION_TOKEN = 'verification-token-not-found',
+    EMAIL_VERIFICATION_CODE = 'email-verification-code-not-found',
     EXTERNAL_ACCOUNT = 'external-account-not-found',
 }
 

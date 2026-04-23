@@ -45,13 +45,13 @@ export class ResendVerificationEmailUseCase {
             )
         }
 
-        user.generateVerificationToken()
+        user.generateEmailVerificationCode()
 
         await this.usersRepository.update(user)
 
         await this.notificationGateway.sendEmailVerification(
             email,
-            user.getVerificationToken()!,
+            user.getEmailVerificationCode()!,
         )
     }
 }

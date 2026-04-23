@@ -42,11 +42,11 @@ export class SetSystemLoginUseCase {
 
         await this.usersRepository.update(user)
 
-        const verificationToken = user.getVerificationToken()
-        if (verificationToken) {
+        const emailVerificationCode = user.getEmailVerificationCode()
+        if (emailVerificationCode) {
             await this.notificationGateway.sendEmailVerification(
                 email,
-                verificationToken,
+                emailVerificationCode,
             )
         }
     }

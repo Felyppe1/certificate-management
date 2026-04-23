@@ -41,7 +41,7 @@ export class SignUpUseCase {
 
         await this.notificationGateway.sendEmailVerification(
             data.email,
-            user.getVerificationToken()!,
+            user.getEmailVerificationCode()!,
         )
 
         const googleUser = await this.usersRepository.getByExternalAccountEmail(
