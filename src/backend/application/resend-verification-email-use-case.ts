@@ -33,9 +33,9 @@ export class ResendVerificationEmailUseCase {
             throw new AuthenticationError('user-not-found')
         }
 
-        if (!user.getEmail()) {
-            throw new ForbiddenError(
-                FORBIDDEN_ERROR_TYPE.NO_SYSTEM_EMAIL_CONFIGURED,
+        if (!user.hasSystemLogin()) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED,
             )
         }
 

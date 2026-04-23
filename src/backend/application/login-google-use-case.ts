@@ -66,6 +66,7 @@ export class LoginGoogleUseCase {
 
         let user: User
         let isNewUser = false
+        let suggestLinkingEmail: string | null = null
 
         if (authenticatedUser) {
             // Re-auth: linking Google to an already authenticated user
@@ -80,7 +81,7 @@ export class LoginGoogleUseCase {
                 existingOwner.getId() !== authenticatedUser.getId()
             ) {
                 throw new ConflictError(
-                    CONFLICT_ERROR_TYPE.ACCOUNT_ALREADY_LINKED,
+                    CONFLICT_ERROR_TYPE.EXTERNAL_ACCOUNT_ALREADY_EXISTS,
                 )
             }
 
@@ -123,12 +124,20 @@ export class LoginGoogleUseCase {
                         tokenData.refreshToken ?? user.getGoogleRefreshToken(),
                 })
             } else {
+                const systemUser = await this.usersRepository.getByEmail(
+                    userInfo.email,
+                )
+                if (systemUser && !systemUser.hasGoogleAccount()) {
+                    suggestLinkingEmail = userInfo.email
+                }
+
                 isNewUser = true
                 user = await User.create({
                     email: null,
                     name: userInfo.name,
                     passwordHash: null,
                 })
+
                 user.addExternalAccount({
                     provider: 'GOOGLE',
                     providerUserId: userInfo.providerUserId,
@@ -154,6 +163,6 @@ export class LoginGoogleUseCase {
             await this.sessionsRepository.save(session)
         })
 
-        return session.getToken()
+        return { sessionToken: session.getToken(), suggestLinkingEmail }
     }
 }

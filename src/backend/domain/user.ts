@@ -18,6 +18,7 @@ import {
     ValidationError,
 } from './error/validation-error'
 import { NOT_FOUND_ERROR_TYPE, NotFoundError } from './error/not-found-error'
+import { CONFLICT_ERROR_TYPE, ConflictError } from './error/conflict-error'
 
 export const USER_CREDITS = 300
 
@@ -123,6 +124,27 @@ export class User extends AggregateRoot {
         this.changeEmail(email)
     }
 
+    linkSystemAccountWithSameEmail(
+        provider: Provider,
+        passwordHash: string,
+    ): void {
+        const externalAccount = this.getExternalAccount(provider)
+
+        if (!externalAccount) {
+            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.EXTERNAL_ACCOUNT)
+        }
+
+        if (this.hasSystemLogin()) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_ENABLED,
+            )
+        }
+
+        this.passwordHash = passwordHash
+
+        this.changeEmail(externalAccount.getEmail())
+    }
+
     async verifyEmail(tokenStr: string): Promise<void> {
         if (this.isEmailVerified) {
             throw new ValidationError(
@@ -224,6 +246,37 @@ export class User extends AggregateRoot {
         this.externalAccounts.push(new ExternalAccount(data))
     }
 
+    addExternalAccountWithSameEmail(
+        provider: Provider,
+        data: Omit<ExternalAccountInput, 'provider' | 'email'>,
+    ): void {
+        const externalAccount = this.getExternalAccount(provider)
+
+        if (externalAccount) {
+            throw new ConflictError(
+                CONFLICT_ERROR_TYPE.EXTERNAL_ACCOUNT_ALREADY_EXISTS,
+            )
+        }
+
+        if (!this.hasSystemLogin()) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED,
+            )
+        }
+
+        if (!this.isEmailVerified) {
+            this.generateVerificationToken()
+        }
+
+        this.externalAccounts.push(
+            new ExternalAccount({
+                ...data,
+                email: this.getEmail()!,
+                provider,
+            }),
+        )
+    }
+
     updateExternalAccount(
         provider: Provider,
         tokens: {
@@ -295,6 +348,10 @@ export class User extends AggregateRoot {
 
     hasExternalAccounts(): boolean {
         return this.externalAccounts.length > 0
+    }
+
+    getGoogleEmail(): string | null {
+        return this.getExternalAccount('GOOGLE')?.getEmail() ?? null
     }
 
     getGoogleAccessToken(): string | null {

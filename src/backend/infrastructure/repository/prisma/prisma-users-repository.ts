@@ -103,6 +103,21 @@ export class PrismaUsersRepository implements IUsersRepository {
         return this.mapUser(user)
     }
 
+    async getByExternalAccountEmail(provider: Provider, email: string) {
+        const user = await this.prisma.user.findFirst({
+            where: {
+                ExternalUserAccount: {
+                    some: { provider, email },
+                },
+            },
+            include: { ExternalUserAccount: true, VerificationToken: true },
+        })
+
+        if (!user) return null
+
+        return this.mapUser(user)
+    }
+
     async getByVerificationToken(token: string) {
         const user = await this.prisma.user.findFirst({
             where: {
@@ -128,7 +143,7 @@ export class PrismaUsersRepository implements IUsersRepository {
             externalAccounts,
             verificationToken,
         } = user.serialize()
-
+        console.log('external accounts', externalAccounts)
         await this.prisma.user.create({
             data: {
                 id,
@@ -175,7 +190,7 @@ export class PrismaUsersRepository implements IUsersRepository {
         } = user.serialize()
 
         const currentProviders = externalAccounts.map(a => a.provider)
-
+        console.log(externalAccounts)
         await this.prisma.user.update({
             where: { id },
             data: {

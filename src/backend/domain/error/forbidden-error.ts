@@ -7,7 +7,6 @@ export enum FORBIDDEN_ERROR_TYPE {
     GOOGLE_ACCOUNT_EMAIL_MISMATCH = 'google-account-email-mismatch',
     NOT_ADMIN = 'not-admin',
     EMAIL_NOT_VERIFIED = 'email-not-verified',
-    NO_SYSTEM_EMAIL_CONFIGURED = 'no-system-email-configured',
     VERIFICATION_CODE_EXPIRED = 'verification-code-expired',
     VERIFICATION_CODE_INVALID = 'verification-code-invalid',
 }

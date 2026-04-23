@@ -33,10 +33,11 @@ export async function GET(request: Request) {
     )
 
     try {
-        const sessionToken = await loginGoogleUseCase.execute({
-            code,
-            reAuthenticate: false,
-        })
+        const { sessionToken, suggestLinkingEmail } =
+            await loginGoogleUseCase.execute({
+                code,
+                reAuthenticate: false,
+            })
 
         const cookie = await cookies()
 
@@ -48,9 +49,18 @@ export async function GET(request: Request) {
             // sameSite: "strict" // TODO: use sameSite
         })
 
+        if (suggestLinkingEmail) {
+            const redirectUrl = new URL(
+                env.NEXT_PUBLIC_BASE_URL + '/vincular-conta',
+            )
+            redirectUrl.searchParams.set('email', suggestLinkingEmail)
+            return NextResponse.redirect(redirectUrl)
+        }
+
         return NextResponse.redirect(env.NEXT_PUBLIC_BASE_URL + '/')
     } catch (error) {
         console.error(error)
+
         const redirectUrl = new URL(env.NEXT_PUBLIC_BASE_URL + '/entrar')
 
         if (error instanceof AppError) {

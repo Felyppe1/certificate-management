@@ -9,6 +9,10 @@ export interface IUsersRepository {
         provider: Provider,
         providerUserId: string,
     ): Promise<User | null>
+    getByExternalAccountEmail(
+        provider: Provider,
+        email: string,
+    ): Promise<User | null>
     getByVerificationToken(token: string): Promise<User | null>
     save(user: User): Promise<void>
     update(user: User): Promise<void>

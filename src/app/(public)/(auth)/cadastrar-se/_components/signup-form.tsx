@@ -13,6 +13,7 @@ import { useMutation } from '@tanstack/react-query'
 import { signUpSchema } from '@/backend/infrastructure/server-actions/schemas'
 import { useRouter } from 'next/navigation'
 import { VerifyEmailForm } from '@/components/VerifyEmailForm'
+import { LinkSystemToGoogleModal } from './link-system-to-google-modal'
 
 const formSchema = signUpSchema
     .extend({
@@ -31,6 +32,9 @@ export function SignUpForm() {
     const router = useRouter()
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const [pendingVerification, setPendingVerification] = useState(false)
+    const [googleLinkingSuggestion, setGoogleLinkingSuggestion] =
+        useState(false)
+    const [showLinkingModal, setShowLinkingModal] = useState(false)
 
     const {
         register,
@@ -57,16 +61,34 @@ export function SignUpForm() {
                         : 'Ocorreu um erro ao realizar o cadastro. Tente novamente.',
                 )
             } else {
+                setGoogleLinkingSuggestion(result.googleLinkingSuggestion)
                 setPendingVerification(true)
             }
         },
     })
 
+    function handleVerificationSuccess() {
+        if (googleLinkingSuggestion) {
+            setShowLinkingModal(true)
+        } else {
+            router.push('/')
+        }
+    }
+
+    if (showLinkingModal) {
+        return (
+            <LinkSystemToGoogleModal
+                email={getValues('email')}
+                onDismiss={() => router.push('/')}
+            />
+        )
+    }
+
     if (pendingVerification) {
         return (
             <VerifyEmailForm
                 email={getValues('email')}
-                onSuccess={() => router.push('/')}
+                onSuccess={handleVerificationSuccess}
             />
         )
     }

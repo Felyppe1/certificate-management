@@ -33,7 +33,7 @@ export async function loginGoogleServerAction(_: unknown, formData: FormData) {
             transactionManager,
         )
 
-        const sessionToken = await loginGoogleUseCase.execute({
+        const { sessionToken } = await loginGoogleUseCase.execute({
             code: parsedCode,
             reAuthenticate: true,
             userId,

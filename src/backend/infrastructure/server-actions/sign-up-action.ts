@@ -24,12 +24,13 @@ export async function signUpAction(_: unknown, formData: FormData) {
             notificationGateway,
         )
 
-        await signUpUseCase.execute({
+        const { googleLinkingSuggestion } = await signUpUseCase.execute({
             name: parsedData.name,
             email: parsedData.email,
             password: parsedData.password,
         })
-        return { success: true as const }
+
+        return { success: true as const, googleLinkingSuggestion }
     } catch (error: any) {
         console.log(error)
 

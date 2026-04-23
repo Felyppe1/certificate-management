@@ -66,11 +66,10 @@ export function useGoogleRelogin({
                                 'Não é possível reautenticar-se com um e-mail diferente.',
                             )
                         } else if (
-                            result.errorType === 'account-already-linked'
+                            result.errorType ===
+                            'external-account-already-exists'
                         ) {
-                            toast.error(
-                                'Esta conta já está vinculada a outro usuário.',
-                            )
+                            toast.error('Esta conta já está sendo usada')
                         } else {
                             toast.error(
                                 'Falha ao autenticar com o Google. Tente novamente.',

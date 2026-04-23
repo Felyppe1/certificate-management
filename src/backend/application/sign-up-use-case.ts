@@ -14,7 +14,10 @@ interface SignUpInput {
 
 export class SignUpUseCase {
     constructor(
-        private usersRepository: Pick<IUsersRepository, 'getByEmail' | 'save'>,
+        private usersRepository: Pick<
+            IUsersRepository,
+            'getByEmail' | 'getByExternalAccountEmail' | 'save'
+        >,
         private notificationGateway: Pick<
             INotificationGateway,
             'sendEmailVerification'
@@ -41,6 +44,13 @@ export class SignUpUseCase {
             user.getVerificationToken()!,
         )
 
-        return { userId: user.getId() }
+        const googleUser = await this.usersRepository.getByExternalAccountEmail(
+            'GOOGLE',
+            data.email,
+        )
+        const googleLinkingSuggestion =
+            !!googleUser && !googleUser.hasSystemLogin()
+
+        return { userId: user.getId(), googleLinkingSuggestion }
     }
 }

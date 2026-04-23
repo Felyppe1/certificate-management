@@ -4,7 +4,7 @@ export enum CONFLICT_ERROR_TYPE {
     CERTIFICATE = 'certificate-already-exists',
     TEMPLATE = 'template-already-exists',
     USER = 'user-already-exists',
-    ACCOUNT_ALREADY_LINKED = 'account-already-linked',
+    EXTERNAL_ACCOUNT_ALREADY_EXISTS = 'external-account-already-exists',
     EMAIL_UNAVAILABLE = 'email-unavailable',
     EMAIL_ALREADY_VERIFIED = 'email-already-verified',
 }

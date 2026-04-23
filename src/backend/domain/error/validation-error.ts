@@ -38,8 +38,10 @@ export enum VALIDATION_ERROR_TYPE {
     DATA_SOURCE_NOT_IMAGE = 'data-source-not-image',
     CURRENT_PASSWORD_INCORRECT = 'current-password-incorrect',
     SYSTEM_LOGIN_NOT_ENABLED = 'system-login-not-enabled',
+    SYSTEM_LOGIN_ENABLED = 'system-login-enabled',
     LAST_LOGIN_METHOD = 'last-login-method',
     EMAIL_ALREADY_VERIFIED = 'email-already-verified',
+    NO_GOOGLE_ACCOUNT = 'no-google-account',
 }
 
 export class ValidationError extends AppError<VALIDATION_ERROR_TYPE> {
