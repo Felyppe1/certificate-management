@@ -19,7 +19,7 @@ export default function SignUp() {
                         <Logo className="w-34 sm:w-40 shrink-0" />
                     </div>
                     <p className="text-muted-foreground">
-                        Gerencie e gere certificados de forma rápida.
+                        Gere e emita certificados de forma rápida.
                     </p>
                 </div>
 

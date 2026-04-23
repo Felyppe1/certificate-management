@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { signUpAction } from '@/backend/infrastructure/server-actions/sign-up-action'
 import { AlertCircle, ArrowRight } from 'lucide-react'
 import { useForm } from 'react-hook-form'
@@ -11,8 +11,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { VerifyEmailForm } from '@/components/VerifyEmailForm'
-import { LinkSystemToGoogleModal } from './link-system-to-google-modal'
 import { AlertMessage } from '@/components/ui/alert-message'
 
 const signUpSchema = z
@@ -36,11 +34,8 @@ type SignUpFormData = z.infer<typeof signUpSchema>
 
 export function SignUpForm() {
     const router = useRouter()
+    const [isNavigating, startTransition] = useTransition()
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
-    const [pendingVerification, setPendingVerification] = useState(false)
-    const [googleLinkingSuggestion, setGoogleLinkingSuggestion] =
-        useState(false)
-    const [showLinkingModal, setShowLinkingModal] = useState(false)
 
     const {
         register,
@@ -67,37 +62,16 @@ export function SignUpForm() {
                         : 'Ocorreu um erro ao realizar o cadastro. Tente novamente.',
                 )
             } else {
-                setGoogleLinkingSuggestion(result.googleLinkingSuggestion)
-                setPendingVerification(true)
+                const email = getValues('email')
+                const linking = result.googleLinkingSuggestion
+                startTransition(() => {
+                    router.push(
+                        `/verificar-email?email=${encodeURIComponent(email)}${linking ? '&linking=true' : ''}`,
+                    )
+                })
             }
         },
     })
-
-    function handleVerificationSuccess() {
-        if (googleLinkingSuggestion) {
-            setShowLinkingModal(true)
-        } else {
-            router.push('/')
-        }
-    }
-
-    if (showLinkingModal) {
-        return (
-            <LinkSystemToGoogleModal
-                email={getValues('email')}
-                onDismiss={() => router.push('/')}
-            />
-        )
-    }
-
-    if (pendingVerification) {
-        return (
-            <VerifyEmailForm
-                email={getValues('email')}
-                onSuccess={handleVerificationSuccess}
-            />
-        )
-    }
 
     return (
         <form
@@ -192,11 +166,13 @@ export function SignUpForm() {
 
             <Button
                 type="submit"
-                disabled={mutation.isPending}
+                disabled={mutation.isPending || isNavigating}
                 className="w-full"
                 size="lg"
             >
-                {mutation.isPending ? 'Cadastrando...' : 'Cadastrar'}
+                {mutation.isPending || isNavigating
+                    ? 'Cadastrando...'
+                    : 'Cadastrar'}
                 <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
         </form>

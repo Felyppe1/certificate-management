@@ -9,6 +9,8 @@ export enum FORBIDDEN_ERROR_TYPE {
     EMAIL_NOT_VERIFIED = 'email-not-verified',
     VERIFICATION_CODE_EXPIRED = 'verification-code-expired',
     VERIFICATION_CODE_INVALID = 'verification-code-invalid',
+    RESET_PASSWORD_CODE_EXPIRED = 'reset-password-code-expired',
+    RESET_PASSWORD_CODE_INVALID = 'reset-password-code-invalid',
 }
 
 export class ForbiddenError extends AppError<FORBIDDEN_ERROR_TYPE> {

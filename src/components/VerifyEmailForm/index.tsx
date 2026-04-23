@@ -17,9 +17,14 @@ import { resendVerificationEmailAction } from '@/backend/infrastructure/server-a
 interface VerifyEmailFormProps {
     email: string
     onSuccess?: () => void
+    isLoading?: boolean
 }
 
-export function VerifyEmailForm({ email, onSuccess }: VerifyEmailFormProps) {
+export function VerifyEmailForm({
+    email,
+    onSuccess,
+    isLoading,
+}: VerifyEmailFormProps) {
     const [code, setCode] = useState('')
     const [error, setError] = useState<string | null>(null)
     const [resendCooldown, setResendCooldown] = useState(0)
@@ -98,6 +103,7 @@ export function VerifyEmailForm({ email, onSuccess }: VerifyEmailFormProps) {
                     value={code}
                     onChange={setCode}
                     onComplete={handleSubmit}
+                    disabled={isLoading || verifyMutation.isPending}
                 >
                     <InputOTPGroup>
                         <InputOTPSlot index={0} />
@@ -123,11 +129,13 @@ export function VerifyEmailForm({ email, onSuccess }: VerifyEmailFormProps) {
             <Button
                 type="button"
                 onClick={handleSubmit}
-                disabled={code.length !== 6 || verifyMutation.isPending}
+                disabled={
+                    code.length !== 6 || verifyMutation.isPending || isLoading
+                }
                 className="w-full"
                 size="lg"
             >
-                {verifyMutation.isPending && (
+                {(verifyMutation.isPending || isLoading) && (
                     <Loader2 className="animate-spin" />
                 )}
                 Verificar
@@ -139,7 +147,11 @@ export function VerifyEmailForm({ email, onSuccess }: VerifyEmailFormProps) {
                     variant="link"
                     size="sm"
                     onClick={handleResend}
-                    disabled={resendMutation.isPending || resendCooldown > 0}
+                    disabled={
+                        resendMutation.isPending ||
+                        resendCooldown > 0 ||
+                        isLoading
+                    }
                     className="text-muted-foreground"
                 >
                     {resendMutation.isPending && (

@@ -23,6 +23,7 @@ export class VerifyEmailUseCase {
     ) {}
 
     async execute({ email, code }: Input) {
+        console.log('email', email)
         const user = await this.usersRepository.getByEmail(email)
 
         if (!user) {

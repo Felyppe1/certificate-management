@@ -8,6 +8,8 @@ const publicRoutes = [
     '/cadastrar-se',
     '/politicas-de-privacidade',
     '/termos-de-servico',
+    '/resetar-senha',
+    '/verificar-email',
 ]
 
 export function proxy(request: NextRequest) {

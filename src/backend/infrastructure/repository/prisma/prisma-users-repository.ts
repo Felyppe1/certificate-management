@@ -1,4 +1,5 @@
 import { EmailVerificationCode } from '@/backend/domain/email-verification-code'
+import { ResetPasswordCode } from '@/backend/domain/reset-password-code'
 import {
     IUsersRepository,
     USER_CREDITS,
@@ -36,6 +37,8 @@ export class PrismaUsersRepository implements IUsersRepository {
             code: string
             expires_at: Date
         } | null
+        reset_password_code: string | null
+        reset_password_expires_at: Date | null
     }): User {
         return new User({
             id: user.id,
@@ -64,6 +67,13 @@ export class PrismaUsersRepository implements IUsersRepository {
                       expiresAt: user.EmailVerificationCode.expires_at,
                   })
                 : null,
+            resetPasswordCode:
+                user.reset_password_code && user.reset_password_expires_at
+                    ? new ResetPasswordCode({
+                          code: user.reset_password_code,
+                          expiresAt: user.reset_password_expires_at,
+                      })
+                    : null,
         })
     }
 
@@ -144,7 +154,6 @@ export class PrismaUsersRepository implements IUsersRepository {
             externalAccounts,
             emailVerificationCode,
         } = user.serialize()
-        console.log('external accounts', externalAccounts)
         await this.prisma.user.create({
             data: {
                 id,
@@ -152,6 +161,8 @@ export class PrismaUsersRepository implements IUsersRepository {
                 is_email_verified: isEmailVerified,
                 name,
                 password_hash: passwordHash,
+                reset_password_code: null,
+                reset_password_expires_at: null,
                 ExternalUserAccount: {
                     create: externalAccounts.map(account => ({
                         provider: account.provider,
@@ -188,6 +199,7 @@ export class PrismaUsersRepository implements IUsersRepository {
             passwordHash,
             externalAccounts,
             emailVerificationCode,
+            resetPasswordCode,
         } = user.serialize()
 
         const currentProviders = externalAccounts.map(a => a.provider)
@@ -206,6 +218,9 @@ export class PrismaUsersRepository implements IUsersRepository {
                     is_email_verified: isEmailVerified,
                     name,
                     password_hash: passwordHash,
+                    reset_password_code: resetPasswordCode?.code ?? null,
+                    reset_password_expires_at:
+                        resetPasswordCode?.expiresAt ?? null,
                     EmailVerificationCode: emailVerificationCode
                         ? {
                               upsert: {

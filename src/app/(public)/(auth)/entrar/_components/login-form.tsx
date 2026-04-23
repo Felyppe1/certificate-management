@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import Link from 'next/link'
 import { AlertCircle, ArrowRight } from 'lucide-react'
 import { AlertMessage } from '@/components/ui/alert-message'
 import { useForm } from 'react-hook-form'
@@ -12,7 +11,7 @@ import { z } from 'zod'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { loginAction } from '@/backend/infrastructure/server-actions/login-action'
-import { VerifyEmailForm } from '@/components/VerifyEmailForm'
+import { ForgotPasswordPopover } from './ForgotPasswordPopover'
 
 const loginSchema = z.object({
     email: z.email('Formato de email inválido'),
@@ -28,12 +27,10 @@ export function LoginForm() {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
-    const [emailNotVerified, setEmailNotVerified] = useState(false)
 
     const {
         register,
         handleSubmit,
-        getValues,
         formState: { errors },
     } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
@@ -41,7 +38,6 @@ export function LoginForm() {
 
     const onSubmit = async (data: LoginFormData) => {
         setErrorMessage(null)
-        setEmailNotVerified(false)
 
         startTransition(async () => {
             const formData = new FormData()
@@ -54,7 +50,10 @@ export function LoginForm() {
                 if (result.errorType === 'incorrect-credentials') {
                     setErrorMessage('Email ou senha incorretos.')
                 } else if (result.errorType === 'email-not-verified') {
-                    setEmailNotVerified(true)
+                    router.push(
+                        '/verificar-email?email=' +
+                            encodeURIComponent(data.email),
+                    )
                 } else {
                     setErrorMessage(
                         'Ocorreu um erro inesperado. Tente novamente.',
@@ -62,15 +61,6 @@ export function LoginForm() {
                 }
             }
         })
-    }
-
-    if (emailNotVerified) {
-        return (
-            <VerifyEmailForm
-                email={getValues('email')}
-                onSuccess={() => router.push('/')}
-            />
-        )
     }
 
     return (
@@ -106,12 +96,7 @@ export function LoginForm() {
                     <Label htmlFor="password" className="text-sm font-medium">
                         Senha
                     </Label>
-                    <Link
-                        href="/recuperar-senha"
-                        className="text-sm font-semibold text-primary hover:underline"
-                    >
-                        Esqueceu a senha?
-                    </Link>
+                    <ForgotPasswordPopover />
                 </div>
                 <Input
                     type="password"

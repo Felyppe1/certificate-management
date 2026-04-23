@@ -5,7 +5,6 @@ import { useMutation } from '@tanstack/react-query'
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
@@ -61,9 +60,7 @@ export function LinkSystemToGoogleModal({ email, onDismiss }: Props) {
                         Não vincular
                     </Button>
                     <Button
-                        onClick={() => {
-                            linkMutation.mutate()
-                        }}
+                        onClick={() => linkMutation.mutate()}
                         disabled={linkMutation.isPending}
                     >
                         {linkMutation.isPending

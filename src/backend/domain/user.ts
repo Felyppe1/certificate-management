@@ -11,6 +11,10 @@ import {
     EmailVerificationCode,
     EmailVerificationCodeOutput,
 } from './email-verification-code'
+import {
+    ResetPasswordCode,
+    ResetPasswordCodeOutput,
+} from './reset-password-code'
 import { ForbiddenError, FORBIDDEN_ERROR_TYPE } from './error/forbidden-error'
 import {
     VALIDATION_ERROR_TYPE,
@@ -30,6 +34,7 @@ export interface UserInput {
     credits: number
     externalAccounts: ExternalAccount[]
     emailVerificationCode: EmailVerificationCode | null
+    resetPasswordCode: ResetPasswordCode | null
 }
 
 interface CreateUserInput {
@@ -47,6 +52,7 @@ export interface UserOutput {
     credits: number
     externalAccounts: ExternalAccountOutput[]
     emailVerificationCode: EmailVerificationCodeOutput | null
+    resetPasswordCode: ResetPasswordCodeOutput | null
 }
 
 export class User extends AggregateRoot {
@@ -57,6 +63,7 @@ export class User extends AggregateRoot {
     private credits: number
     private externalAccounts: ExternalAccount[]
     private emailVerificationCode: EmailVerificationCode | null
+    private resetPasswordCode: ResetPasswordCode | null
 
     static async create(data: CreateUserInput): Promise<User> {
         let passwordHash: string | null = null
@@ -77,6 +84,7 @@ export class User extends AggregateRoot {
                     ? EmailVerificationCode.create()
                     : null,
             externalAccounts: [],
+            resetPasswordCode: null,
         })
     }
 
@@ -114,6 +122,7 @@ export class User extends AggregateRoot {
         this.credits = data.credits
         this.externalAccounts = data.externalAccounts
         this.emailVerificationCode = data.emailVerificationCode
+        this.resetPasswordCode = data.resetPasswordCode
     }
 
     async setSystemLogin(email: string, plainPassword: string): Promise<void> {
@@ -178,6 +187,52 @@ export class User extends AggregateRoot {
 
     getEmailVerificationCode(): string | null {
         return this.emailVerificationCode?.getCode() ?? null
+    }
+
+    generateResetPasswordCode(): void {
+        if (!this.hasSystemLogin()) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED,
+            )
+        }
+
+        this.resetPasswordCode = ResetPasswordCode.create()
+    }
+
+    getResetPasswordCode(): string | null {
+        return this.resetPasswordCode?.getCode() ?? null
+    }
+
+    validateResetPasswordCode(code: string): void {
+        if (!this.hasSystemLogin()) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED,
+            )
+        }
+
+        if (!this.resetPasswordCode) {
+            throw new ForbiddenError(
+                FORBIDDEN_ERROR_TYPE.RESET_PASSWORD_CODE_EXPIRED,
+            )
+        }
+
+        if (this.resetPasswordCode.isExpired()) {
+            throw new ForbiddenError(
+                FORBIDDEN_ERROR_TYPE.RESET_PASSWORD_CODE_EXPIRED,
+            )
+        }
+
+        if (this.resetPasswordCode.getCode() !== code) {
+            throw new ForbiddenError(
+                FORBIDDEN_ERROR_TYPE.RESET_PASSWORD_CODE_INVALID,
+            )
+        }
+    }
+
+    async resetPassword(code: string, newPassword: string): Promise<void> {
+        this.validateResetPasswordCode(code)
+        this.passwordHash = await bcrypt.hash(newPassword, 10)
+        this.resetPasswordCode = null
     }
 
     changeEmail(email: string) {
@@ -402,6 +457,7 @@ export class User extends AggregateRoot {
             ),
             emailVerificationCode:
                 this.emailVerificationCode?.serialize() ?? null,
+            resetPasswordCode: this.resetPasswordCode?.serialize() ?? null,
         }
     }
 }

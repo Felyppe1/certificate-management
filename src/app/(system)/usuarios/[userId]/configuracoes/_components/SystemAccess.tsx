@@ -13,9 +13,8 @@ import {
     ChevronDown,
     ChevronUp,
 } from 'lucide-react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { useForm } from 'react-hook-form'
@@ -26,6 +25,7 @@ import { updateSystemEmailAction } from '@/backend/infrastructure/server-actions
 import { updateSystemPasswordAction } from '@/backend/infrastructure/server-actions/update-system-password-action'
 import { VerifyEmailForm } from '@/components/VerifyEmailForm'
 import { useMe } from '@/custom-hooks/use-me'
+import { queryKeys } from '@/lib/query-keys'
 
 const setupSchema = z
     .object({
@@ -58,7 +58,7 @@ type ChangeEmailData = z.infer<typeof changeEmailSchema>
 type ChangePasswordData = z.infer<typeof changePasswordSchema>
 
 export function SystemAccess() {
-    const router = useRouter()
+    const queryClient = useQueryClient()
     const { data } = useMe()
     const { email, isEmailVerified } = data.user
 
@@ -70,7 +70,9 @@ export function SystemAccess() {
         return (
             <SetupSystemAccess
                 googleEmail={googleEmail}
-                onSuccess={() => router.refresh()}
+                onSuccess={() =>
+                    queryClient.invalidateQueries({ queryKey: queryKeys.me() })
+                }
             />
         )
     }
@@ -80,7 +82,9 @@ export function SystemAccess() {
             email={email}
             isEmailVerified={isEmailVerified}
             googleEmail={googleEmail}
-            onSuccess={() => router.refresh()}
+            onSuccess={() =>
+                queryClient.invalidateQueries({ queryKey: queryKeys.me() })
+            }
         />
     )
 }

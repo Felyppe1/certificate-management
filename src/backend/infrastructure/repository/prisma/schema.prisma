@@ -30,6 +30,9 @@ model User {
     password_hash     String?
     credits           Int     @default(300)
 
+    reset_password_code         String?
+    reset_password_expires_at   DateTime?
+
     Session             Session[]
     ExternalUserAccount ExternalUserAccount[]
     EmailVerificationCode   EmailVerificationCode?
