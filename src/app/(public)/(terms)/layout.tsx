@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Logo } from '@/components/Logo'
 
 interface PublicLayoutProps {
     children: React.ReactNode
@@ -13,11 +14,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                         href="/"
                         className="flex items-center outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md"
                     >
-                        <img
-                            src="/logo.png"
-                            alt="Certifica"
-                            className="w-34 sm:w-40"
-                        />
+                        <Logo className="w-34 sm:w-40" />
                     </Link>
                 </div>
 

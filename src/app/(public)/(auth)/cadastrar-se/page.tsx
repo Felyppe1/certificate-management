@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Logo } from '@/components/Logo'
 import { SignUpForm } from './_components/signup-form'
 import { GoogleButton } from '@/components/GoogleButton'
 import { Metadata } from 'next'
@@ -15,11 +16,7 @@ export default function SignUp() {
             <div className="w-full max-w-md space-y-8">
                 <div className="text-center space-y-2">
                     <div className="flex items-center justify-center sm:mb-4">
-                        <img
-                            src="/logo.png"
-                            alt="Certifica"
-                            className="w-34 sm:w-40 shrink-0"
-                        />
+                        <Logo className="w-34 sm:w-40 shrink-0" />
                     </div>
                     <p className="text-muted-foreground">
                         Gerencie e gere certificados de forma rápida.
