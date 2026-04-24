@@ -24,6 +24,7 @@ import { setSystemLoginAction } from '@/backend/infrastructure/server-actions/se
 import { updateSystemEmailAction } from '@/backend/infrastructure/server-actions/update-system-email-action'
 import { updateSystemPasswordAction } from '@/backend/infrastructure/server-actions/update-system-password-action'
 import { VerifyEmailForm } from '@/components/VerifyEmailForm'
+import { WarningPopover } from '@/components/WarningPopover'
 import { useMe } from '@/custom-hooks/use-me'
 import { queryKeys } from '@/lib/query-keys'
 
@@ -240,6 +241,8 @@ function ManageSystemAccess({
     const [showChangeEmail, setShowChangeEmail] = useState(false)
     const [showChangePassword, setShowChangePassword] = useState(false)
     const [pendingNewEmail, setPendingNewEmail] = useState<string | null>(null)
+    const [pendingEmailChangeData, setPendingEmailChangeData] =
+        useState<ChangeEmailData | null>(null)
 
     const emailForm = useForm<ChangeEmailData>({
         resolver: zodResolver(changeEmailSchema),
@@ -358,7 +361,7 @@ function ManageSystemAccess({
                 <div className="border rounded-2xl overflow-hidden">
                     <button
                         type="button"
-                        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/40 transition-colors"
+                        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/40 transition-colors cursor-pointer"
                         onClick={() => setShowChangeEmail(v => !v)}
                     >
                         <span className="font-medium">Alterar E-mail</span>
@@ -374,6 +377,11 @@ function ManageSystemAccess({
                             onSubmit={emailForm.handleSubmit(data => {
                                 if (email === data.newEmail) {
                                     toast.error('Novo e-mail é igual ao atual')
+                                    return
+                                }
+
+                                if (googleEmail === null) {
+                                    setPendingEmailChangeData(data)
                                     return
                                 }
 
@@ -409,15 +417,31 @@ function ManageSystemAccess({
                                 >
                                     Cancelar
                                 </Button>
-                                <Button
-                                    type="submit"
-                                    disabled={changeEmailMutation.isPending}
+                                <WarningPopover
+                                    open={pendingEmailChangeData !== null}
+                                    onOpenChange={open => {
+                                        if (!open)
+                                            setPendingEmailChangeData(null)
+                                    }}
+                                    onConfirm={() => {
+                                        changeEmailMutation.mutate(
+                                            pendingEmailChangeData!,
+                                        )
+                                        setPendingEmailChangeData(null)
+                                    }}
+                                    title="Tem certeza em alterar E-mail?"
+                                    description="Ao alterar o e-mail, você será desconectado e precisará verificar o novo e-mail para poder entrar novamente."
                                 >
-                                    {changeEmailMutation.isPending && (
-                                        <Loader2 className="animate-spin" />
-                                    )}
-                                    Salvar
-                                </Button>
+                                    <Button
+                                        type="submit"
+                                        disabled={changeEmailMutation.isPending}
+                                    >
+                                        {changeEmailMutation.isPending && (
+                                            <Loader2 className="animate-spin" />
+                                        )}
+                                        Salvar
+                                    </Button>
+                                </WarningPopover>
                             </div>
                         </form>
                     )}
@@ -427,7 +451,7 @@ function ManageSystemAccess({
                 <div className="border rounded-2xl overflow-hidden">
                     <button
                         type="button"
-                        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/40 transition-colors"
+                        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/40 transition-colors cursor-pointer"
                         onClick={() => setShowChangePassword(v => !v)}
                     >
                         <span className="font-medium">Alterar Senha</span>
