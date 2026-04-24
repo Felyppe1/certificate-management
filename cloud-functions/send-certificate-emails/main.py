@@ -94,7 +94,6 @@ def main(request):
         certificate_emission_id = input_data.certificateEmissionId
         email_id = input_data.emailId
         user_id = input_data.userId
-        sender = input_data.sender
         subject = input_data.subject
         body = input_data.body
         recipients = input_data.recipients
