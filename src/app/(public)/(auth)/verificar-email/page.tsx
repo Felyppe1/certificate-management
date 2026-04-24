@@ -23,7 +23,7 @@ export default async function VerificarEmail({
                         <Logo className="w-34 sm:w-40 shrink-0" />
                     </div>
                     <h1 className="text-2xl font-semibold">
-                        Validação de e-mail
+                        Verificação de e-mail
                     </h1>
                 </div>
 

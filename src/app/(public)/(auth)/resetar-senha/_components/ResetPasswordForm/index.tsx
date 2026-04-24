@@ -149,7 +149,7 @@ export function ResetPasswordForm({ email }: ResetPasswordFormProps) {
     if (step === 'code') {
         return (
             <div className="space-y-4">
-                <p className="font-semibold text-lg">Verificação do código</p>
+                <p className="font-semibold text-lg">Validação do código</p>
                 <p className="text-sm text-muted-foreground">
                     Insira o código enviado para{' '}
                     <span className="font-medium text-foreground">{email}</span>

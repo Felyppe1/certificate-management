@@ -34,7 +34,7 @@ export function VerifyEmailCard({ email, linking }: Props) {
 
     return (
         <>
-            <p className="font-semibold text-lg">Verificação do e-mail</p>
+            <p className="font-semibold text-lg">Validação do código</p>
             <VerifyEmailForm
                 email={email}
                 isLoading={isPending}
