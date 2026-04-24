@@ -136,6 +136,7 @@ export class AddTemplateByDrivePickerUseCase {
             variables: uniqueVariables,
             fileMimeType,
             thumbnailUrl,
+            googleAccountEmail: user.getGoogleEmail()!,
         }
 
         certificateEmission.setTemplate(newTemplateInput)

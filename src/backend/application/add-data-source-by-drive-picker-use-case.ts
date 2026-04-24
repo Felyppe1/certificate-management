@@ -184,6 +184,7 @@ export class AddDataSourceByDrivePickerUseCase {
                 dataRowStart: 2,
                 columns,
                 rows,
+                googleAccountEmail: user.getGoogleEmail()!,
             },
         })
 
