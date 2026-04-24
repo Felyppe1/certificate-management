@@ -104,6 +104,8 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                 input_method: dataSource.inputMethod,
                                 file_extension: dataSource.fileMimeType,
                                 thumbnail_url: dataSource.thumbnailUrl,
+                                google_account_email:
+                                    dataSource.googleAccountEmail,
                                 DataSourceFile: {
                                     createMany: {
                                         data: dataSource.files.map(
@@ -151,6 +153,8 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                 file_name: template.fileName,
                                 file_extension: template.fileMimeType,
                                 thumbnail_url: template.thumbnailUrl,
+                                google_account_email:
+                                    template.googleAccountEmail,
                                 TemplateVariable: {
                                     createMany: {
                                         data: template.variables.map(
@@ -333,6 +337,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                         input_method: dataSource.inputMethod,
                         file_extension: dataSource.fileMimeType,
                         thumbnail_url: dataSource.thumbnailUrl,
+                        google_account_email: dataSource.googleAccountEmail,
                         DataSourceFile: {
                             createMany: {
                                 data: dataSource.files.map((file, index) => ({
@@ -366,6 +371,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                         input_method: dataSource.inputMethod,
                         file_extension: dataSource.fileMimeType,
                         thumbnail_url: dataSource.thumbnailUrl,
+                        google_account_email: dataSource.googleAccountEmail,
                         DataSourceFile: {
                             deleteMany: {},
                             createMany: {
@@ -443,6 +449,8 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                     file_name: template.fileName,
                                     file_extension: template.fileMimeType,
                                     thumbnail_url: template.thumbnailUrl,
+                                    google_account_email:
+                                        template.googleAccountEmail,
                                     TemplateVariable: {
                                         createMany: {
                                             data: template.variables.map(
@@ -470,6 +478,8 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                                     input_method: template.inputMethod,
                                     file_extension: template.fileMimeType,
                                     thumbnail_url: template.thumbnailUrl,
+                                    google_account_email:
+                                        template.googleAccountEmail,
                                     TemplateVariable: {
                                         deleteMany: {},
                                         createMany: {
@@ -730,6 +740,7 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                       variable => variable.name,
                   ),
                   thumbnailUrl: certificate.Template.thumbnail_url,
+                  googleAccountEmail: certificate.Template.google_account_email,
               })
             : null
 
@@ -763,6 +774,8 @@ export class PrismaCertificatesRepository implements ICertificatesRepository {
                   columnsRow: 1,
                   dataRowStart: 2,
                   thumbnailUrl: certificate.DataSource.thumbnail_url,
+                  googleAccountEmail:
+                      certificate.DataSource.google_account_email,
               })
             : null
 

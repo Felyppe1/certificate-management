@@ -11,6 +11,7 @@ import { PrismaTransactionManager } from '../repository/prisma/prisma-transactio
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { logoutAction } from './logout-action'
 import { addDataSourceByUploadSchema } from './schemas'
+import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
 import { redirect } from 'next/navigation'
 import { gcpStorage } from '../cloud/gcp'
 
@@ -37,12 +38,15 @@ export async function addDataSourceByUploadAction(
             new SpreadsheetContentExtractorFactory()
         const transactionManager = new PrismaTransactionManager(prisma)
 
+        const usersRepository = new PrismaUsersRepository(prisma)
+
         const addDataSourceByUploadUseCase = new AddDataSourceByUploadUseCase(
             bucket,
             certificatesRepository,
             dataSourceRowsRepository,
             spreadsheetContentExtractorFactory,
             transactionManager,
+            usersRepository,
         )
 
         await addDataSourceByUploadUseCase.execute({

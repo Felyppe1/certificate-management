@@ -23,6 +23,7 @@ import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { DataSourceDomainService } from '../domain/domain-service/data-source-domain-service'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { env } from '@/env'
 
 interface AddDataSourceByUploadUseCaseInput {
@@ -47,6 +48,7 @@ export class AddDataSourceByUploadUseCase {
             'create'
         >,
         private transactionManager: Pick<ITransactionManager, 'run'>,
+        private usersRepository: Pick<IUsersRepository, 'getById'>,
     ) {}
 
     async execute(input: AddDataSourceByUploadUseCaseInput) {
@@ -148,6 +150,8 @@ export class AddDataSourceByUploadUseCase {
 
         const dataSourceDomainService = new DataSourceDomainService()
 
+        const user = await this.usersRepository.getById(input.userId)
+
         const dataSourceRows = dataSourceDomainService.createDataSource({
             certificate: certificateEmission,
             newDataSourceData: {
@@ -163,6 +167,7 @@ export class AddDataSourceByUploadUseCase {
                 dataRowStart: 2,
                 columns,
                 rows,
+                googleAccountEmail: user?.getGoogleEmail() ?? null,
             },
         })
 

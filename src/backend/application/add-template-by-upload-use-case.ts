@@ -18,6 +18,7 @@ import { IFileContentExtractorFactory } from './interfaces/ifile-content-extract
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { IStringVariableExtractor } from './interfaces/istring-variable-extractor'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { env } from '@/env'
 
 interface AddTemplateByUploadUseCaseInput {
@@ -46,6 +47,7 @@ export class AddTemplateByUploadUseCase {
             IStringVariableExtractor,
             'extractVariables'
         >,
+        private usersRepository: Pick<IUsersRepository, 'getById'>,
     ) {}
 
     async execute(input: AddTemplateByUploadUseCaseInput) {
@@ -84,6 +86,8 @@ export class AddTemplateByUploadUseCase {
         const uniqueVariables =
             this.stringVariableExtractor.extractVariables(content)
 
+        const user = await this.usersRepository.getById(input.userId)
+
         const newTemplateInput = {
             inputMethod: INPUT_METHOD.UPLOAD,
             driveFileId: null,
@@ -91,6 +95,7 @@ export class AddTemplateByUploadUseCase {
             fileMimeType,
             variables: uniqueVariables,
             thumbnailUrl: null,
+            googleAccountEmail: user?.getGoogleEmail() ?? null,
         }
 
         certificateEmission.setTemplate(newTemplateInput)

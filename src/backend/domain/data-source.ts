@@ -58,6 +58,7 @@ export interface DataSourceInput {
     columnsRow: number
     dataRowStart: number
     columns: DataSourceColumnInput[]
+    googleAccountEmail: string | null
 }
 
 export interface DataSourceOutput extends DataSourceInput {}
@@ -79,6 +80,7 @@ export class DataSource extends ValueObject<DataSource> {
     private readonly columnsRow: number
     private readonly dataRowStart: number
     private readonly thumbnailUrl: string | null
+    private readonly googleAccountEmail: string | null
 
     static create(data: CreateDataSourceInput): DataSource {
         if (data.columns.length > MAX_DATA_SOURCE_COLUMNS) {
@@ -176,6 +178,7 @@ export class DataSource extends ValueObject<DataSource> {
         this.columnsRow = data.columnsRow ?? 1
         this.dataRowStart = data.dataRowStart ?? 2
         this.columns = data.columns.map(c => new DataSourceColumn(c))
+        this.googleAccountEmail = data.googleAccountEmail
     }
 
     setColumns(columnsRaw: DataSourceColumnInput[]) {
@@ -381,6 +384,7 @@ export class DataSource extends ValueObject<DataSource> {
             thumbnailUrl: this.thumbnailUrl,
             columnsRow: this.columnsRow,
             dataRowStart: this.dataRowStart,
+            googleAccountEmail: this.googleAccountEmail,
         }
     }
 }

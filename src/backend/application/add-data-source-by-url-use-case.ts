@@ -173,6 +173,7 @@ export class AddDataSourceByUrlUseCase {
                 dataRowStart: 2,
                 columns,
                 rows,
+                googleAccountEmail: user?.getGoogleEmail() ?? null,
             },
         })
 

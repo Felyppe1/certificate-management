@@ -14,6 +14,7 @@ import { PrismaTransactionManager } from '@/backend/infrastructure/repository/pr
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { LiquidStringVariableExtractor } from '@/backend/infrastructure/string-variable-extractor/liquidjs'
 import { gcpStorage } from '@/backend/infrastructure/cloud/gcp'
+import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 
 const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
 
@@ -45,6 +46,7 @@ export async function PUT(
         const fileContentExtractorFactory = new FileContentExtractorFactory()
         const transactionManager = new PrismaTransactionManager(prisma)
         const stringVariableExtractor = new LiquidStringVariableExtractor()
+        const usersRepository = new PrismaUsersRepository(prisma)
 
         const addTemplateByUploadUseCase = new AddTemplateByUploadUseCase(
             bucket,
@@ -53,6 +55,7 @@ export async function PUT(
             fileContentExtractorFactory,
             transactionManager,
             stringVariableExtractor,
+            usersRepository,
         )
 
         await addTemplateByUploadUseCase.execute({

@@ -25,6 +25,7 @@ export interface TemplateInput {
     fileMimeType: TEMPLATE_FILE_MIME_TYPE
     thumbnailUrl: string | null
     variables: string[]
+    googleAccountEmail: string | null
 }
 
 export interface TemplateOutput extends TemplateInput {}
@@ -42,6 +43,7 @@ export class Template extends ValueObject<Template> {
     private readonly fileMimeType: TEMPLATE_FILE_MIME_TYPE
     private readonly variables: string[]
     private readonly thumbnailUrl: string | null
+    private readonly googleAccountEmail: string | null
 
     constructor(data: TemplateInput) {
         super()
@@ -78,6 +80,7 @@ export class Template extends ValueObject<Template> {
         this.fileMimeType = data.fileMimeType
         this.variables = data.variables
         this.thumbnailUrl = data.thumbnailUrl
+        this.googleAccountEmail = data.googleAccountEmail
     }
 
     getDriveFileId() {
@@ -144,6 +147,7 @@ export class Template extends ValueObject<Template> {
             fileMimeType: this.fileMimeType,
             variables: this.variables,
             thumbnailUrl: this.thumbnailUrl,
+            googleAccountEmail: this.googleAccountEmail,
         }
     }
 }

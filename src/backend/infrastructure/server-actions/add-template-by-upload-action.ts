@@ -12,6 +12,7 @@ import { PrismaTransactionManager } from '../repository/prisma/prisma-transactio
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { addTemplateByUploadSchema } from './schemas'
 import { LiquidStringVariableExtractor } from '../string-variable-extractor/liquidjs'
+import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
 import { redirect } from 'next/navigation'
 import { gcpStorage } from '../cloud/gcp'
 
@@ -38,6 +39,8 @@ export async function addTemplateByUploadAction(
         const transactionManager = new PrismaTransactionManager(prisma)
         const stringVariableExtractor = new LiquidStringVariableExtractor()
 
+        const usersRepository = new PrismaUsersRepository(prisma)
+
         const addTemplateByUploadUseCase = new AddTemplateByUploadUseCase(
             bucket,
             certificatesRepository,
@@ -45,6 +48,7 @@ export async function addTemplateByUploadAction(
             fileContentExtractorFactory,
             transactionManager,
             stringVariableExtractor,
+            usersRepository,
         )
 
         await addTemplateByUploadUseCase.execute({

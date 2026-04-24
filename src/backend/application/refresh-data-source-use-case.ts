@@ -186,6 +186,7 @@ export class RefreshDataSourceUseCase {
                 dataRowStart: 2,
                 columns,
                 rows,
+                googleAccountEmail: user?.getGoogleEmail() ?? null,
             },
         })
 

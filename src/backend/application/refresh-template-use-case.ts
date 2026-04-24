@@ -163,6 +163,7 @@ export class RefreshTemplateUseCase {
             fileName: name,
             variables: uniqueVariables,
             thumbnailUrl,
+            googleAccountEmail: user?.getGoogleEmail() ?? null,
         }
 
         certificateEmission.setTemplate(newTemplateInput)

@@ -118,6 +118,7 @@ export class AddTemplateByUrlUseCase {
             variables: uniqueVariables,
             fileMimeType,
             thumbnailUrl,
+            googleAccountEmail: user?.getGoogleEmail() ?? null,
         }
 
         certificateEmission.setTemplate(newTemplateInput)
