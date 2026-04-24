@@ -20,7 +20,7 @@ export class FinishCertificateEmailSendingProcessUseCase {
         private emailsRepository: Pick<IEmailsRepository, 'getById' | 'update'>,
         private certificateEmissionsRepository: Pick<
             ICertificatesRepository,
-            'checkIfExistsById'
+            'getById' | 'update'
         >,
         private usersRepository: Pick<IUsersRepository, 'upsertDailyUsage'>,
         private transactionManager: Pick<ITransactionManager, 'run'>,
@@ -37,12 +37,12 @@ export class FinishCertificateEmailSendingProcessUseCase {
 
         const certificateEmissionId = email.getCertificateEmissionId()
 
-        const certificateExists =
-            await this.certificateEmissionsRepository.checkIfExistsById(
+        const certificateEmission =
+            await this.certificateEmissionsRepository.getById(
                 certificateEmissionId,
             )
 
-        if (!certificateExists) {
+        if (!certificateEmission) {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
         }
 
@@ -50,6 +50,7 @@ export class FinishCertificateEmailSendingProcessUseCase {
 
         if (status === PROCESSING_STATUS_ENUM.FAILED) {
             email.setEmailErrorType(EMAIL_ERROR_TYPE_ENUM.INTERNAL_ERROR)
+            certificateEmission.markAsGenerated()
         }
 
         await this.transactionManager.run(async () => {
@@ -57,6 +58,12 @@ export class FinishCertificateEmailSendingProcessUseCase {
                 await this.usersRepository.upsertDailyUsage(userId, {
                     emailsSentCount,
                 })
+            }
+
+            if (status === PROCESSING_STATUS_ENUM.FAILED) {
+                await this.certificateEmissionsRepository.update(
+                    certificateEmission,
+                )
             }
 
             await this.emailsRepository.update(email)
