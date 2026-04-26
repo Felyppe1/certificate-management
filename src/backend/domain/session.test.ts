@@ -36,4 +36,32 @@ describe('Session', () => {
             expect(session.getExpiresAt()).toBe(expiresAt)
         })
     })
+
+    describe('expiration logic', () => {
+        it('should return false if session is not expired', () => {
+            const futureDate = new Date()
+            futureDate.setDate(futureDate.getDate() + 1)
+
+            const session = new Session({
+                token: 'token',
+                userId: 'user',
+                expiresAt: futureDate,
+            })
+
+            expect(session.isExpired()).toBe(false)
+        })
+
+        it('should return true if session is expired', () => {
+            const pastDate = new Date()
+            pastDate.setDate(pastDate.getDate() - 1)
+
+            const session = new Session({
+                token: 'token',
+                userId: 'user',
+                expiresAt: pastDate,
+            })
+
+            expect(session.isExpired()).toBe(true)
+        })
+    })
 })
