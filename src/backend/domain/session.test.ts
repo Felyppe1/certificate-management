@@ -64,4 +64,22 @@ describe('Session', () => {
             expect(session.isExpired()).toBe(true)
         })
     })
+
+    describe('serialization', () => {
+        it('should convert session to primitives correctly', () => {
+            const expiresAt = new Date()
+
+            const session = new Session({
+                token: 'token-123',
+                userId: 'user-123',
+                expiresAt,
+            })
+
+            expect(session.toPrimitives()).toEqual({
+                token: 'token-123',
+                userId: 'user-123',
+                expiresAt,
+            })
+        })
+    })
 })
