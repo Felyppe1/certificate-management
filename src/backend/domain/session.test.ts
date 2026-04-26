@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { Session, SESSION_EXPIRY_DAYS } from './session'
 
 describe('Session', () => {
-    describe('session creation', () => {
-        it('should create a session with token, userId and expiration date', () => {
+    describe('criação de sessão', () => {
+        it('deve criar uma sessão com token, userId e data de expiração', () => {
             const session = Session.create('user-1')
 
             expect(session.getToken()).toBeDefined()
@@ -11,7 +11,7 @@ describe('Session', () => {
             expect(session.getExpiresAt()).toBeInstanceOf(Date)
         })
 
-        it('should set expiration date based on SESSION_EXPIRY_DAYS', () => {
+        it('deve definir a data de expiração com base em SESSION_EXPIRY_DAYS', () => {
             const now = new Date()
             const session = Session.create('user-1')
 
@@ -22,8 +22,8 @@ describe('Session', () => {
         })
     })
 
-    describe('session getters', () => {
-        it('should return correct values from getters', () => {
+    describe('getters da sessão', () => {
+        it('deve retornar os valores corretos pelos getters', () => {
             const expiresAt = new Date()
             const session = new Session({
                 token: 'token-123',
@@ -37,8 +37,8 @@ describe('Session', () => {
         })
     })
 
-    describe('expiration logic', () => {
-        it('should return false if session is not expired', () => {
+    describe('lógica de expiração', () => {
+        it('deve retornar false se a sessão não estiver expirada', () => {
             const futureDate = new Date()
             futureDate.setDate(futureDate.getDate() + 1)
 
@@ -51,7 +51,7 @@ describe('Session', () => {
             expect(session.isExpired()).toBe(false)
         })
 
-        it('should return true if session is expired', () => {
+        it('deve retornar true se a sessão estiver expirada', () => {
             const pastDate = new Date()
             pastDate.setDate(pastDate.getDate() - 1)
 
@@ -65,8 +65,8 @@ describe('Session', () => {
         })
     })
 
-    describe('serialization', () => {
-        it('should convert session to primitives correctly', () => {
+    describe('serialização', () => {
+        it('deve converter a sessão para primitivos corretamente', () => {
             const expiresAt = new Date()
 
             const session = new Session({
