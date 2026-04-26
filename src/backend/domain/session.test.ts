@@ -21,4 +21,19 @@ describe('Session', () => {
             expect(session.getExpiresAt().getDate()).toBe(expected.getDate())
         })
     })
+
+    describe('session getters', () => {
+        it('should return correct values from getters', () => {
+            const expiresAt = new Date()
+            const session = new Session({
+                token: 'token-123',
+                userId: 'user-123',
+                expiresAt,
+            })
+
+            expect(session.getToken()).toBe('token-123')
+            expect(session.getUserId()).toBe('user-123')
+            expect(session.getExpiresAt()).toBe(expiresAt)
+        })
+    })
 })
