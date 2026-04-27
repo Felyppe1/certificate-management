@@ -92,16 +92,7 @@ export class RefreshTemplateUseCase {
         const user = await this.usersRepository.getById(
             certificateEmission.getUserId(),
         )
-        if (
-            certificateEmission.isTemplateFromGoogleDrive() ||
-            certificateEmission.isTemplateFromUrl()
-        ) {
-            if (!user?.hasGoogleAccount()) {
-                throw new ForbiddenError(
-                    FORBIDDEN_ERROR_TYPE.GOOGLE_ACCOUNT_NOT_FOUND,
-                )
-            }
-
+        if (user?.hasGoogleAccount()) {
             const newData =
                 await this.googleAuthGateway.checkOrGetNewAccessToken({
                     accessToken: user.getGoogleAccessToken()!,
@@ -125,8 +116,7 @@ export class RefreshTemplateUseCase {
         const { name, fileMimeType, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
                 fileId: driveFileId,
-                ...((certificateEmission.isTemplateFromGoogleDrive() ||
-                    certificateEmission.isTemplateFromUrl()) && {
+                ...(user?.hasGoogleAccount() && {
                     userAccessToken: user?.getGoogleAccessToken() ?? undefined,
                     userRefreshToken:
                         user?.getGoogleRefreshToken() ?? undefined,
@@ -142,8 +132,7 @@ export class RefreshTemplateUseCase {
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
             fileMimeType: fileMimeType,
-            ...((certificateEmission.isTemplateFromGoogleDrive() ||
-                certificateEmission.isTemplateFromUrl()) && {
+            ...(user?.hasGoogleAccount() && {
                 accessToken: user?.getGoogleAccessToken() ?? undefined,
             }),
         })

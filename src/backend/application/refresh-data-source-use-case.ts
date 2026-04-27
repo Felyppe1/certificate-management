@@ -90,16 +90,8 @@ export class RefreshDataSourceUseCase {
         const user = await this.usersRepository.getById(
             certificateEmission.getUserId(),
         )
-        if (
-            certificateEmission.isDataSourceFromGoogleDrive() ||
-            certificateEmission.isDataSourceFromUrl()
-        ) {
-            if (!user?.hasGoogleAccount()) {
-                throw new ForbiddenError(
-                    FORBIDDEN_ERROR_TYPE.GOOGLE_ACCOUNT_NOT_FOUND,
-                )
-            }
 
+        if (user?.hasGoogleAccount()) {
             const newData =
                 await this.googleAuthGateway.checkOrGetNewAccessToken({
                     accessToken: user.getGoogleAccessToken()!,
@@ -119,16 +111,12 @@ export class RefreshDataSourceUseCase {
             }
         }
 
-        const authParams =
-            certificateEmission.isDataSourceFromGoogleDrive() ||
-            certificateEmission.isDataSourceFromUrl()
-                ? {
-                      userAccessToken:
-                          user?.getGoogleAccessToken() ?? undefined,
-                      userRefreshToken:
-                          user?.getGoogleRefreshToken() ?? undefined,
-                  }
-                : {}
+        const authParams = user?.hasGoogleAccount()
+            ? {
+                  userAccessToken: user?.getGoogleAccessToken() ?? undefined,
+                  userRefreshToken: user?.getGoogleRefreshToken() ?? undefined,
+              }
+            : {}
 
         const { name, fileMimeType, thumbnailUrl } =
             await this.googleDriveGateway.getFileMetadata({
@@ -148,16 +136,12 @@ export class RefreshDataSourceUseCase {
             )
         }
 
-        const accessTokenParam =
-            certificateEmission.isDataSourceFromGoogleDrive() ||
-            certificateEmission.isDataSourceFromUrl()
-                ? { accessToken: user?.getGoogleAccessToken() ?? undefined }
-                : {}
-
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
             fileMimeType,
-            ...accessTokenParam,
+            ...(user?.hasGoogleAccount() && {
+                accessToken: user?.getGoogleAccessToken() ?? undefined,
+            }),
         })
 
         const contentExtractor =
