@@ -149,16 +149,20 @@ export class DataSource extends ValueObject<DataSource> {
             }
         }
 
-        if (!data.columnsRow) {
+        if (data.columnsRow === undefined || data.columnsRow === null) {
             throw new Error('DataSource columns row is required')
         }
 
-        if (!data.dataRowStart) {
+        if (data.dataRowStart === undefined || data.dataRowStart === null) {
             throw new Error('DataSource data row start is required')
         }
 
-        if (data.columnsRow < 1) {
-            throw new Error('DataSource columns row must be greater than 0')
+        if (data.columnsRow < 0) {
+            throw new Error('DataSource columns row must be positive')
+        }
+
+        if (data.dataRowStart < 0) {
+            throw new Error('DataSource data row start must be positive')
         }
 
         if (data.dataRowStart <= data.columnsRow) {
