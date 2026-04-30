@@ -50,6 +50,7 @@ export function EmailForm({
             <div className="space-y-3">
                 <Label htmlFor={`email-column-${sendMode}`}>
                     Coluna com Email dos Destinatários
+                    <span className="text-destructive">*</span>
                 </Label>
                 <div>
                     <Select
@@ -86,7 +87,9 @@ export function EmailForm({
             {sendMode === 'scheduled' && (
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label>Data</Label>
+                        <Label>
+                            Data<span className="text-destructive">*</span>
+                        </Label>
                         <Input
                             type="date"
                             {...register('scheduledDate')}
@@ -94,7 +97,9 @@ export function EmailForm({
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label>Horário</Label>
+                        <Label>
+                            Horário<span className="text-destructive">*</span>
+                        </Label>
                         <Input
                             type="time"
                             {...register('scheduledTime')}
@@ -106,7 +111,7 @@ export function EmailForm({
 
             <div className="space-y-3">
                 <Label htmlFor={`email-subject-${sendMode}`}>
-                    Assunto do Email
+                    Assunto do Email<span className="text-destructive">*</span>
                 </Label>
                 <div>
                     <Input
@@ -125,7 +130,9 @@ export function EmailForm({
             </div>
 
             <div className="space-y-3">
-                <Label>Mensagem</Label>
+                <Label>
+                    Mensagem<span className="text-destructive">*</span>
+                </Label>
                 <div>
                     <Controller
                         control={form.control}
