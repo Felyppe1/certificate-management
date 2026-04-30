@@ -94,7 +94,7 @@ export class AddDataSourceByDrivePickerUseCase {
         })
 
         if (newData) {
-            user.updateExternalAccount('GOOGLE', {
+            user.updateExternalAccountTokens('GOOGLE', {
                 accessToken: newData.newAccessToken,
                 accessTokenExpiryDateTime: newData.newAccessTokenExpiryDateTime,
             })

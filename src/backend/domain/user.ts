@@ -332,7 +332,7 @@ export class User extends AggregateRoot {
         )
     }
 
-    updateExternalAccount(
+    updateExternalAccountTokens(
         provider: Provider,
         tokens: {
             accessToken: string

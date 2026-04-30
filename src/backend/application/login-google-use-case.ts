@@ -98,7 +98,7 @@ export class LoginGoogleUseCase {
                     refreshTokenExpiryDateTime: null,
                 })
             } else {
-                user.updateExternalAccount('GOOGLE', {
+                user.updateExternalAccountTokens('GOOGLE', {
                     accessToken: tokenData.accessToken,
                     accessTokenExpiryDateTime:
                         tokenData.accessTokenExpiryDateTime,
@@ -116,7 +116,7 @@ export class LoginGoogleUseCase {
 
             if (existingUser) {
                 user = existingUser
-                user.updateExternalAccount('GOOGLE', {
+                user.updateExternalAccountTokens('GOOGLE', {
                     accessToken: tokenData.accessToken,
                     accessTokenExpiryDateTime:
                         tokenData.accessTokenExpiryDateTime,

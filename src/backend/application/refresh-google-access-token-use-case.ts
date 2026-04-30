@@ -35,7 +35,7 @@ export class RefreshGoogleAccessTokenUseCase {
         })
 
         if (newToken) {
-            user.updateExternalAccount('GOOGLE', {
+            user.updateExternalAccountTokens('GOOGLE', {
                 accessToken: newToken.newAccessToken,
                 accessTokenExpiryDateTime:
                     newToken.newAccessTokenExpiryDateTime,
