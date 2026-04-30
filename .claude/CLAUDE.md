@@ -26,9 +26,9 @@ terraform/                  # GCP infrastructure (Cloud Run, Cloud Functions, Cl
 
 ## Rules
 
-@.claude/rules/ddd.md — when working on domain entities, aggregates, use cases, or repositories
-@.claude/rules/server-actions.md — when adding or modifying server actions
-@.claude/rules/route-handlers.md — when working on API routes or internal endpoints
-@.claude/rules/frontend-structure.md — when creating or moving React components
-@.claude/rules/cicd.md — when changing the deployment pipeline or environment variables
-@.claude/rules/terraform.md — when modifying or adding GCP infrastructure
+@docs/ddd.md — when working on domain entities, aggregates, use cases, or repositories
+@docs/server-actions.md — when adding or modifying server actions
+@docs/route-handlers.md — when working on API routes or internal endpoints
+@docs/frontend-structure.md — when creating or moving React components
+@docs/cicd.md — when changing the deployment pipeline or environment variables
+@docs/terraform.md — when modifying or adding GCP infrastructure
