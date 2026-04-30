@@ -21,7 +21,7 @@ export class RefreshGoogleAccessTokenUseCase {
     async execute({ userId }: RefreshGoogleAccessTokenUseCaseInput) {
         const user = await this.usersRepository.getById(userId)
 
-        if (!user?.hasGoogleAccount()) {
+        if (!user?.hasExternalAccount('GOOGLE')) {
             throw new ForbiddenError(
                 FORBIDDEN_ERROR_TYPE.GOOGLE_ACCOUNT_NOT_FOUND,
             )

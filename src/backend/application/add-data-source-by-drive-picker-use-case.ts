@@ -76,7 +76,7 @@ export class AddDataSourceByDrivePickerUseCase {
 
         const user = await this.usersRepository.getById(input.userId)
 
-        if (!user?.hasGoogleAccount()) {
+        if (!user?.hasExternalAccount('GOOGLE')) {
             throw new ForbiddenError(
                 FORBIDDEN_ERROR_TYPE.GOOGLE_ACCOUNT_NOT_FOUND,
             )

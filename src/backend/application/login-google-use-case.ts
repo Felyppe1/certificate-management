@@ -86,7 +86,7 @@ export class LoginGoogleUseCase {
             }
 
             user = authenticatedUser
-            if (!user.hasGoogleAccount()) {
+            if (!user.hasExternalAccount('GOOGLE')) {
                 user.addExternalAccount({
                     provider: 'GOOGLE',
                     providerUserId: userInfo.providerUserId,
@@ -127,7 +127,7 @@ export class LoginGoogleUseCase {
                 const systemUser = await this.usersRepository.getByEmail(
                     userInfo.email,
                 )
-                if (systemUser && !systemUser.hasGoogleAccount()) {
+                if (systemUser && !systemUser.hasExternalAccount('GOOGLE')) {
                     suggestLinkingEmail = userInfo.email
                 }
 

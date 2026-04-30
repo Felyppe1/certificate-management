@@ -37,7 +37,7 @@ export class ConfirmLinkGoogleToSystemAccountUseCase {
             throw new AuthenticationError('user-not-found')
         }
 
-        if (!googleUser.hasGoogleAccount()) {
+        if (!googleUser.hasExternalAccount('GOOGLE')) {
             throw new ValidationError(VALIDATION_ERROR_TYPE.NO_GOOGLE_ACCOUNT)
         }
 
@@ -49,7 +49,7 @@ export class ConfirmLinkGoogleToSystemAccountUseCase {
             throw new NotFoundError(NOT_FOUND_ERROR_TYPE.USER)
         }
 
-        if (systemUser.hasGoogleAccount()) {
+        if (systemUser.hasExternalAccount('GOOGLE')) {
             throw new ConflictError(
                 CONFLICT_ERROR_TYPE.EXTERNAL_ACCOUNT_ALREADY_EXISTS,
             )

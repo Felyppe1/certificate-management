@@ -320,7 +320,7 @@ export class User extends AggregateRoot {
         }
 
         if (!this.isEmailVerified) {
-            this.generateEmailVerificationCode()
+            this.generateEmailVerificationCode() // TODO: I think this is wrong, what should be done is mark email as verified because if the user hasn't verified it yet and then tries to login with that same email via social login, it means that the email is valid and belongs to the user, so it should be marked as verified
         }
 
         this.externalAccounts.push(
@@ -397,8 +397,8 @@ export class User extends AggregateRoot {
         return this.externalAccounts.find(a => a.getProvider() === provider)
     }
 
-    hasGoogleAccount(): boolean {
-        return !!this.getExternalAccount('GOOGLE')
+    hasExternalAccount(provider: Provider): boolean {
+        return !!this.getExternalAccount(provider)
     }
 
     hasExternalAccounts(): boolean {

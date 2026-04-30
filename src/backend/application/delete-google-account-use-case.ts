@@ -22,7 +22,7 @@ export class DeleteAccountUseCase {
             throw new AuthenticationError('user-not-found')
         }
 
-        if (user.hasGoogleAccount()) {
+        if (user.hasExternalAccount('GOOGLE')) {
             await this.googleAuthGateway.revokeRefreshToken(
                 user.getGoogleRefreshToken()!,
             )

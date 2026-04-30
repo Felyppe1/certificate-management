@@ -91,7 +91,7 @@ export class RefreshDataSourceUseCase {
             certificateEmission.getUserId(),
         )
 
-        if (user?.hasGoogleAccount()) {
+        if (user?.hasExternalAccount('GOOGLE')) {
             const newData =
                 await this.googleAuthGateway.checkOrGetNewAccessToken({
                     accessToken: user.getGoogleAccessToken()!,
@@ -111,7 +111,7 @@ export class RefreshDataSourceUseCase {
             }
         }
 
-        const authParams = user?.hasGoogleAccount()
+        const authParams = user?.hasExternalAccount('GOOGLE')
             ? {
                   userAccessToken: user?.getGoogleAccessToken() ?? undefined,
                   userRefreshToken: user?.getGoogleRefreshToken() ?? undefined,
@@ -139,7 +139,7 @@ export class RefreshDataSourceUseCase {
         const buffer = await this.googleDriveGateway.downloadFile({
             driveFileId,
             fileMimeType,
-            ...(user?.hasGoogleAccount() && {
+            ...(user?.hasExternalAccount('GOOGLE') && {
                 accessToken: user?.getGoogleAccessToken() ?? undefined,
             }),
         })
