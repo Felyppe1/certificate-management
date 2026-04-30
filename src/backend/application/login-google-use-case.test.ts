@@ -6,9 +6,9 @@ import { ConflictError } from '../domain/error/conflict-error'
 function createUserMock(overrides: any = {}) {
     return {
         getId: () => 'user-1',
-        hasGoogleAccount: () => false,
+        hasExternalAccount: () => false,
         addExternalAccount: vi.fn(),
-        updateExternalAccount: vi.fn(),
+        updateExternalAccountTokens: vi.fn(),
         getGoogleRefreshToken: () => 'old-refresh',
         ...overrides,
     }
@@ -127,7 +127,7 @@ describe('LoginGoogleUseCase', () => {
 
         usersRepository.getByEmail.mockResolvedValue(
             createUserMock({
-                hasGoogleAccount: () => false,
+                hasExternalAccount: () => false,
             }),
         )
 
@@ -147,7 +147,7 @@ describe('LoginGoogleUseCase', () => {
 
     it('deve atualizar usuário existente com Google (login)', async () => {
         const existingUser = createUserMock({
-            hasGoogleAccount: () => true,
+            hasExternalAccount: () => true,
         })
 
         usersRepository.getByExternalAccount.mockResolvedValue(existingUser)
@@ -167,7 +167,7 @@ describe('LoginGoogleUseCase', () => {
 
     it('deve adicionar conta Google no re-auth quando usuário não tem', async () => {
         const userMock = createUserMock({
-            hasGoogleAccount: () => false,
+            hasExternalAccount: () => false,
         })
 
         usersRepository.getById.mockResolvedValue(userMock)
@@ -184,7 +184,7 @@ describe('LoginGoogleUseCase', () => {
 
     it('deve atualizar conta Google no re-auth quando já existe', async () => {
         const userMock = createUserMock({
-            hasGoogleAccount: () => true,
+            hasExternalAccount: () => true,
         })
 
         usersRepository.getById.mockResolvedValue(userMock)
@@ -200,7 +200,7 @@ describe('LoginGoogleUseCase', () => {
             userId: 'user-1',
         })
 
-        expect(userMock.updateExternalAccount).toHaveBeenCalled()
+        expect(userMock.updateExternalAccountTokens).toHaveBeenCalled()
     })
 
     it('deve sempre criar sessão', async () => {

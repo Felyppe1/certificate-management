@@ -12,11 +12,12 @@ const createTemplateData = (
     fileName: 'File Name',
     variables: [],
     thumbnailUrl: null,
+    googleAccountEmail: null,
     ...overrides,
 })
 
 describe('Template', () => {
-    it('should allow creating a template with all required information', () => {
+    it('deve permitir criar um template com todas as informações obrigatórias', () => {
         const template = new Template(createTemplateData())
 
         expect(template.serialize()).toEqual({
@@ -25,12 +26,13 @@ describe('Template', () => {
             driveFileId: null,
             storageFileUrl: 'https://storage-url',
             fileName: 'File Name',
+            googleAccountEmail: null,
             variables: [],
             thumbnailUrl: null,
         })
     })
 
-    it('should allow a template linked via Google Drive', () => {
+    it('deve permitir um template vinculado via Google Drive', () => {
         const template = new Template(
             createTemplateData({
                 inputMethod: INPUT_METHOD.URL,
@@ -45,7 +47,7 @@ describe('Template', () => {
         })
     })
 
-    it('should not have a Drive file ID if the input method is UPLOAD', () => {
+    it('não deve ter ID de arquivo do Drive se o método de input é UPLOAD', () => {
         expect(
             () =>
                 new Template(
@@ -59,8 +61,8 @@ describe('Template', () => {
         )
     })
 
-    describe('template creation constraints', () => {
-        it('should not allow template creation without an input method', () => {
+    describe('restrições de criação de template', () => {
+        it('não deve permitir criar template sem método de input', () => {
             expect(
                 () =>
                     new Template(
@@ -71,7 +73,7 @@ describe('Template', () => {
             ).toThrow('Template input method is required')
         })
 
-        it('should not allow template creation without a file name', () => {
+        it('não deve permitir criar template sem nome de arquivo', () => {
             expect(
                 () =>
                     new Template(
@@ -82,7 +84,7 @@ describe('Template', () => {
             ).toThrow('Template file name is required')
         })
 
-        it('should not allow template creation without a file format', () => {
+        it('não deve permitir criar template sem formato de arquivo', () => {
             expect(
                 () =>
                     new Template(
@@ -93,7 +95,7 @@ describe('Template', () => {
             ).toThrow('Template file mimetype is required')
         })
 
-        it("should not allow template creation without defined variables (even if it's empty)", () => {
+        it('não deve permitir criar template sem variáveis definidas (mesmo que vazia)', () => {
             expect(
                 () =>
                     new Template(
@@ -105,8 +107,8 @@ describe('Template', () => {
         })
     })
 
-    describe('storage location update', () => {
-        it('should update the storage location while preserving immutability', () => {
+    describe('atualização da localização de armazenamento', () => {
+        it('deve atualizar a localização de armazenamento preservando a imutabilidade', () => {
             const template = new Template(createTemplateData())
             const updated = template.setStorageFileUrl('https://new-url')
 
@@ -115,8 +117,8 @@ describe('Template', () => {
         })
     })
 
-    describe('thumbnail update', () => {
-        it('should update the thumbnail while preserving immutability', () => {
+    describe('atualização da thumbnail', () => {
+        it('deve atualizar a thumbnail preservando a imutabilidade', () => {
             const template = new Template(createTemplateData())
             const updated = template.setThumbnailUrl('https://thumbnail-url')
 
@@ -127,15 +129,15 @@ describe('Template', () => {
         })
     })
 
-    describe('template identity', () => {
-        it('should be considered identical if all properties match', () => {
+    describe('identidade do template', () => {
+        it('deve ser considerado idêntico se todas as propriedades forem iguais', () => {
             const template1 = new Template(createTemplateData())
             const template2 = new Template(createTemplateData())
 
             expect(template1.equals(template2)).toBe(true)
         })
 
-        it('should be considered different if any property differs', () => {
+        it('deve ser considerado diferente se alguma propriedade for diferente', () => {
             const template1 = new Template(createTemplateData())
             const template2 = new Template(
                 createTemplateData({ fileName: 'Different File Name' }),
@@ -145,22 +147,22 @@ describe('Template', () => {
         })
     })
 
-    describe('Google Drive file ID identification', () => {
-        it('should identify the id from a Google Drive link', () => {
+    describe('identificação do ID de arquivo do Google Drive', () => {
+        it('deve identificar o ID a partir de um link do Google Drive', () => {
             const url = 'https://drive.google.com/file/d/aA1-_/view'
 
             expect(Template.getFileIdFromUrl(url)).toBe('aA1-_')
         })
 
-        it('should not identify the id from an unrecognized link', () => {
+        it('não deve identificar o ID a partir de um link não reconhecido', () => {
             const url = 'https://example.com/file'
 
             expect(Template.getFileIdFromUrl(url)).toBeNull()
         })
     })
 
-    describe('supported file formats', () => {
-        it('should accept Word, PowerPoint, Google Docs, and Google Slides files', () => {
+    describe('formatos de arquivo suportados', () => {
+        it('deve aceitar arquivos Word, PowerPoint, Google Docs e Google Slides', () => {
             expect(
                 Template.isValidFileMimeType(TEMPLATE_FILE_MIME_TYPE.DOCX),
             ).toBe(true)
@@ -179,7 +181,7 @@ describe('Template', () => {
             ).toBe(true)
         })
 
-        it('should reject unsupported file formats', () => {
+        it('deve rejeitar formatos de arquivo não suportados', () => {
             expect(Template.isValidFileMimeType('application/pdf')).toBe(false)
             expect(Template.isValidFileMimeType('')).toBe(false)
         })

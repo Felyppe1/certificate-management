@@ -3,7 +3,10 @@ import { User, UserInput } from './user'
 import { ExternalAccount, ExternalAccountInput } from './external-account'
 import bcrypt from 'bcrypt'
 import { CONFLICT_ERROR_TYPE, ConflictError } from './error/conflict-error'
-import { VALIDATION_ERROR_TYPE, ValidationError } from './error/validation-error'
+import {
+    VALIDATION_ERROR_TYPE,
+    ValidationError,
+} from './error/validation-error'
 import { NOT_FOUND_ERROR_TYPE, NotFoundError } from './error/not-found-error'
 
 const createExternalAccountData = (
@@ -19,9 +22,7 @@ const createExternalAccountData = (
     ...overrides,
 })
 
-const createUserData = (
-    overrides?: Partial<UserInput>,
-): User =>
+const createUserData = (overrides?: Partial<UserInput>): User =>
     new User({
         id: 'user-id',
         email: null,
@@ -43,7 +44,7 @@ describe('Gerenciamento de conta do usuário', () => {
 
             user.addExternalAccount(externalAccount)
 
-            expect(user.hasGoogleAccount()).toBe(true)
+            expect(user.hasExternalAccount('GOOGLE')).toBe(true)
             expect(user.getGoogleEmail()).toBe('user@gmail.com')
         })
     })
@@ -72,7 +73,9 @@ describe('Gerenciamento de conta do usuário', () => {
                 email: 'user@gmail.com',
                 passwordHash: 'password-hash',
                 isEmailVerified: true,
-                externalAccounts: [new ExternalAccount(createExternalAccountData())],
+                externalAccounts: [
+                    new ExternalAccount(createExternalAccountData()),
+                ],
             })
 
             try {
@@ -85,7 +88,9 @@ describe('Gerenciamento de conta do usuário', () => {
                 })
             } catch (error: any) {
                 expect(error).toBeInstanceOf(ConflictError)
-                expect(error.type).toBe(CONFLICT_ERROR_TYPE.EXTERNAL_ACCOUNT_ALREADY_EXISTS)
+                expect(error.type).toBe(
+                    CONFLICT_ERROR_TYPE.EXTERNAL_ACCOUNT_ALREADY_EXISTS,
+                )
             }
         })
 
@@ -102,7 +107,9 @@ describe('Gerenciamento de conta do usuário', () => {
                 })
             } catch (error: any) {
                 expect(error).toBeInstanceOf(ValidationError)
-                expect(error.type).toBe(VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED)
+                expect(error.type).toBe(
+                    VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED,
+                )
             }
         })
     })
@@ -113,22 +120,26 @@ describe('Gerenciamento de conta do usuário', () => {
                 email: 'user@gmail.com',
                 passwordHash: 'password-hash',
                 isEmailVerified: true,
-                externalAccounts: [new ExternalAccount(createExternalAccountData())],
+                externalAccounts: [
+                    new ExternalAccount(createExternalAccountData()),
+                ],
             })
 
             const removedAccount = user.removeExternalAccount('GOOGLE')
 
             expect(removedAccount.provider).toBe('GOOGLE')
-            expect(user.hasGoogleAccount()).toBe(false)
+            expect(user.hasExternalAccount('GOOGLE')).toBe(false)
         })
 
         it('deve dar erro ao tentar remover conta do Google com apenas o login por email/senha sem o email estar verificado ainda', () => {
             const user = createUserData({
                 email: 'user@gmail.com',
                 passwordHash: 'password-hash',
-                externalAccounts: [new ExternalAccount(createExternalAccountData())],
+                externalAccounts: [
+                    new ExternalAccount(createExternalAccountData()),
+                ],
             })
-            
+
             try {
                 user.removeExternalAccount('GOOGLE')
             } catch (error: any) {
@@ -153,7 +164,9 @@ describe('Gerenciamento de conta do usuário', () => {
                 email: null,
                 passwordHash: null,
                 isEmailVerified: false,
-                externalAccounts: [new ExternalAccount(createExternalAccountData())],
+                externalAccounts: [
+                    new ExternalAccount(createExternalAccountData()),
+                ],
             })
 
             try {
@@ -234,7 +247,9 @@ describe('Gerenciamento de conta do usuário', () => {
                 await user.updatePassword('newpassword', 'anypassword')
             } catch (error: any) {
                 expect(error).toBeInstanceOf(ValidationError)
-                expect(error.type).toBe(VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED)
+                expect(error.type).toBe(
+                    VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED,
+                )
             }
         })
 
@@ -249,7 +264,9 @@ describe('Gerenciamento de conta do usuário', () => {
                 await user.updatePassword('newpassword', 'wrongpassword')
             } catch (error: any) {
                 expect(error).toBeInstanceOf(ValidationError)
-                expect(error.type).toBe(VALIDATION_ERROR_TYPE.CURRENT_PASSWORD_INCORRECT)
+                expect(error.type).toBe(
+                    VALIDATION_ERROR_TYPE.CURRENT_PASSWORD_INCORRECT,
+                )
             }
         })
     })
@@ -259,7 +276,9 @@ describe('Gerenciamento de conta do usuário', () => {
             const user = createUserData({
                 email: null,
                 passwordHash: null,
-                externalAccounts: [new ExternalAccount(createExternalAccountData())],
+                externalAccounts: [
+                    new ExternalAccount(createExternalAccountData()),
+                ],
             })
 
             await user.setSystemLogin('user@gmail.com', 'password123')
@@ -275,7 +294,9 @@ describe('Gerenciamento de conta do usuário', () => {
     describe('Vincular login por email/senha à conta do Google', () => {
         it('deve vincular login do sistema à conta do Google quando o email é igual', () => {
             const user = createUserData({
-                externalAccounts: [new ExternalAccount(createExternalAccountData())],
+                externalAccounts: [
+                    new ExternalAccount(createExternalAccountData()),
+                ],
             })
 
             user.linkSystemAccountWithSameEmail('GOOGLE', 'new-password-hash')
@@ -305,25 +326,31 @@ describe('Gerenciamento de conta do usuário', () => {
                 email: 'user@gmail.com',
                 passwordHash: 'password-hash',
                 isEmailVerified: true,
-                externalAccounts: [new ExternalAccount(createExternalAccountData())],
+                externalAccounts: [
+                    new ExternalAccount(createExternalAccountData()),
+                ],
             })
 
             try {
                 user.linkSystemAccountWithSameEmail('GOOGLE', 'new-hash')
             } catch (error: any) {
                 expect(error).toBeInstanceOf(ValidationError)
-                expect(error.type).toBe(VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_ENABLED)
+                expect(error.type).toBe(
+                    VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_ENABLED,
+                )
             }
         })
     })
 
-    describe('Atualizar dados da conta do Google', () => {
+    describe('Atualizar tokens da conta do Google', () => {
         it('deve atualizar token de acesso da conta do Google', () => {
             const user = createUserData({
-                externalAccounts: [new ExternalAccount(createExternalAccountData())],
+                externalAccounts: [
+                    new ExternalAccount(createExternalAccountData()),
+                ],
             })
 
-            user.updateExternalAccount('GOOGLE', {
+            user.updateExternalAccountTokens('GOOGLE', {
                 accessToken: 'new-access-token',
                 accessTokenExpiryDateTime: new Date(),
                 refreshToken: 'new-refresh-token',
@@ -336,7 +363,7 @@ describe('Gerenciamento de conta do usuário', () => {
         it('deve não fazer nada se a conta do Google não existir', () => {
             const user = createUserData()
 
-            user.updateExternalAccount('GOOGLE', {
+            user.updateExternalAccountTokens('GOOGLE', {
                 accessToken: 'new-access-token',
                 accessTokenExpiryDateTime: new Date(),
             })

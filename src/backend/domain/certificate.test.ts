@@ -95,159 +95,174 @@ describe('Emissão de Certifcado', () => {
             expect(mapping?.student).toBe('STUDENT')
         })
     })
-})
 
-describe('Mapeamento de variáveis', () => {
-    describe('Regras obrigatórias para criação', () => {
-        it('deve exigir nome para permitir cadastro da emissão', () => {
-            expect(
-                () =>
-                    new CertificateEmission({
-                        ...makeValidCertificate(),
-                        name: '',
-                    }),
-            ).toThrow('Certificate name is required')
-        })
+    describe('Mapeamento de variáveis', () => {
+        describe('Regras obrigatórias para criação', () => {
+            it('deve exigir nome para permitir cadastro da emissão', () => {
+                expect(
+                    () =>
+                        new CertificateEmission({
+                            ...makeValidCertificate(),
+                            name: '',
+                        }),
+                ).toThrow('Certificate name is required')
+            })
 
-        it('deve exigir usuário responsável para permitir cadastro da emissão', () => {
-            expect(
-                () =>
-                    new CertificateEmission({
-                        ...makeValidCertificate(),
-                        userId: '',
-                    }),
-            ).toThrow('Certificate user ID is required')
-        })
-    })
-
-    describe('Controle de propriedade', () => {
-        it('deve permitir acesso ao proprietário da emissão', () => {
-            const certificate = new CertificateEmission(makeValidCertificate())
-
-            expect(certificate.isOwner('user-123')).toBe(true)
-        })
-
-        it('deve negar acesso para outro usuário', () => {
-            const certificate = new CertificateEmission(makeValidCertificate())
-
-            expect(certificate.isOwner('other-user')).toBe(false)
-        })
-    })
-
-    describe('Emissões de certificado', () => {
-        it('deve iniciar nova emissão como rascunho', () => {
-            const certificate = CertificateEmission.create(makeCreateInput())
-
-            expect(certificate.serialize().status).toBe(
-                CERTIFICATE_STATUS.DRAFT,
-            )
-        })
-
-        it('deve permitir alterar status para agendado', () => {
-            const certificate = CertificateEmission.create(makeCreateInput())
-
-            certificate.markAsScheduled()
-
-            expect(certificate.serialize().status).toBe(
-                CERTIFICATE_STATUS.SCHEDULED,
-            )
-        })
-
-        it('deve permitir alterar status para gerado', () => {
-            const certificate = CertificateEmission.create(makeCreateInput())
-
-            certificate.markAsGenerated()
-
-            expect(certificate.serialize().status).toBe(
-                CERTIFICATE_STATUS.GENERATED,
-            )
-        })
-
-        it('deve permitir alterar status para emitido', () => {
-            const certificate = CertificateEmission.create(makeCreateInput())
-
-            certificate.markAsEmitted()
-
-            expect(certificate.serialize().status).toBe(
-                CERTIFICATE_STATUS.EMITTED,
-            )
-        })
-    })
-
-    describe('Relação tag e variáveis', () => {
-        it('deve relacionar automaticamente campos equivalentes', () => {
-            const certificate = CertificateEmission.create(makeCreateInput())
-
-            expect(certificate.serialize().variableColumnMapping).toEqual({
-                student: 'STUDENT',
-                email: 'EMAIL',
+            it('deve exigir usuário responsável para permitir cadastro da emissão', () => {
+                expect(
+                    () =>
+                        new CertificateEmission({
+                            ...makeValidCertificate(),
+                            userId: '',
+                        }),
+                ).toThrow('Certificate user ID is required')
             })
         })
 
-        it('deve ignorar diferenças de maiúsculas, espaços e acentos', () => {
-            const input = makeCreateInput()
+        describe('Controle de propriedade', () => {
+            it('deve permitir acesso ao proprietário da emissão', () => {
+                const certificate = new CertificateEmission(
+                    makeValidCertificate(),
+                )
 
-            input.template.variables = ['nomeCompleto']
-            input.dataSource.columns = ['NOME COMPLETO']
+                expect(certificate.isOwner('user-123')).toBe(true)
+            })
 
-            const certificate = CertificateEmission.create(input)
+            it('deve negar acesso para outro usuário', () => {
+                const certificate = new CertificateEmission(
+                    makeValidCertificate(),
+                )
 
-            expect(certificate.serialize().variableColumnMapping).toEqual({
-                nomeCompleto: 'NOME COMPLETO',
+                expect(certificate.isOwner('other-user')).toBe(false)
             })
         })
 
-        it('deve manter variável sem vínculo quando não houver coluna compatível', () => {
-            const input = makeCreateInput()
+        describe('Emissões de certificado', () => {
+            it('deve iniciar nova emissão como rascunho', () => {
+                const certificate =
+                    CertificateEmission.create(makeCreateInput())
 
-            input.template.variables = ['student', 'phone']
-
-            const certificate = CertificateEmission.create(input)
-
-            expect(certificate.serialize().variableColumnMapping).toEqual({
-                student: 'STUDENT',
-                phone: null,
-            })
-        })
-    })
-
-    describe('Template', () => {
-        it('deve impedir remoção do template por outro usuário', () => {
-            const certificate = CertificateEmission.create(makeCreateInput())
-
-            expect(() => certificate.removeTemplate('other-user')).toThrow(
-                ForbiddenError,
-            )
-        })
-
-        it('deve permitir definir template para a emissão', () => {
-            const certificate = new CertificateEmission(makeValidCertificate())
-
-            certificate.setTemplate(makeTemplateWithVariables(['student']))
-
-            expect(certificate.hasTemplate()).toBe(true)
-        })
-    })
-
-    describe('Fonte de dados', () => {
-        it('deve impedir remoção da fonte de dados por outro usuário', () => {
-            const certificate = CertificateEmission.create(makeCreateInput())
-
-            expect(() => certificate.removeDataSource('other-user')).toThrow(
-                ForbiddenError,
-            )
-        })
-    })
-
-    describe('Atualização da emissão', () => {
-        it('deve permitir alterar nome da emissão', () => {
-            const certificate = new CertificateEmission(makeValidCertificate())
-
-            certificate.update({
-                name: 'Novo Nome',
+                expect(certificate.serialize().status).toBe(
+                    CERTIFICATE_STATUS.DRAFT,
+                )
             })
 
-            expect(certificate.getName()).toBe('Novo Nome')
+            it('deve permitir alterar status para agendado', () => {
+                const certificate =
+                    CertificateEmission.create(makeCreateInput())
+
+                certificate.markAsScheduled()
+
+                expect(certificate.serialize().status).toBe(
+                    CERTIFICATE_STATUS.SCHEDULED,
+                )
+            })
+
+            it('deve permitir alterar status para gerado', () => {
+                const certificate =
+                    CertificateEmission.create(makeCreateInput())
+
+                certificate.markAsGenerated()
+
+                expect(certificate.serialize().status).toBe(
+                    CERTIFICATE_STATUS.GENERATED,
+                )
+            })
+
+            it('deve permitir alterar status para emitido', () => {
+                const certificate =
+                    CertificateEmission.create(makeCreateInput())
+
+                certificate.markAsEmitted()
+
+                expect(certificate.serialize().status).toBe(
+                    CERTIFICATE_STATUS.EMITTED,
+                )
+            })
+        })
+
+        describe('Relação tag e variáveis', () => {
+            it('deve relacionar automaticamente campos equivalentes', () => {
+                const certificate =
+                    CertificateEmission.create(makeCreateInput())
+
+                expect(certificate.serialize().variableColumnMapping).toEqual({
+                    student: 'STUDENT',
+                    email: 'EMAIL',
+                })
+            })
+
+            it('deve ignorar diferenças de maiúsculas, espaços e acentos', () => {
+                const input = makeCreateInput()
+
+                input.template.variables = ['nomeCompleto']
+                input.dataSource.columns = ['NOME COMPLETO']
+
+                const certificate = CertificateEmission.create(input)
+
+                expect(certificate.serialize().variableColumnMapping).toEqual({
+                    nomeCompleto: 'NOME COMPLETO',
+                })
+            })
+
+            it('deve manter variável sem vínculo quando não houver coluna compatível', () => {
+                const input = makeCreateInput()
+
+                input.template.variables = ['student', 'phone']
+
+                const certificate = CertificateEmission.create(input)
+
+                expect(certificate.serialize().variableColumnMapping).toEqual({
+                    student: 'STUDENT',
+                    phone: null,
+                })
+            })
+        })
+
+        describe('Template', () => {
+            it('deve impedir remoção do template por outro usuário', () => {
+                const certificate =
+                    CertificateEmission.create(makeCreateInput())
+
+                expect(() => certificate.removeTemplate('other-user')).toThrow(
+                    ForbiddenError,
+                )
+            })
+
+            it('deve permitir definir template para a emissão', () => {
+                const certificate = new CertificateEmission(
+                    makeValidCertificate(),
+                )
+
+                certificate.setTemplate(makeTemplateWithVariables(['student']))
+
+                expect(certificate.hasTemplate()).toBe(true)
+            })
+        })
+
+        describe('Fonte de dados', () => {
+            it('deve impedir remoção da fonte de dados por outro usuário', () => {
+                const certificate =
+                    CertificateEmission.create(makeCreateInput())
+
+                expect(() =>
+                    certificate.removeDataSource('other-user'),
+                ).toThrow(ForbiddenError)
+            })
+        })
+
+        describe('Atualização da emissão', () => {
+            it('deve permitir alterar nome da emissão', () => {
+                const certificate = new CertificateEmission(
+                    makeValidCertificate(),
+                )
+
+                certificate.update({
+                    name: 'Novo Nome',
+                })
+
+                expect(certificate.getName()).toBe('Novo Nome')
+            })
         })
     })
 })
