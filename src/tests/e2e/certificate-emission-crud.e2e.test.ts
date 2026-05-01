@@ -70,7 +70,9 @@ test.describe('Certificate emission CRUD', () => {
         await emissionLink.click()
         await page.waitForURL(/\/certificados\/.+/)
         await page.getByTitle('Excluir certificado').click()
-        await page.getByRole('button', { name: 'Continuar' }).click()
+        const continueButton = page.getByRole('button', { name: 'Continuar' })
+        await expect(continueButton).toBeVisible()
+        await continueButton.click()
         await expect(
             page.getByText('Certificado excluído com sucesso'),
         ).toBeVisible({ timeout: 20000 })

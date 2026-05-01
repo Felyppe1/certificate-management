@@ -12,16 +12,17 @@ export default defineConfig({
     baseURL: 'http://localhost:3001',
     trace: 'on-first-retry',
     colorScheme: 'dark',
+    video: 'on',
   },
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    // {
-    //   name: 'firefox',
-    //   use: { ...devices['Desktop Firefox'] },
-    // },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
     // {
     //   name: 'webkit',
     //   use: { ...devices['Desktop Safari'] },
@@ -38,7 +39,7 @@ export default defineConfig({
     command: 'npx tsx src/tests/e2e/start-server.ts',
     url: 'http://localhost:3001',
     reuseExistingServer: !process.env.CI,
-    timeout: 200000,
+    timeout: 300000,
     stdout: 'pipe',
     stderr: 'pipe',
   },
