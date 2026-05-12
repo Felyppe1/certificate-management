@@ -44,6 +44,7 @@ async function startServer() {
         GCP_PROJECT_ID: 'test-project',
         GEMINI_API_KEY: 'test-key',
         RESEND_API_KEY: 'test-key',
+        BREVO_API_KEY: 'test-key',
         OWNER_EMAIL: 'test@test.com',
         REDIS_URL: 'redis://localhost:6380',
         LOKI_URL: 'http://localhost:3100',
