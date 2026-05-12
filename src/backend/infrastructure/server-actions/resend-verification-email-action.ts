@@ -2,7 +2,7 @@
 
 import { ResendVerificationEmailUseCase } from '@/backend/application/resend-verification-email-use-case'
 import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
-import { ResendNotificationGateway } from '../gateway/resend-notification-gateway'
+import { BrevoNotificationGateway } from '../gateway/brevo-notification-gateway'
 import { prisma } from '../repository/prisma'
 
 export async function resendVerificationEmailAction(
@@ -14,7 +14,7 @@ export async function resendVerificationEmailAction(
     try {
         const useCase = new ResendVerificationEmailUseCase(
             new PrismaUsersRepository(prisma),
-            new ResendNotificationGateway(),
+            new BrevoNotificationGateway(),
         )
 
         await useCase.execute({ email })

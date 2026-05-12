@@ -24,6 +24,8 @@ inputs:
     required: true
   resend_api_key:
     required: true
+  brevo_api_key:
+    required: true
   db_user:
     required: true
   db_password:
@@ -73,6 +75,7 @@ runs:
         NEXT_PUBLIC_BASE_URL: ${{ inputs.next_public_base_url }}
         GEMINI_API_KEY: ${{ inputs.gemini_api_key }}
         RESEND_API_KEY: ${{ inputs.resend_api_key }}
+        BREVO_API_KEY: ${{ inputs.brevo_api_key }}
         OWNER_EMAIL: ${{ inputs.owner_email }}
         SUFFIX: ${{ inputs.branch == 'main' && '' || format('-{0}', inputs.branch) }}
       run: |
@@ -87,6 +90,7 @@ runs:
         echo "TF_VAR_google_drive_folder_id=${{ inputs.google_drive_folder_id }}" >> $GITHUB_ENV
         echo "TF_VAR_gemini_api_key=${{ inputs.gemini_api_key }}" >> $GITHUB_ENV
         echo "TF_VAR_resend_api_key=${{ inputs.resend_api_key }}" >> $GITHUB_ENV
+        echo "TF_VAR_brevo_api_key=${{ inputs.brevo_api_key }}" >> $GITHUB_ENV
         TF_ENV_VARS=$(jq -nc '{
           DB_USER: env.DB_USER,
           DB_PASSWORD: env.DB_PASSWORD,
@@ -105,6 +109,7 @@ runs:
           NEXT_PUBLIC_BASE_URL: env.NEXT_PUBLIC_BASE_URL,
           GEMINI_API_KEY: env.GEMINI_API_KEY,
           RESEND_API_KEY: env.RESEND_API_KEY,
+          BREVO_API_KEY: env.BREVO_API_KEY,
           OWNER_EMAIL: env.OWNER_EMAIL
         }')
         echo "TF_VAR_environment_variables=$TF_ENV_VARS" >> $GITHUB_ENV

@@ -28,7 +28,8 @@ const serverSchema = z.object({
     GEMINI_API_KEY: z.string(),
 
     OWNER_EMAIL: z.string(),
-    RESEND_API_KEY: z.string(),
+    RESEND_API_KEY: z.string().optional(),
+    BREVO_API_KEY: z.string(),
 
     // Test variables
     TEST_DB_USERNAME: z.string().optional(),
@@ -65,6 +66,7 @@ const serverEnvs = {
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
+    BREVO_API_KEY: process.env.BREVO_API_KEY,
     OWNER_EMAIL: process.env.OWNER_EMAIL,
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
 

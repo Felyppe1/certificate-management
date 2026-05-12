@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { SignUpUseCase } from '@/backend/application/sign-up-use-case'
-import { ResendNotificationGateway } from '@/backend/infrastructure/gateway/resend-notification-gateway'
+import { BrevoNotificationGateway } from '@/backend/infrastructure/gateway/brevo-notification-gateway'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
@@ -17,7 +17,7 @@ export async function POST(
 
         const usersRepository = new PrismaUsersRepository(prisma)
 
-        const notificationGateway = new ResendNotificationGateway()
+        const notificationGateway = new BrevoNotificationGateway()
         const signUpUseCase = new SignUpUseCase(
             usersRepository,
             notificationGateway,

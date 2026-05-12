@@ -4,7 +4,7 @@ import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken
 import { SetSystemLoginUseCase } from '@/backend/application/set-system-login-use-case'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
-import { ResendNotificationGateway } from '../gateway/resend-notification-gateway'
+import { BrevoNotificationGateway } from '../gateway/brevo-notification-gateway'
 import { prisma } from '../repository/prisma'
 import { logoutAction } from './logout-action'
 import { redirect } from 'next/navigation'
@@ -23,7 +23,7 @@ export async function setSystemLoginAction(_: unknown, formData: FormData) {
 
         const useCase = new SetSystemLoginUseCase(
             new PrismaUsersRepository(prisma),
-            new ResendNotificationGateway(),
+            new BrevoNotificationGateway(),
         )
 
         await useCase.execute({ userId, ...parsed })

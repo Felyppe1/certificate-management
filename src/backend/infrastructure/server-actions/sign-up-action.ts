@@ -1,7 +1,7 @@
 'use server'
 
 import { SignUpUseCase } from '@/backend/application/sign-up-use-case'
-import { ResendNotificationGateway } from '@/backend/infrastructure/gateway/resend-notification-gateway'
+import { BrevoNotificationGateway } from '@/backend/infrastructure/gateway/brevo-notification-gateway'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { signUpSchema } from './schemas'
@@ -17,7 +17,7 @@ export async function signUpAction(_: unknown, formData: FormData) {
         const parsedData = signUpSchema.parse(rawData)
 
         const usersRepository = new PrismaUsersRepository(prisma)
-        const notificationGateway = new ResendNotificationGateway()
+        const notificationGateway = new BrevoNotificationGateway()
 
         const signUpUseCase = new SignUpUseCase(
             usersRepository,

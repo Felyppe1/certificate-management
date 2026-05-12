@@ -20,8 +20,14 @@ variable "branch" {
   type        = string
 }
 
-variable "resend_api_key" {
-  description = "Resend API key for sending emails"
+# variable "resend_api_key" {
+#   description = "Resend API key for sending emails"
+#   type        = string
+#   sensitive   = true
+# }
+
+variable "brevo_api_key" {
+  description = "Brevo API key for sending emails"
   type        = string
   sensitive   = true
 }

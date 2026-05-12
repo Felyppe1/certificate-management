@@ -4,7 +4,7 @@ import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken
 import { UpdateSystemEmailUseCase } from '@/backend/application/update-system-email-use-case'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
-import { ResendNotificationGateway } from '../gateway/resend-notification-gateway'
+import { BrevoNotificationGateway } from '../gateway/brevo-notification-gateway'
 import { prisma } from '../repository/prisma'
 import { logoutAction } from './logout-action'
 import { redirect } from 'next/navigation'
@@ -22,7 +22,7 @@ export async function updateSystemEmailAction(_: unknown, formData: FormData) {
 
         const useCase = new UpdateSystemEmailUseCase(
             new PrismaUsersRepository(prisma),
-            new ResendNotificationGateway(),
+            new BrevoNotificationGateway(),
         )
 
         const { hasOtherLoginMethod } = await useCase.execute({

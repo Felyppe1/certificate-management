@@ -11,10 +11,13 @@ from datetime import date
 from pydantic import BaseModel, ValidationError
 from typing import List
 import resend
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
 
 load_dotenv()
 
 RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 ENV = os.getenv('ENV', 'production')
 APP_BASE_URL = os.getenv('APP_BASE_URL')
 AUDIENCE = os.getenv("TOKEN_AUDIENCE", APP_BASE_URL) # For local environments
@@ -23,12 +26,13 @@ CERTIFICATES_BUCKET = os.getenv('CERTIFICATES_BUCKET')
 for var_name, var_value in {
     "APP_BASE_URL": APP_BASE_URL,
     "CERTIFICATES_BUCKET": CERTIFICATES_BUCKET,
-    "RESEND_API_KEY": RESEND_API_KEY,
+    "BREVO_API_KEY": BREVO_API_KEY,
 }.items():
     if not var_value:
         raise ValueError(f"Environment variable '{var_name}' is not set.")
 
-resend.api_key = RESEND_API_KEY
+brevo_configuration = sib_api_v3_sdk.Configuration()
+brevo_configuration.api_key['api-key'] = BREVO_API_KEY
 storage_client = storage.Client()
 
 class RecipientModel(BaseModel):
@@ -134,23 +138,31 @@ def main(request):
             """
 
             try:
-                params = {
-                    "from": "Certifica <nao-responda@certifica.felyppe.com.br>",
-                    "to": [recipient],
-                    "subject": subject,
-                    "text": body,
-                    "html": html_content,
-                    "attachments": [
-                        {
-                            "filename": "certificado.pdf",
-                            "content": list(pdf_bytes) 
-                        }
-                    ]
-                }
-                print(f"Sending email to {recipient} via Resend...")
-                response = resend.Emails.send(params)
-                print(f"Enviado com sucesso! ID: {response['id']}")
+                print(f"Sending email to {recipient} via Brevo...")
+                api_client = sib_api_v3_sdk.ApiClient(brevo_configuration)
+                api = sib_api_v3_sdk.TransactionalEmailsApi(api_client)
+
+                send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+                    sender={
+                        "name": "Certifica",
+                        "email": "nao-responda@mail.certifica.felyppe.com.br"
+                    },
+                    to=[{"email": recipient}],
+                    subject=subject,
+                    html_content=html_content,
+                    text_content=body,
+                    attachment=[{
+                        "name": "certificado.pdf",
+                        "content": base64.b64encode(pdf_bytes).decode("utf-8")
+                    }]
+                )
+
+                response = api.send_transac_email(send_smtp_email)
+                print(f"Enviado com sucesso! Message ID: {response.message_id}")
                 return True
+            except ApiException as e:
+                print(f"Erro ao enviar e-mail via Brevo: {e}")
+                return False
             except Exception as e:
                 print(f"Erro ao enviar e-mail: {e}")
                 return False

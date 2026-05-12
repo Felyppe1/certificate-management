@@ -2,7 +2,7 @@
 
 import { RequestPasswordResetUseCase } from '@/backend/application/request-password-reset-use-case'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
-import { ResendNotificationGateway } from '@/backend/infrastructure/gateway/resend-notification-gateway'
+import { BrevoNotificationGateway } from '@/backend/infrastructure/gateway/brevo-notification-gateway'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 
 export async function requestPasswordResetAction(
@@ -14,7 +14,7 @@ export async function requestPasswordResetAction(
     try {
         const useCase = new RequestPasswordResetUseCase(
             new PrismaUsersRepository(prisma),
-            new ResendNotificationGateway(),
+            new BrevoNotificationGateway(),
         )
 
         await useCase.execute({ email })

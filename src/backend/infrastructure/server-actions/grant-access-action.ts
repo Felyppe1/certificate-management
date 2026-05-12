@@ -1,7 +1,7 @@
 'use server'
 
 import { GrantAccessUseCase } from '@/backend/application/grant-access-use-case'
-import { ResendNotificationGateway } from '@/backend/infrastructure/gateway/resend-notification-gateway'
+import { BrevoNotificationGateway } from '@/backend/infrastructure/gateway/brevo-notification-gateway'
 import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
@@ -28,7 +28,7 @@ export async function grantAccessAction(_: unknown, formData: FormData) {
 
         const parsedData = grantAccessSchema.parse(rawData)
 
-        const notificationEmailGateway = new ResendNotificationGateway()
+        const notificationEmailGateway = new BrevoNotificationGateway()
         const usersRepository = new PrismaUsersRepository(prisma)
 
         const useCase = new GrantAccessUseCase(
