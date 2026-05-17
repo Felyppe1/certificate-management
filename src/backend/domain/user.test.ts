@@ -197,22 +197,24 @@ describe('Gerenciamento de conta do usuário', () => {
             expect(user.getEmail()).toBe('new@gmail.com')
             expect(user.getIsEmailVerified()).toBe(true)
             expect(user.getEmailVerificationCode()).toBeNull()
+            expect(user.getEmailChangeCode()).toBeNull()
         })
 
-        it('deve mudar para o mesmo email', () => {
+        it('deve dar erro ao tentar mudar para o mesmo email', () => {
             const user = createUserData({
                 email: 'user@gmail.com',
                 passwordHash: 'password-hash',
                 isEmailVerified: true,
             })
 
-            user.changeEmail('user@gmail.com')
-
-            expect(user.getIsEmailVerified()).toBe(true)
-            expect(user.getEmailVerificationCode()).toBeNull()
+            expect(() => user.changeEmail('user@gmail.com')).toThrowError(
+                expect.objectContaining({
+                    type: VALIDATION_ERROR_TYPE.EMAIL_ALREADY_VERIFIED,
+                }),
+            )
         })
 
-        it('deve mudar para novo email e gerar código de verificação', () => {
+        it('deve gerar o código de verificação para o novo email', () => {
             const user = createUserData({
                 email: 'old@gmail.com',
                 isEmailVerified: true,
@@ -221,9 +223,11 @@ describe('Gerenciamento de conta do usuário', () => {
 
             user.changeEmail('newemail@gmail.com')
 
-            expect(user.getEmail()).toBe('newemail@gmail.com')
-            expect(user.getIsEmailVerified()).toBe(false)
-            expect(user.getEmailVerificationCode()).not.toBeNull()
+            expect(user.getEmail()).toBe('old@gmail.com')
+            expect(user.getIsEmailVerified()).toBe(true)
+            expect(user.getEmailVerificationCode()).toBeNull()
+            expect(user.getEmailChangeCode()).not.toBeNull()
+            expect(user.getEmailRequestedForChange()).toBe('newemail@gmail.com')
         })
     })
 
