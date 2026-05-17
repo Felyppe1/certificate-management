@@ -20,6 +20,10 @@ export interface GetMeControllerResponse {
             accessToken: string
             accessTokenExpiryDateTime: Date | null
         }[]
+        emailChangeCode: {
+            newEmail: string
+            expiresAt: Date
+        } | null
     }
 }
 

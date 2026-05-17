@@ -14,6 +14,7 @@ export interface IUsersRepository {
         email: string,
     ): Promise<User | null>
     getByEmailVerificationCode(code: string): Promise<User | null>
+    getByEmailChangeCode(code: string): Promise<User | null>
     save(user: User): Promise<void>
     update(user: User): Promise<void>
     delete(id: string): Promise<void>

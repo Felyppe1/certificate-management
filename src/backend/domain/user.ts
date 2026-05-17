@@ -15,6 +15,7 @@ import {
     ResetPasswordCode,
     ResetPasswordCodeOutput,
 } from './reset-password-code'
+import { EmailChangeCode, EmailChangeCodeOutput } from './email-change-code'
 import { ForbiddenError, FORBIDDEN_ERROR_TYPE } from './error/forbidden-error'
 import {
     VALIDATION_ERROR_TYPE,
@@ -35,6 +36,7 @@ export interface UserInput {
     externalAccounts: ExternalAccount[]
     emailVerificationCode: EmailVerificationCode | null
     resetPasswordCode: ResetPasswordCode | null
+    emailChangeCode: EmailChangeCode | null
 }
 
 interface CreateUserInput {
@@ -53,6 +55,7 @@ export interface UserOutput {
     externalAccounts: ExternalAccountOutput[]
     emailVerificationCode: EmailVerificationCodeOutput | null
     resetPasswordCode: ResetPasswordCodeOutput | null
+    emailChangeCode: EmailChangeCodeOutput | null
 }
 
 export class User extends AggregateRoot {
@@ -64,6 +67,7 @@ export class User extends AggregateRoot {
     private externalAccounts: ExternalAccount[]
     private emailVerificationCode: EmailVerificationCode | null
     private resetPasswordCode: ResetPasswordCode | null
+    private emailChangeCode: EmailChangeCode | null
 
     static async create(data: CreateUserInput): Promise<User> {
         let passwordHash: string | null = null
@@ -85,6 +89,7 @@ export class User extends AggregateRoot {
                     : null,
             externalAccounts: [],
             resetPasswordCode: null,
+            emailChangeCode: null,
         })
     }
 
@@ -123,12 +128,23 @@ export class User extends AggregateRoot {
         this.externalAccounts = data.externalAccounts
         this.emailVerificationCode = data.emailVerificationCode
         this.resetPasswordCode = data.resetPasswordCode
+        this.emailChangeCode = data.emailChangeCode
     }
 
     async setSystemLogin(email: string, plainPassword: string): Promise<void> {
         this.passwordHash = await bcrypt.hash(plainPassword, 10)
 
-        this.changeEmail(email)
+        const isEmailFromExternalAccount = this.externalAccounts.some(
+            acc => acc.getEmail() === email,
+        )
+
+        if (isEmailFromExternalAccount) {
+            this.isEmailVerified = true
+        } else {
+            this.generateEmailVerificationCode()
+        }
+
+        this.email = email
     }
 
     linkSystemAccountWithSameEmail(
@@ -149,7 +165,8 @@ export class User extends AggregateRoot {
 
         this.passwordHash = passwordHash
 
-        this.changeEmail(externalAccount.getEmail())
+        this.isEmailVerified = true
+        this.email = externalAccount.getEmail()
     }
 
     async verifyEmail(tokenStr: string): Promise<void> {
@@ -235,19 +252,63 @@ export class User extends AggregateRoot {
         this.resetPasswordCode = null
     }
 
+    confirmEmailChange(code: string): void {
+        if (!this.emailChangeCode) {
+            throw new ForbiddenError(
+                FORBIDDEN_ERROR_TYPE.EMAIL_CHANGE_CODE_EXPIRED,
+            ) // TODO: this error message is not accurate because the code might not be expired but just not exist, should we have a different error message for that case?
+        }
+
+        if (this.emailChangeCode.isExpired()) {
+            throw new ForbiddenError(
+                FORBIDDEN_ERROR_TYPE.EMAIL_CHANGE_CODE_EXPIRED,
+            )
+        }
+
+        if (this.emailChangeCode.getCode() !== code) {
+            throw new ForbiddenError(
+                FORBIDDEN_ERROR_TYPE.EMAIL_CHANGE_CODE_INVALID,
+            )
+        }
+
+        this.email = this.emailChangeCode.getNewEmail()
+        this.emailChangeCode = null
+    }
+
+    cancelEmailChange(): void {
+        this.emailChangeCode = null
+    }
+
+    getEmailChangeCode(): string | null {
+        return this.emailChangeCode?.getCode() ?? null
+    }
+
+    getEmailRequestedForChange(): string | null {
+        return this.emailChangeCode?.getNewEmail() ?? null
+    }
+
     changeEmail(email: string) {
+        if (!this.hasSystemLogin()) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED,
+            )
+        }
+
+        const isEmailTheSame = email === this.email
+
+        if (isEmailTheSame) {
+            throw new ValidationError(
+                VALIDATION_ERROR_TYPE.EMAIL_ALREADY_VERIFIED,
+            )
+        }
+
         const isEmailFromExternalAccount = this.externalAccounts.some(
             acc => acc.getEmail() === email,
         )
 
-        const isEmailTheSame = email === this.email
-
-        if (isEmailFromExternalAccount || isEmailTheSame) {
-            this.isEmailVerified = true
-            this.emailVerificationCode = null
-        } else {
-            this.isEmailVerified = false
-            this.generateEmailVerificationCode()
+        if (!isEmailFromExternalAccount) {
+            this.emailChangeCode = EmailChangeCode.create(email)
+            return
         }
 
         this.email = email
@@ -381,6 +442,13 @@ export class User extends AggregateRoot {
         return !!this.email && !!this.passwordHash
     }
 
+    cancelSystemLogin(): void {
+        this.email = null
+        this.passwordHash = null
+        this.emailVerificationCode = null
+        this.isEmailVerified = false
+    }
+
     canRemoveExternalAccount(provider: Provider): boolean {
         const remainingExternalAccounts = this.externalAccounts.filter(
             a => a.getProvider() !== provider,
@@ -458,6 +526,7 @@ export class User extends AggregateRoot {
             emailVerificationCode:
                 this.emailVerificationCode?.serialize() ?? null,
             resetPasswordCode: this.resetPasswordCode?.serialize() ?? null,
+            emailChangeCode: this.emailChangeCode?.serialize() ?? null,
         }
     }
 }

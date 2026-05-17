@@ -210,6 +210,14 @@ export const updateSystemEmailSchema = z.object({
     newEmail: z.string().email(),
 })
 
+export const requestEmailChangeSchema = z.object({
+    newEmail: z.string().email(),
+})
+
+export const confirmEmailChangeSchema = z.object({
+    code: z.string().length(6),
+})
+
 export const updateSystemPasswordSchema = z.object({
     currentPassword: z.string().min(1),
     newPassword: z.string().min(6).max(100),

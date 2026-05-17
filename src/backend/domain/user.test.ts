@@ -33,6 +33,7 @@ const createUserData = (overrides?: Partial<UserInput>): User =>
         externalAccounts: [],
         emailVerificationCode: null,
         resetPasswordCode: null,
+        emailChangeCode: null,
         ...overrides,
     })
 

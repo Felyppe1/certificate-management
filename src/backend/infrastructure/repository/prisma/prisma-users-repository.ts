@@ -1,5 +1,6 @@
 import { EmailVerificationCode } from '@/backend/domain/email-verification-code'
 import { ResetPasswordCode } from '@/backend/domain/reset-password-code'
+import { EmailChangeCode } from '@/backend/domain/email-change-code'
 import {
     IUsersRepository,
     USER_CREDITS,
@@ -34,6 +35,11 @@ export class PrismaUsersRepository implements IUsersRepository {
             refresh_token_expiry_datetime: Date | null
         }[]
         EmailVerificationCode?: {
+            code: string
+            expires_at: Date
+        } | null
+        EmailChange?: {
+            new_email: string
             code: string
             expires_at: Date
         } | null
@@ -74,13 +80,24 @@ export class PrismaUsersRepository implements IUsersRepository {
                           expiresAt: user.reset_password_expires_at,
                       })
                     : null,
+            emailChangeCode: user.EmailChange
+                ? new EmailChangeCode({
+                      newEmail: user.EmailChange.new_email,
+                      code: user.EmailChange.code,
+                      expiresAt: user.EmailChange.expires_at,
+                  })
+                : null,
         })
     }
 
     async getByEmail(email: string) {
         const user = await this.prisma.user.findUnique({
             where: { email },
-            include: { ExternalUserAccount: true, EmailVerificationCode: true },
+            include: {
+                ExternalUserAccount: true,
+                EmailVerificationCode: true,
+                EmailChange: true,
+            },
         })
 
         if (!user) return null
@@ -91,7 +108,11 @@ export class PrismaUsersRepository implements IUsersRepository {
     async getById(id: string) {
         const user = await this.prisma.user.findUnique({
             where: { id },
-            include: { ExternalUserAccount: true, EmailVerificationCode: true },
+            include: {
+                ExternalUserAccount: true,
+                EmailVerificationCode: true,
+                EmailChange: true,
+            },
         })
 
         if (!user) return null
@@ -106,7 +127,11 @@ export class PrismaUsersRepository implements IUsersRepository {
                     some: { provider, provider_user_id: providerUserId },
                 },
             },
-            include: { ExternalUserAccount: true, EmailVerificationCode: true },
+            include: {
+                ExternalUserAccount: true,
+                EmailVerificationCode: true,
+                EmailChange: true,
+            },
         })
 
         if (!user) return null
@@ -121,7 +146,11 @@ export class PrismaUsersRepository implements IUsersRepository {
                     some: { provider, email },
                 },
             },
-            include: { ExternalUserAccount: true, EmailVerificationCode: true },
+            include: {
+                ExternalUserAccount: true,
+                EmailVerificationCode: true,
+                EmailChange: true,
+            },
         })
 
         if (!user) return null
@@ -136,7 +165,28 @@ export class PrismaUsersRepository implements IUsersRepository {
                     code: code,
                 },
             },
-            include: { ExternalUserAccount: true, EmailVerificationCode: true },
+            include: {
+                ExternalUserAccount: true,
+                EmailVerificationCode: true,
+                EmailChange: true,
+            },
+        })
+
+        if (!user) return null
+
+        return this.mapUser(user)
+    }
+
+    async getByEmailChangeCode(code: string) {
+        const user = await this.prisma.user.findFirst({
+            where: {
+                EmailChange: { code },
+            },
+            include: {
+                ExternalUserAccount: true,
+                EmailVerificationCode: true,
+                EmailChange: true,
+            },
         })
 
         if (!user) return null
@@ -199,6 +249,7 @@ export class PrismaUsersRepository implements IUsersRepository {
             passwordHash,
             externalAccounts,
             emailVerificationCode,
+            emailChangeCode,
             resetPasswordCode,
         } = user.serialize()
 
@@ -209,6 +260,10 @@ export class PrismaUsersRepository implements IUsersRepository {
                 await tx.emailVerificationCode.deleteMany({
                     where: { user_id: id },
                 })
+            }
+
+            if (!emailChangeCode) {
+                await tx.emailChange.deleteMany({ where: { user_id: id } })
             }
 
             await tx.user.update({
@@ -233,6 +288,22 @@ export class PrismaUsersRepository implements IUsersRepository {
                                       code: emailVerificationCode.code,
                                       expires_at:
                                           emailVerificationCode.expiresAt,
+                                  },
+                              },
+                          }
+                        : undefined,
+                    EmailChange: emailChangeCode
+                        ? {
+                              upsert: {
+                                  create: {
+                                      new_email: emailChangeCode.newEmail,
+                                      code: emailChangeCode.code,
+                                      expires_at: emailChangeCode.expiresAt,
+                                  },
+                                  update: {
+                                      new_email: emailChangeCode.newEmail,
+                                      code: emailChangeCode.code,
+                                      expires_at: emailChangeCode.expiresAt,
                                   },
                               },
                           }

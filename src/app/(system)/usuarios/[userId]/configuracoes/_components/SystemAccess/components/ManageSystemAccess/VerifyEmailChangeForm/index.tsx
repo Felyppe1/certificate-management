@@ -11,22 +11,21 @@ import { REGEXP_ONLY_DIGITS } from 'input-otp'
 import { Loader2 } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
-import { verifyEmailAction } from '@/backend/infrastructure/server-actions/verify-email-action'
-import { resendVerificationEmailAction } from '@/backend/infrastructure/server-actions/resend-verification-email-action'
+import { confirmEmailChangeAction } from '@/backend/infrastructure/server-actions/confirm-email-change-action'
+import { requestEmailChangeAction } from '@/backend/infrastructure/server-actions/request-email-change-action'
+import { cancelEmailChangeAction } from '@/backend/infrastructure/server-actions/cancel-email-change-action'
 
-interface VerifyEmailFormProps {
-    email: string
-    onSuccess?: () => void
-    onCancel?: () => void
-    isLoading?: boolean
+interface VerifyEmailChangeFormProps {
+    newEmail: string
+    onSuccess: () => void
+    onCancel: () => void
 }
 
-export function VerifyEmailForm({
-    email,
+export function VerifyEmailChangeForm({
+    newEmail,
     onSuccess,
     onCancel,
-    isLoading,
-}: VerifyEmailFormProps) {
+}: VerifyEmailChangeFormProps) {
     const [code, setCode] = useState('')
     const [error, setError] = useState<string | null>(null)
     const [resendCooldown, setResendCooldown] = useState(0)
@@ -41,19 +40,19 @@ export function VerifyEmailForm({
     const verifyMutation = useMutation({
         mutationFn: async (code: string) => {
             const fd = new FormData()
-            fd.append('email', email)
             fd.append('code', code)
-            const result = await verifyEmailAction(null, fd)
+            const result = await confirmEmailChangeAction(null, fd)
             if (result?.success === false) throw result
             return result
         },
-        onSuccess: () => onSuccess?.(),
+        onSuccess: () => onSuccess(),
         onError: (error: any) => {
             if (isRedirectError(error)) return
-            if (error?.errorType === 'verification-code-expired') {
-                setError('Código expirado. Reenvie um novo código.')
-            } else if (error?.errorType === 'verification-code-invalid') {
-                setError('Código errado. Tente novamente.')
+            if (error?.errorType === 'email-change-code-expired') {
+                setError('Código expirado.')
+                onCancel()
+            } else if (error?.errorType === 'email-change-code-invalid') {
+                setError('Código inválido. Tente novamente.')
             } else {
                 setError('Ocorreu um erro.')
             }
@@ -63,8 +62,8 @@ export function VerifyEmailForm({
     const resendMutation = useMutation({
         mutationFn: async () => {
             const fd = new FormData()
-            fd.append('email', email)
-            const result = await resendVerificationEmailAction(null, fd)
+            fd.append('newEmail', newEmail)
+            const result = await requestEmailChangeAction(null, fd)
             if (result?.success === false) throw result
             return result
         },
@@ -72,10 +71,24 @@ export function VerifyEmailForm({
             setResendSuccess(true)
             setResendCooldown(60)
             setCode('')
+            setError(null)
         },
         onError: (error: any) => {
             if (isRedirectError(error)) return
             setError('Erro ao reenviar. Tente novamente.')
+        },
+    })
+
+    const cancelMutation = useMutation({
+        mutationFn: async () => {
+            const result = await cancelEmailChangeAction()
+            if (result?.success === false) throw result
+            return result
+        },
+        onSuccess: () => onCancel(),
+        onError: (error: any) => {
+            if (isRedirectError(error)) return
+            setError('Erro ao cancelar. Tente novamente.')
         },
     })
 
@@ -85,19 +98,13 @@ export function VerifyEmailForm({
         verifyMutation.mutate(code)
     }
 
-    const handleResend = () => {
-        setResendSuccess(false)
-        setError(null)
-        resendMutation.mutate()
-    }
+    const isPending =
+        verifyMutation.isPending ||
+        resendMutation.isPending ||
+        cancelMutation.isPending
 
     return (
         <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-                Insira o código enviado para{' '}
-                <span className="font-medium text-foreground">{email}</span>
-            </p>
-
             <div className="flex justify-center">
                 <InputOTP
                     maxLength={6}
@@ -105,7 +112,7 @@ export function VerifyEmailForm({
                     value={code}
                     onChange={setCode}
                     onComplete={handleSubmit}
-                    disabled={isLoading || verifyMutation.isPending}
+                    disabled={isPending}
                 >
                     <InputOTPGroup>
                         <InputOTPSlot index={0} />
@@ -131,13 +138,11 @@ export function VerifyEmailForm({
             <Button
                 type="button"
                 onClick={handleSubmit}
-                disabled={
-                    code.length !== 6 || verifyMutation.isPending || isLoading
-                }
+                disabled={code.length !== 6 || isPending}
                 className="w-full"
                 size="lg"
             >
-                {(verifyMutation.isPending || isLoading) && (
+                {verifyMutation.isPending && (
                     <Loader2 className="animate-spin" />
                 )}
                 Verificar
@@ -148,12 +153,12 @@ export function VerifyEmailForm({
                     type="button"
                     variant="link"
                     size="sm"
-                    onClick={handleResend}
-                    disabled={
-                        resendMutation.isPending ||
-                        resendCooldown > 0 ||
-                        isLoading
-                    }
+                    onClick={() => {
+                        setResendSuccess(false)
+                        setError(null)
+                        resendMutation.mutate()
+                    }}
+                    disabled={isPending || resendCooldown > 0}
                     className="text-muted-foreground"
                 >
                     {resendMutation.isPending && (
@@ -165,19 +170,20 @@ export function VerifyEmailForm({
                 </Button>
             </div>
 
-            {onCancel && (
-                <div className="text-center">
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={onCancel}
-                        disabled={isLoading}
-                    >
-                        Cancelar
-                    </Button>
-                </div>
-            )}
+            <div className="text-center">
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => cancelMutation.mutate()}
+                    disabled={isPending}
+                >
+                    {cancelMutation.isPending && (
+                        <Loader2 className="size-3 animate-spin" />
+                    )}
+                    Cancelar
+                </Button>
+            </div>
         </div>
     )
 }

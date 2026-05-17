@@ -36,6 +36,7 @@ model User {
     Session             Session[]
     ExternalUserAccount ExternalUserAccount[]
     EmailVerificationCode   EmailVerificationCode?
+    EmailChange             EmailChange?
 
     CertificateEmission CertificateEmission[]
     DailyUsage          DailyUsage[]
@@ -230,6 +231,17 @@ model EmailVerificationCode {
     User User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
     @@map("email_verification_codes")
+}
+
+model EmailChange {
+    user_id    String   @id
+    new_email  String
+    code       String   @unique
+    expires_at DateTime
+
+    User User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    @@map("email_changes")
 }
 
 model Outbox {

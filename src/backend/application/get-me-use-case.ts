@@ -24,6 +24,12 @@ export class GetMeUseCase {
             name: serializedUser.name,
             credits: serializedUser.credits,
             externalAccounts: serializedUser.externalAccounts,
+            emailChangeCode: serializedUser.emailChangeCode
+                ? {
+                      newEmail: serializedUser.emailChangeCode.newEmail,
+                      expiresAt: serializedUser.emailChangeCode.expiresAt,
+                  }
+                : null,
         }
     }
 }
