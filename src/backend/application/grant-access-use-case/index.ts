@@ -1,13 +1,14 @@
 import {
     FORBIDDEN_ERROR_TYPE,
     ForbiddenError,
-} from '../domain/error/forbidden-error'
+} from '../../domain/error/forbidden-error'
 import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
-} from '../domain/error/not-found-error'
-import { INotificationGateway } from './interfaces/inotification-gateway'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+} from '../../domain/error/not-found-error'
+import { INotificationGateway } from '../interfaces/inotification-gateway'
+import { IUsersRepository } from '../interfaces/repository/iusers-repository'
+import { from, subject, buildHtml } from './email-template'
 
 interface GrantAccessInput {
     email: string
@@ -18,7 +19,7 @@ export class GrantAccessUseCase {
     constructor(
         private notificationEmailGateway: Pick<
             INotificationGateway,
-            'sendAccessGranted'
+            'sendEmail'
         >,
         private usersRepository: Pick<IUsersRepository, 'getById'>,
     ) {}
@@ -37,6 +38,11 @@ export class GrantAccessUseCase {
             throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_ADMIN)
         }
 
-        await this.notificationEmailGateway.sendAccessGranted(data.email)
+        await this.notificationEmailGateway.sendEmail(
+            data.email,
+            from,
+            subject,
+            buildHtml(),
+        )
     }
 }

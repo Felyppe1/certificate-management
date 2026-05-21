@@ -1,10 +1,11 @@
 import {
     CONFLICT_ERROR_TYPE,
     ConflictError,
-} from '../domain/error/conflict-error'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { INotificationGateway } from './interfaces/inotification-gateway'
-import { User } from '../domain/user'
+} from '../../domain/error/conflict-error'
+import { IUsersRepository } from '../interfaces/repository/iusers-repository'
+import { INotificationGateway } from '../interfaces/inotification-gateway'
+import { User } from '../../domain/user'
+import { from, subject, buildHtml } from './email-template'
 
 interface SignUpInput {
     name: string
@@ -18,10 +19,7 @@ export class SignUpUseCase {
             IUsersRepository,
             'getByEmail' | 'getByExternalAccountEmail' | 'save'
         >,
-        private notificationGateway: Pick<
-            INotificationGateway,
-            'sendEmailVerification'
-        >,
+        private notificationGateway: Pick<INotificationGateway, 'sendEmail'>,
     ) {}
 
     async execute(data: SignUpInput) {
@@ -39,9 +37,11 @@ export class SignUpUseCase {
 
         await this.usersRepository.save(user)
 
-        await this.notificationGateway.sendEmailVerification(
+        await this.notificationGateway.sendEmail(
             data.email,
-            user.getEmailVerificationCode()!,
+            from,
+            subject,
+            buildHtml(user.getEmailVerificationCode()!),
         )
 
         const googleUser = await this.usersRepository.getByExternalAccountEmail(

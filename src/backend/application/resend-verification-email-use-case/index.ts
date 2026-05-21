@@ -1,14 +1,15 @@
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { INotificationGateway } from './interfaces/inotification-gateway'
-import { AuthenticationError } from '../domain/error/authentication-error'
+import { IUsersRepository } from '../interfaces/repository/iusers-repository'
+import { INotificationGateway } from '../interfaces/inotification-gateway'
+import { AuthenticationError } from '../../domain/error/authentication-error'
 import {
     ForbiddenError,
     FORBIDDEN_ERROR_TYPE,
-} from '../domain/error/forbidden-error'
+} from '../../domain/error/forbidden-error'
 import {
     VALIDATION_ERROR_TYPE,
     ValidationError,
-} from '../domain/error/validation-error'
+} from '../../domain/error/validation-error'
+import { from, subject, buildHtml } from './email-template'
 
 interface Input {
     email: string
@@ -20,10 +21,7 @@ export class ResendVerificationEmailUseCase {
             IUsersRepository,
             'getByEmail' | 'update'
         >,
-        private notificationGateway: Pick<
-            INotificationGateway,
-            'sendEmailVerification'
-        >,
+        private notificationGateway: Pick<INotificationGateway, 'sendEmail'>,
     ) {}
 
     async execute({ email }: Input) {
@@ -49,9 +47,11 @@ export class ResendVerificationEmailUseCase {
 
         await this.usersRepository.update(user)
 
-        await this.notificationGateway.sendEmailVerification(
+        await this.notificationGateway.sendEmail(
             email,
-            user.getEmailVerificationCode()!,
+            from,
+            subject,
+            buildHtml(user.getEmailVerificationCode()!),
         )
     }
 }

@@ -1,14 +1,10 @@
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { INotificationGateway } from './interfaces/inotification-gateway'
-import { AuthenticationError } from '../domain/error/authentication-error'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
+import { IUsersRepository } from '../interfaces/repository/iusers-repository'
+import { INotificationGateway } from '../interfaces/inotification-gateway'
 import {
     NOT_FOUND_ERROR_TYPE,
     NotFoundError,
-} from '../domain/error/not-found-error'
+} from '../../domain/error/not-found-error'
+import { from, subject, buildHtml } from './email-template'
 
 interface Input {
     email: string
@@ -20,10 +16,7 @@ export class RequestPasswordResetUseCase {
             IUsersRepository,
             'getByEmail' | 'update'
         >,
-        private notificationGateway: Pick<
-            INotificationGateway,
-            'sendResetPasswordCode'
-        >,
+        private notificationGateway: Pick<INotificationGateway, 'sendEmail'>,
     ) {}
 
     async execute({ email }: Input) {
@@ -37,9 +30,11 @@ export class RequestPasswordResetUseCase {
 
         await this.usersRepository.update(user)
 
-        await this.notificationGateway.sendResetPasswordCode(
+        await this.notificationGateway.sendEmail(
             email,
-            user.getResetPasswordCode()!,
+            from,
+            subject,
+            buildHtml(user.getResetPasswordCode()!),
         )
     }
 }

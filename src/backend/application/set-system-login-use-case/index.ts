@@ -1,10 +1,11 @@
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { INotificationGateway } from './interfaces/inotification-gateway'
-import { AuthenticationError } from '../domain/error/authentication-error'
+import { IUsersRepository } from '../interfaces/repository/iusers-repository'
+import { INotificationGateway } from '../interfaces/inotification-gateway'
+import { AuthenticationError } from '../../domain/error/authentication-error'
 import {
     CONFLICT_ERROR_TYPE,
     ConflictError,
-} from '../domain/error/conflict-error'
+} from '../../domain/error/conflict-error'
+import { from, subject, buildHtml } from './email-template'
 
 interface Input {
     userId: string
@@ -18,10 +19,7 @@ export class SetSystemLoginUseCase {
             IUsersRepository,
             'getById' | 'getByEmail' | 'update'
         >,
-        private notificationGateway: Pick<
-            INotificationGateway,
-            'sendEmailVerification'
-        >,
+        private notificationGateway: Pick<INotificationGateway, 'sendEmail'>,
     ) {}
 
     async execute({ userId, email, passwordPlain }: Input) {
@@ -44,9 +42,11 @@ export class SetSystemLoginUseCase {
 
         const emailVerificationCode = user.getEmailVerificationCode()
         if (emailVerificationCode) {
-            await this.notificationGateway.sendEmailVerification(
+            await this.notificationGateway.sendEmail(
                 email,
-                emailVerificationCode,
+                from,
+                subject,
+                buildHtml(emailVerificationCode),
             )
         }
     }

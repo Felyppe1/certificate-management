@@ -1,10 +1,11 @@
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { INotificationGateway } from './interfaces/inotification-gateway'
-import { AuthenticationError } from '../domain/error/authentication-error'
+import { IUsersRepository } from '../interfaces/repository/iusers-repository'
+import { INotificationGateway } from '../interfaces/inotification-gateway'
+import { AuthenticationError } from '../../domain/error/authentication-error'
 import {
     ConflictError,
     CONFLICT_ERROR_TYPE,
-} from '../domain/error/conflict-error'
+} from '../../domain/error/conflict-error'
+import { from, subject, buildHtml } from './email-template'
 
 interface Input {
     userId: string
@@ -17,10 +18,7 @@ export class RequestEmailChangeUseCase {
             IUsersRepository,
             'getById' | 'getByEmail' | 'update'
         >,
-        private notificationGateway: Pick<
-            INotificationGateway,
-            'sendEmailVerification'
-        >,
+        private notificationGateway: Pick<INotificationGateway, 'sendEmail'>,
     ) {}
 
     async execute({ userId, newEmail }: Input) {
@@ -44,9 +42,11 @@ export class RequestEmailChangeUseCase {
         const emailChangeCode = user.getEmailChangeCode()
 
         if (emailChangeCode) {
-            await this.notificationGateway.sendEmailVerification(
+            await this.notificationGateway.sendEmail(
                 newEmail,
-                emailChangeCode,
+                from,
+                subject,
+                buildHtml(emailChangeCode),
             )
         }
     }

@@ -1,6 +1,8 @@
 export interface INotificationGateway {
-    sendEmailVerification(email: string, code: string): Promise<void>
-    sendResetPasswordCode(email: string, code: string): Promise<void>
-    sendAccessRequest(email: string): Promise<void>
-    sendAccessGranted(email: string): Promise<void>
+    sendEmail(
+        to: string,
+        from: string,
+        subject: string,
+        html: string,
+    ): Promise<void>
 }
