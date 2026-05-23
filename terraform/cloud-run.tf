@@ -26,9 +26,11 @@ resource "google_cloud_run_v2_service" "app" {
 
       resources {
         limits = {
-          cpu    = "2"
-          memory = "1Gi"
+          cpu    = "1"
+          memory = "512Mi"
         }
+
+        cpu_idle = true # false = Instance billing | true = Request billing
       }
 
       dynamic "env" {
@@ -76,7 +78,7 @@ resource "google_cloud_run_v2_service" "app" {
       }
     }
 
-    timeout = "1000s"
+    timeout = "300s"
   }
 
   traffic {
