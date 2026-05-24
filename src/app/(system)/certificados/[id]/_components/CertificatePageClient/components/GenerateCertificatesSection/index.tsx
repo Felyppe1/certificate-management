@@ -45,7 +45,15 @@ export function GenerateCertificatesSection({
     emailSent,
 }: GenerateCertificatesSectionProps) {
     const queryClient = useQueryClient()
-    const [completedRows, setCompletedRows] = useState(0)
+    const [completedRows, setCompletedRows] = useState(() => {
+        const hasRunning = rows.some(
+            row => row.processingStatus === PROCESSING_STATUS_ENUM.RUNNING,
+        )
+        if (!hasRunning) return 0
+        return rows.filter(
+            row => row.processingStatus === PROCESSING_STATUS_ENUM.COMPLETED,
+        ).length
+    })
     const [retryCompletedRows, setRetryCompletedRows] = useState(0)
     const [totalRetryingRows, setTotalRetryingRows] = useState(0)
 
@@ -170,6 +178,26 @@ export function GenerateCertificatesSection({
             })
         }
     }, [completedRows, totalRows])
+
+    // Sync completedRows upward when server data (from polling) reports more completions
+    // than SSE events alone. Guard on isGenerating to avoid a spurious completion toast
+    // when the page re-mounts after generation is already done.
+    useEffect(() => {
+        if (!isGenerating) return
+        setCompletedRows(prev => Math.max(prev, successRows))
+    }, [successRows])
+
+    // Poll server every 3 s while generating to catch SSE events missed during
+    // navigation or connection gaps.
+    useEffect(() => {
+        if (!isGenerating) return
+        const interval = setInterval(() => {
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmission(certificateId),
+            })
+        }, 3000)
+        return () => clearInterval(interval)
+    }, [isGenerating, certificateId, queryClient])
 
     // Handle retry completion
     useEffect(() => {
