@@ -21,7 +21,7 @@ resource "google_cloud_scheduler_job" "reset_daily_credits" {
 
     oidc_token {
       service_account_email = google_service_account.app_service_account.email
-      audience              = google_cloud_run_v2_service.app.uri
+      audience              = "https://certificate-management${local.suffix}-${data.google_project.project.number}.${var.region}.run.app"
     }
   }
 }
