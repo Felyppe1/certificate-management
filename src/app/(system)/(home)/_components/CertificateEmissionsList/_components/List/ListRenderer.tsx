@@ -1,8 +1,10 @@
 'use client'
 
-import { CertificateEmissionsResponse } from '@/api-calls/fetch-certificate-emissions'
+import { GetCertificateEmissionsResponse } from '@/app/api/certificate-emissions/route'
 import { Badge } from '@/components/ui/badge'
 import { useCertificatesStore } from '@/lib/certificatesStore'
+import { queryKeys } from '@/lib/query-keys'
+import { useQueryClient } from '@tanstack/react-query'
 import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 
@@ -13,9 +15,10 @@ export const STATUS_MAPPING = {
     EMITTED: 'Emitido',
 }
 
-interface ListRendererProps extends CertificateEmissionsResponse {}
+interface ListRendererProps extends GetCertificateEmissionsResponse {}
 
 export function ListRenderer({ certificateEmissions }: ListRendererProps) {
+    const queryClient = useQueryClient()
     const inputValue = useCertificatesStore(state => state.inputValue)
 
     const filteredEmissions = certificateEmissions.filter((certificate: any) =>
@@ -111,6 +114,20 @@ export function ListRenderer({ certificateEmissions }: ListRendererProps) {
                     </Link>
                 </li>
             ))}
+
+            <button
+                className="opacity-0"
+                onClick={() => {
+                    queryClient.invalidateQueries({
+                        queryKey: queryKeys.certificateEmissions(),
+                    })
+                    queryClient.invalidateQueries({
+                        queryKey: queryKeys.certificateEmissionsMetrics(),
+                    })
+                }}
+            >
+                Invalidar
+            </button>
         </ul>
     )
 }

@@ -1,4 +1,4 @@
-import { fetchMe } from '@/api-calls/fetch-me'
+import { getMeAction } from '@/backend/infrastructure/server-actions/get-me-action'
 import { Header } from './_components/Header'
 import { Toast } from '@/components/Toast'
 import { BackgroundBubbles } from '@/components/BackgroundBubbles'
@@ -8,7 +8,6 @@ import {
     QueryClient,
 } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
-import { prefetchOrRedirect } from '@/utils/prefetchOrRedirect'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,10 +18,9 @@ interface SystemLayoutProps {
 export default async function Layout({ children }: SystemLayoutProps) {
     const queryClient = new QueryClient()
 
-    await prefetchOrRedirect(queryClient, {
-        queryKey: queryKeys.me(),
-        queryFn: fetchMe,
-    })
+    const { user } = await getMeAction()
+
+    queryClient.setQueryData(queryKeys.me(), { user })
 
     return (
         <HydrationBoundary state={dehydrate(queryClient)}>

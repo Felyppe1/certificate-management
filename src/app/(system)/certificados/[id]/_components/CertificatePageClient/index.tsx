@@ -21,10 +21,6 @@ export function CertificatePageClient({
         useCertificateEmission(certificateId)
     const { data: meResponse } = useMe()
 
-    if (!certificateEmissionResponse || !meResponse) {
-        return null
-    }
-
     const googleAccount = meResponse.user.externalAccounts.find(
         externalAccount => externalAccount.provider === 'GOOGLE',
     )

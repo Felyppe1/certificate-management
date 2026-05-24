@@ -9,7 +9,7 @@ import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken
 import { createCertificateEmissionSchema } from '@/backend/infrastructure/server-actions/schemas'
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 
-export interface GetAllCertificateEmissionsControllerResponse {
+export interface GetCertificateEmissionsResponse {
     certificateEmissions: {
         id: string
         name: string
@@ -22,9 +22,7 @@ export interface GetAllCertificateEmissionsControllerResponse {
 export async function GET(
     request: NextRequest,
 ): Promise<
-    NextResponse<
-        GetAllCertificateEmissionsControllerResponse | HandleErrorResponse
-    >
+    NextResponse<GetCertificateEmissionsResponse | HandleErrorResponse>
 > {
     try {
         const { userId } = await validateSessionToken(request)

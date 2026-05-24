@@ -2,14 +2,8 @@
 
 import { useCertificateEmissionsMetrics } from '@/custom-hooks/use-certificate-emissions-metrics'
 import { Card } from '@/components/ui/card'
-import { Clock } from 'lucide-react'
 import { MetricsSkeleton } from './MetricsSkeleton'
 import { MetricChart, MetricChartDataPoint } from './MetricChart'
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover'
 
 function formatDate(isoDate: string): string {
     const d = new Date(isoDate)
@@ -26,20 +20,18 @@ export function Metrics() {
     const { certificateEmissionsMetrics } = data
 
     const certificatesChartData: MetricChartDataPoint[] =
-        certificateEmissionsMetrics.dailyCertificates.map(
-            (d: { date: string; quantity: number }) => ({
-                date: formatDate(d.date),
+        certificateEmissionsMetrics.dailyCertificates.map(d => {
+            return {
+                date: formatDate(String(d.date)),
                 value: d.quantity,
-            }),
-        )
+            }
+        })
 
     const emailsChartData: MetricChartDataPoint[] =
-        certificateEmissionsMetrics.dailyEmails.map(
-            (d: { date: string; quantity: number }) => ({
-                date: formatDate(d.date),
-                value: d.quantity,
-            }),
-        )
+        certificateEmissionsMetrics.dailyEmails.map(d => ({
+            date: formatDate(String(d.date)),
+            value: d.quantity,
+        }))
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-3 md:gap-6 mb-4 sm:mb-6 md:mb-10">

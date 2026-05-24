@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 
-export interface GetMeControllerResponse {
+export interface GetMeResponse {
     user: {
         id: string
         email: string | null
@@ -29,7 +29,7 @@ export interface GetMeControllerResponse {
 
 export async function GET(
     request: NextRequest,
-): Promise<NextResponse<GetMeControllerResponse | HandleErrorResponse>> {
+): Promise<NextResponse<GetMeResponse | HandleErrorResponse>> {
     try {
         const { userId } = await validateSessionToken(request)
 

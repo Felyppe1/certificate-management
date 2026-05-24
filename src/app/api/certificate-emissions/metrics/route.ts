@@ -8,7 +8,7 @@ import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { NextRequest, NextResponse } from 'next/server'
 
-export interface GetCertificateEmissionsMetricsControllerResponse {
+export interface GetCertificateEmissionsMetricsResponse {
     certificateEmissionsMetrics: {
         totalCertificatesGenerated: number
         totalEmailsSent: number
@@ -20,9 +20,7 @@ export interface GetCertificateEmissionsMetricsControllerResponse {
 export async function GET(
     request: NextRequest,
 ): Promise<
-    NextResponse<
-        GetCertificateEmissionsMetricsControllerResponse | HandleErrorResponse
-    >
+    NextResponse<GetCertificateEmissionsMetricsResponse | HandleErrorResponse>
 > {
     try {
         const { userId } = await validateSessionToken(request)

@@ -23,7 +23,7 @@ import { PROCESSING_STATUS_ENUM as DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM } from
 import { ColumnType } from '@/backend/domain/data-source-column'
 import { gcpStorage } from '@/backend/infrastructure/cloud/gcp'
 
-export interface GetCertificateEmissionControllerResponse {
+export interface GetCertificateEmissionResponse {
     certificateEmission: {
         id: string
         name: string
@@ -77,9 +77,7 @@ export interface GetCertificateEmissionControllerResponse {
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ certificateEmissionId: string }> },
-): Promise<
-    NextResponse<GetCertificateEmissionControllerResponse | HandleErrorResponse>
-> {
+): Promise<NextResponse<GetCertificateEmissionResponse | HandleErrorResponse>> {
     const { certificateEmissionId } = await params
 
     try {

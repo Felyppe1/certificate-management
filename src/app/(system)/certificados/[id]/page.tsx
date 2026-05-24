@@ -1,4 +1,3 @@
-import { fetchCertificateEmission } from '@/api-calls/fetch-certificate-emission'
 import {
     dehydrate,
     HydrationBoundary,
@@ -7,7 +6,7 @@ import {
 import { queryKeys } from '@/lib/query-keys'
 import { CertificatePageClient } from './_components/CertificatePageClient'
 import { Metadata } from 'next'
-import { prefetchOrRedirect } from '@/utils/prefetchOrRedirect'
+import { getCertificateEmissionAction } from '@/backend/infrastructure/server-actions/get-certificate-emission-action'
 
 export const metadata: Metadata = {
     title: 'Detalhes da Emissão',
@@ -22,9 +21,11 @@ export default async function CertificatePage({
 
     const queryClient = new QueryClient()
 
-    await prefetchOrRedirect(queryClient, {
-        queryKey: queryKeys.certificateEmission(certificateId),
-        queryFn: () => fetchCertificateEmission(certificateId),
+    const { certificateEmission } =
+        await getCertificateEmissionAction(certificateId)
+
+    queryClient.setQueryData(queryKeys.certificateEmission(certificateId), {
+        certificateEmission,
     })
 
     return (

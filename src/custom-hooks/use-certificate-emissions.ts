@@ -1,46 +1,29 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
-import { CertificateEmissionsResponse } from '@/api-calls/fetch-certificate-emissions'
-import { notFound, redirect } from 'next/navigation'
-import { env } from '@/env'
+import { GetCertificateEmissionsResponse } from '@/app/api/certificate-emissions/route'
+import { ApiError } from '@/app/api/_utils/api-error'
 
-async function fetchCertificateEmissionsClient(): Promise<CertificateEmissionsResponse> {
-    const response = await fetch(
-        `${env.NEXT_PUBLIC_BASE_URL}/api/certificate-emissions`,
-    )
+async function fetchCertificateEmissionsClient(): Promise<GetCertificateEmissionsResponse> {
+    const response = await fetch('/api/certificate-emissions')
+
+    const data = await response.json()
 
     if (!response.ok) {
-        const errorData = await response.json()
-
-        const errorType =
-            errorData.type !== 'about:blank' ? errorData.type : null
-
-        if (response.status === 404) {
-            notFound()
-        }
-
-        if (response.status === 403) {
-            const query = errorType ? `?error=${errorType}` : ''
-            redirect(`/${query}`)
-        }
-
-        if (response.status === 401) {
-            const query = errorType ? `?error=${errorType}` : ''
-            redirect(`/entrar${query}`)
-        }
-
-        throw {
-            statusCode: response.status,
-            body: errorData,
-        }
+        throw new ApiError(response.status, data)
     }
 
-    return response.json()
+    return data
 }
 
 export function useCertificateEmissions() {
-    return useSuspenseQuery({
+    const result = useSuspenseQuery({
         queryKey: queryKeys.certificateEmissions(),
         queryFn: fetchCertificateEmissionsClient,
     })
+
+    if (result.isError) {
+        throw result.error
+    }
+
+    return result
 }

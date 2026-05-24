@@ -6,10 +6,9 @@ import {
     QueryClient,
 } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
-import { fetchCertificateEmissions } from '@/api-calls/fetch-certificate-emissions'
-import { fetchCertificateEmissionsMetricsByUser } from '@/api-calls/fetch-certificate-emissions-metrics-by-user'
 import { Metadata } from 'next'
-import { prefetchOrRedirect } from '@/utils/prefetchOrRedirect'
+import { getCertificateEmissionsAction } from '@/backend/infrastructure/server-actions/get-all-certificate-emissions-action'
+import { getCertificateEmissionsMetricsAction } from '@/backend/infrastructure/server-actions/get-certificate-emissions-metrics-action'
 
 export const metadata: Metadata = {
     title: 'Início',
@@ -18,16 +17,16 @@ export const metadata: Metadata = {
 export default async function Home() {
     const queryClient = new QueryClient()
 
-    await Promise.all([
-        prefetchOrRedirect(queryClient, {
-            queryKey: queryKeys.certificateEmissions(),
-            queryFn: fetchCertificateEmissions,
-        }),
-        prefetchOrRedirect(queryClient, {
-            queryKey: queryKeys.certificateEmissionsMetrics(),
-            queryFn: fetchCertificateEmissionsMetricsByUser,
-        }),
+    const [certificateEmissionsResult, metrics] = await Promise.all([
+        getCertificateEmissionsAction(),
+        getCertificateEmissionsMetricsAction(),
     ])
+
+    queryClient.setQueryData(
+        queryKeys.certificateEmissions(),
+        certificateEmissionsResult,
+    )
+    queryClient.setQueryData(queryKeys.certificateEmissionsMetrics(), metrics)
 
     return (
         <HydrationBoundary state={dehydrate(queryClient)}>
