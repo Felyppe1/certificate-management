@@ -1,13 +1,7 @@
 import { CERTIFICATE_STATUS } from '../domain/certificate'
 import { DATA_SOURCE_MIME_TYPE } from '../domain/data-source'
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 import { INPUT_METHOD } from '../domain/certificate'
 import { TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
 import { prisma } from '../infrastructure/repository/prisma'
@@ -64,11 +58,11 @@ export class GetCertificateEmissionUseCase {
             },
         )
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         if (certificateEmission.user_id !== userId) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         let rows: {

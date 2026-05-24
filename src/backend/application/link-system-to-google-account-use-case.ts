@@ -2,15 +2,9 @@ import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { Session } from '../domain/session'
-import { AuthenticationError } from '../domain/error/authentication-error'
-import {
-    NotFoundError,
-    NOT_FOUND_ERROR_TYPE,
-} from '../domain/error/not-found-error'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
+import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
+import { ExternalAccountNotFoundError } from '../domain/error/not-found-error/external-account-not-found-error'
+import { SystemLoginNotEnabledError } from '../domain/error/validation-error/system-login-not-enabled-error'
 
 interface LinkSystemToGoogleAccountUseCaseInput {
     currentUserId: string
@@ -30,13 +24,11 @@ export class LinkSystemToGoogleAccountUseCase {
         const systemUser = await this.usersRepository.getById(currentUserId)
 
         if (!systemUser) {
-            throw new AuthenticationError('user-not-found')
+            throw new UserNotFoundError()
         }
 
         if (!systemUser.hasSystemLogin()) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED,
-            )
+            throw new SystemLoginNotEnabledError()
         }
 
         const googleUser = await this.usersRepository.getByExternalAccountEmail(
@@ -45,7 +37,7 @@ export class LinkSystemToGoogleAccountUseCase {
         )
 
         if (!googleUser) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.EXTERNAL_ACCOUNT)
+            throw new ExternalAccountNotFoundError()
         }
 
         googleUser.linkSystemAccountWithSameEmail(

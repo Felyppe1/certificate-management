@@ -1,22 +1,18 @@
 import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
-
+import { AppError } from '@/backend/domain/error/app-error'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import { ConflictError } from '@/backend/domain/error/conflict-error'
-import { ForbiddenError } from '@/backend/domain/error/forbidden-error'
-import { NotFoundError } from '@/backend/domain/error/not-found-error'
-import { ValidationError } from '@/backend/domain/error/validation-error'
 import { NextResponse } from 'next/server'
 import z from 'zod'
 
 export interface HandleErrorResponse {
     type: string
     title: string
+    status: number
     detail?: string
     errors?: {
         detail: string
         pointer: string
     }[]
-    pointers?: string[]
 }
 
 export async function handleError(error: any) {
@@ -29,6 +25,7 @@ export async function handleError(error: any) {
             {
                 type: 'validation-error',
                 title: 'Your request is not valid',
+                status: 400,
                 detail: 'The data provided is not valid',
                 errors: error.issues.map(issue => {
                     return {
@@ -40,11 +37,28 @@ export async function handleError(error: any) {
             { status: 400 },
         )
     }
-    if (error instanceof AuthenticationError) {
-        const response = NextResponse.json(
-            { type: error.type, title: error.title, detail: error.detail },
-            { status: 401 },
+
+    if (!(error instanceof AppError)) {
+        return NextResponse.json(
+            {
+                type: 'about:blank',
+                title: 'Internal Server Error',
+                status: 500,
+            },
+            { status: 500 },
         )
+    }
+
+    const body = {
+        type: error.type,
+        title: error.message,
+        detail: error.detail,
+        status: error.status,
+        ...error.extensions,
+    }
+
+    if (error instanceof AuthenticationError) {
+        const response = NextResponse.json(body, { status: error.status })
         response.cookies.delete({
             name: SESSION_COOKIE_NAME,
             path: '/',
@@ -52,42 +66,6 @@ export async function handleError(error: any) {
         })
         return response
     }
-    if (error instanceof ForbiddenError) {
-        return NextResponse.json(
-            { type: error.type, title: error.title, detail: error.detail },
-            { status: 403 },
-        )
-    }
-    if (error instanceof NotFoundError) {
-        return NextResponse.json(
-            { type: error.type, title: error.title, detail: error.detail },
-            { status: 404 },
-        )
-    }
-    if (error instanceof ConflictError) {
-        return NextResponse.json(
-            {
-                type: error.type,
-                title: error.title,
-                detail: error.detail,
-                pointers: error.pointers,
-            },
-            { status: 409 },
-        )
-    }
-    if (error instanceof ValidationError) {
-        return NextResponse.json(
-            { type: error.type, title: error.title, detail: error.detail },
-            { status: 422 },
-        )
-    }
 
-    return NextResponse.json(
-        {
-            type: 'about:blank',
-            title: 'An internal error occurred',
-            detail: error.message as string,
-        },
-        { status: 500 },
-    )
+    return NextResponse.json(body, { status: error.status })
 }

@@ -1,20 +1,12 @@
 import { env } from '@/env'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
+import { DataSourceRowNotFoundError } from '../domain/error/not-found-error/data-source-row-not-found-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { PROCESSING_STATUS_ENUM } from '../domain/data-source-row'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
+import { CertificateNotGeneratedError } from '../domain/error/validation-error/certificate-not-generated-error'
 
 interface DownloadCertificateEmissionUseCaseInput {
     userId: string
@@ -35,7 +27,7 @@ export class DownloadCertificateEmissionUseCase {
         const row = await this.dataSourceRowsRepository.getById(input.rowId)
 
         if (!row) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE_ROW)
+            throw new DataSourceRowNotFoundError()
         }
 
         const certificateEmission = await this.certificateRepository.getById(
@@ -43,17 +35,15 @@ export class DownloadCertificateEmissionUseCase {
         )
 
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         if (!certificateEmission.isOwner(input.userId)) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         if (row.getProcessingStatus() !== PROCESSING_STATUS_ENUM.COMPLETED) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.CERTIFICATE_NOT_GENERATED,
-            )
+            throw new CertificateNotGeneratedError()
         }
 
         const bucketName = env.CERTIFICATES_BUCKET

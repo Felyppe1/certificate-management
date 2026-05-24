@@ -1,10 +1,8 @@
 import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { AuthenticationError } from '../domain/error/authentication-error'
-import {
-    ConflictError,
-    CONFLICT_ERROR_TYPE,
-} from '../domain/error/conflict-error'
+import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
+import { InsufficientExternalAccountScopesError } from '../domain/error/authentication-error/insufficient-external-account-scopes-error'
+import { ExternalAccountAlreadyExistsError } from '../domain/error/conflict-error/external-account-already-exists-error'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { User } from '../domain/user'
@@ -40,7 +38,7 @@ export class LoginGoogleUseCase {
         if (userId) {
             authenticatedUser = await this.usersRepository.getById(userId)
             if (!authenticatedUser) {
-                throw new AuthenticationError('user-not-found')
+                throw new UserNotFoundError()
             }
         }
 
@@ -55,9 +53,7 @@ export class LoginGoogleUseCase {
         ].every(scope => tokenData.scopes.includes(scope))
 
         if (!hasAllScopes) {
-            throw new AuthenticationError(
-                'insufficient-external-account-scopes',
-            )
+            throw new InsufficientExternalAccountScopesError()
         }
 
         const userInfo = await this.googleAuthGateway.getUserInfo({
@@ -80,9 +76,7 @@ export class LoginGoogleUseCase {
                 existingOwner &&
                 existingOwner.getId() !== authenticatedUser.getId()
             ) {
-                throw new ConflictError(
-                    CONFLICT_ERROR_TYPE.EXTERNAL_ACCOUNT_ALREADY_EXISTS,
-                )
+                throw new ExternalAccountAlreadyExistsError()
             }
 
             user = authenticatedUser

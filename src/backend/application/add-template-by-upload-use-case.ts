@@ -1,15 +1,7 @@
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
+import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
+import { UnsupportedTemplateMimetypeError } from '../domain/error/validation-error/unsupported-template-mimetype-error'
 import { INPUT_METHOD } from '../domain/certificate'
 import { Template } from '../domain/template'
 import { IBucket } from './interfaces/cloud/ibucket'
@@ -56,23 +48,21 @@ export class AddTemplateByUploadUseCase {
         )
 
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         if (!certificateEmission.isOwner(input.userId)) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         if (certificateEmission.isEmitted()) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
+            throw new CertificateEmittedError()
         }
 
         const fileMimeType = input.file.type
 
         if (!Template.isValidFileMimeType(fileMimeType)) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE,
-            )
+            throw new UnsupportedTemplateMimetypeError()
         }
 
         const bytes = await input.file.arrayBuffer()

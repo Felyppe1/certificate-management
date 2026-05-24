@@ -1,9 +1,6 @@
 import { Liquid } from 'liquidjs'
 import { IStringVariableExtractor } from '@/backend/application/interfaces/istring-variable-extractor'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '@/backend/domain/error/validation-error'
+import { TemplateVariablesParsingError } from '@/backend/domain/error/validation-error/template-variables-parsing-error'
 
 export class LiquidStringVariableExtractor implements IStringVariableExtractor {
     private engine = new Liquid()
@@ -35,9 +32,7 @@ export class LiquidStringVariableExtractor implements IStringVariableExtractor {
                 variable => !localVariables.has(variable),
             )
         } catch (error) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.TEMPLATE_VARIABLES_PARSING_ERROR,
-            )
+            throw new TemplateVariablesParsingError()
         }
     }
 }

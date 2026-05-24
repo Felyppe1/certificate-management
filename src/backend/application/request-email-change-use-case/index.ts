@@ -1,10 +1,7 @@
 import { IUsersRepository } from '../interfaces/repository/iusers-repository'
 import { INotificationGateway } from '../interfaces/inotification-gateway'
-import { AuthenticationError } from '../../domain/error/authentication-error'
-import {
-    ConflictError,
-    CONFLICT_ERROR_TYPE,
-} from '../../domain/error/conflict-error'
+import { UserNotFoundError } from '../../domain/error/authentication-error/user-not-found-error'
+import { EmailUnavailableError } from '../../domain/error/conflict-error/email-unavailable-error'
 import { from, subject, buildHtml } from './email-template'
 
 interface Input {
@@ -25,14 +22,14 @@ export class RequestEmailChangeUseCase {
         const user = await this.usersRepository.getById(userId)
 
         if (!user) {
-            throw new AuthenticationError('user-not-found')
+            throw new UserNotFoundError()
         }
 
         const existingUserWithEmail =
             await this.usersRepository.getByEmail(newEmail)
 
         if (existingUserWithEmail && existingUserWithEmail.getId() !== userId) {
-            throw new ConflictError(CONFLICT_ERROR_TYPE.EMAIL_UNAVAILABLE)
+            throw new EmailUnavailableError()
         }
 
         user.changeEmail(newEmail)

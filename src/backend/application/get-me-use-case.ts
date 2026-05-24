@@ -1,4 +1,4 @@
-import { AuthenticationError } from '../domain/error/authentication-error'
+import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
 
 interface GetMeUseCaseInput {
@@ -12,7 +12,7 @@ export class GetMeUseCase {
         const user = await this.usersRepository.getById(input.userId)
 
         if (!user) {
-            throw new AuthenticationError('user-not-found')
+            throw new UserNotFoundError()
         }
 
         const serializedUser = user.serialize()

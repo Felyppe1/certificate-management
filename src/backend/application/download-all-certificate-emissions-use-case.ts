@@ -1,17 +1,8 @@
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
+import { CertificatesNotGeneratedError } from '../domain/error/validation-error/certificates-not-generated-error'
 
 import archiver from 'archiver' // TODO: dependency inversion
 import { PassThrough } from 'stream'
@@ -39,11 +30,11 @@ export class DownloadAllCertificateEmissionsUseCase {
         )
 
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         if (!certificateEmission.isOwner(input.userId)) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         const allRowsFinishedProcessing =
@@ -52,9 +43,7 @@ export class DownloadAllCertificateEmissionsUseCase {
             )
 
         if (!allRowsFinishedProcessing) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.CERTIFICATES_NOT_GENERATED,
-            )
+            throw new CertificatesNotGeneratedError()
         }
 
         const bucketName = env.CERTIFICATES_BUCKET

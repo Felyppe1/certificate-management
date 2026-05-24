@@ -1,7 +1,4 @@
-import {
-    CONFLICT_ERROR_TYPE,
-    ConflictError,
-} from '../../domain/error/conflict-error'
+import { UserAlreadyExistsError } from '../../domain/error/conflict-error/user-already-exists-error'
 import { IUsersRepository } from '../interfaces/repository/iusers-repository'
 import { INotificationGateway } from '../interfaces/inotification-gateway'
 import { User } from '../../domain/user'
@@ -26,7 +23,7 @@ export class SignUpUseCase {
         const userExists = await this.usersRepository.getByEmail(data.email)
 
         if (userExists) {
-            throw new ConflictError(CONFLICT_ERROR_TYPE.USER)
+            throw new UserAlreadyExistsError()
         }
 
         const user = await User.create({

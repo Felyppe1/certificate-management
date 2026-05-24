@@ -8,7 +8,7 @@ import {
     TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION,
 } from './template'
 import { TemplateSetDomainEvent } from './events/template-set-domain-event'
-import { FORBIDDEN_ERROR_TYPE, ForbiddenError } from './error/forbidden-error'
+import { NotCertificateOwnerError } from './error/forbidden-error/not-certificate-owner-error'
 import {
     DataSource,
     DataSourceOutput,
@@ -16,7 +16,8 @@ import {
     DATA_SOURCE_MIME_TYPE,
     DataSourceFileReference,
 } from './data-source'
-import { NOT_FOUND_ERROR_TYPE, NotFoundError } from './error/not-found-error'
+import { TemplateNotFoundError } from './error/not-found-error/template-not-found-error'
+import { DataSourceNotFoundError } from './error/not-found-error/data-source-not-found-error'
 import { DataSourceSetDomainEvent } from './events/data-source-set-domain-event'
 import { DataSourceColumnInput } from './data-source-column'
 // import { Email, EmailOutput } from './email'
@@ -258,11 +259,11 @@ export class CertificateEmission extends AggregateRoot {
 
     removeTemplate(userIdTryingToRemove: string) {
         if (this.userId !== userIdTryingToRemove) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         if (!this.template) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
+            throw new TemplateNotFoundError()
         }
 
         this.template = null
@@ -296,7 +297,7 @@ export class CertificateEmission extends AggregateRoot {
 
     setTemplateStorageFileUrl(url: string) {
         if (!this.template) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
+            throw new TemplateNotFoundError()
         }
 
         this.template = this.template.setStorageFileUrl(url)
@@ -304,7 +305,7 @@ export class CertificateEmission extends AggregateRoot {
 
     setTemplateThumbnailUrl(url: string) {
         if (!this.template) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
+            throw new TemplateNotFoundError()
         }
 
         this.template = this.template.setThumbnailUrl(url)
@@ -312,7 +313,7 @@ export class CertificateEmission extends AggregateRoot {
 
     getTemplateStorageFileUrl() {
         if (!this.template) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
+            throw new TemplateNotFoundError()
         }
         return this.template.getStorageFileUrl()
     }
@@ -336,7 +337,7 @@ export class CertificateEmission extends AggregateRoot {
 
     updateDataSourceColumns(columns: DataSourceColumnInput[]): string[] {
         if (!this.dataSource) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
+            throw new DataSourceNotFoundError()
         }
 
         const { dataSource, unsafeColumnNames } =
@@ -395,7 +396,7 @@ export class CertificateEmission extends AggregateRoot {
 
     setDataSourceStorageFileUrl(url: string) {
         if (!this.dataSource) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
+            throw new DataSourceNotFoundError()
         }
 
         this.dataSource = this.dataSource.setStorageFileUrl(url)
@@ -407,7 +408,7 @@ export class CertificateEmission extends AggregateRoot {
         newInputMethod: INPUT_METHOD,
     ) {
         if (!this.dataSource) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
+            throw new DataSourceNotFoundError()
         }
 
         this.dataSource = this.dataSource.replaceWithSpreadsheet(
@@ -419,11 +420,11 @@ export class CertificateEmission extends AggregateRoot {
 
     removeDataSource(userIdTryingToRemove: string) {
         if (this.userId !== userIdTryingToRemove) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         if (!this.dataSource) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
+            throw new DataSourceNotFoundError()
         }
 
         this.dataSource = null

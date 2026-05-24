@@ -1,5 +1,5 @@
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { AuthenticationError } from '../domain/error/authentication-error'
+import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
 import { Provider } from '../domain/external-account'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 
@@ -18,7 +18,7 @@ export class UnlinkExternalAccountUseCase {
         const user = await this.usersRepository.getById(userId)
 
         if (!user) {
-            throw new AuthenticationError('user-not-found')
+            throw new UserNotFoundError()
         }
 
         const removedExternalAccount = user.removeExternalAccount(provider)

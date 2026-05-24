@@ -1,14 +1,9 @@
 import { env } from '@/env'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
+import { TemplateNotFoundError } from '../domain/error/not-found-error/template-not-found-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 
 interface DownloadTemplateUseCaseInput {
     userId: string
@@ -27,15 +22,15 @@ export class DownloadTemplateUseCase {
         )
 
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         if (!certificateEmission.isOwner(input.userId)) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         if (!certificateEmission.hasTemplate()) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
+            throw new TemplateNotFoundError()
         }
 
         const templateStorageFileUrl =

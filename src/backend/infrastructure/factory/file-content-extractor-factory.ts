@@ -1,8 +1,5 @@
 import { IFileContentExtractorStrategy } from '../../application/interfaces/ifile-content-extractor-factory'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../../domain/error/validation-error'
+import { UnsupportedTemplateMimetypeError } from '../../domain/error/validation-error/unsupported-template-mimetype-error'
 import { DocxContentExtractorStrategy } from './strategy/docx-content-extractor-strategy'
 import { PptxContentExtractorStrategy } from './strategy/pptx-content-extractor-strategy'
 import { IFileContentExtractorFactory } from '../../application/interfaces/ifile-content-extractor-factory'
@@ -28,8 +25,6 @@ export class FileContentExtractorFactory
             return new DocxContentExtractorStrategy()
         }
 
-        throw new ValidationError(
-            VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE,
-        )
+        throw new UnsupportedTemplateMimetypeError()
     }
 }

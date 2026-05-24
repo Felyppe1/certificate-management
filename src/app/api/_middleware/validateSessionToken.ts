@@ -1,6 +1,8 @@
 import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
 
-import { AuthenticationError } from '@/backend/domain/error/authentication-error'
+import { MissingSessionError } from '@/backend/domain/error/authentication-error/missing-session-error'
+import { SessionNotFoundError } from '@/backend/domain/error/authentication-error/session-not-found-error'
+import { SessionExpiredError } from '@/backend/domain/error/authentication-error/session-expired-error'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
 import { cookies } from 'next/headers'
@@ -21,7 +23,7 @@ export async function validateSessionToken(req?: NextRequest) {
     const sessionToken = bearerToken || cookieToken || null
 
     if (!sessionToken) {
-        throw new AuthenticationError('missing-session')
+        throw new MissingSessionError()
     }
 
     const sessionsRepository = new PrismaSessionsRepository(prisma)
@@ -29,11 +31,11 @@ export async function validateSessionToken(req?: NextRequest) {
     const session = await sessionsRepository.getById(sessionToken)
 
     if (!session) {
-        throw new AuthenticationError('session-not-found')
+        throw new SessionNotFoundError()
     }
 
     if (session.isExpired()) {
-        throw new AuthenticationError('session-expired')
+        throw new SessionExpiredError()
     }
 
     return { userId: session.getUserId(), token: session.getToken() }

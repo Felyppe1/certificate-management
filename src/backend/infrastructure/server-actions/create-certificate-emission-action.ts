@@ -9,10 +9,6 @@ import { logoutAction } from './logout-action'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { createCertificateEmissionSchema } from './schemas'
 import { redirect } from 'next/navigation'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '@/backend/domain/error/validation-error'
 
 export async function createCertificateEmissionAction(
     _: unknown,
@@ -47,15 +43,8 @@ export async function createCertificateEmissionAction(
         console.log(error)
 
         if (error instanceof AuthenticationError) {
-            if (
-                error.type === 'missing-session' ||
-                error.type === 'session-not-found' ||
-                error.type === 'session-expired' ||
-                error.type === 'user-not-found'
-            ) {
-                await logoutAction()
-                redirect(`/entrar?error=${error.type}`)
-            }
+            await logoutAction()
+            redirect(`/entrar?error=${error.type}`)
         }
 
         return {

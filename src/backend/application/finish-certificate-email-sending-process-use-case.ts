@@ -1,8 +1,6 @@
 import { EMAIL_ERROR_TYPE_ENUM, PROCESSING_STATUS_ENUM } from '../domain/email'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
+import { EmailNotFoundError } from '../domain/error/not-found-error/email-not-found-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IEmailsRepository } from './interfaces/repository/iemails-repository'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
@@ -32,7 +30,7 @@ export class FinishCertificateEmailSendingProcessUseCase {
         const email = await this.emailsRepository.getById(emailId)
 
         if (!email) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.EMAIL)
+            throw new EmailNotFoundError()
         }
 
         const certificateEmissionId = email.getCertificateEmissionId()
@@ -43,7 +41,7 @@ export class FinishCertificateEmailSendingProcessUseCase {
             )
 
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         email.setProcessingStatus(status)

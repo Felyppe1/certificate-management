@@ -29,20 +29,8 @@ export async function refreshGoogleAccessTokenAction() {
         }
     } catch (error: any) {
         if (error instanceof AuthenticationError) {
-            if (
-                error.type === 'missing-session' ||
-                error.type === 'session-not-found'
-            ) {
-                await logoutAction()
-                redirect(`/entrar?error=${error.type}`)
-            }
-
-            // TODO: como fazer para fazer login novamente pegando o refresh token por popup
-            // if (['external-account-not-found', 'google-token-refresh-failed'].includes(error.type)) {
-            //     return {
-            //         success: false,
-            //     }
-            // }
+            await logoutAction()
+            redirect(`/entrar?error=${error.type}`)
         }
 
         return {

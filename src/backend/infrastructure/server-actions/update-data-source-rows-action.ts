@@ -9,10 +9,6 @@ import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data
 import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
 import { UpdateDataSourceRowsUseCase } from '@/backend/application/update-data-source-rows-use-case'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '@/backend/domain/error/validation-error'
 import { updateDataSourceRowsSchema } from './schemas'
 import { redirect } from 'next/navigation'
 
@@ -53,15 +49,8 @@ export async function updateDataSourceRowsAction(
         console.log(error)
 
         if (error instanceof AuthenticationError) {
-            if (
-                error.type === 'missing-session' ||
-                error.type === 'session-not-found' ||
-                error.type === 'session-expired' ||
-                error.type === 'user-not-found'
-            ) {
-                await logoutAction()
-                redirect(`/entrar?error=${error.type}`)
-            }
+            await logoutAction()
+            redirect(`/entrar?error=${error.type}`)
         }
 
         return {

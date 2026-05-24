@@ -1,14 +1,9 @@
 import { env } from '@/env'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
+import { DataSourceNotFoundError } from '../domain/error/not-found-error/data-source-not-found-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 
 interface DownloadDataSourceUseCaseInput {
     userId: string
@@ -28,18 +23,18 @@ export class DownloadDataSourceUseCase {
         )
 
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         if (!certificateEmission.isOwner(input.userId)) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         const dataSourceStorageFileUrl =
             certificateEmission.getDataSourceStorageFileUrl(input.fileIndex)
 
         if (!dataSourceStorageFileUrl) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
+            throw new DataSourceNotFoundError()
         }
 
         const bucketName = env.CERTIFICATES_BUCKET

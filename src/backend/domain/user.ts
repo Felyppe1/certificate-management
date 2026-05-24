@@ -16,13 +16,19 @@ import {
     ResetPasswordCodeOutput,
 } from './reset-password-code'
 import { EmailChangeCode, EmailChangeCodeOutput } from './email-change-code'
-import { ForbiddenError, FORBIDDEN_ERROR_TYPE } from './error/forbidden-error'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from './error/validation-error'
-import { NOT_FOUND_ERROR_TYPE, NotFoundError } from './error/not-found-error'
-import { CONFLICT_ERROR_TYPE, ConflictError } from './error/conflict-error'
+import { SystemLoginEnabledError } from './error/validation-error/system-login-enabled-error'
+import { EmailAlreadyVerifiedError } from './error/validation-error/email-already-verified-error'
+import { SystemLoginNotEnabledError } from './error/validation-error/system-login-not-enabled-error'
+import { CurrentPasswordIncorrectError } from './error/validation-error/current-password-incorrect-error'
+import { LastLoginMethodError } from './error/validation-error/last-login-method-error'
+import { ExternalAccountNotFoundError } from './error/not-found-error/external-account-not-found-error'
+import { ExternalAccountAlreadyExistsError } from './error/conflict-error/external-account-already-exists-error'
+import { VerificationCodeExpiredError } from './error/forbidden-error/verification-code-expired-error'
+import { VerificationCodeInvalidError } from './error/forbidden-error/verification-code-invalid-error'
+import { ResetPasswordCodeExpiredError } from './error/forbidden-error/reset-password-code-expired-error'
+import { ResetPasswordCodeInvalidError } from './error/forbidden-error/reset-password-code-invalid-error'
+import { EmailChangeCodeExpiredError } from './error/forbidden-error/email-change-code-expired-error'
+import { EmailChangeCodeInvalidError } from './error/forbidden-error/email-change-code-invalid-error'
 
 export const USER_CREDITS = 300
 
@@ -154,13 +160,11 @@ export class User extends AggregateRoot {
         const externalAccount = this.getExternalAccount(provider)
 
         if (!externalAccount) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.EXTERNAL_ACCOUNT)
+            throw new ExternalAccountNotFoundError()
         }
 
         if (this.hasSystemLogin()) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_ENABLED,
-            )
+            throw new SystemLoginEnabledError()
         }
 
         this.passwordHash = passwordHash
@@ -171,27 +175,19 @@ export class User extends AggregateRoot {
 
     async verifyEmail(tokenStr: string): Promise<void> {
         if (this.isEmailVerified) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.EMAIL_ALREADY_VERIFIED,
-            )
+            throw new EmailAlreadyVerifiedError()
         }
 
         if (!this.emailVerificationCode) {
-            throw new ForbiddenError(
-                FORBIDDEN_ERROR_TYPE.VERIFICATION_CODE_EXPIRED,
-            )
+            throw new VerificationCodeExpiredError()
         }
 
         if (this.emailVerificationCode.getCode() !== tokenStr) {
-            throw new ForbiddenError(
-                FORBIDDEN_ERROR_TYPE.VERIFICATION_CODE_INVALID,
-            )
+            throw new VerificationCodeInvalidError()
         }
 
         if (this.emailVerificationCode.isExpired()) {
-            throw new ForbiddenError(
-                FORBIDDEN_ERROR_TYPE.VERIFICATION_CODE_EXPIRED,
-            )
+            throw new VerificationCodeExpiredError()
         }
 
         this.isEmailVerified = true
@@ -208,9 +204,7 @@ export class User extends AggregateRoot {
 
     generateResetPasswordCode(): void {
         if (!this.hasSystemLogin()) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED,
-            )
+            throw new SystemLoginNotEnabledError()
         }
 
         this.resetPasswordCode = ResetPasswordCode.create()
@@ -222,27 +216,19 @@ export class User extends AggregateRoot {
 
     validateResetPasswordCode(code: string): void {
         if (!this.hasSystemLogin()) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED,
-            )
+            throw new SystemLoginNotEnabledError()
         }
 
         if (!this.resetPasswordCode) {
-            throw new ForbiddenError(
-                FORBIDDEN_ERROR_TYPE.RESET_PASSWORD_CODE_EXPIRED,
-            )
+            throw new ResetPasswordCodeExpiredError()
         }
 
         if (this.resetPasswordCode.isExpired()) {
-            throw new ForbiddenError(
-                FORBIDDEN_ERROR_TYPE.RESET_PASSWORD_CODE_EXPIRED,
-            )
+            throw new ResetPasswordCodeExpiredError()
         }
 
         if (this.resetPasswordCode.getCode() !== code) {
-            throw new ForbiddenError(
-                FORBIDDEN_ERROR_TYPE.RESET_PASSWORD_CODE_INVALID,
-            )
+            throw new ResetPasswordCodeInvalidError()
         }
     }
 
@@ -254,21 +240,15 @@ export class User extends AggregateRoot {
 
     confirmEmailChange(code: string): void {
         if (!this.emailChangeCode) {
-            throw new ForbiddenError(
-                FORBIDDEN_ERROR_TYPE.EMAIL_CHANGE_CODE_EXPIRED,
-            ) // TODO: this error message is not accurate because the code might not be expired but just not exist, should we have a different error message for that case?
+            throw new EmailChangeCodeExpiredError() // TODO: this error message is not accurate because the code might not be expired but just not exist, should we have a different error message for that case?
         }
 
         if (this.emailChangeCode.isExpired()) {
-            throw new ForbiddenError(
-                FORBIDDEN_ERROR_TYPE.EMAIL_CHANGE_CODE_EXPIRED,
-            )
+            throw new EmailChangeCodeExpiredError()
         }
 
         if (this.emailChangeCode.getCode() !== code) {
-            throw new ForbiddenError(
-                FORBIDDEN_ERROR_TYPE.EMAIL_CHANGE_CODE_INVALID,
-            )
+            throw new EmailChangeCodeInvalidError()
         }
 
         this.email = this.emailChangeCode.getNewEmail()
@@ -289,17 +269,13 @@ export class User extends AggregateRoot {
 
     changeEmail(email: string) {
         if (!this.hasSystemLogin()) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED,
-            )
+            throw new SystemLoginNotEnabledError()
         }
 
         const isEmailTheSame = email === this.email
 
         if (isEmailTheSame) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.EMAIL_ALREADY_VERIFIED,
-            )
+            throw new EmailAlreadyVerifiedError()
         }
 
         const isEmailFromExternalAccount = this.externalAccounts.some(
@@ -336,18 +312,14 @@ export class User extends AggregateRoot {
         const hasSystemLogin = this.hasSystemLogin()
 
         if (!hasSystemLogin) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED,
-            )
+            throw new SystemLoginNotEnabledError()
         }
 
         const isCurrentPasswordValid =
             await this.comparePassword(currentPassword)
 
         if (!isCurrentPasswordValid) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.CURRENT_PASSWORD_INCORRECT,
-            )
+            throw new CurrentPasswordIncorrectError()
         }
 
         this.passwordHash = await bcrypt.hash(newPassword, 10)
@@ -369,15 +341,11 @@ export class User extends AggregateRoot {
         const externalAccount = this.getExternalAccount(provider)
 
         if (externalAccount) {
-            throw new ConflictError(
-                CONFLICT_ERROR_TYPE.EXTERNAL_ACCOUNT_ALREADY_EXISTS,
-            )
+            throw new ExternalAccountAlreadyExistsError()
         }
 
         if (!this.hasSystemLogin()) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED,
-            )
+            throw new SystemLoginNotEnabledError()
         }
 
         if (!this.isEmailVerified) {
@@ -418,13 +386,13 @@ export class User extends AggregateRoot {
         const externalAccount = this.getExternalAccount(provider)
 
         if (!externalAccount) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.EXTERNAL_ACCOUNT)
+            throw new ExternalAccountNotFoundError()
         }
 
         const canRemove = this.canRemoveExternalAccount(provider)
 
         if (!canRemove) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.LAST_LOGIN_METHOD)
+            throw new LastLoginMethodError()
         }
 
         this.externalAccounts = this.externalAccounts.filter(

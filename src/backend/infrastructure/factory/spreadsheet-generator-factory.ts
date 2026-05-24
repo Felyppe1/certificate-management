@@ -5,10 +5,7 @@ import {
 import { DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
 import { CsvSpreadsheetContentExtractorStrategy } from './strategy/csv-spreadsheet-content-extractor-strategy'
 import { ExcelSpreadsheetContentExtractorStrategy } from './strategy/excel-spreadsheet-content-extractor-strategy'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '@/backend/domain/error/validation-error'
+import { UnsupportedDataSourceMimetypeError } from '@/backend/domain/error/validation-error/unsupported-data-source-mimetype-error'
 
 export class SpreadsheetGeneratorFactory
     implements ISpreadsheetGeneratorFactory
@@ -22,9 +19,7 @@ export class SpreadsheetGeneratorFactory
             case DATA_SOURCE_MIME_TYPE.CSV:
                 return new CsvSpreadsheetContentExtractorStrategy()
             default:
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
-                )
+                throw new UnsupportedDataSourceMimetypeError()
         }
     }
 }

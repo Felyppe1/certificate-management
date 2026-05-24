@@ -1,9 +1,6 @@
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { AuthenticationError } from '../domain/error/authentication-error'
-import {
-    CONFLICT_ERROR_TYPE,
-    ConflictError,
-} from '../domain/error/conflict-error'
+import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
+import { EmailUnavailableError } from '../domain/error/conflict-error/email-unavailable-error'
 
 interface Input {
     userId: string
@@ -22,7 +19,7 @@ export class ConfirmEmailChangeUseCase {
         const user = await this.usersRepository.getById(userId)
 
         if (!user) {
-            throw new AuthenticationError('user-not-found')
+            throw new UserNotFoundError()
         }
 
         const newEmail = user.getEmailRequestedForChange() || ''
@@ -31,7 +28,7 @@ export class ConfirmEmailChangeUseCase {
             await this.usersRepository.getByEmail(newEmail)
 
         if (existingUserWithEmail && existingUserWithEmail.getId() !== userId) {
-            throw new ConflictError(CONFLICT_ERROR_TYPE.EMAIL_UNAVAILABLE)
+            throw new EmailUnavailableError()
         }
 
         user.confirmEmailChange(code)

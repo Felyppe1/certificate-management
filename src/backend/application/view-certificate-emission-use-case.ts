@@ -1,13 +1,8 @@
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
+import { DataSourceRowNotFoundError } from '../domain/error/not-found-error/data-source-row-not-found-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { env } from '@/env'
 
@@ -32,7 +27,7 @@ export class ViewCertificateEmissionUseCase {
         )
 
         if (!dataSourceRow) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE_ROW)
+            throw new DataSourceRowNotFoundError()
         }
 
         const certificateEmission = await this.certificateRepository.getById(
@@ -40,11 +35,11 @@ export class ViewCertificateEmissionUseCase {
         )
 
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         if (!certificateEmission.isOwner(input.userId)) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
         // TODO: handle error
 

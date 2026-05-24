@@ -1,10 +1,7 @@
 import { INPUT_METHOD } from '../domain/certificate'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IBucket } from './interfaces/cloud/ibucket'
@@ -14,16 +11,14 @@ import {
     DataSource,
     MAX_IMAGE_FILES,
 } from '../domain/data-source'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
+import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
+import { UnsupportedDataSourceMimetypeError } from '../domain/error/validation-error/unsupported-data-source-mimetype-error'
+import { DataSourceImageFilesExceededError } from '../domain/error/validation-error/data-source-image-files-exceeded-error'
+import { DataSourceAllFilesNotImagesError } from '../domain/error/validation-error/data-source-all-files-not-images-error'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
+import { GoogleAccountNotFoundError } from '../domain/error/forbidden-error/google-account-not-found-error'
 import { DataSourceDomainService } from '../domain/domain-service/data-source-domain-service'
 import { env } from '@/env'
 
@@ -67,23 +62,21 @@ export class AddDataSourceByDrivePickerUseCase {
             )
 
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         if (!certificateEmission.isOwner(input.userId)) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         const user = await this.usersRepository.getById(input.userId)
 
         if (!user?.hasExternalAccount('GOOGLE')) {
-            throw new ForbiddenError(
-                FORBIDDEN_ERROR_TYPE.GOOGLE_ACCOUNT_NOT_FOUND,
-            )
+            throw new GoogleAccountNotFoundError()
         }
 
         if (certificateEmission.isEmitted()) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
+            throw new CertificateEmittedError()
         }
 
         const newData = await this.googleAuthGateway.checkOrGetNewAccessToken({
@@ -114,9 +107,7 @@ export class AddDataSourceByDrivePickerUseCase {
 
         for (const metadata of filesMetadata) {
             if (!DataSource.isValidFileMimeType(metadata.fileMimeType)) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
-                )
+                throw new UnsupportedDataSourceMimetypeError()
             }
         }
 
@@ -127,9 +118,7 @@ export class AddDataSourceByDrivePickerUseCase {
 
         if (isImage) {
             if (filesMetadata.length > MAX_IMAGE_FILES) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.DATA_SOURCE_IMAGE_FILES_EXCEEDED,
-                )
+                throw new DataSourceImageFilesExceededError()
             }
 
             const allFilesAreImages = filesMetadata.every(file =>
@@ -137,15 +126,11 @@ export class AddDataSourceByDrivePickerUseCase {
             )
 
             if (!allFilesAreImages) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.DATA_SOURCE_ALL_FILES_NOT_IMAGES,
-                )
+                throw new DataSourceAllFilesNotImagesError()
             }
         } else {
             if (filesMetadata.length !== 1) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.DATA_SOURCE_ALL_FILES_NOT_IMAGES,
-                )
+                throw new DataSourceAllFilesNotImagesError()
             }
         }
 

@@ -1,7 +1,4 @@
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
+import { GoogleAccountNotFoundError } from '../domain/error/forbidden-error/google-account-not-found-error'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 
@@ -22,9 +19,7 @@ export class RefreshGoogleAccessTokenUseCase {
         const user = await this.usersRepository.getById(userId)
 
         if (!user?.hasExternalAccount('GOOGLE')) {
-            throw new ForbiddenError(
-                FORBIDDEN_ERROR_TYPE.GOOGLE_ACCOUNT_NOT_FOUND,
-            )
+            throw new GoogleAccountNotFoundError()
         }
 
         const newToken = await this.googleAuthGateway.checkOrGetNewAccessToken({

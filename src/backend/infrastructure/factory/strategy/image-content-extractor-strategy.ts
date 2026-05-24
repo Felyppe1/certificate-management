@@ -1,6 +1,6 @@
 import { ISpreadsheetContentExtractorStrategy } from '@/backend/application/interfaces/ispreadsheet-content-extractor-factory'
 import { DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
-import { ServiceUnavailableError } from '@/backend/domain/error/service-unavailable-error'
+import { GenaiApiUnavailableError } from '@/backend/domain/error/service-unavailable-error/genai-api-unavailable-error'
 import { GenerateContentResponse, GoogleGenAI } from '@google/genai'
 import { fileTypeFromBuffer } from 'file-type'
 
@@ -65,7 +65,7 @@ export class ImageContentExtractorStrategy
                     errorData?.error?.message.includes('high demand')
 
                 if (isHighDemandError) {
-                    throw new ServiceUnavailableError('genai-api-unavailable')
+                    throw new GenaiApiUnavailableError()
                 }
             }
 

@@ -1,9 +1,7 @@
 import z from 'zod'
 import { ValueObject } from './primitives/value-object'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from './error/validation-error'
+import { DataSourceInvalidColumnTypesError } from './error/validation-error/data-source-invalid-column-types-error'
+import { DataSourceInvalidColumnMetadataError } from './error/validation-error/data-source-invalid-column-metadata-error'
 
 export type ColumnType = 'string' | 'number' | 'boolean' | 'date' | 'array'
 export type ArrayItemType = Exclude<ColumnType, 'array'>
@@ -47,9 +45,7 @@ export class DataSourceColumn extends ValueObject<DataSourceColumn> {
         }
 
         if (!VALID_COLUMN_TYPES.includes(data.type)) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.DATA_SOURCE_INVALID_COLUMN_TYPES,
-            )
+            throw new DataSourceInvalidColumnTypesError()
         }
 
         if (data.type === 'array') {
@@ -65,14 +61,10 @@ export class DataSourceColumn extends ValueObject<DataSourceColumn> {
                 !!itemType && VALID_ITEM_TYPES.includes(itemType)
 
             if (!isSeparatorValid || !isItemTypeValid) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.DATA_SOURCE_INVALID_COLUMN_METADATA,
-                )
+                throw new DataSourceInvalidColumnMetadataError()
             }
         } else if (data.arrayMetadata !== null) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.DATA_SOURCE_INVALID_COLUMN_METADATA,
-            )
+            throw new DataSourceInvalidColumnMetadataError()
         }
 
         this.name = data.name

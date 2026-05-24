@@ -1,18 +1,12 @@
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
+import { DataSourceNotFoundError } from '../domain/error/not-found-error/data-source-not-found-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
+import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
+import { DataSourceInvalidInputMethodError } from '../domain/error/validation-error/data-source-invalid-input-method-error'
+import { DataSourceRowsNotFoundError } from '../domain/error/validation-error/data-source-rows-not-found-error'
 import { INPUT_METHOD } from '../domain/certificate'
 
 export interface UpdateDataSourceRowsUseCaseInput {
@@ -48,28 +42,26 @@ export class UpdateDataSourceRowsUseCase {
         )
 
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         if (!certificateEmission.isOwner(data.userId)) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         if (certificateEmission.isEmitted()) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
+            throw new CertificateEmittedError()
         }
 
         if (
             certificateEmission.getDataSourceInputMethod() !==
             INPUT_METHOD.UPLOAD
         ) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.DATA_SOURCE_INVALID_INPUT_METHOD,
-            )
+            throw new DataSourceInvalidInputMethodError()
         }
 
         if (!certificateEmission.hasDataSource()) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
+            throw new DataSourceNotFoundError()
         }
 
         const rowIds = data.editedRows.map(r => r.rowId)
@@ -77,9 +69,7 @@ export class UpdateDataSourceRowsUseCase {
 
         const rows = await this.dataSourceRowsRepository.getByIds(rowIds)
         if (rows.length !== rowIds.length) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.DATA_SOURCE_ROWS_NOT_FOUND,
-            )
+            throw new DataSourceRowsNotFoundError()
         }
 
         // const errors: string[] = []

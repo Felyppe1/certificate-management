@@ -1,12 +1,23 @@
-export class AppError<T> {
+export abstract class AppError extends Error {
+    type: string
     title: string
-    type: T
+    status: number
     detail?: string
-    // attribute instance
+    extensions?: Record<string, unknown>
 
-    constructor(title: string, type: T, detail?: string) {
-        this.title = title
-        this.type = type
-        this.detail = detail
+    constructor(input: {
+        type: string
+        title: string
+        status: number
+        detail?: string
+        extensions?: Record<string, unknown>
+    }) {
+        super(input.title)
+        this.name = new.target.name
+        this.type = input.type
+        this.title = input.title
+        this.status = input.status
+        this.detail = input.detail
+        this.extensions = input.extensions
     }
 }

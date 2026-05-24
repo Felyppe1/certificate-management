@@ -5,18 +5,13 @@ import {
     DataSource,
     MAX_IMAGE_FILES,
 } from '../domain/data-source'
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
+import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
+import { DataSourceFileRequiredError } from '../domain/error/validation-error/data-source-file-required-error'
+import { UnsupportedDataSourceMimetypeError } from '../domain/error/validation-error/unsupported-data-source-mimetype-error'
+import { DataSourceImageFilesExceededError } from '../domain/error/validation-error/data-source-image-files-exceeded-error'
+import { DataSourceAllFilesNotImagesError } from '../domain/error/validation-error/data-source-all-files-not-images-error'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
@@ -57,28 +52,24 @@ export class AddDataSourceByUploadUseCase {
         )
 
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         if (!certificateEmission.isOwner(input.userId)) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         if (certificateEmission.isEmitted()) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
+            throw new CertificateEmittedError()
         }
 
         if (input.files.length === 0) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.DATA_SOURCE_FILE_REQUIRED,
-            )
+            throw new DataSourceFileRequiredError()
         }
 
         for (const file of input.files) {
             if (!DataSource.isValidFileMimeType(file.type)) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
-                )
+                throw new UnsupportedDataSourceMimetypeError()
             }
         }
 
@@ -88,9 +79,7 @@ export class AddDataSourceByUploadUseCase {
 
         if (isImage) {
             if (input.files.length > MAX_IMAGE_FILES) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.DATA_SOURCE_IMAGE_FILES_EXCEEDED,
-                )
+                throw new DataSourceImageFilesExceededError()
             }
 
             const allFilesAreImages = input.files.every(file =>
@@ -98,15 +87,11 @@ export class AddDataSourceByUploadUseCase {
             )
 
             if (!allFilesAreImages) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.DATA_SOURCE_ALL_FILES_NOT_IMAGES,
-                )
+                throw new DataSourceAllFilesNotImagesError()
             }
         } else {
             if (input.files.length !== 1) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.DATA_SOURCE_ALL_FILES_NOT_IMAGES,
-                )
+                throw new DataSourceAllFilesNotImagesError()
             }
         }
 

@@ -2,19 +2,10 @@ import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { ISessionsRepository } from './interfaces/repository/isessions-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { Session } from '../domain/session'
-import { AuthenticationError } from '../domain/error/authentication-error'
-import {
-    NotFoundError,
-    NOT_FOUND_ERROR_TYPE,
-} from '../domain/error/not-found-error'
-import {
-    ConflictError,
-    CONFLICT_ERROR_TYPE,
-} from '../domain/error/conflict-error'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
+import { UserNotFoundError as AuthUserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
+import { UserNotFoundError } from '../domain/error/not-found-error/user-not-found-error'
+import { ExternalAccountAlreadyExistsError } from '../domain/error/conflict-error/external-account-already-exists-error'
+import { NoGoogleAccountError } from '../domain/error/validation-error/no-google-account-error'
 
 interface ConfirmLinkGoogleToSystemAccountInput {
     userId: string
@@ -34,11 +25,11 @@ export class ConfirmLinkGoogleToSystemAccountUseCase {
         const googleUser = await this.usersRepository.getById(userId)
 
         if (!googleUser) {
-            throw new AuthenticationError('user-not-found')
+            throw new AuthUserNotFoundError()
         }
 
         if (!googleUser.hasExternalAccount('GOOGLE')) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.NO_GOOGLE_ACCOUNT)
+            throw new NoGoogleAccountError()
         }
 
         const systemUser = await this.usersRepository.getByEmail(
@@ -46,13 +37,11 @@ export class ConfirmLinkGoogleToSystemAccountUseCase {
         )
 
         if (!systemUser) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.USER)
+            throw new UserNotFoundError()
         }
 
         if (systemUser.hasExternalAccount('GOOGLE')) {
-            throw new ConflictError(
-                CONFLICT_ERROR_TYPE.EXTERNAL_ACCOUNT_ALREADY_EXISTS,
-            )
+            throw new ExternalAccountAlreadyExistsError()
         }
 
         const googleAccountData = googleUser

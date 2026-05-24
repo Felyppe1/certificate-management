@@ -80,15 +80,8 @@ export async function addTemplateByUrlAction(_: unknown, formData: FormData) {
         })
 
         if (error instanceof AuthenticationError) {
-            if (
-                error.type === 'missing-session' ||
-                error.type === 'session-not-found' ||
-                error.type === 'session-expired' ||
-                error.type === 'user-not-found'
-            ) {
-                await logoutAction()
-                redirect(`/entrar?error=${error.type}`)
-            }
+            await logoutAction()
+            redirect(`/entrar?error=${error.type}`)
         }
 
         return {

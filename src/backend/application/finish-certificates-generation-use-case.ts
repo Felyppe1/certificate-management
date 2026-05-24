@@ -1,11 +1,6 @@
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
+import { DataSourceRowNotFoundError } from '../domain/error/not-found-error/data-source-row-not-found-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
+import { FileBytesMissingError } from '../domain/error/validation-error/file-bytes-missing-error'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
@@ -38,14 +33,12 @@ export class FinishCertificatesGenerationUseCase {
         )
 
         if (!dataSourceRow) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE_ROW)
+            throw new DataSourceRowNotFoundError()
         }
 
         if (input.success) {
             if (!input.totalBytes) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.FILE_BYTES_MISSING,
-                )
+                throw new FileBytesMissingError()
             }
 
             dataSourceRow.finishGenerationSuccessfully(input.totalBytes)
@@ -62,7 +55,7 @@ export class FinishCertificatesGenerationUseCase {
             )
 
         if (!certificateExists) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         await this.dataSourceRowsRepository.update(dataSourceRow)

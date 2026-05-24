@@ -1,20 +1,12 @@
 import { env } from '@/env'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
+import { TemplateNotFoundError } from '../domain/error/not-found-error/template-not-found-error'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
+import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 
 interface DeleteTemplateUseCaseInput {
     certificateId: string
@@ -40,19 +32,19 @@ export class DeleteTemplateUseCase {
             await this.certificateEmissionsRepository.getById(certificateId)
 
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         if (!certificateEmission.isOwner(userId)) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         if (certificateEmission.isEmitted()) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
+            throw new CertificateEmittedError()
         }
 
         if (!certificateEmission.hasTemplate()) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
+            throw new TemplateNotFoundError()
         }
 
         const storageFileUrl = certificateEmission.getTemplateStorageFileUrl()

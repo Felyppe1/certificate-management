@@ -5,10 +5,9 @@ import {
     UploadFileInput,
 } from '@/backend/application/interfaces/igoogle-drive-gateway'
 import { IGoogleAuthGateway } from '@/backend/application/interfaces/igoogle-auth-gateway'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '@/backend/domain/error/validation-error'
+import { MimetypeMissingError } from '@/backend/domain/error/validation-error/mimetype-missing-error'
+import { TemplateFileSizeTooLargeError } from '@/backend/domain/error/validation-error/template-file-size-too-large-error'
+import { DataSourceFileSizeTooLargeError } from '@/backend/domain/error/validation-error/data-source-file-size-too-large-error'
 import {
     MAX_TEMPLATE_BYTES_SIZE,
     TEMPLATE_FILE_MIME_TYPE,
@@ -18,10 +17,7 @@ import {
     DATA_SOURCE_MIME_TYPE,
     MAX_DATA_SOURCE_BYTES_SIZE,
 } from '@/backend/domain/data-source'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '@/backend/domain/error/not-found-error'
+import { DriveFileNotFoundError } from '@/backend/domain/error/not-found-error/drive-file-not-found-error'
 
 export class GoogleDriveGateway implements IGoogleDriveGateway {
     constructor(private readonly googleAuthGateway: IGoogleAuthGateway) {}
@@ -53,9 +49,7 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
             const mimeType = file.data.mimeType
 
             if (!mimeType) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.MIMETYPE_MISSING,
-                )
+                throw new MimetypeMissingError()
             }
 
             // TODO: check if I will still use it...
@@ -70,11 +64,11 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
         } catch (error: any) {
             console.log(error)
 
-            if (error instanceof ValidationError) {
+            if (error instanceof MimetypeMissingError) {
                 throw error
             }
 
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DRIVE_FILE)
+            throw new DriveFileNotFoundError()
         }
     }
 
@@ -133,15 +127,11 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
             : null
         if (contentLength) {
             if (isTemplateFile && contentLength > MAX_TEMPLATE_BYTES_SIZE) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.TEMPLATE_FILE_SIZE_TOO_LARGE,
-                )
+                throw new TemplateFileSizeTooLargeError()
             }
 
             if (!isTemplateFile && contentLength > MAX_DATA_SOURCE_BYTES_SIZE) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.DATA_SOURCE_FILE_SIZE_TOO_LARGE,
-                )
+                throw new DataSourceFileSizeTooLargeError()
             }
         }
 
@@ -170,18 +160,14 @@ export class GoogleDriveGateway implements IGoogleDriveGateway {
                     downloadedSize > MAX_TEMPLATE_BYTES_SIZE
                 ) {
                     await reader.cancel()
-                    throw new ValidationError(
-                        VALIDATION_ERROR_TYPE.TEMPLATE_FILE_SIZE_TOO_LARGE,
-                    )
+                    throw new TemplateFileSizeTooLargeError()
                 }
                 if (
                     !isTemplateFile &&
                     downloadedSize > MAX_DATA_SOURCE_BYTES_SIZE
                 ) {
                     await reader.cancel()
-                    throw new ValidationError(
-                        VALIDATION_ERROR_TYPE.DATA_SOURCE_FILE_SIZE_TOO_LARGE,
-                    )
+                    throw new DataSourceFileSizeTooLargeError()
                 }
 
                 chunks.push(value)

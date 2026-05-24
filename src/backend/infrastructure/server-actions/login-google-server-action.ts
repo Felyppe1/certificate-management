@@ -48,12 +48,7 @@ export async function loginGoogleServerAction(_: unknown, formData: FormData) {
     } catch (error: any) {
         console.error(error)
         if (error instanceof AuthenticationError) {
-            if (
-                error.type === 'missing-session' ||
-                error.type === 'session-not-found'
-            ) {
-                await logoutAction()
-            }
+            await logoutAction()
         }
 
         return {

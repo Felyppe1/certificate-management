@@ -1,5 +1,5 @@
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { AuthenticationError } from '../domain/error/authentication-error'
+import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 
 interface DeleteAccountUseCaseInput {
@@ -19,7 +19,7 @@ export class DeleteAccountUseCase {
         const user = await this.usersRepository.getById(userId)
 
         if (!user) {
-            throw new AuthenticationError('user-not-found')
+            throw new UserNotFoundError()
         }
 
         if (user.hasExternalAccount('GOOGLE')) {

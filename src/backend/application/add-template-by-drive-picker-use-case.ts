@@ -3,23 +3,16 @@ import { Template } from '../domain/template'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor-factory'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { IBucket } from './interfaces/cloud/ibucket'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
+import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
+import { UnsupportedTemplateMimetypeError } from '../domain/error/validation-error/unsupported-template-mimetype-error'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
+import { GoogleAccountNotFoundError } from '../domain/error/forbidden-error/google-account-not-found-error'
 import { IStringVariableExtractor } from './interfaces/istring-variable-extractor'
 import { env } from '@/env'
 
@@ -67,23 +60,21 @@ export class AddTemplateByDrivePickerUseCase {
             )
 
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         if (!certificateEmission.isOwner(input.userId)) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         const user = await this.usersRepository.getById(input.userId)
 
         if (!user?.hasExternalAccount('GOOGLE')) {
-            throw new ForbiddenError(
-                FORBIDDEN_ERROR_TYPE.GOOGLE_ACCOUNT_NOT_FOUND,
-            )
+            throw new GoogleAccountNotFoundError()
         }
 
         if (certificateEmission.isEmitted()) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
+            throw new CertificateEmittedError()
         }
 
         const newData = await this.googleAuthGateway.checkOrGetNewAccessToken({
@@ -110,9 +101,7 @@ export class AddTemplateByDrivePickerUseCase {
             })
 
         if (!Template.isValidFileMimeType(fileMimeType)) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE,
-            )
+            throw new UnsupportedTemplateMimetypeError()
         }
 
         const buffer = await this.googleDriveGateway.downloadFile({

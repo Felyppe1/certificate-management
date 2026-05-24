@@ -1,10 +1,7 @@
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { ISessionsRepository } from './interfaces/repository/isessions-repository'
-import { AuthenticationError } from '../domain/error/authentication-error'
-import {
-    ForbiddenError,
-    FORBIDDEN_ERROR_TYPE,
-} from '../domain/error/forbidden-error'
+import { IncorrectCredentialsError } from '../domain/error/authentication-error/incorrect-credentials-error'
+import { EmailNotVerifiedError } from '../domain/error/forbidden-error/email-not-verified-error'
 import { Session } from '../domain/session'
 
 export class LoginUseCase {
@@ -17,17 +14,17 @@ export class LoginUseCase {
         const user = await this.usersRepository.getByEmail(email)
 
         if (!user) {
-            throw new AuthenticationError('incorrect-credentials')
+            throw new IncorrectCredentialsError()
         }
 
         const isPasswordValid = await user.comparePassword(passwordPlain)
 
         if (!isPasswordValid) {
-            throw new AuthenticationError('incorrect-credentials')
+            throw new IncorrectCredentialsError()
         }
 
         if (!user.hasVerifiedEmailAccess()) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.EMAIL_NOT_VERIFIED)
+            throw new EmailNotVerifiedError()
         }
 
         const session = Session.create(user.getId())

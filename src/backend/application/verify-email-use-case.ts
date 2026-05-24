@@ -1,8 +1,5 @@
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import {
-    NotFoundError,
-    NOT_FOUND_ERROR_TYPE,
-} from '../domain/error/not-found-error'
+import { EmailVerificationCodeNotFoundError } from '../domain/error/not-found-error/email-verification-code-not-found-error'
 import { Session } from '../domain/session'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { ISessionsRepository } from './interfaces/repository/isessions-repository'
@@ -27,9 +24,7 @@ export class VerifyEmailUseCase {
         const user = await this.usersRepository.getByEmail(email)
 
         if (!user) {
-            throw new NotFoundError(
-                NOT_FOUND_ERROR_TYPE.EMAIL_VERIFICATION_CODE,
-            )
+            throw new EmailVerificationCodeNotFoundError()
         }
 
         await user.verifyEmail(code)

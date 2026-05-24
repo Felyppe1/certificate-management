@@ -1,5 +1,5 @@
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { AuthenticationError } from '../domain/error/authentication-error'
+import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
 
 interface Input {
     userId: string
@@ -13,7 +13,7 @@ export class UpdateUserBasicDataUseCase {
 
     async execute({ userId, name }: Input) {
         const user = await this.usersRepository.getById(userId)
-        if (!user) throw new AuthenticationError('user-not-found')
+        if (!user) throw new UserNotFoundError()
         user.updateName(name)
         await this.usersRepository.update(user)
     }

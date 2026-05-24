@@ -8,10 +8,7 @@ import {
     GetUserInfoInput,
     IGoogleAuthGateway,
 } from '@/backend/application/interfaces/igoogle-auth-gateway'
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '@/backend/domain/error/forbidden-error'
+import { GoogleSessionExpiredError } from '@/backend/domain/error/forbidden-error/google-session-expired-error'
 
 export class GoogleAuthGateway implements IGoogleAuthGateway {
     private readonly oauth2Client: Auth.OAuth2Client
@@ -85,9 +82,7 @@ export class GoogleAuthGateway implements IGoogleAuthGateway {
         } catch (error: any) {
             console.error('Error refreshing access token:', error)
 
-            throw new ForbiddenError(
-                FORBIDDEN_ERROR_TYPE.GOOGLE_SESSION_EXPIRED,
-            )
+            throw new GoogleSessionExpiredError()
         }
     }
 

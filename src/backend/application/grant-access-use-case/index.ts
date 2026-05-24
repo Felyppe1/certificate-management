@@ -1,11 +1,5 @@
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../../domain/error/forbidden-error'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../../domain/error/not-found-error'
+import { NotAdminError } from '../../domain/error/forbidden-error/not-admin-error'
+import { UserNotFoundError } from '../../domain/error/not-found-error/user-not-found-error'
 import { INotificationGateway } from '../interfaces/inotification-gateway'
 import { IUsersRepository } from '../interfaces/repository/iusers-repository'
 import { from, subject, buildHtml } from './email-template'
@@ -28,14 +22,14 @@ export class GrantAccessUseCase {
         const user = await this.usersRepository.getById(data.userId)
 
         if (!user) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.USER)
+            throw new UserNotFoundError()
         }
 
         if (
             user.getEmail() !== 'felyppe.nunes1@gmail.com' &&
             user.getEmail() !== 'luizfelyppe@id.uff.br'
         ) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_ADMIN)
+            throw new NotAdminError()
         }
 
         await this.notificationEmailGateway.sendEmail(

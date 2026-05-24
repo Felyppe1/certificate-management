@@ -1,16 +1,11 @@
 import { DATA_SOURCE_MIME_TYPE, DataSource } from '../domain/data-source'
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
+import { DataSourceNotFoundError } from '../domain/error/not-found-error/data-source-not-found-error'
+import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
+import { DataSourceImageRefreshNotAllowedError } from '../domain/error/validation-error/data-source-image-refresh-not-allowed-error'
+import { UnexistentDataSourceDriveFileIdError } from '../domain/error/validation-error/unexistent-data-source-drive-file-id-error'
+import { UnsupportedDataSourceMimetypeError } from '../domain/error/validation-error/unsupported-data-source-mimetype-error'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
@@ -58,33 +53,29 @@ export class RefreshDataSourceUseCase {
             )
 
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         if (!certificateEmission.isOwner(input.userId)) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         if (certificateEmission.isEmitted()) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
+            throw new CertificateEmittedError()
         }
 
         if (!certificateEmission.hasDataSource()) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
+            throw new DataSourceNotFoundError()
         }
 
         if (certificateEmission.dataSourceHasImage()) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.DATA_SOURCE_IMAGE_REFRESH_NOT_ALLOWED,
-            )
+            throw new DataSourceImageRefreshNotAllowedError()
         }
 
         const driveFileId = certificateEmission.getDriveDataSourceFileId()
 
         if (!driveFileId) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.UNEXISTENT_DATA_SOURCE_DRIVE_FILE_ID,
-            )
+            throw new UnexistentDataSourceDriveFileIdError()
         }
 
         const user = await this.usersRepository.getById(
@@ -125,15 +116,11 @@ export class RefreshDataSourceUseCase {
             })
 
         if (!DataSource.isValidFileMimeType(fileMimeType)) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
-            )
+            throw new UnsupportedDataSourceMimetypeError()
         }
 
         if (DataSource.isImageMimeType(fileMimeType)) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.DATA_SOURCE_IMAGE_REFRESH_NOT_ALLOWED,
-            )
+            throw new DataSourceImageRefreshNotAllowedError()
         }
 
         const buffer = await this.googleDriveGateway.downloadFile({

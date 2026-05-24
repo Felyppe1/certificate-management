@@ -6,10 +6,12 @@ import {
 } from './data-source-column'
 import { DataSourceFile, DataSourceFileInput } from './data-source-file'
 import { ValueObject } from './primitives/value-object'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from './error/validation-error'
+import { DataSourceColumnsExceededError } from './error/validation-error/data-source-columns-exceeded-error'
+import { DataSourceRowsExceededError } from './error/validation-error/data-source-rows-exceeded-error'
+import { DataSourceColumnsNotFoundError } from './error/validation-error/data-source-columns-not-found-error'
+import { DataSourceImageFilesExceededError } from './error/validation-error/data-source-image-files-exceeded-error'
+import { DataSourceColumnTypeChangeNotAllowedError } from './error/validation-error/data-source-column-type-change-not-allowed-error'
+import { DataSourceNotImageError } from './error/validation-error/data-source-not-image-error'
 
 export const MAX_DATA_SOURCE_ROWS = 300
 export const MAX_DATA_SOURCE_COLUMNS = 20
@@ -84,23 +86,17 @@ export class DataSource extends ValueObject<DataSource> {
 
     static create(data: CreateDataSourceInput): DataSource {
         if (data.columns.length > MAX_DATA_SOURCE_COLUMNS) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.DATA_SOURCE_COLUMNS_EXCEEDED,
-            )
+            throw new DataSourceColumnsExceededError()
         }
 
         if (data.rows.length > MAX_DATA_SOURCE_ROWS) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.DATA_SOURCE_ROWS_EXCEEDED,
-            )
+            throw new DataSourceRowsExceededError()
         }
 
         data.rows.some(row => {
             Object.keys(row).some(key => {
                 if (data.columns.indexOf(key) === -1) {
-                    throw new ValidationError(
-                        VALIDATION_ERROR_TYPE.DATA_SOURCE_COLUMNS_NOT_FOUND,
-                    )
+                    throw new DataSourceColumnsNotFoundError()
                 }
             })
         })
@@ -137,15 +133,11 @@ export class DataSource extends ValueObject<DataSource> {
 
         if (DataSource.isImageMimeType(data.fileMimeType)) {
             if (data.files.length > MAX_IMAGE_FILES) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.DATA_SOURCE_IMAGE_FILES_EXCEEDED,
-                )
+                throw new DataSourceImageFilesExceededError()
             }
         } else {
             if (data.files.length !== 1) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.DATA_SOURCE_IMAGE_FILES_EXCEEDED,
-                )
+                throw new DataSourceImageFilesExceededError()
             }
         }
 
@@ -193,9 +185,7 @@ export class DataSource extends ValueObject<DataSource> {
         )
 
         if (!allColumnsFound) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.DATA_SOURCE_COLUMNS_NOT_FOUND,
-            )
+            throw new DataSourceColumnsNotFoundError()
         }
 
         // Type changes verification
@@ -232,9 +222,7 @@ export class DataSource extends ValueObject<DataSource> {
         })
 
         if (forbiddenColumns.length > 0) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.DATA_SOURCE_COLUMN_TYPE_CHANGE_NOT_ALLOWED,
-            )
+            throw new DataSourceColumnTypeChangeNotAllowedError()
         }
 
         return {
@@ -331,9 +319,7 @@ export class DataSource extends ValueObject<DataSource> {
         newInputMethod: INPUT_METHOD,
     ): DataSource {
         if (!DataSource.isImageMimeType(this.fileMimeType)) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.DATA_SOURCE_NOT_IMAGE,
-            )
+            throw new DataSourceNotImageError()
         }
 
         return new DataSource({

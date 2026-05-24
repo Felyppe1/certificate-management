@@ -1,22 +1,17 @@
 import { CERTIFICATE_STATUS } from '../domain/certificate'
 import { Email, PROCESSING_STATUS_ENUM } from '../domain/email'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
+import { DataSourceNotFoundError } from '../domain/error/not-found-error/data-source-not-found-error'
+import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
+import { NoDataSourceRowsError } from '../domain/error/validation-error/no-data-source-rows-error'
+import { UnexistentDataSourceColumnError } from '../domain/error/validation-error/unexistent-data-source-column-error'
+import { InvalidRecipientEmailError } from '../domain/error/validation-error/invalid-recipient-email-error'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
 import { IEmailsRepository } from './interfaces/repository/iemails-repository'
 import { IQueue } from './interfaces/cloud/iqueue'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 
 export interface CreateEmailUseCaseInput {
     userId: string
@@ -49,15 +44,15 @@ export class CreateEmailUseCase {
             )
 
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         if (!certificateEmission.isOwner(data.userId)) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         if (certificateEmission.isEmitted()) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
+            throw new CertificateEmittedError()
         }
 
         const rowsCount =
@@ -68,17 +63,15 @@ export class CreateEmailUseCase {
         // TODO: check if certificates were generated
 
         if (!certificateEmission.hasDataSource()) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
+            throw new DataSourceNotFoundError()
         }
 
         if (data.scheduledAt && rowsCount === 0) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.NO_DATA_SOURCE_ROWS)
+            throw new NoDataSourceRowsError()
         }
 
         if (!certificateEmission.hasDataSourceColumn(data.emailColumn)) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.UNEXISTENT_DATA_SOURCE_COLUMN,
-            )
+            throw new UnexistentDataSourceColumnError()
         }
 
         const rows: { id: string; data: Record<string, string> }[] = []
@@ -98,9 +91,7 @@ export class CreateEmailUseCase {
 
         const emailValues = rows.map(row => row.data[data.emailColumn])
         if (!Email.validateEmailColumnRecords(emailValues)) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.INVALID_RECIPIENT_EMAIL,
-            )
+            throw new InvalidRecipientEmailError()
         }
 
         const recipients = rows.map(row => ({

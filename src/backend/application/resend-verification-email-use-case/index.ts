@@ -1,14 +1,8 @@
 import { IUsersRepository } from '../interfaces/repository/iusers-repository'
 import { INotificationGateway } from '../interfaces/inotification-gateway'
-import { AuthenticationError } from '../../domain/error/authentication-error'
-import {
-    ForbiddenError,
-    FORBIDDEN_ERROR_TYPE,
-} from '../../domain/error/forbidden-error'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../../domain/error/validation-error'
+import { UserNotFoundError } from '../../domain/error/authentication-error/user-not-found-error'
+import { SystemLoginNotEnabledError } from '../../domain/error/validation-error/system-login-not-enabled-error'
+import { EmailAlreadyVerifiedError } from '../../domain/error/validation-error/email-already-verified-error'
 import { from, subject, buildHtml } from './email-template'
 
 interface Input {
@@ -28,19 +22,15 @@ export class ResendVerificationEmailUseCase {
         const user = await this.usersRepository.getByEmail(email)
 
         if (!user) {
-            throw new AuthenticationError('user-not-found')
+            throw new UserNotFoundError()
         }
 
         if (!user.hasSystemLogin()) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED,
-            )
+            throw new SystemLoginNotEnabledError()
         }
 
         if (user.getIsEmailVerified()) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.EMAIL_ALREADY_VERIFIED,
-            )
+            throw new EmailAlreadyVerifiedError()
         }
 
         user.generateEmailVerificationCode()

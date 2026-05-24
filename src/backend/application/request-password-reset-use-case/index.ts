@@ -1,9 +1,6 @@
 import { IUsersRepository } from '../interfaces/repository/iusers-repository'
 import { INotificationGateway } from '../interfaces/inotification-gateway'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../../domain/error/not-found-error'
+import { UserNotFoundError } from '../../domain/error/not-found-error/user-not-found-error'
 import { from, subject, buildHtml } from './email-template'
 
 interface Input {
@@ -23,7 +20,7 @@ export class RequestPasswordResetUseCase {
         const user = await this.usersRepository.getByEmail(email)
 
         if (!user) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.USER)
+            throw new UserNotFoundError()
         }
 
         user.generateResetPasswordCode()

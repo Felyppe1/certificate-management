@@ -1,16 +1,14 @@
 import { env } from '@/env'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
+import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
+import { UnexistentDataSourceDriveFileIdError } from '../domain/error/validation-error/unexistent-data-source-drive-file-id-error'
+import { UnsupportedDataSourceMimetypeError } from '../domain/error/validation-error/unsupported-data-source-mimetype-error'
+import { DataSourceImageFilesExceededError } from '../domain/error/validation-error/data-source-image-files-exceeded-error'
+import { DataSourceAllFilesNotImagesError } from '../domain/error/validation-error/data-source-all-files-not-images-error'
 
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 import { INPUT_METHOD } from '../domain/certificate'
@@ -23,10 +21,7 @@ import { ITransactionManager } from './interfaces/repository/itransaction-manage
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { DataSourceDomainService } from '../domain/domain-service/data-source-domain-service'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 
 interface AddDataSourceByUrlUseCaseInput {
     certificateId: string
@@ -64,24 +59,22 @@ export class AddDataSourceByUrlUseCase {
             )
 
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         if (!certificateEmission.isOwner(input.userId)) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         if (certificateEmission.isEmitted()) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
+            throw new CertificateEmittedError()
         }
 
         const driveFileIds = input.fileUrls.map(fileUrl => {
             const driveFileId = DataSource.getFileIdFromUrl(fileUrl)
 
             if (!driveFileId) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.UNEXISTENT_DATA_SOURCE_DRIVE_FILE_ID,
-                )
+                throw new UnexistentDataSourceDriveFileIdError()
             }
 
             return driveFileId
@@ -102,9 +95,7 @@ export class AddDataSourceByUrlUseCase {
 
         for (const metadata of filesMetadata) {
             if (!DataSource.isValidFileMimeType(metadata.fileMimeType)) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.UNSUPPORTED_DATA_SOURCE_MIMETYPE,
-                )
+                throw new UnsupportedDataSourceMimetypeError()
             }
         }
 
@@ -115,9 +106,7 @@ export class AddDataSourceByUrlUseCase {
 
         if (isImage) {
             if (driveFileIds.length > MAX_IMAGE_FILES) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.DATA_SOURCE_IMAGE_FILES_EXCEEDED,
-                )
+                throw new DataSourceImageFilesExceededError()
             }
 
             const allFilesAreImages = filesMetadata.every(metadata =>
@@ -125,15 +114,11 @@ export class AddDataSourceByUrlUseCase {
             )
 
             if (!allFilesAreImages) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.DATA_SOURCE_ALL_FILES_NOT_IMAGES,
-                )
+                throw new DataSourceAllFilesNotImagesError()
             }
         } else {
             if (driveFileIds.length !== 1) {
-                throw new ValidationError(
-                    VALIDATION_ERROR_TYPE.DATA_SOURCE_ALL_FILES_NOT_IMAGES,
-                )
+                throw new DataSourceAllFilesNotImagesError()
             }
         }
 

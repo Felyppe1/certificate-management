@@ -1,5 +1,5 @@
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { AuthenticationError } from '../domain/error/authentication-error'
+import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
 
 interface Input {
     userId: string
@@ -14,7 +14,7 @@ export class CancelSystemLoginUseCase {
         const user = await this.usersRepository.getById(userId)
 
         if (!user) {
-            throw new AuthenticationError('user-not-found')
+            throw new UserNotFoundError()
         }
 
         user.cancelSystemLogin()

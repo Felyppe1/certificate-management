@@ -1,16 +1,12 @@
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
+import { TemplateNotFoundError } from '../domain/error/not-found-error/template-not-found-error'
+import { DataSourceNotFoundError } from '../domain/error/not-found-error/data-source-not-found-error'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
+import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
+import { NoDataSourceRowsError } from '../domain/error/validation-error/no-data-source-rows-error'
+import { DataSourceRowsNotReadyError } from '../domain/error/validation-error/data-source-rows-not-ready-error'
+import { InsufficientCreditsError } from '../domain/error/validation-error/insufficient-credits-error'
 import { IQueue } from './interfaces/cloud/iqueue'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { IBucket } from './interfaces/cloud/ibucket'
@@ -55,23 +51,23 @@ export class GenerateCertificatesUseCase {
             )
 
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         if (!certificateEmission.isOwner(userId)) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         if (certificateEmission.isEmitted()) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
+            throw new CertificateEmittedError()
         }
 
         if (!certificateEmission.hasTemplate()) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.TEMPLATE)
+            throw new TemplateNotFoundError()
         }
 
         if (!certificateEmission.hasDataSource()) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.DATA_SOURCE)
+            throw new DataSourceNotFoundError()
         }
 
         const totalRows =
@@ -80,7 +76,7 @@ export class GenerateCertificatesUseCase {
             )
 
         if (totalRows === 0) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.NO_DATA_SOURCE_ROWS)
+            throw new NoDataSourceRowsError()
         }
 
         const totalPendingRows =
@@ -90,9 +86,7 @@ export class GenerateCertificatesUseCase {
             )
 
         if (totalPendingRows !== totalRows) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.DATA_SOURCE_ROWS_NOT_READY,
-            )
+            throw new DataSourceRowsNotReadyError()
         }
 
         const credited = await this.usersRepository.deductCredits(
@@ -101,9 +95,7 @@ export class GenerateCertificatesUseCase {
         )
 
         if (!credited) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.INSUFFICIENT_CREDITS,
-            )
+            throw new InsufficientCreditsError()
         }
 
         // Delete old certificates before generating new ones

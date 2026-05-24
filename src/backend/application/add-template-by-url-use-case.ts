@@ -1,26 +1,19 @@
 import { env } from '@/env'
 import { INPUT_METHOD } from '../domain/certificate'
 import { Template } from '../domain/template'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from '../domain/error/validation-error'
+import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
+import { UnexistentTemplateDriveFileIdError } from '../domain/error/validation-error/unexistent-template-drive-file-id-error'
+import { UnsupportedTemplateMimetypeError } from '../domain/error/validation-error/unsupported-template-mimetype-error'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { IFileContentExtractorFactory } from './interfaces/ifile-content-extractor-factory'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import {
-    NOT_FOUND_ERROR_TYPE,
-    NotFoundError,
-} from '../domain/error/not-found-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { IStringVariableExtractor } from './interfaces/istring-variable-extractor'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import {
-    FORBIDDEN_ERROR_TYPE,
-    ForbiddenError,
-} from '../domain/error/forbidden-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 
 interface AddTemplateByUrlUseCaseInput {
     certificateId: string
@@ -63,23 +56,21 @@ export class AddTemplateByUrlUseCase {
             )
 
         if (!certificateEmission) {
-            throw new NotFoundError(NOT_FOUND_ERROR_TYPE.CERTIFICATE)
+            throw new CertificateNotFoundError()
         }
 
         if (!certificateEmission.isOwner(input.userId)) {
-            throw new ForbiddenError(FORBIDDEN_ERROR_TYPE.NOT_CERTIFICATE_OWNER)
+            throw new NotCertificateOwnerError()
         }
 
         if (certificateEmission.isEmitted()) {
-            throw new ValidationError(VALIDATION_ERROR_TYPE.CERTIFICATE_EMITTED)
+            throw new CertificateEmittedError()
         }
 
         const driveFileId = Template.getFileIdFromUrl(input.fileUrl)
 
         if (!driveFileId) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.UNEXISTENT_TEMPLATE_DRIVE_FILE_ID,
-            )
+            throw new UnexistentTemplateDriveFileIdError()
         }
 
         const user = await this.usersRepository.getById(input.userId)
@@ -92,9 +83,7 @@ export class AddTemplateByUrlUseCase {
             })
 
         if (!Template.isValidFileMimeType(fileMimeType)) {
-            throw new ValidationError(
-                VALIDATION_ERROR_TYPE.UNSUPPORTED_TEMPLATE_MIMETYPE,
-            )
+            throw new UnsupportedTemplateMimetypeError()
         }
 
         const buffer = await this.googleDriveGateway.downloadFile({
