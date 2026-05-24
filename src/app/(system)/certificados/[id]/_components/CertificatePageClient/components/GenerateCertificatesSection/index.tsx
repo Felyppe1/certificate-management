@@ -45,15 +45,19 @@ export function GenerateCertificatesSection({
     emailSent,
 }: GenerateCertificatesSectionProps) {
     const queryClient = useQueryClient()
-    const [completedRows, setCompletedRows] = useState(() => {
-        const hasRunning = rows.some(
-            row => row.processingStatus === PROCESSING_STATUS_ENUM.RUNNING,
-        )
-        if (!hasRunning) return 0
-        return rows.filter(
-            row => row.processingStatus === PROCESSING_STATUS_ENUM.COMPLETED,
-        ).length
-    })
+    const [completedRowIds, setCompletedRowIds] = useState<Set<string>>(
+        () =>
+            new Set(
+                rows
+                    .filter(
+                        r =>
+                            r.processingStatus ===
+                            PROCESSING_STATUS_ENUM.COMPLETED,
+                    )
+                    .map(r => r.id),
+            ),
+    )
+    const completedRows = completedRowIds.size
     const [retryCompletedRows, setRetryCompletedRows] = useState(0)
     const [totalRetryingRows, setTotalRetryingRows] = useState(0)
 
@@ -97,7 +101,7 @@ export function GenerateCertificatesSection({
             return result
         },
         onMutate: () => {
-            setCompletedRows(0)
+            setCompletedRowIds(new Set())
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({
@@ -163,40 +167,61 @@ export function GenerateCertificatesSection({
                 if (isRetrying) {
                     setRetryCompletedRows(prev => prev + 1)
                 } else {
-                    setCompletedRows(prev => prev + 1)
+                    setCompletedRowIds(
+                        prev => new Set([...prev, data.dataSourceRowId]),
+                    )
                 }
             }
         },
         enabled: isGenerating || isRetrying,
     })
 
+    // Fires toast only when completedRows transitions to totalRows (not on re-mount
+    // where the Set is already fully initialized from server data).
+    const prevCompletedRowsRef = useRef(completedRows)
     useEffect(() => {
-        if (completedRows === totalRows && totalRows > 0 && completedRows > 0) {
+        if (
+            completedRows === totalRows &&
+            totalRows > 0 &&
+            prevCompletedRowsRef.current < totalRows
+        ) {
             toast.success('A geração de certificados finalizou')
             queryClient.invalidateQueries({
                 queryKey: queryKeys.certificateEmission(certificateId),
             })
         }
+        prevCompletedRowsRef.current = completedRows
     }, [completedRows, totalRows])
 
-    // Sync completedRows upward when server data (from polling) reports more completions
-    // than SSE events alone. Guard on isGenerating to avoid a spurious completion toast
-    // when the page re-mounts after generation is already done.
+    // Idempotent sync: when rows refetches (e.g. after the catch-up below),
+    // add any server-known COMPLETED row IDs to the Set without double-counting.
     useEffect(() => {
         if (!isGenerating) return
-        setCompletedRows(prev => Math.max(prev, successRows))
-    }, [successRows])
-
-    // Poll server every 3 s while generating to catch SSE events missed during
-    // navigation or connection gaps.
-    useEffect(() => {
-        if (!isGenerating) return
-        const interval = setInterval(() => {
-            queryClient.invalidateQueries({
-                queryKey: queryKeys.certificateEmission(certificateId),
+        setCompletedRowIds(prev => {
+            const next = new Set(prev)
+            let changed = false
+            rows.forEach(row => {
+                if (
+                    row.processingStatus === PROCESSING_STATUS_ENUM.COMPLETED &&
+                    !prev.has(row.id)
+                ) {
+                    next.add(row.id)
+                    changed = true
+                }
             })
-        }, 3000)
-        return () => clearInterval(interval)
+            return changed ? next : prev
+        })
+    }, [rows, isGenerating])
+
+    // One-time catch-up refetch when generation becomes active, to cover the
+    // brief window between the initial page fetch and SSE connection.
+    const catchUpRef = useRef(false)
+    useEffect(() => {
+        if (!isGenerating || catchUpRef.current) return
+        catchUpRef.current = true
+        queryClient.invalidateQueries({
+            queryKey: queryKeys.certificateEmission(certificateId),
+        })
     }, [isGenerating, certificateId, queryClient])
 
     // Handle retry completion
@@ -231,7 +256,7 @@ export function GenerateCertificatesSection({
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="space-y-2">
-                    {successRows > 0 && (
+                    {successRows > 0 && !isGenerating && (
                         <AlertMessage
                             variant="success"
                             icon={<CheckCircle2 />}
@@ -244,35 +269,39 @@ export function GenerateCertificatesSection({
                         />
                     )}
 
-                    {failedRows > 0 && failedRows !== totalRows && (
-                        <AlertMessage
-                            variant="error"
-                            icon={<CircleAlert />}
-                            text={`${failedRows} ${failedRows !== 1 ? 'gerações de certificados falharam' : 'geração de certificado falhou'}.`}
-                            actionLayout="start"
-                            action={
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => retryMutation.mutate()}
-                                    disabled={isRetryProcessing || isPending}
-                                    className="text-red-700 dark:text-red-300 border-red-300 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30"
-                                >
-                                    {retryMutation.isPending ? (
-                                        <>
-                                            <Loader2 className="scale-90 h-3 w-3 animate-spin" />
-                                            Iniciando...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <RefreshCw className="scale-90 h-3 w-3" />
-                                            Tentar novamente
-                                        </>
-                                    )}
-                                </Button>
-                            }
-                        />
-                    )}
+                    {failedRows > 0 &&
+                        failedRows !== totalRows &&
+                        !isGenerating && (
+                            <AlertMessage
+                                variant="error"
+                                icon={<CircleAlert />}
+                                text={`${failedRows} ${failedRows !== 1 ? 'gerações de certificados falharam' : 'geração de certificado falhou'}.`}
+                                actionLayout="start"
+                                action={
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => retryMutation.mutate()}
+                                        disabled={
+                                            isRetryProcessing || isPending
+                                        }
+                                        className="text-red-700 dark:text-red-300 border-red-300 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30"
+                                    >
+                                        {retryMutation.isPending ? (
+                                            <>
+                                                <Loader2 className="scale-90 h-3 w-3 animate-spin" />
+                                                Iniciando...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <RefreshCw className="scale-90 h-3 w-3" />
+                                                Tentar novamente
+                                            </>
+                                        )}
+                                    </Button>
+                                }
+                            />
+                        )}
 
                     {retryingRows > 0 && (
                         <AlertMessage
@@ -292,34 +321,36 @@ export function GenerateCertificatesSection({
                     )}
                 </div>
 
-                {failedRows > 0 && failedRows === totalRows && (
-                    <AlertMessage
-                        variant="error"
-                        icon={<CircleAlert />}
-                        text={`Todas as gerações de certificados falharam.`}
-                        action={
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => retryMutation.mutate()}
-                                disabled={isRetryProcessing || isPending}
-                                className="text-red-700 dark:text-red-300 border-red-300 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30"
-                            >
-                                {retryMutation.isPending ? (
-                                    <>
-                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                        Iniciando...
-                                    </>
-                                ) : (
-                                    <>
-                                        <RefreshCw className="h-3 w-3" />
-                                        Tentar novamente
-                                    </>
-                                )}
-                            </Button>
-                        }
-                    />
-                )}
+                {failedRows > 0 &&
+                    failedRows === totalRows &&
+                    !isGenerating && (
+                        <AlertMessage
+                            variant="error"
+                            icon={<CircleAlert />}
+                            text={`Todas as gerações de certificados falharam.`}
+                            action={
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => retryMutation.mutate()}
+                                    disabled={isRetryProcessing || isPending}
+                                    className="text-red-700 dark:text-red-300 border-red-300 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30"
+                                >
+                                    {retryMutation.isPending ? (
+                                        <>
+                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                            Iniciando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <RefreshCw className="h-3 w-3" />
+                                            Tentar novamente
+                                        </>
+                                    )}
+                                </Button>
+                            }
+                        />
+                    )}
 
                 {!allVariablesWereMapped && (
                     <div className="bg-muted/50 border rounded-lg p-4">
