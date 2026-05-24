@@ -7,7 +7,7 @@ import {
 
 import { TEMPLATE_FILE_MIME_TYPE } from './template'
 import { DATA_SOURCE_MIME_TYPE } from './data-source'
-import { ForbiddenError } from './error/forbidden-error'
+import { NotCertificateOwnerError } from './error/forbidden-error/not-certificate-owner-error'
 
 const makeDataSourceWithColumns = (columnNames: string[]) => ({
     fileMimeType: DATA_SOURCE_MIME_TYPE.CSV,
@@ -225,7 +225,7 @@ describe('Emissão de Certifcado', () => {
                     CertificateEmission.create(makeCreateInput())
 
                 expect(() => certificate.removeTemplate('other-user')).toThrow(
-                    ForbiddenError,
+                    NotCertificateOwnerError,
                 )
             })
 
@@ -247,7 +247,7 @@ describe('Emissão de Certifcado', () => {
 
                 expect(() =>
                     certificate.removeDataSource('other-user'),
-                ).toThrow(ForbiddenError)
+                ).toThrow(NotCertificateOwnerError)
             })
         })
 

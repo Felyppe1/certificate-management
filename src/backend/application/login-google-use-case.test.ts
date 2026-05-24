@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { LoginGoogleUseCase } from './login-google-use-case'
-import { AuthenticationError } from '../domain/error/authentication-error'
-import { ConflictError } from '../domain/error/conflict-error'
+import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
+import { ExternalAccountAlreadyExistsError } from '../domain/error/conflict-error/external-account-already-exists-error'
 
 function createUserMock(overrides: any = {}) {
     return {
@@ -85,7 +85,7 @@ describe('LoginGoogleUseCase', () => {
                 reAuthenticate: true,
                 userId: 'invalid',
             }),
-        ).rejects.toThrow(AuthenticationError)
+        ).rejects.toThrow(UserNotFoundError)
     })
 
     it('deve lançar conflito se conta Google já pertencer a outro usuário', async () => {
@@ -105,7 +105,7 @@ describe('LoginGoogleUseCase', () => {
                 reAuthenticate: true,
                 userId: 'user-1',
             }),
-        ).rejects.toThrow(ConflictError)
+        ).rejects.toThrow(ExternalAccountAlreadyExistsError)
     })
 
     it('deve criar novo usuário quando não existir', async () => {

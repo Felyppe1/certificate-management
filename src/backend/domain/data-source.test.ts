@@ -8,10 +8,7 @@ import {
     MAX_DATA_SOURCE_COLUMNS,
     MAX_IMAGE_FILES,
 } from './data-source'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from './error/validation-error'
+import { ValidationError } from './error/validation-error'
 import { INPUT_METHOD } from './certificate'
 
 const makeFile = (overrides = {}) => ({

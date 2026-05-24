@@ -10,9 +10,10 @@ import {
 } from '../domain/certificate'
 import { Template, TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
 import { IBucket } from './interfaces/cloud/ibucket'
-import { ForbiddenError } from '../domain/error/forbidden-error'
-import { NotFoundError } from '../domain/error/not-found-error'
-import { ValidationError } from '../domain/error/validation-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
+import { TemplateNotFoundError } from '../domain/error/not-found-error/template-not-found-error'
+import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
 
 describe('DeleteTemplateUseCase', () => {
     const USER_ID = '1'
@@ -118,7 +119,7 @@ describe('DeleteTemplateUseCase', () => {
                 certificateId: 'non-existent-id',
                 userId: USER_ID,
             }),
-        ).rejects.toThrow(NotFoundError)
+        ).rejects.toThrow(CertificateNotFoundError)
 
         expect(certificateEmissionsRepositoryMock.update).not.toHaveBeenCalled()
     })
@@ -148,7 +149,7 @@ describe('DeleteTemplateUseCase', () => {
                 certificateId: CERTIFICATE_ID,
                 userId: USER_ID,
             }),
-        ).rejects.toThrow(ForbiddenError)
+        ).rejects.toThrow(NotCertificateOwnerError)
 
         expect(certificateEmissionsRepositoryMock.update).not.toHaveBeenCalled()
     })
@@ -178,7 +179,7 @@ describe('DeleteTemplateUseCase', () => {
                 certificateId: CERTIFICATE_ID,
                 userId: USER_ID,
             }),
-        ).rejects.toThrow(ValidationError)
+        ).rejects.toThrow(CertificateEmittedError)
 
         expect(certificateEmissionsRepositoryMock.update).not.toHaveBeenCalled()
     })
@@ -208,7 +209,7 @@ describe('DeleteTemplateUseCase', () => {
                 certificateId: CERTIFICATE_ID,
                 userId: USER_ID,
             }),
-        ).rejects.toThrow(NotFoundError)
+        ).rejects.toThrow(TemplateNotFoundError)
 
         expect(certificateEmissionsRepositoryMock.update).not.toHaveBeenCalled()
     })

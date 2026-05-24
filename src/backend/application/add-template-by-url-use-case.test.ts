@@ -17,9 +17,11 @@ import {
     IFileContentExtractorStrategy,
     IFileContentExtractorFactory,
 } from './interfaces/ifile-content-extractor-factory'
-import { ForbiddenError } from '../domain/error/forbidden-error'
-import { NotFoundError } from '../domain/error/not-found-error'
-import { ValidationError } from '../domain/error/validation-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
+import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
+import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
+import { UnexistentTemplateDriveFileIdError } from '../domain/error/validation-error/unexistent-template-drive-file-id-error'
+import { UnsupportedTemplateMimetypeError } from '../domain/error/validation-error/unsupported-template-mimetype-error'
 import { IBucket } from './interfaces/cloud/ibucket'
 
 describe('AddTemplateByUrlUseCase', () => {
@@ -64,6 +66,7 @@ describe('AddTemplateByUrlUseCase', () => {
             ],
             emailVerificationCode: null,
             resetPasswordCode: null,
+            emailChangeCode: null,
         })
     }
 
@@ -201,7 +204,7 @@ describe('AddTemplateByUrlUseCase', () => {
                 fileUrl: VALID_DRIVE_URL,
                 userId: USER_ID,
             }),
-        ).rejects.toThrow(ForbiddenError)
+        ).rejects.toThrow(NotCertificateOwnerError)
 
         expect(certificateEmissionsRepositoryMock.update).not.toHaveBeenCalled()
     })
@@ -236,7 +239,7 @@ describe('AddTemplateByUrlUseCase', () => {
                 fileUrl: VALID_DRIVE_URL,
                 userId: USER_ID,
             }),
-        ).rejects.toThrow(ValidationError)
+        ).rejects.toThrow(CertificateEmittedError)
 
         expect(certificateEmissionsRepositoryMock.update).not.toHaveBeenCalled()
     })
@@ -267,7 +270,7 @@ describe('AddTemplateByUrlUseCase', () => {
                 fileUrl: VALID_DRIVE_URL,
                 userId: USER_ID,
             }),
-        ).rejects.toThrow(NotFoundError)
+        ).rejects.toThrow(CertificateNotFoundError)
 
         expect(certificateEmissionsRepositoryMock.getById).toHaveBeenCalledWith(
             'non-existent-id',
@@ -301,7 +304,7 @@ describe('AddTemplateByUrlUseCase', () => {
                 fileUrl: 'https://invalid-url.com',
                 userId: USER_ID,
             }),
-        ).rejects.toThrow(ValidationError)
+        ).rejects.toThrow(UnexistentTemplateDriveFileIdError)
 
         expect(certificateEmissionsRepositoryMock.update).not.toHaveBeenCalled()
     })
@@ -355,7 +358,7 @@ describe('AddTemplateByUrlUseCase', () => {
                 fileUrl: VALID_DRIVE_URL,
                 userId: USER_ID,
             }),
-        ).rejects.toThrow(ValidationError)
+        ).rejects.toThrow(UnsupportedTemplateMimetypeError)
 
         expect(certificateEmissionsRepositoryMock.update).not.toHaveBeenCalled()
     })

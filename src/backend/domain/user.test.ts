@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { User, UserInput } from './user'
 import { ExternalAccount, ExternalAccountInput } from './external-account'
 import bcrypt from 'bcrypt'
-import { CONFLICT_ERROR_TYPE, ConflictError } from './error/conflict-error'
-import {
-    VALIDATION_ERROR_TYPE,
-    ValidationError,
-} from './error/validation-error'
-import { NOT_FOUND_ERROR_TYPE, NotFoundError } from './error/not-found-error'
+import { ExternalAccountAlreadyExistsError } from './error/conflict-error/external-account-already-exists-error'
+import { SystemLoginNotEnabledError } from './error/validation-error/system-login-not-enabled-error'
+import { LastLoginMethodError } from './error/validation-error/last-login-method-error'
+import { EmailAlreadyVerifiedError } from './error/validation-error/email-already-verified-error'
+import { CurrentPasswordIncorrectError } from './error/validation-error/current-password-incorrect-error'
+import { SystemLoginEnabledError } from './error/validation-error/system-login-enabled-error'
+import { ExternalAccountNotFoundError } from './error/not-found-error/external-account-not-found-error'
 
 const createExternalAccountData = (
     overrides?: Partial<ExternalAccountInput>,
@@ -88,10 +89,7 @@ describe('Gerenciamento de conta do usuário', () => {
                     refreshTokenExpiryDateTime: new Date(),
                 })
             } catch (error: any) {
-                expect(error).toBeInstanceOf(ConflictError)
-                expect(error.type).toBe(
-                    CONFLICT_ERROR_TYPE.EXTERNAL_ACCOUNT_ALREADY_EXISTS,
-                )
+                expect(error).toBeInstanceOf(ExternalAccountAlreadyExistsError)
             }
         })
 
@@ -107,10 +105,7 @@ describe('Gerenciamento de conta do usuário', () => {
                     refreshTokenExpiryDateTime: new Date(),
                 })
             } catch (error: any) {
-                expect(error).toBeInstanceOf(ValidationError)
-                expect(error.type).toBe(
-                    VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED,
-                )
+                expect(error).toBeInstanceOf(SystemLoginNotEnabledError)
             }
         })
     })
@@ -144,8 +139,7 @@ describe('Gerenciamento de conta do usuário', () => {
             try {
                 user.removeExternalAccount('GOOGLE')
             } catch (error: any) {
-                expect(error).toBeInstanceOf(ValidationError)
-                expect(error.type).toBe(VALIDATION_ERROR_TYPE.LAST_LOGIN_METHOD)
+                expect(error).toBeInstanceOf(LastLoginMethodError)
             }
         })
 
@@ -155,8 +149,7 @@ describe('Gerenciamento de conta do usuário', () => {
             try {
                 user.removeExternalAccount('GOOGLE')
             } catch (error: any) {
-                expect(error).toBeInstanceOf(NotFoundError)
-                expect(error.type).toBe(NOT_FOUND_ERROR_TYPE.EXTERNAL_ACCOUNT)
+                expect(error).toBeInstanceOf(ExternalAccountNotFoundError)
             }
         })
 
@@ -173,8 +166,7 @@ describe('Gerenciamento de conta do usuário', () => {
             try {
                 user.removeExternalAccount('GOOGLE')
             } catch (error: any) {
-                expect(error).toBeInstanceOf(ValidationError)
-                expect(error.type).toBe(VALIDATION_ERROR_TYPE.LAST_LOGIN_METHOD)
+                expect(error).toBeInstanceOf(LastLoginMethodError)
             }
         })
     })
@@ -207,10 +199,8 @@ describe('Gerenciamento de conta do usuário', () => {
                 isEmailVerified: true,
             })
 
-            expect(() => user.changeEmail('user@gmail.com')).toThrowError(
-                expect.objectContaining({
-                    type: VALIDATION_ERROR_TYPE.EMAIL_ALREADY_VERIFIED,
-                }),
+            expect(() => user.changeEmail('user@gmail.com')).toThrow(
+                EmailAlreadyVerifiedError,
             )
         })
 
@@ -251,10 +241,7 @@ describe('Gerenciamento de conta do usuário', () => {
             try {
                 await user.updatePassword('newpassword', 'anypassword')
             } catch (error: any) {
-                expect(error).toBeInstanceOf(ValidationError)
-                expect(error.type).toBe(
-                    VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_NOT_ENABLED,
-                )
+                expect(error).toBeInstanceOf(SystemLoginNotEnabledError)
             }
         })
 
@@ -268,10 +255,7 @@ describe('Gerenciamento de conta do usuário', () => {
             try {
                 await user.updatePassword('newpassword', 'wrongpassword')
             } catch (error: any) {
-                expect(error).toBeInstanceOf(ValidationError)
-                expect(error.type).toBe(
-                    VALIDATION_ERROR_TYPE.CURRENT_PASSWORD_INCORRECT,
-                )
+                expect(error).toBeInstanceOf(CurrentPasswordIncorrectError)
             }
         })
     })
@@ -321,8 +305,7 @@ describe('Gerenciamento de conta do usuário', () => {
             try {
                 user.linkSystemAccountWithSameEmail('GOOGLE', 'hash')
             } catch (error: any) {
-                expect(error).toBeInstanceOf(NotFoundError)
-                expect(error.type).toBe(NOT_FOUND_ERROR_TYPE.EXTERNAL_ACCOUNT)
+                expect(error).toBeInstanceOf(ExternalAccountNotFoundError)
             }
         })
 
@@ -339,10 +322,7 @@ describe('Gerenciamento de conta do usuário', () => {
             try {
                 user.linkSystemAccountWithSameEmail('GOOGLE', 'new-hash')
             } catch (error: any) {
-                expect(error).toBeInstanceOf(ValidationError)
-                expect(error.type).toBe(
-                    VALIDATION_ERROR_TYPE.SYSTEM_LOGIN_ENABLED,
-                )
+                expect(error).toBeInstanceOf(SystemLoginEnabledError)
             }
         })
     })
