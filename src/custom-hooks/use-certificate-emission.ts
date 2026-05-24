@@ -26,7 +26,7 @@ export function useCertificateEmission(certificateId: string) {
 
     if (result.isError) {
         if (result.error instanceof ApiError) {
-            if (result.error.statusCode === 404) {
+            if (result.error.status === 404) {
                 notFound()
             }
         }

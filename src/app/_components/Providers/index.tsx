@@ -19,13 +19,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
             new QueryClient({
                 queryCache: new QueryCache({
                     onError: (error: any) => {
-                        console.log('Query error:', error)
-                        console.log('teste', error?.statusCode, error?.body)
-                        const status = error?.statusCode
+                        const status = error?.status
                         const type =
-                            error?.body?.type !== 'about:blank'
-                                ? error?.body?.type
-                                : null
+                            error?.type !== 'about:blank' ? error?.type : null
                         const query = type ? `?error=${type}` : ''
 
                         if (status === 401) {
