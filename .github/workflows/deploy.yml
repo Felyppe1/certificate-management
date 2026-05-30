@@ -131,7 +131,7 @@ jobs:
     outputs:
       artifact_path: ${{ steps.get_artifact_path.outputs.artifact_path }}
       cloud_run_name: ${{ steps.get_service_name.outputs.cloud_run_name }}
-      generate_pdfs_cloud_run_name: ${{ steps.get_generate_pdfs_service_name.outputs.generate_pdfs_cloud_run_name }}
+      # generate_pdfs_cloud_run_name: ${{ steps.get_generate_pdfs_service_name.outputs.generate_pdfs_cloud_run_name }}
 
     env:
       REGION: us-central1
@@ -217,11 +217,11 @@ jobs:
         run: |
           echo "cloud_run_name=$(terraform output -raw cloud_run_name)" >> $GITHUB_OUTPUT
 
-      - name: Get generate_pdfs Service Name from Terraform
-        id: get_generate_pdfs_service_name
-        working-directory: ./terraform
-        run: |
-          echo "generate_pdfs_cloud_run_name=$(terraform output -raw generate_pdfs_cloud_run_name)" >> $GITHUB_OUTPUT
+      # - name: Get generate_pdfs Service Name from Terraform
+      #   id: get_generate_pdfs_service_name
+      #   working-directory: ./terraform
+      #   run: |
+      #     echo "generate_pdfs_cloud_run_name=$(terraform output -raw generate_pdfs_cloud_run_name)" >> $GITHUB_OUTPUT
 
   deploy-certificate-management:
     runs-on: ubuntu-latest
