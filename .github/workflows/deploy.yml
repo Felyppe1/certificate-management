@@ -46,7 +46,7 @@ jobs:
 
   terraform-plan:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
+    environment: ${{ github.ref == 'refs/heads/main' && 'main-personal-account' || 'develop' }}
     needs: test
 
     env:
@@ -125,7 +125,7 @@ jobs:
 
   terraform-apply:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
+    environment: ${{ github.ref == 'refs/heads/main' && 'main-personal-account' || 'develop' }}
     needs: terraform-plan
 
     outputs:
@@ -225,7 +225,7 @@ jobs:
 
   deploy-certificate-management:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
+    environment: ${{ github.ref == 'refs/heads/main' && 'main-personal-account' || 'develop' }}
     needs: terraform-apply
 
     env:
@@ -283,7 +283,7 @@ jobs:
 
   # deploy-generate-pdfs:
   #   runs-on: ubuntu-latest
-  #   environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'develop' }}
+  #   environment: ${{ github.ref == 'refs/heads/main' && 'main-personal-account' || 'develop' }}
   #   needs: terraform-apply
 
   #   env:
