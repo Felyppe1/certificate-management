@@ -60,6 +60,9 @@ export function useEmailForm({
             await queryClient.invalidateQueries({
                 queryKey: queryKeys.certificateEmission(certificateId),
             })
+            await queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmissionsMetrics(),
+            })
             toast.success(
                 totalRecipients < 2
                     ? 'Email enviado com sucesso'
