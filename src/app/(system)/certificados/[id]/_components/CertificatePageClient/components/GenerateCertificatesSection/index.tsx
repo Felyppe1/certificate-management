@@ -107,6 +107,9 @@ export function GenerateCertificatesSection({
             await queryClient.invalidateQueries({
                 queryKey: queryKeys.certificateEmission(certificateId),
             })
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmissionsMetrics(),
+            })
             await queryClient.invalidateQueries({
                 queryKey: queryKeys.me(),
             })
@@ -143,6 +146,9 @@ export function GenerateCertificatesSection({
         onSuccess: async data => {
             await queryClient.invalidateQueries({
                 queryKey: queryKeys.certificateEmission(certificateId),
+            })
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmissionsMetrics(),
             })
             if (data?.data) {
                 setTotalRetryingRows(data.data.totalRetrying)
@@ -188,6 +194,9 @@ export function GenerateCertificatesSection({
             toast.success('A geração de certificados finalizou')
             queryClient.invalidateQueries({
                 queryKey: queryKeys.certificateEmission(certificateId),
+            })
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmissionsMetrics(),
             })
         }
         prevCompletedRowsRef.current = completedRows
@@ -236,6 +245,9 @@ export function GenerateCertificatesSection({
             )
             queryClient.invalidateQueries({
                 queryKey: queryKeys.certificateEmission(certificateId),
+            })
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.certificateEmissionsMetrics(),
             })
         }
     }, [retryCompletedRows, totalRetryingRows, isRetrying])
