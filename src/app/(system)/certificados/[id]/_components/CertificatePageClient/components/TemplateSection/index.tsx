@@ -69,49 +69,44 @@ export function TemplateSection({
         defaultValues: { fileUrls: [{ value: '' }] },
     })
 
-    const urlMutation = useMutation({
-        mutationFn: async (data: UrlFormValues) => {
-            const formData = new FormData()
-            formData.append('certificateId', certificateId)
-            formData.append('fileUrl', data.fileUrls[0].value)
-            const result = await addTemplateByUrlAction(null, formData)
-            if (!result?.success) throw result
-            return result
-        },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({
-                queryKey: queryKeys.certificateEmission(certificateId),
-            })
-            toast.success('Template adicionado com sucesso')
-            templateUrlForm.reset({ fileUrls: [{ value: '' }] })
-            setIsEditing(false)
-        },
-        onError: (error: any) => {
-            if (isRedirectError(error)) return
+    const onSubmitUrl = async (data: UrlFormValues) => {
+        const formData = new FormData()
+        formData.append('certificateId', certificateId)
+        formData.append('fileUrl', data.fileUrls[0].value)
+        const result = await addTemplateByUrlAction(null, formData)
 
-            if (error?.errorType === 'drive-file-not-found') {
+        if (!result?.success) {
+            if (result?.errorType === 'drive-file-not-found') {
                 toast.error(
                     'Arquivo não encontrado. Verifique se ele se existe no Drive, se você tem permissão para acessá-lo ou se ele está público',
                 )
-            } else if (error?.errorType === 'unsupported-template-mimetype') {
+            } else if (result?.errorType === 'unsupported-template-mimetype') {
                 toast.error(
                     'Tipo de arquivo não suportado. Apenas Google Slides, Google Docs, .pptx ou .docx são permitidos',
                 )
             } else if (
-                error?.errorType === 'template-variables-parsing-error'
+                result?.errorType === 'template-variables-parsing-error'
             ) {
                 toast.error(
                     'Foi encontrado um erro de sintaxe do Liquid no template.',
                 )
-            } else if (error?.errorType === 'template-file-size-too-large') {
+            } else if (result?.errorType === 'template-file-size-too-large') {
                 toast.error(
                     `O arquivo do template é muito grande. O tamanho máximo é 5MB`,
                 )
             } else {
                 toast.error('Ocorreu um erro ao tentar adicionar template')
             }
-        },
-    })
+            return
+        }
+
+        await queryClient.invalidateQueries({
+            queryKey: queryKeys.certificateEmission(certificateId),
+        })
+        toast.success('Template adicionado com sucesso')
+        templateUrlForm.reset({ fileUrls: [{ value: '' }] })
+        setIsEditing(false)
+    }
 
     const drivePickerMutation = useMutation({
         mutationFn: async (fileId: string) => {
@@ -224,7 +219,7 @@ export function TemplateSection({
                         variant="outline"
                         onClick={handleCancelEdit}
                         disabled={
-                            urlMutation.isPending ||
+                            templateUrlForm.formState.isSubmitting ||
                             drivePickerMutation.isPending
                         }
                         className="text-destructive hover:text-destructive hover:bg-destructive/10 self-end xs:self-auto"
@@ -237,7 +232,7 @@ export function TemplateSection({
                         userEmail={userEmail}
                         googleOAuthToken={googleOAuthToken}
                         urlForm={templateUrlForm}
-                        onSubmitUrl={data => urlMutation.mutate(data)}
+                        onSubmitUrl={onSubmitUrl}
                         onSubmitDrive={fileIds =>
                             drivePickerMutation.mutate(fileIds[0])
                         }
@@ -285,7 +280,7 @@ export function TemplateSection({
                     userEmail={userEmail}
                     googleOAuthToken={googleOAuthToken}
                     urlForm={templateUrlForm}
-                    onSubmitUrl={data => urlMutation.mutate(data)}
+                    onSubmitUrl={onSubmitUrl}
                     onSubmitDrive={fileIds =>
                         drivePickerMutation.mutate(fileIds[0])
                     }
