@@ -1,5 +1,6 @@
 import { ColumnType } from '@/backend/domain/data-source-column'
-import { Calendar, Hash, List, ToggleLeft, Type } from 'lucide-react'
+import { NumberTypeIcon } from '@/components/icons/NumberTypeIcon'
+import { Calendar, List, ToggleLeft, Type } from 'lucide-react'
 
 export const columnTypeConfig: Record<
     ColumnType,
@@ -12,7 +13,7 @@ export const columnTypeConfig: Record<
     },
     number: {
         label: 'Número',
-        icon: Hash,
+        icon: NumberTypeIcon,
         iconColor: 'text-purple-500',
     },
     date: {
