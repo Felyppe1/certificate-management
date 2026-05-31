@@ -26,7 +26,7 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Generate Prisma Client
         run: npx prisma generate
         env:
@@ -51,7 +51,7 @@ jobs:
 
     env:
       REGION: us-central1
-      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
 
     steps:
       - name: Checkout code
@@ -60,38 +60,27 @@ jobs:
       - name: Authenticate to GCP
         uses: ./.github/actions/gcp-auth
         with:
-          wif_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_NAME }}
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          wif_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
 
       - name: Setup Terraform environment
         uses: ./.github/actions/terraform-env
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
           region: ${{ env.REGION }}
           branch: ${{ github.ref_name }}
-          smtp_user: ${{ secrets.SMTP_USER }}
-          smtp_password: ${{ secrets.SMTP_PASSWORD }}
-          google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
+          google_client_id: ${{ vars.GOOGLE_CLIENT_ID }}
           google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           google_refresh_token: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
-          google_drive_folder_id: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+          google_drive_folder_id: ${{ vars.GOOGLE_DRIVE_FOLDER_ID }}
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
-          resend_api_key: ${{ secrets.RESEND_API_KEY }}
           brevo_api_key: ${{ secrets.BREVO_API_KEY }}
-          db_user: ${{ secrets.DB_USER }}
-          db_password: ${{ secrets.DB_PASSWORD }}
-          db_name: ${{ secrets.DB_NAME }}
-          db_port: ${{ secrets.DB_PORT }}
-          db_host: ${{ secrets.DB_HOST }}
           db_url: ${{ secrets.DB_URL }}
           db_direct_url: ${{ secrets.DB_DIRECT_URL }}
-          redis_url: ${{ secrets.REDIS_URL }}
-          loki_url: ${{ secrets.LOKI_URL }}
-          otel_exporter_otlp_logs_endpoint: ${{ secrets.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT }}
-          ga_id: ${{ secrets.GA_ID }}
+          ga_id: ${{ vars.GA_ID }}
           next_public_base_url: ${{ vars.NEXT_PUBLIC_BASE_URL }}
-          owner_email: ${{ secrets.OWNER_EMAIL }}
+          owner_email: ${{ vars.OWNER_EMAIL }}
 
       - name: Create Terraform state bucket if not exists
         run: |
@@ -135,7 +124,7 @@ jobs:
 
     env:
       REGION: us-central1
-      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
 
     steps:
       - name: Checkout code
@@ -144,38 +133,27 @@ jobs:
       - name: Authenticate to GCP
         uses: ./.github/actions/gcp-auth
         with:
-          wif_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_NAME }}
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          wif_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
 
       - name: Setup Terraform environment
         uses: ./.github/actions/terraform-env
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
           region: ${{ env.REGION }}
           branch: ${{ github.ref_name }}
-          smtp_user: ${{ secrets.SMTP_USER }}
-          smtp_password: ${{ secrets.SMTP_PASSWORD }}
-          google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
+          google_client_id: ${{ vars.GOOGLE_CLIENT_ID }}
           google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           google_refresh_token: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
-          google_drive_folder_id: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+          google_drive_folder_id: ${{ vars.GOOGLE_DRIVE_FOLDER_ID }}
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
-          resend_api_key: ${{ secrets.RESEND_API_KEY }}
           brevo_api_key: ${{ secrets.BREVO_API_KEY }}
-          db_user: ${{ secrets.DB_USER }}
-          db_password: ${{ secrets.DB_PASSWORD }}
-          db_name: ${{ secrets.DB_NAME }}
-          db_port: ${{ secrets.DB_PORT }}
-          db_host: ${{ secrets.DB_HOST }}
           db_url: ${{ secrets.DB_URL }}
           db_direct_url: ${{ secrets.DB_DIRECT_URL }}
-          redis_url: ${{ secrets.REDIS_URL }}
-          loki_url: ${{ secrets.LOKI_URL }}
-          otel_exporter_otlp_logs_endpoint: ${{ secrets.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT }}
-          ga_id: ${{ secrets.GA_ID }}
+          ga_id: ${{ vars.GA_ID }}
           next_public_base_url: ${{ vars.NEXT_PUBLIC_BASE_URL }}
-          owner_email: ${{ secrets.OWNER_EMAIL }}
+          owner_email: ${{ vars.OWNER_EMAIL }}
 
       - name: Terraform Init
         working-directory: ./terraform
@@ -239,9 +217,9 @@ jobs:
       - name: Authenticate to GCP
         uses: ./.github/actions/gcp-auth
         with:
-          wif_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_NAME }}
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          wif_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
           export_default_credentials: 'true'
 
       - name: Download Artifact Path
@@ -297,9 +275,9 @@ jobs:
   #     - name: Authenticate to GCP
   #       uses: ./.github/actions/gcp-auth
   #       with:
-  #         wif_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-  #         service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_NAME }}
-  #         project_id: ${{ secrets.GCP_PROJECT_ID }}
+  #         wif_provider: ${{ vars.GCP_WIF_PROVIDER }}
+  #         service_account: ${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}
+  #         project_id: ${{ vars.GCP_PROJECT_ID }}
   #         export_default_credentials: 'true'
 
   #     - name: Download Artifact Path

@@ -53,7 +53,7 @@ GitHub Actions runner
 
 O que fica nos GitHub Secrets **não é uma chave** — são apenas dois identificadores:
 - `GCP_WIF_PROVIDER` — ID do Workload Identity Pool Provider no GCP
-- `GCP_SERVICE_ACCOUNT_NAME` — email do service account a ser impersonado
+- `GCP_SERVICE_ACCOUNT_EMAIL` — email do service account a ser impersonado
 
 As credenciais temporárias expiram ao fim do job. A configuração da action está em `.github/actions/gcp-auth/action.yml`.
 
