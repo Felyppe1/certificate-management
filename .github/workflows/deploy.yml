@@ -10,6 +10,9 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  GCP_REGION: ${{ vars.GCP_REGION }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -50,7 +53,6 @@ jobs:
     needs: test
 
     env:
-      REGION: us-central1
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
 
     steps:
@@ -68,7 +70,7 @@ jobs:
         uses: ./.github/actions/terraform-env
         with:
           project_id: ${{ vars.GCP_PROJECT_ID }}
-          region: ${{ env.REGION }}
+          region: ${{ env.GCP_REGION }}
           branch: ${{ github.ref_name }}
           google_client_id: ${{ vars.GOOGLE_CLIENT_ID }}
           google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
@@ -85,7 +87,7 @@ jobs:
       - name: Create Terraform state bucket if not exists
         run: |
           if ! gcloud storage buckets describe gs://$TF_BACKEND_BUCKET --project=${{ env.GCP_PROJECT_ID }} > /dev/null 2>&1; then
-            gcloud storage buckets create gs://$TF_BACKEND_BUCKET --project=${{ env.GCP_PROJECT_ID }} --location=${{ env.REGION }} --uniform-bucket-level-access
+            gcloud storage buckets create gs://$TF_BACKEND_BUCKET --project=${{ env.GCP_PROJECT_ID }} --location=${{ env.GCP_REGION }} --uniform-bucket-level-access
           fi
 
       - name: Enable required GCP API
@@ -123,7 +125,6 @@ jobs:
       # generate_pdfs_cloud_run_name: ${{ steps.get_generate_pdfs_service_name.outputs.generate_pdfs_cloud_run_name }}
 
     env:
-      REGION: us-central1
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
 
     steps:
@@ -141,7 +142,7 @@ jobs:
         uses: ./.github/actions/terraform-env
         with:
           project_id: ${{ vars.GCP_PROJECT_ID }}
-          region: ${{ env.REGION }}
+          region: ${{ env.GCP_REGION }}
           branch: ${{ github.ref_name }}
           google_client_id: ${{ vars.GOOGLE_CLIENT_ID }}
           google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
@@ -207,7 +208,6 @@ jobs:
     needs: terraform-apply
 
     env:
-      REGION: us-central1
       CLOUD_RUN_NAME: ${{ needs.terraform-apply.outputs.cloud_run_name }}
 
     steps:
@@ -240,7 +240,7 @@ jobs:
 
       - name: Push image
         run: |
-          gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+          gcloud auth configure-docker ${GCP_REGION}-docker.pkg.dev --quiet
           docker push $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA
 
       - name: Run Database Migrations
@@ -255,7 +255,7 @@ jobs:
         run: |
           gcloud run deploy $CLOUD_RUN_NAME \
             --image $ARTIFACT_REGISTRY_PATH/certificate-management:$GITHUB_SHA \
-            --region $REGION \
+            --region $GCP_REGION \
             --platform managed \
             --allow-unauthenticated
 
@@ -265,7 +265,6 @@ jobs:
   #   needs: terraform-apply
 
   #   env:
-  #     REGION: us-central1
   #     GENERATE_PDFS_CLOUD_RUN_NAME: ${{ needs.terraform-apply.outputs.generate_pdfs_cloud_run_name }}
 
   #   steps:
@@ -297,13 +296,13 @@ jobs:
 
   #     - name: Push image (generate-pdfs)
   #       run: |
-  #         gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+  #         gcloud auth configure-docker ${GCP_REGION}-docker.pkg.dev --quiet
   #         docker push $ARTIFACT_REGISTRY_PATH/generate-pdfs:$GITHUB_SHA
 
   #     - name: Deploy to Cloud Run (generate-pdfs)
   #       run: |
   #         gcloud run deploy $GENERATE_PDFS_CLOUD_RUN_NAME \
   #           --image $ARTIFACT_REGISTRY_PATH/generate-pdfs:$GITHUB_SHA \
-  #           --region $REGION \
+  #           --region $GCP_REGION \
   #           --platform managed \
   #           --no-allow-unauthenticated
