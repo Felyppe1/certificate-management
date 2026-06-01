@@ -185,6 +185,7 @@ export class DataSourceRow extends AggregateRoot {
         columnType: ColumnType,
         arrayMetadata: ArrayMetadata | null,
     ): boolean {
+        if (value.trim() === '') return true
         if (columnType === 'string') return true
         if (columnType === 'number') return DataSourceColumn.isNumber(value)
         if (columnType === 'boolean') return DataSourceColumn.isBoolean(value)
