@@ -10,23 +10,20 @@ import { logoutAction } from './logout-action'
 import { redirect } from 'next/navigation'
 import z from 'zod'
 
-interface GrantAccessActionInput {
-    email: string
-}
-
 const grantAccessSchema = z.object({
     email: z.email(),
 })
 
 export async function grantAccessAction(_: unknown, formData: FormData) {
-    const rawData: GrantAccessActionInput = {
-        email: formData.get('email') as string,
-    }
+    const fromForm = formData.get('fromForm') === 'true'
+    const isRealCase = formData.get('isRealCase') === 'true'
 
     try {
         const { userId } = await validateSessionToken()
 
-        const parsedData = grantAccessSchema.parse(rawData)
+        const parsedData = grantAccessSchema.parse({
+            email: formData.get('email') as string,
+        })
 
         const notificationEmailGateway = new BrevoNotificationGateway()
         const usersRepository = new PrismaUsersRepository(prisma)
@@ -36,7 +33,12 @@ export async function grantAccessAction(_: unknown, formData: FormData) {
             usersRepository,
         )
 
-        await useCase.execute({ email: parsedData.email, userId })
+        await useCase.execute({
+            email: parsedData.email,
+            userId,
+            fromForm,
+            isRealCase,
+        })
 
         return { success: true }
     } catch (error: any) {

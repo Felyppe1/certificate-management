@@ -2,11 +2,19 @@ import { NotAdminError } from '../../domain/error/forbidden-error/not-admin-erro
 import { UserNotFoundError } from '../../domain/error/not-found-error/user-not-found-error'
 import { INotificationGateway } from '../interfaces/inotification-gateway'
 import { IUsersRepository } from '../interfaces/repository/iusers-repository'
-import { from, subject, buildHtml } from './email-template'
+import {
+    from,
+    subject,
+    buildHtml,
+    buildHtmlRealCase,
+    buildHtmlSimulation,
+} from './email-template'
 
 interface GrantAccessInput {
     email: string
     userId: string
+    fromForm?: boolean
+    isRealCase?: boolean
 }
 
 export class GrantAccessUseCase {
@@ -32,11 +40,17 @@ export class GrantAccessUseCase {
             throw new NotAdminError()
         }
 
+        const html = data.fromForm
+            ? data.isRealCase
+                ? buildHtmlRealCase()
+                : buildHtmlSimulation()
+            : buildHtml()
+
         await this.notificationEmailGateway.sendEmail(
             data.email,
             from,
             subject,
-            buildHtml(),
+            html,
         )
     }
 }
