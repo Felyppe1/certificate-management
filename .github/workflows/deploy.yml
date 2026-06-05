@@ -83,6 +83,7 @@ jobs:
           ga_id: ${{ vars.GA_ID }}
           next_public_base_url: ${{ vars.NEXT_PUBLIC_BASE_URL }}
           owner_email: ${{ vars.OWNER_EMAIL }}
+          drive_link: ${{ vars.DRIVE_LINK }}
 
       - name: Create Terraform state bucket if not exists
         run: |
