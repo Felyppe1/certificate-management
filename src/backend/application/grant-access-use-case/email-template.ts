@@ -192,7 +192,7 @@ const templateSimulation = `<!DOCTYPE html>
 
                     <h2>Como proceder:</h2>
                     <ol class="step-list">
-                        <li>Use os <a href="{{DRIVE_LINK}}" target="_blank" rel="noopener noreferrer">arquivos de exemplo</a> que preparei para o teste. A pasta contém um template de certificado de participação em um evento de tecnologia e uma planilha de exemplo dos participantes.</li>
+                        <li>Acesse os <a href="{{DRIVE_LINK}}" target="_blank" rel="noopener noreferrer">arquivos de exemplo</a> que preparei para o teste. <strong>Copie-os para o seu Google Drive ou baixe-os</strong>. A pasta contém um template de certificado de participação em um evento de tecnologia e uma planilha de exemplo dos participantes.</li>
                         <li><strong>Dica crucial:</strong> Abra a planilha de exemplo e adicione pelo menos 1 nova linha com um e-mail real de sua propriedade (ou de amigos/colegas). Assim você poderá verificar se o e-mail com o certificado chegou corretamente.</li>
                         <li>Acesse o sistema, gere e envie os certificados para os destinatários.</li>
                     </ol>
