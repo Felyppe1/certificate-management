@@ -29,6 +29,7 @@ const serverSchema = z.object({
 
     OWNER_EMAIL: z.string(),
     DRIVE_LINK: z.string().optional(),
+    FORM2_LINK: z.string().optional(),
     RESEND_API_KEY: z.string().optional(),
     BREVO_API_KEY: z.string(),
 
@@ -70,6 +71,7 @@ const serverEnvs = {
     BREVO_API_KEY: process.env.BREVO_API_KEY,
     OWNER_EMAIL: process.env.OWNER_EMAIL,
     DRIVE_LINK: process.env.DRIVE_LINK,
+    FORM2_LINK: process.env.FORM2_LINK,
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
 
     TEST_DB_USERNAME: process.env.TEST_DB_USERNAME,

@@ -32,6 +32,8 @@ inputs:
     required: true
   drive_link:
     required: false
+  form2_link:
+    required: false
 
 runs:
   using: composite
@@ -49,6 +51,7 @@ runs:
         BREVO_API_KEY: ${{ inputs.brevo_api_key }}
         OWNER_EMAIL: ${{ inputs.owner_email }}
         DRIVE_LINK: ${{ inputs.drive_link }}
+        FORM2_LINK: ${{ inputs.form2_link }}
         SUFFIX: ${{ inputs.branch == 'main' && '' || format('-{0}', inputs.branch) }}
       run: |
         echo "TF_VAR_project_id=${{ inputs.project_id }}" >> $GITHUB_ENV
@@ -70,7 +73,8 @@ runs:
           GEMINI_API_KEY: env.GEMINI_API_KEY,
           BREVO_API_KEY: env.BREVO_API_KEY,
           OWNER_EMAIL: env.OWNER_EMAIL,
-          DRIVE_LINK: env.DRIVE_LINK
+          DRIVE_LINK: env.DRIVE_LINK,
+          FORM2_LINK: env.FORM2_LINK
         }')
         echo "TF_VAR_environment_variables=$TF_ENV_VARS" >> $GITHUB_ENV
 
