@@ -157,7 +157,7 @@ const templateRealCase = `<!DOCTYPE html>
                     <p style="color: #6b7280;">Caso queira testar o sistema com um cenário simulado, disponibilizei <a href="{{DRIVE_LINK}}" target="_blank" rel="noopener noreferrer">arquivos de exemplo</a> com um template de certificado e uma planilha de participantes para você explorar.</p>
 
                     <div class="notice">
-                        <strong>Importante:</strong> Após finalizar o processo no sistema, abra o <a href="{{FORM2_LINK}}" target="_blank" rel="noopener noreferrer"><strong>Formulário 2</strong></a> para informar o seu feedback.
+                        <strong>Importante:</strong> Após finalizar o processo no sistema, abra o <strong><a href="{{FORM2_LINK}}" target="_blank" rel="noopener noreferrer">Formulário 2</a></strong> para informar o seu feedback.
                     </div>
 
                     <div style="text-align: center; margin-top: 1.5rem;">
@@ -208,7 +208,7 @@ const templateSimulation = `<!DOCTYPE html>
                     </ul>
 
                     <div class="notice">
-                        <strong>Importante:</strong> Após finalizar o processo no sistema, abra o <a href="{{FORM2_LINK}}" target="_blank" rel="noopener noreferrer"><strong>Formulário 2</strong></a> para informar o seu feedback.
+                        <strong>Importante:</strong> Após finalizar o processo no sistema, abra o <strong><a href="{{FORM2_LINK}}" target="_blank" rel="noopener noreferrer">Formulário 2</a></strong> para informar o seu feedback.
                     </div>
 
                     <div style="text-align: center; margin-top: 1.5rem;">
