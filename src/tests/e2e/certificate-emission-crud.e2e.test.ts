@@ -1,38 +1,47 @@
 import { test, expect } from './fixtures'
 import { BrowserContext } from '@playwright/test'
 import { PrismaClient } from '@/backend/infrastructure/repository/prisma/client/client'
+import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
+import { TIPS_STORAGE_KEY } from '@/app/(system)/certificados/[id]/_components/CertificatePageClient/components/TipsButton'
+import { createId } from '@paralleldrive/cuid2'
 import crypto from 'crypto'
 import { faker } from '@faker-js/faker'
 
 async function setupAuth(prisma: PrismaClient, context: BrowserContext) {
+    const userId = createId()
     const token = crypto.randomBytes(32).toString('hex')
 
-    await prisma.user.upsert({
-        where: { id: 'user-e2e-crud' },
-        update: {},
-        create: {
-            id: 'user-e2e-crud',
-            email: 'crud@test.com',
-            name: 'CRUD User',
+    await prisma.user.create({
+        data: {
+            id: userId,
+            email: faker.internet.email(),
+            name: faker.person.fullName(),
             password_hash: 'hash',
         },
     })
-
     await prisma.session.create({
         data: {
             token,
-            user_id: 'user-e2e-crud',
+            user_id: userId,
             expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         },
     })
+
+    await context.addInitScript(
+        key => localStorage.setItem(key, 'true'),
+        TIPS_STORAGE_KEY,
+    )
+
     await context.addCookies([
         {
-            name: 'session_token',
+            name: SESSION_COOKIE_NAME,
             value: token,
             domain: 'localhost',
             path: '/',
         },
     ])
+
+    return { userId }
 }
 
 test.describe('Certificate emission CRUD', () => {
@@ -41,7 +50,7 @@ test.describe('Certificate emission CRUD', () => {
         context,
         prisma,
     }) => {
-        await setupAuth(prisma, context)
+        const { userId } = await setupAuth(prisma, context)
 
         const initialName = faker.commerce.productName()
         const renamedName = `${initialName} Renammed`
@@ -83,5 +92,7 @@ test.describe('Certificate emission CRUD', () => {
         await expect(
             page.getByText('Nenhuma emissão de certificado criada'),
         ).toBeVisible()
+
+        await prisma.user.delete({ where: { id: userId } })
     })
 })

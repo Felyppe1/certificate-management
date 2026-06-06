@@ -20,20 +20,6 @@ export const test = base.extend<MyFixtures>({
             const adapter = new PrismaPg(pool)
             const prisma = new PrismaClient({ adapter })
 
-            const tables = await prisma.$queryRaw<Array<{ tablename: string }>>`
-                SELECT tablename
-                FROM pg_tables
-                WHERE schemaname = 'public'
-            `
-
-            for (const { tablename } of tables) {
-                if (tablename !== '_prisma_migrations') {
-                    await prisma.$executeRawUnsafe(
-                        `TRUNCATE TABLE "public"."${tablename}" RESTART IDENTITY CASCADE;`,
-                    )
-                }
-            }
-
             await use(prisma)
 
             await prisma.$disconnect()

@@ -101,19 +101,22 @@ Arquivo: `playwright.config.ts`
 
 - Test dir: `src/tests/e2e/`
 - Base URL: `http://localhost:3001`
-- `workers: 1` + `fullyParallel: false` — execução totalmente sequencial: todos os testes rodam no Chromium, depois todos rodam no Firefox. Sem paralelismo entre browsers nem entre testes.
+- `fullyParallel: true` — todos os testes (inclusive dentro do mesmo arquivo) rodam em paralelo entre workers
+- Workers: `undefined` local (Playwright decide, ~metade dos CPUs), `4` no CI
 - Retries: 2 no CI, 0 local
-- Browsers: Chromium e Firefox
+- Browsers: Chromium, Firefox, WebKit e Edge — cada caso de teste roda nos 4 browsers em paralelo
 - O webserver é iniciado automaticamente por `src/tests/e2e/start-server.ts`:
   - Sobe container PostgreSQL na porta 54332
   - Roda `prisma db push`
   - Builda e sobe Next.js em modo produção na porta 3001
 
+O paralelismo é seguro porque cada teste cria seus próprios dados com IDs únicos (`createId()` do `@paralleldrive/cuid2`) e dados falsos via `faker`, sem compartilhar estado com outros testes. Ao final, cada teste deleta o próprio usuário — o `onDelete: Cascade` do schema limpa sessões e certificados em cascata.
+
 Rodar: `npm run test:e2e` | com UI: `npm run test:e2e:ui`
 
 ### Fixtures
 
-`src/tests/e2e/fixtures.ts` estende o `test` do Playwright com a fixture `prisma`, que fornece um cliente Prisma conectado ao banco de testes e trunca as tabelas antes de cada teste.
+`src/tests/e2e/fixtures.ts` estende o `test` do Playwright com a fixture `prisma`, que fornece um cliente Prisma conectado ao banco de testes. Não há truncate global — o isolamento é garantido pelos IDs únicos por teste.
 
 ### Localização
 
