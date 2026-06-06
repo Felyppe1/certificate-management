@@ -32,3 +32,4 @@ terraform/                  # GCP infrastructure (Cloud Run, Cloud Functions, Cl
 @docs/frontend-structure.md — when creating or moving React components
 @docs/cicd.md — when changing the deployment pipeline or environment variables
 @docs/terraform.md — when modifying or adding GCP infrastructure
+@docs/tests.md — when writing or modifying tests (unit, integration, e2e)
