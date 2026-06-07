@@ -35,6 +35,7 @@ export function UrlForm({ urlForm, onSubmitUrl, type }: UrlFormProps) {
                             )}
                             placeholder="https://docs.google.com/..."
                             className={`${urlForm.formState.errors.fileUrls?.[index]?.value ? 'border-destructive focus-visible:ring-destructive' : ''} flex-1 px-4`}
+                            data-testid={`url-input-${index}`}
                         />
                         {urlForm.formState.errors.fileUrls?.[index]?.value && (
                             <span className="text-sm text-destructive mt-2 block">
@@ -80,6 +81,7 @@ export function UrlForm({ urlForm, onSubmitUrl, type }: UrlFormProps) {
                         !urlForm.formState.isValid ||
                         urlForm.formState.isSubmitting
                     }
+                    data-testid="url-form-confirm"
                 >
                     Confirmar
                 </Button>
