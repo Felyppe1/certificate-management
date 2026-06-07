@@ -67,6 +67,9 @@ export function useEmailForm({
                 totalRecipients < 2
                     ? 'Email enviado com sucesso'
                     : 'Emails enviados com sucesso',
+                {
+                    testId: 'toaster',
+                },
             )
             form.reset()
             onSuccess?.()

@@ -113,6 +113,7 @@ export function VerifyEmailChangeForm({
                     onChange={setCode}
                     onComplete={handleSubmit}
                     disabled={isPending}
+                    data-testid="change-email-otp"
                 >
                     <InputOTPGroup>
                         <InputOTPSlot index={0} />
@@ -141,6 +142,7 @@ export function VerifyEmailChangeForm({
                 disabled={code.length !== 6 || isPending}
                 className="w-full"
                 size="lg"
+                data-testid="verify-email-change-button"
             >
                 {verifyMutation.isPending && (
                     <Loader2 className="animate-spin" />

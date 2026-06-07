@@ -452,6 +452,7 @@ export function GenerateCertificatesSection({
                     </div>
 
                     <Button
+                        data-testid="generate-certificates-button"
                         size="lg"
                         onClick={() => generateMutation.mutate()}
                         disabled={

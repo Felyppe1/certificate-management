@@ -94,7 +94,11 @@ export function BasicData() {
                 </div>
 
                 <div className="flex justify-end">
-                    <Button type="submit" disabled={mutation.isPending}>
+                    <Button
+                        type="submit"
+                        disabled={mutation.isPending}
+                        data-testid="basic-name-save-button"
+                    >
                         {mutation.isPending && (
                             <Loader2 className="animate-spin" />
                         )}

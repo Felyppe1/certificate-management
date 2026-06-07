@@ -471,6 +471,7 @@ export function ConfigurableDataSourceTable({
                                 description="Você precisará gerar os certificados novamente após esta ação."
                             >
                                 <Button
+                                    data-testid="columns-save-button"
                                     variant="default"
                                     size="sm"
                                     onClick={handleSaveClick}

@@ -42,6 +42,10 @@ export const ColumnHeaderMenu = forwardRef<
             <button
                 ref={ref}
                 type="button"
+                data-testid={`column-header-${columnName
+                    .toLowerCase()
+                    .replace(/\s+/g, '-')
+                    .replace(/[^a-z0-9-]/g, '')}`}
                 disabled={disabled}
                 onClick={onClick}
                 className={`flex items-center w-full min-w-[120px] sm:min-w-[150px] h-full min-h-[40px] justify-between gap-2 px-3 py-2 transition-all cursor-pointer outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:ring-inset border-x border-transparent hover:border-border/50 disabled:cursor-default 

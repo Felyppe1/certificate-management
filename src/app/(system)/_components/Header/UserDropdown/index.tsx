@@ -46,6 +46,7 @@ export function UserDropdown({ name, userId }: UserDropdownProps) {
                     variant="ghost"
                     className="flex items-center gap-2"
                     disabled={isPending}
+                    data-testid="user-dropdown-trigger"
                 >
                     <span className="text-card-foreground truncate inline-block max-w-56 sm:max-w-80">
                         {name}
@@ -64,6 +65,7 @@ export function UserDropdown({ name, userId }: UserDropdownProps) {
                     variant="destructive"
                     onClick={handleLogout}
                     disabled={isPending}
+                    data-testid="logout-button"
                 >
                     <LogOut className="w-4 h-4 mr-2" />
                     {isPending ? 'Saindo...' : 'Sair'}

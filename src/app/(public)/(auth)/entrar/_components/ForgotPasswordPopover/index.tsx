@@ -23,6 +23,7 @@ export function ForgotPasswordPopover() {
                     variant="link"
                     size="sm"
                     className="h-auto p-0 text-sm font-semibold text-primary"
+                    data-testid="forgot-password-trigger"
                 >
                     Esqueceu a senha?
                 </Button>
@@ -61,6 +62,7 @@ export function ForgotPasswordPopover() {
                         type="submit"
                         className="w-full"
                         disabled={isSubmitting}
+                        data-testid="send-reset-code-button"
                     >
                         {isSubmitting ? (
                             <>

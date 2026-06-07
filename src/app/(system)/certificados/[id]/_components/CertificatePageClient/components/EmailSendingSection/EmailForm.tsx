@@ -63,6 +63,7 @@ export function EmailForm({
                         disabled={isDisabled}
                     >
                         <SelectTrigger
+                            data-testid="email-column-select"
                             className="w-full"
                             aria-invalid={!!errors?.emailColumn}
                         >
@@ -175,6 +176,7 @@ export function EmailForm({
                 </div>
 
                 <Button
+                    data-testid="email-send-button"
                     type="submit"
                     size="lg"
                     disabled={isDisabled || isSubmitting || !isValid}

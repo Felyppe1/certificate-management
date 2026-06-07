@@ -212,6 +212,7 @@ export function ManageSystemAccess({
                             type="button"
                             className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/40 transition-colors cursor-pointer"
                             onClick={() => setShowChangeEmail(v => !v)}
+                            data-testid="change-email-toggle"
                         >
                             <span className="font-medium">Alterar E-mail</span>
                             {showChangeEmail ? (
@@ -242,6 +243,7 @@ export function ManageSystemAccess({
                                         id="new-email"
                                         type="email"
                                         placeholder="nome@email.com"
+                                        data-testid="new-email-input"
                                         {...emailForm.register('newEmail')}
                                         aria-invalid={
                                             !!emailForm.formState.errors
@@ -272,6 +274,7 @@ export function ManageSystemAccess({
                                         disabled={
                                             requestEmailChangeMutation.isPending
                                         }
+                                        data-testid="save-email-button"
                                     >
                                         {requestEmailChangeMutation.isPending && (
                                             <Loader2 className="animate-spin" />
@@ -291,6 +294,7 @@ export function ManageSystemAccess({
                             type="button"
                             className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/40 transition-colors cursor-pointer"
                             onClick={() => setShowChangePassword(v => !v)}
+                            data-testid="change-password-toggle"
                         >
                             <span className="font-medium">Alterar Senha</span>
                             {showChangePassword ? (
@@ -341,6 +345,7 @@ export function ManageSystemAccess({
                                         id="new-password"
                                         type="password"
                                         placeholder="••••••••"
+                                        data-testid="new-password-input"
                                         {...passwordForm.register(
                                             'newPassword',
                                         )}
@@ -367,6 +372,7 @@ export function ManageSystemAccess({
                                         id="confirm-new-password"
                                         type="password"
                                         placeholder="••••••••"
+                                        data-testid="confirm-new-password-input"
                                         {...passwordForm.register(
                                             'confirmNewPassword',
                                         )}
@@ -400,6 +406,7 @@ export function ManageSystemAccess({
                                         disabled={
                                             changePasswordMutation.isPending
                                         }
+                                        data-testid="save-password-button"
                                     >
                                         {changePasswordMutation.isPending && (
                                             <Loader2 className="animate-spin" />

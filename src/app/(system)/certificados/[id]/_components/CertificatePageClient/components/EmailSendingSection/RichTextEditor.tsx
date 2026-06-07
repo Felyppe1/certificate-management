@@ -502,6 +502,7 @@ export function RichTextEditor({
 
     return (
         <div
+            data-testid="email-body-editor"
             className={cn(
                 'rounded-md border bg-transparent text-sm ring-offset-background',
                 'focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',

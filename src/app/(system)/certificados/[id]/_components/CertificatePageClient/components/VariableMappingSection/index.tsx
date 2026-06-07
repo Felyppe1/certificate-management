@@ -272,7 +272,9 @@ export function VariableMappingSection({
                                                 }}
                                                 disabled={emailSent}
                                             >
-                                                <SelectTrigger>
+                                                <SelectTrigger
+                                                    data-testid={`mapping-select-${variable}`}
+                                                >
                                                     <SelectValue placeholder="Selecione uma coluna">
                                                         {(() => {
                                                             const selectedValue =
@@ -427,6 +429,7 @@ export function VariableMappingSection({
                         description="Você precisará gerar os certificados novamente após esta ação."
                     >
                         <Button
+                            data-testid="mapping-save-button"
                             onClick={handleSaveClick}
                             disabled={mappingIsLoading || !hasChanges}
                             variant={!hasChanges ? 'outline' : 'default'}

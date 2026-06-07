@@ -162,6 +162,7 @@ export function ResetPasswordForm({ email }: ResetPasswordFormProps) {
                         value={code}
                         onChange={setCode}
                         onComplete={handleVerify}
+                        data-testid="reset-code-otp"
                     >
                         <InputOTPGroup>
                             <InputOTPSlot index={0} />
@@ -192,6 +193,7 @@ export function ResetPasswordForm({ email }: ResetPasswordFormProps) {
                     disabled={code.length !== 6 || verifyMutation.isPending}
                     className="w-full"
                     size="lg"
+                    data-testid="verify-reset-code-button"
                 >
                     {verifyMutation.isPending && (
                         <Loader2 className="animate-spin" />
@@ -281,6 +283,7 @@ export function ResetPasswordForm({ email }: ResetPasswordFormProps) {
                 className="w-full"
                 size="lg"
                 disabled={resetMutation.isPending || isPending}
+                data-testid="reset-password-submit-button"
             >
                 {(resetMutation.isPending || isPending) && (
                     <Loader2 className="animate-spin" />

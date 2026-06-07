@@ -117,6 +117,7 @@ export function LoginForm() {
                 disabled={isPending}
                 className="w-full"
                 size="lg"
+                data-testid="login-submit-button"
             >
                 Entrar
                 <ArrowRight />

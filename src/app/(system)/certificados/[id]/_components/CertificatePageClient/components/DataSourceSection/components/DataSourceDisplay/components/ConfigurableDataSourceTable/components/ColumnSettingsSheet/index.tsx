@@ -117,6 +117,7 @@ export function ColumnSettingsSheet({
                                 return (
                                     <button
                                         key={key}
+                                        data-testid={`column-type-option-${key}`}
                                         onClick={() =>
                                             handleTypeChange(index, key)
                                         }
@@ -157,6 +158,7 @@ export function ColumnSettingsSheet({
                                         Separador de itens
                                     </Label>
                                     <Input
+                                        data-testid="column-array-separator-input"
                                         value={column.arraySeparator || ''}
                                         onChange={e =>
                                             handleSeparatorChange(

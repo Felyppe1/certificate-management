@@ -169,6 +169,7 @@ export function SignUpForm() {
                 disabled={mutation.isPending || isNavigating}
                 className="w-full"
                 size="lg"
+                data-testid="signup-submit-button"
             >
                 {mutation.isPending || isNavigating
                     ? 'Cadastrando...'
