@@ -102,7 +102,7 @@ Arquivo: `playwright.config.ts`
 - Test dir: `src/tests/e2e/`
 - Base URL: `http://localhost:3001`
 - `fullyParallel: true` — todos os testes (inclusive dentro do mesmo arquivo) rodam em paralelo entre workers
-- Workers: `undefined` local (Playwright decide, ~metade dos CPUs), `4` no CI
+- Workers: `undefined` local (Playwright decide), `2` no CI
 - Retries: 2 no CI, 0 local
 - Browsers: Chromium, Firefox, WebKit e Edge — cada caso de teste roda nos 4 browsers em paralelo
 - O webserver é iniciado automaticamente por `src/tests/e2e/start-server.ts`:
@@ -116,15 +116,58 @@ Rodar: `npm run test:e2e` | com UI: `npm run test:e2e:ui`
 
 ### Fixtures
 
-`src/tests/e2e/fixtures.ts` estende o `test` do Playwright com a fixture `prisma`, que fornece um cliente Prisma conectado ao banco de testes. Não há truncate global — o isolamento é garantido pelos IDs únicos por teste.
+`src/tests/e2e/fixtures.ts` estende o `test` do Playwright com a fixture `prisma` (automática, disponível em todos os testes sem declarar), que fornece um cliente Prisma conectado ao banco de testes. Não há truncate global — o isolamento é garantido pelos IDs únicos por teste.
+
+### Helpers
+
+`src/tests/e2e/helpers.ts` centraliza a preparação de estado que se repete entre testes:
+
+| Helper | O que faz |
+|--------|-----------|
+| `setupAuth(prisma, context, password?)` | Cria usuário e sessão no banco, injeta cookie de sessão no contexto do browser e oculta a tooltip de dicas via `localStorage`. Retorna `{ userId, email, name }`. |
+| `setupCertificate(prisma, context)` | Chama `setupAuth` e cria uma emissão de certificado. Retorna `{ userId, emissionId }`. |
+| `uploadTemplate(page)` | Navega pelo fluxo de upload de template e aguarda confirmação de sucesso. |
+| `uploadDataSource(page)` | Navega pelo fluxo de upload de fonte de dados e aguarda confirmação de sucesso. |
+
+A ocultação de dicas (`TIPS_STORAGE_KEY` no `localStorage`) é feita via `context.addInitScript` dentro de `setupAuth` — garantida antes de qualquer navegação, para que popups de onboarding não interfiram nas asserções.
+
+### Simulação de callbacks assíncronos
+
+Alguns fluxos dependem de webhooks externos (geração de PDFs, envio de e-mails). Nesses casos, o próprio teste dispara a callback via `page.request.fetch` para os endpoints internos, simulando o retorno do Cloud Function:
+
+```ts
+// Simula callback de geração bem-sucedida para cada linha da fonte de dados
+for (const row of rows) {
+    await page.request.fetch(`/api/internal/data-source-rows/${row.id}/generations`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        data: { success: true, totalBytes: 1024, userId },
+    })
+}
+```
+
+### Testes com env vars obrigatórias
+
+Alguns testes dependem de recursos externos (URLs de templates/fontes de dados em nuvem). Eles lançam erro explícito quando a env var está ausente — não são pulados silenciosamente:
+
+```ts
+if (!TEMPLATE_URL)
+    throw new Error('E2E_TEMPLATE_URL env var is required to run this test')
+```
 
 ### Localização
 
 ```
 src/tests/e2e/
 ├── fixtures.ts
+├── helpers.ts
 ├── start-server.ts
-└── certificate-emission-crud.e2e.test.ts
+├── fixtures/
+│   ├── template.docx
+│   └── data-source.csv
+├── authentication.e2e.test.ts
+├── account-management.e2e.test.ts
+└── certificate-emission.e2e.test.ts
 ```
 
 ---
@@ -418,28 +461,39 @@ it('should delete a template successfully', async () => {
 ### Teste E2E — Fluxo de browser
 
 ```ts
-// src/tests/e2e/certificate-emission-crud.e2e.test.ts
-test('should create, rename, verify updated name in listing, delete', async ({
-    page,
-    context,
-    prisma,
-}) => {
-    // Auth: injeta sessão diretamente no banco e seta cookie
-    await setupAuth(prisma, context)
+// src/tests/e2e/certificate-emission.e2e.test.ts
+import { test, expect } from './fixtures'
+import { faker } from '@faker-js/faker'
+import { setupAuth } from './helpers'
 
-    const name = faker.commerce.productName()
+test.describe('Emissão de certificado', () => {
+    test('CRUD - deve criar, renomear, listar e excluir uma emissão de certificado', async ({
+        page,
+        context,
+        prisma,
+    }) => {
+        // Auth: cria usuário/sessão no banco e injeta cookie no browser
+        const { userId } = await setupAuth(prisma, context)
 
-    await page.goto('/')
-    await page.getByRole('button', { name: 'Criar' }).first().click()
-    await page.getByLabel('Nome da emissão').fill(name)
-    await page.getByRole('button', { name: 'Criar Emissão' }).click()
-    await page.waitForURL(/\/certificados\/.+/)
+        const initialName = faker.commerce.productName()
+        const renamedName = `${initialName} Renammed`
 
-    // Rename...
-    await page.getByTitle('Editar nome do certificado').click()
-    await page.getByRole('textbox').fill(`${name} Renameado`)
-    await page.getByRole('textbox').press('Enter')
-    await expect(page.getByText('Nome atualizado com sucesso')).toBeVisible()
+        await page.goto('/')
+        await page.getByTestId('create-emission-button').click()
+        await page.getByLabel('Nome da emissão').fill(initialName)
+        await page.getByTestId('create-emission-submit').click()
+        await page.waitForURL(/\/certificados\/.+/)
+
+        await page.getByTestId('certificate-edit-name-button').click()
+        await page.getByRole('textbox').fill(renamedName)
+        await page.getByRole('textbox').press('Enter')
+        await expect(page.getByText('Nome atualizado com sucesso')).toBeVisible(
+            { timeout: 20000 },
+        )
+
+        // Cleanup — cascade apaga sessões e certificados
+        await prisma.user.delete({ where: { id: userId } })
+    })
 })
 ```
 
@@ -449,22 +503,31 @@ test('should create, rename, verify updated name in listing, delete', async ({
 
 **Linguagem e nomenclatura**
 
-Testes são escritos na linguagem do negócio, em português. O nome do teste descreve a regra ou comportamento esperado — não o que o código faz internamente.
+Todos os testes — unitários, integração e e2e — são escritos em português. O nome do teste descreve a regra ou comportamento esperado, não o que o código faz internamente.
 
 ```ts
 // correto — fala o que o negócio espera
 it('deve impedir envio quando existir destinatário inválido na lista', ...)
+test('deve criar conta, verificar e-mail e ficar autenticado', ...)
 
-// errado — descreve implementação
+// errado — descreve implementação ou usa inglês
 it('should return false when validateEmailColumnRecords receives invalid email', ...)
+test('should create account and verify email', ...)
 ```
 
-`describe` aninhados para agrupar cenários pelo mesmo conceito de domínio:
+`describe` / `test.describe` aninhados para agrupar cenários pelo mesmo conceito de domínio:
 
 ```ts
+// Unitários/integração (Vitest)
 describe('Email Domain', () => {
     describe('Validação de destinatários', () => { ... })
     describe('Regras obrigatórias para criação', () => { ... })
+})
+
+// E2E (Playwright)
+test.describe('Autenticação', () => {
+    test('deve criar conta, verificar e-mail e ficar autenticado', ...)
+    test('deve exibir erro com senha inválida e permitir redefinição de senha', ...)
 })
 ```
 
