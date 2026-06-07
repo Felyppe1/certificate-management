@@ -228,11 +228,7 @@ export const unlinkExternalAccountSchema = z.object({
 })
 
 export const updateUserBasicDataSchema = z.object({
-    name: z
-        .string()
-        .min(3)
-        .max(50)
-        .regex(/^[\p{L} ]+$/u),
+    name: z.string().min(3).max(50),
 })
 
 export const loginGoogleServerActionSchema = z.string().min(1)
