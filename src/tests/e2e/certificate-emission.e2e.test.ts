@@ -73,6 +73,54 @@ test.describe('Emissão de certificado', () => {
         await uploadTemplate(page)
         await uploadDataSource(page)
 
+        // Map the two variables not auto-mapped
+        await page.getByTestId('mapping-select-nome').click()
+        await page.getByRole('option', { name: 'Nome Participante' }).click()
+        await page.getByTestId('mapping-select-data').click()
+        await page.getByRole('option', { name: 'Data do Evento' }).click()
+        await page.getByTestId('mapping-save-button').click()
+        await expect(page.getByText('Mapeamento salvo com sucesso')).toBeVisible({ timeout: 10000 })
+
+        await page.getByTestId('generate-certificates-button').click()
+        await expect(page.getByText('Gerando certificados...')).toBeVisible({ timeout: 10000 })
+
+        const rows = await prisma.dataSourceRow.findMany({
+            where: { data_source_id: emissionId },
+            select: { id: true },
+        })
+
+        for (const row of rows) {
+            await page.request.fetch(`/api/internal/data-source-rows/${row.id}/generations`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                data: { success: true, totalBytes: 1024, userId },
+            })
+        }
+
+        await expect(page.getByText('A geração de certificados finalizou')).toBeVisible({ timeout: 10000 })
+
+        await page.getByTestId('email-column-select').click()
+        await page.getByRole('option', { name: 'E-mail' }).click()
+        await page.locator('#email-subject-now').fill('Seu certificado está pronto!')
+        await page.getByTestId('email-body-editor').locator('[contenteditable="true"]').click()
+        await page.keyboard.type('Olá! Seu certificado está disponível em anexo.')
+        await page.getByTestId('email-send-button').click()
+
+        const email = await prisma.email.findFirst({
+            where: { certificate_emission_id: emissionId },
+            select: { id: true },
+        })
+
+        if (email) {
+            await page.request.fetch(`/api/internal/emails/${email.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                data: { status: 'COMPLETED', emailsSentCount: rows.length, userId },
+            })
+        }
+
+        await expect(page.getByTestId('toaster').getByText('Emails enviados com sucesso')).toBeVisible({ timeout: 10000 })
+
         await prisma.user.delete({ where: { id: userId } })
     })
 
