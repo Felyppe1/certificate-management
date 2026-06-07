@@ -38,9 +38,9 @@ async function startServer() {
         },
     )
 
-    // Defining env variables for both build and start commands
     const environmentVariables = {
         ...process.env,
+        IS_E2E: 'true',
         NEXT_PUBLIC_BASE_URL: 'http://localhost:3001',
         GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? 'test-client-id',
         GOOGLE_CLIENT_SECRET:
@@ -54,9 +54,8 @@ async function startServer() {
         REDIS_URL: 'redis://localhost:6380',
         LOKI_URL: 'http://localhost:3100',
         OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: 'http://localhost:4318/v1/logs',
-        NODE_ENV: 'production',
         PORT: '3001',
-    } as const
+    }
 
     console.log('Building Next.js application for E2E tests...')
     execSync('npm run build', {
