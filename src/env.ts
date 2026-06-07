@@ -7,6 +7,7 @@ const serverSchema = z.object({
     NODE_ENV: z
         .enum(['development', 'production', 'test'])
         .default('development'),
+    IS_E2E: z.coerce.boolean().default(false),
     NEXT_RUNTIME: z.enum(['nodejs', 'edge']).optional(),
 
     CLOUD_RUN_APP_URL: z.string(),
@@ -53,6 +54,7 @@ const isServer = typeof window === 'undefined'
 
 const serverEnvs = {
     NODE_ENV: process.env.NODE_ENV,
+    IS_E2E: process.env.IS_E2E,
     NEXT_RUNTIME: process.env.NEXT_RUNTIME,
     DB_URL: process.env.DB_URL,
     DB_DIRECT_URL: process.env.DB_DIRECT_URL,

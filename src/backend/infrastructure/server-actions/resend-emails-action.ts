@@ -33,7 +33,7 @@ export async function resendEmailsAction(_: unknown, formData: FormData) {
         )
         const emailsRepository = new PrismaEmailsRepository(prisma)
         const queue =
-            env.NODE_ENV === 'development'
+            env.NODE_ENV !== 'production' || env.IS_E2E
                 ? new LocalQueue()
                 : new CloudTasksQueue(gcpCloudTasks)
 

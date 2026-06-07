@@ -41,7 +41,7 @@ export async function createEmailAction(_: unknown, formData: FormData) {
         const emailsRepository = new PrismaEmailsRepository(prisma)
         const transactionManager = new PrismaTransactionManager(prisma)
         const queue =
-            env.NODE_ENV === 'development'
+            env.NODE_ENV !== 'production' || env.IS_E2E
                 ? new LocalQueue()
                 : new CloudTasksQueue(gcpCloudTasks)
 

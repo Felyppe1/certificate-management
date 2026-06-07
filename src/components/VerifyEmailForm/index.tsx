@@ -106,6 +106,7 @@ export function VerifyEmailForm({
                     onChange={setCode}
                     onComplete={handleSubmit}
                     disabled={isLoading || verifyMutation.isPending}
+                    data-testid="verify-email-otp"
                 >
                     <InputOTPGroup>
                         <InputOTPSlot index={0} />
@@ -136,6 +137,7 @@ export function VerifyEmailForm({
                 }
                 className="w-full"
                 size="lg"
+                data-testid="verify-email-button"
             >
                 {(verifyMutation.isPending || isLoading) && (
                     <Loader2 className="animate-spin" />

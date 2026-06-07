@@ -15,6 +15,8 @@ export class BrevoNotificationGateway implements INotificationGateway {
         subject: string,
         html: string,
     ): Promise<void> {
+        if (env.IS_E2E) return
+
         await this.client.transactionalEmails.sendTransacEmail({
             sender: { name: 'Certifica', email: from },
             to: [{ email: to }],

@@ -7,7 +7,7 @@ import { LoginTicket } from 'google-auth-library'
 import { NextRequest } from 'next/server'
 
 export async function validateServiceAccountToken(req: NextRequest) {
-    if (env.NODE_ENV !== 'production') return
+    if (env.NODE_ENV !== 'production' || env.IS_E2E) return
 
     const googleAuthGateway = new GoogleAuthGateway()
     const oAuth2Client = googleAuthGateway.getOAuth2Client()

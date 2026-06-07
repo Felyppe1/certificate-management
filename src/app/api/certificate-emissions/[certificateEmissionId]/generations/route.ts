@@ -32,7 +32,7 @@ export async function POST(
         const usersRepository = new PrismaUsersRepository(prisma)
         const googleAuthGateway = new GoogleAuthGateway()
         const queue =
-            env.NODE_ENV === 'development'
+            env.NODE_ENV !== 'production' || env.IS_E2E
                 ? new LocalQueue()
                 : new CloudTasksQueue(gcpCloudTasks)
 
