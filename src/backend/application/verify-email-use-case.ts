@@ -30,7 +30,7 @@ export class VerifyEmailUseCase {
         await user.verifyEmail(code)
         const session = Session.create(user.getId())
 
-        this.transactionManager.run(async () => {
+        await this.transactionManager.run(async () => {
             await this.usersRepository.update(user)
             await this.sessionsRepository.save(session)
         })
