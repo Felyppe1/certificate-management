@@ -2,6 +2,9 @@ import { PostgreSqlContainer } from '@testcontainers/postgresql'
 import { execSync, spawn } from 'child_process'
 import fs from 'fs'
 import path from 'path'
+import dotenv from 'dotenv'
+
+dotenv.config({ path: path.resolve(process.cwd(), '.env.test') })
 
 const HOST_PORT = 54332
 
@@ -39,13 +42,15 @@ async function startServer() {
     const environmentVariables = {
         ...process.env,
         NEXT_PUBLIC_BASE_URL: 'http://localhost:3001',
-        GOOGLE_CLIENT_ID: 'test-client-id',
-        GOOGLE_CLIENT_SECRET: 'test-client-secret',
-        GCP_PROJECT_ID: 'test-project',
-        GEMINI_API_KEY: 'test-key',
-        RESEND_API_KEY: 'test-key',
-        BREVO_API_KEY: 'test-key',
-        OWNER_EMAIL: 'test@test.com',
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? 'test-client-id',
+        GOOGLE_CLIENT_SECRET:
+            process.env.GOOGLE_CLIENT_SECRET ?? 'test-client-secret',
+        GCP_PROJECT_ID: process.env.GCP_PROJECT_ID ?? 'test-project',
+        CERTIFICATES_BUCKET: process.env.CERTIFICATES_BUCKET ?? '',
+        GEMINI_API_KEY: process.env.GEMINI_API_KEY ?? 'test-key',
+        RESEND_API_KEY: process.env.RESEND_API_KEY ?? 'test-key',
+        BREVO_API_KEY: process.env.BREVO_API_KEY ?? 'test-key',
+        OWNER_EMAIL: process.env.OWNER_EMAIL ?? 'test@test.com',
         REDIS_URL: 'redis://localhost:6380',
         LOKI_URL: 'http://localhost:3100',
         OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: 'http://localhost:4318/v1/logs',

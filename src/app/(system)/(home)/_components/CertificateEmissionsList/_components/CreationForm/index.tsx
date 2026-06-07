@@ -17,7 +17,7 @@ export function CreationForm() {
     return (
         <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
-                <Button size="lg">
+                <Button size="lg" data-testid="create-emission-button">
                     <Plus />
                     Criar
                 </Button>
@@ -53,6 +53,7 @@ export function CreationForm() {
                     </div>
                     <Button
                         type="submit"
+                        data-testid="create-emission-submit"
                         className="w-full"
                         size="default"
                         disabled={isSubmitting}

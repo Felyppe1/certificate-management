@@ -10,7 +10,7 @@ import {
 import { HiOutlineLightBulb } from 'react-icons/hi'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-const TIPS_STORAGE_KEY = 'certificate-tips-dismissed'
+export const TIPS_STORAGE_KEY = 'certificate-tips-dismissed'
 
 const tips = [
     {

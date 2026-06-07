@@ -1,8 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.test' });
 
 export default defineConfig({
   testDir: './src/tests/e2e',
-  timeout: 240000, // Time for each individual test to complete
+  timeout: 60000, // Milisseconds for each individual test to complete
   fullyParallel: true,
   forbidOnly: !!process.env.CI, // Fail if test.only is left in the source code
   retries: process.env.CI ? 2 : 0, // Retry on CI only

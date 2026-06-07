@@ -207,6 +207,7 @@ export function CertificateHeader({
                                 isTransitionLoading
                             }
                             title="Editar nome do certificado"
+                            data-testid="certificate-edit-name-button"
                         >
                             <Pencil className="h-4 w-4" />
                         </Button>
@@ -228,6 +229,7 @@ export function CertificateHeader({
                                         isTransitionLoading
                                     }
                                     title="Excluir certificado"
+                                    data-testid="certificate-delete-button"
                                     className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                 >
                                     <Trash2 className="h-4 w-4" />

@@ -52,6 +52,7 @@ export function WarningPopover({
                         <Button
                             variant="outline"
                             size="sm"
+                            data-testid="warning-popover-cancel"
                             onClick={() => onOpenChange(false)}
                         >
                             Cancelar
@@ -59,6 +60,7 @@ export function WarningPopover({
                         <Button
                             variant="default"
                             size="sm"
+                            data-testid="warning-popover-confirm"
                             onClick={handleConfirm}
                             className="bg-orange-500 hover:bg-orange-600"
                         >
