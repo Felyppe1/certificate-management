@@ -272,6 +272,7 @@ export function TemplateDisplay({
                                         isDisabled ||
                                         loginIsLoading
                                     }
+                                    data-testid="template-edit-button"
                                 >
                                     <Edit3 className="scale-80" />
                                     Editar
@@ -287,6 +288,7 @@ export function TemplateDisplay({
                                     loginIsLoading
                                 }
                                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                data-testid="template-remove-button"
                             >
                                 <Trash2 className="scale-80" />
                                 {isDeleting ? 'Removendo...' : 'Remover'}

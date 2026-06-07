@@ -393,6 +393,7 @@ export function DataSourceDisplay({
                                     isDisabled ||
                                     loginIsLoading
                                 }
+                                data-testid="data-source-edit-button"
                             >
                                 <Edit3 className="scale-80" />
                                 Editar
@@ -408,6 +409,7 @@ export function DataSourceDisplay({
                                 loginIsLoading
                             }
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            data-testid="data-source-remove-button"
                         >
                             <Trash2 className="scale-80" />
                             {deleteMutation.isPending

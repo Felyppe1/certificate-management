@@ -316,6 +316,7 @@ export function FileSelector({
                     <label
                         htmlFor={`option-upload-${radioGroupName}`}
                         className="group relative"
+                        data-testid={`${radioGroupName}-upload-option`}
                     >
                         <Card className="relative h-full cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none group-has-[:disabled]:cursor-default hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 max-xs:px-[10%] max-xs:py-3 p-4 max-md:py-6 text-center gap-[10%] xs:gap-0 md:!gap-0 content-center flex-row xs:flex-col justify-evenly xs:justify-center">
                             <RadioGroupItem
@@ -349,6 +350,7 @@ export function FileSelector({
                     <label
                         htmlFor={`option-drive-${radioGroupName}`}
                         className="group relative"
+                        data-testid={`${radioGroupName}-drive-option`}
                     >
                         <Card className="h-full cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none hover:group-has-[:disabled]:none hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 max-xs:px-[10%] max-xs:py-3 p-4 max-md:py-6 text-center gap-[10%] xs:gap-0 md:!gap-0 content-center flex-row xs:flex-col justify-evenly xs:justify-center">
                             <RadioGroupItem
@@ -382,6 +384,7 @@ export function FileSelector({
                     <label
                         htmlFor={`option-link-${radioGroupName}`}
                         className="group relative"
+                        data-testid={`${radioGroupName}-link-option`}
                     >
                         <Card className="h-full cursor-pointer group-has-[:disabled]:opacity-60 group-has-[:disabled]:pointer-events-none hover:border-primary group-has-[[data-state=checked]]:border-primary group-has-[[data-state=checked]]:bg-primary/5 focus-within:border-primary focus-within:ring-3 focus-within:ring-ring/50 max-xs:px-[10%] max-xs:py-3 p-4 max-md:py-6 text-center gap-[10%] xs:gap-0 md:!gap-0 content-center flex-row xs:flex-col justify-evenly xs:justify-center">
                             <RadioGroupItem
@@ -557,6 +560,7 @@ export function FileSelector({
                                 {...getInputProps({
                                     disabled: isUploadLoading,
                                 })}
+                                data-testid="file-input"
                             />
                             {isDragActive ? (
                                 <h4 className="text-base sm:text-lg text-center font-medium">

@@ -6,6 +6,7 @@ import { createId } from '@paralleldrive/cuid2'
 import crypto from 'crypto'
 import { faker } from '@faker-js/faker'
 
+
 export async function setupAuth(prisma: PrismaClient, context: BrowserContext) {
     const userId = createId()
     const token = crypto.randomBytes(32).toString('hex')
@@ -41,4 +42,23 @@ export async function setupAuth(prisma: PrismaClient, context: BrowserContext) {
     ])
 
     return { userId }
+}
+
+export async function setupCertificate(
+    prisma: PrismaClient,
+    context: BrowserContext,
+) {
+    const { userId } = await setupAuth(prisma, context)
+    const emissionId = createId()
+
+    await prisma.certificateEmission.create({
+        data: {
+            id: emissionId,
+            title: faker.commerce.productName(),
+            status: 'DRAFT',
+            user_id: userId,
+        },
+    })
+
+    return { userId, emissionId }
 }
