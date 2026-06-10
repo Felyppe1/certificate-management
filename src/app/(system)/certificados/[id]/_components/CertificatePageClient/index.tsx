@@ -99,6 +99,10 @@ export function CertificatePageClient({
                             .dataSource
                     }
                     emailSent={emailSent}
+                    templateFileMimeType={
+                        certificateEmissionResponse.certificateEmission.template
+                            ?.fileMimeType ?? null
+                    }
                 />
 
                 {hasTemplate && hasDataSource && hasTemplateVariables && (

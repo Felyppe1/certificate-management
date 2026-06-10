@@ -40,6 +40,7 @@ export async function POST(
             certificateEmissionId,
             userId,
             rowIds: parsed.rowIds,
+            format: parsed.format,
         })
 
         const webStream = Readable.toWeb(zipStream as Readable)

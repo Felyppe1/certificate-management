@@ -279,6 +279,10 @@ export class CertificateEmission extends AggregateRoot {
         return this.template?.getInputMethod() ?? null
     }
 
+    getTemplateFileMimeType() {
+        return this.template?.getFileMimeType() ?? null
+    }
+
     isTemplateFromUpload() {
         return this.template?.getInputMethod() === INPUT_METHOD.UPLOAD
     }

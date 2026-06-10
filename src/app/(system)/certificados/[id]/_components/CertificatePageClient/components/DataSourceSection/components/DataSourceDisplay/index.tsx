@@ -46,6 +46,7 @@ import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { queryKeys } from '@/lib/query-keys'
 import { ColumnType } from '@/backend/domain/data-source-column'
 import { GoogleAccountWarningPopover } from '@/components/GoogleAccountWarningPopover'
+import { TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION } from '@/backend/domain/template'
 
 function getInputMethodLabel(method: string) {
     switch (method) {
@@ -102,6 +103,7 @@ interface DataSourceDisplayProps {
     isDisabled: boolean
     emailSent?: boolean
     userEmail: string
+    templateFileMimeType: string | null
 }
 
 export function DataSourceDisplay({
@@ -112,6 +114,7 @@ export function DataSourceDisplay({
     isDisabled,
     emailSent = false,
     userEmail,
+    templateFileMimeType,
 }: DataSourceDisplayProps) {
     const [showAllRows, setShowAllRows] = useState(false)
     const [showRefreshWarning, setShowRefreshWarning] = useState(false)
@@ -548,6 +551,13 @@ export function DataSourceDisplay({
                                                     certificatesGenerated
                                                 }
                                                 emailSent={emailSent}
+                                                sourceFileExtension={
+                                                    templateFileMimeType
+                                                        ? (TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION[
+                                                              templateFileMimeType
+                                                          ] ?? null)
+                                                        : null
+                                                }
                                             />
                                         )}
                                     </div>

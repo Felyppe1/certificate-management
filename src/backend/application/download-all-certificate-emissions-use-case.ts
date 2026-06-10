@@ -50,10 +50,15 @@ export class DownloadAllCertificateEmissionsUseCase {
 
         const prefix = `users/${input.userId}/certificates/${certificateEmission.getId()}/certificate`
 
-        const certificateObjects = await this.bucket.getObjectsWithPrefix({
+        const allObjects = await this.bucket.getObjectsWithPrefix({
             bucketName,
             prefix,
         })
+
+        // Filter to only PDF files to avoid including source files (pptx/docx)
+        const certificateObjects = allObjects.filter(f =>
+            f.name.endsWith('.pdf'),
+        )
 
         const archive = archiver('zip', {
             // zlib: { level: 9 } // Optional: define compression level

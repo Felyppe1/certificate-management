@@ -4,6 +4,7 @@ import { DataSourceRowNotFoundError } from '../domain/error/not-found-error/data
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION } from '../domain/template'
 import { env } from '@/env'
 
 interface ViewCertificateEmissionsUseCaseInput {
@@ -23,7 +24,9 @@ export class ViewCertificateEmissionsUseCase {
 
     async execute(
         input: ViewCertificateEmissionsUseCaseInput,
-    ): Promise<{ rowId: string; signedUrl: string }[]> {
+    ): Promise<
+        { rowId: string; signedUrl: string; sourceSignedUrl: string | null }[]
+    > {
         const dataSourceRows = await this.dataSourceRowsRepository.getByIds(
             input.rowIds,
         )
@@ -50,17 +53,30 @@ export class ViewCertificateEmissionsUseCase {
 
         const bucketName = env.CERTIFICATES_BUCKET
 
+        const sourceExt =
+            TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION[
+                certificateEmission.getTemplateFileMimeType() ?? ''
+            ] ?? null
+
         const results = await Promise.all(
             dataSourceRows.map(async row => {
-                const filePath = `users/${input.userId}/certificates/${certificateEmission.getId()}/certificate-${row.getId()}.pdf`
+                const base = `users/${input.userId}/certificates/${certificateEmission.getId()}/certificate-${row.getId()}`
 
                 const signedUrl = await this.bucket.generateSignedUrl({
                     bucketName,
-                    filePath,
+                    filePath: `${base}.pdf`,
                     action: 'read',
                 })
 
-                return { rowId: row.getId(), signedUrl }
+                const sourceSignedUrl = sourceExt
+                    ? await this.bucket.generateSignedUrl({
+                          bucketName,
+                          filePath: `${base}.${sourceExt}`,
+                          action: 'read',
+                      })
+                    : null
+
+                return { rowId: row.getId(), signedUrl, sourceSignedUrl }
             }),
         )
 

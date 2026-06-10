@@ -63,6 +63,7 @@ interface DataSourceSectionProps {
     googleOAuthToken: string | null
     googleOAuthTokenExpiry: Date | null
     emailSent: boolean
+    templateFileMimeType: string | null
 }
 
 export function DataSourceSection({
@@ -72,6 +73,7 @@ export function DataSourceSection({
     userEmail,
     googleOAuthToken,
     emailSent,
+    templateFileMimeType,
 }: DataSourceSectionProps) {
     const [isEditing, setIsEditing] = useState(false)
 
@@ -341,6 +343,7 @@ export function DataSourceSection({
                 isDisabled={emailSent}
                 emailSent={emailSent}
                 userEmail={userEmail}
+                templateFileMimeType={templateFileMimeType}
             />
         )
     }

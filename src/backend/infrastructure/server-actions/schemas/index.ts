@@ -128,6 +128,7 @@ export const viewCertificateEmissionsSchema = z.object({
 
 export const downloadCertificateEmissionsSchema = z.object({
     rowIds: z.array(z.string().min(1)).min(1),
+    format: z.enum(['pdf', 'source']).default('pdf'),
 })
 
 export const downloadCertificateUrlSchema = z.object({

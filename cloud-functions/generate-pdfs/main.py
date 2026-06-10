@@ -442,10 +442,10 @@ def convert_to_pdf_with_google_drive(input_bytes: BytesIO, input_ext: str) -> By
 
 
 #################################### Functions to use bucket ####################################
-def upload_to_bucket(file_buffer, file_path):
+def upload_to_bucket(file_buffer, file_path, content_type="application/pdf"):
     bucket = storage_client.bucket(CERTIFICATES_BUCKET)
     blob = bucket.blob(file_path)
-    blob.upload_from_file(file_buffer, rewind=True, content_type="application/pdf")
+    blob.upload_from_file(file_buffer, rewind=True, content_type=content_type)
     return blob
 
 def get_from_bucket(file_path) -> Blob:
@@ -715,6 +715,14 @@ def main(request):
             else:
                 certificate_buffer = replace_variables_in_pptx_liquid(certificate_buffer, row_variable_mapping)
         
+        source_mime = (
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            if is_docx
+            else "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        )
+        source_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{data_source_row_id}.{file_extension_str}"
+        upload_to_bucket(certificate_buffer, source_path, content_type=source_mime)
+
         pdf_buffer = convert_to_pdf_with_google_drive(certificate_buffer, file_extension_str)
 
         pdf_path = f"users/{user_id}/certificates/{certificate_emission_id}/certificate-{data_source_row_id}.pdf"

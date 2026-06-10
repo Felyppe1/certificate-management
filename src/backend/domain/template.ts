@@ -95,6 +95,10 @@ export class Template extends ValueObject<Template> {
         return this.inputMethod
     }
 
+    getFileMimeType() {
+        return this.fileMimeType
+    }
+
     setStorageFileUrl(url: string): Template {
         return new Template({ ...this.serialize(), storageFileUrl: url })
     }

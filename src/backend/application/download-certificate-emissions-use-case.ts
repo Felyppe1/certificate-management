@@ -2,6 +2,7 @@ import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
+import { TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION } from '../domain/template'
 
 import archiver from 'archiver' // TODO: dependency inversion
 import { PassThrough } from 'stream'
@@ -12,6 +13,7 @@ interface DownloadCertificateEmissionsUseCaseInput {
     userId: string
     certificateEmissionId: string
     rowIds: string[]
+    format: 'pdf' | 'source'
 }
 
 export class DownloadCertificateEmissionsUseCase {
@@ -37,10 +39,17 @@ export class DownloadCertificateEmissionsUseCase {
             throw new NotCertificateOwnerError()
         }
 
+        const ext =
+            input.format === 'source'
+                ? (TEMPLATE_MIME_TYPE_TO_FILE_EXTENSION[
+                      certificateEmission.getTemplateFileMimeType() ?? ''
+                  ] ?? 'pdf')
+                : 'pdf'
+
         // Build the list of specific file paths for the selected rows
         const filePaths = input.rowIds.map(
             rowId =>
-                `users/${input.userId}/certificates/${certificateEmission.getId()}/certificate-${rowId}.pdf`,
+                `users/${input.userId}/certificates/${certificateEmission.getId()}/certificate-${rowId}.${ext}`,
         )
 
         const bucketName = env.CERTIFICATES_BUCKET

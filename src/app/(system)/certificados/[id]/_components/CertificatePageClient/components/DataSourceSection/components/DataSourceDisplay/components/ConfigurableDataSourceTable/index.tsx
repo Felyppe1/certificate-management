@@ -10,7 +10,15 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Eye, Loader2, Download, Save, Mail, Pencil } from 'lucide-react'
+import {
+    Eye,
+    Loader2,
+    Download,
+    Save,
+    Mail,
+    Pencil,
+    ChevronDown,
+} from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
 import { FORBIDDEN_TYPE_CHANGE } from '@/backend/domain/data-source'
@@ -21,6 +29,12 @@ import { updateDataSourceRowsAction } from '@/backend/infrastructure/server-acti
 import { viewCertificatesAction } from '@/backend/infrastructure/server-actions/view-certificates-action'
 import { resendEmailsAction } from '@/backend/infrastructure/server-actions/resend-emails-action'
 import { WarningPopover } from '../../../../../../../../../../../../components/WarningPopover'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { ColumnSettingsSheet } from './components/ColumnSettingsSheet'
 import { EditableCell } from './components/EditableCell'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -41,6 +55,7 @@ interface ConfigurableDataSourceTableProps {
     certificatesEmitted: boolean
     certificatesGenerated: boolean
     emailSent?: boolean
+    sourceFileExtension: string | null
 }
 
 function formatBytes(bytes: number, decimals = 2) {
@@ -61,6 +76,7 @@ export function ConfigurableDataSourceTable({
     certificatesEmitted,
     certificatesGenerated,
     emailSent = false,
+    sourceFileExtension,
 }: ConfigurableDataSourceTableProps) {
     const [showAllRows, setShowAllRows] = useState(false)
     const [columns, setColumns] = useState(initialColumns)
@@ -225,7 +241,7 @@ export function ConfigurableDataSourceTable({
         viewCertificatesActionHandler(formData)
     }
 
-    const handleDownloadSelected = async () => {
+    const handleDownloadSelected = async (format: 'pdf' | 'source' = 'pdf') => {
         setIsDownloadingSelected(true)
         try {
             const response = await fetch(
@@ -233,7 +249,10 @@ export function ConfigurableDataSourceTable({
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ rowIds: [...selectedRowIds] }),
+                    body: JSON.stringify({
+                        rowIds: [...selectedRowIds],
+                        format,
+                    }),
                 },
             )
             if (!response.ok) throw new Error('Download failed')
@@ -733,19 +752,45 @@ export function ConfigurableDataSourceTable({
                                 </span>
 
                                 <div className="flex gap-2">
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={handleDownloadSelected}
-                                        disabled={isDownloadingSelected}
-                                    >
-                                        {isDownloadingSelected ? (
-                                            <Loader2 className="size-4 animate-spin" />
-                                        ) : (
-                                            <Download className="size-4" />
-                                        )}
-                                        Baixar
-                                    </Button>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                disabled={isDownloadingSelected}
+                                            >
+                                                {isDownloadingSelected ? (
+                                                    <Loader2 className="size-4 animate-spin" />
+                                                ) : (
+                                                    <Download className="size-4" />
+                                                )}
+                                                Baixar
+                                                <ChevronDown className="size-3" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="start">
+                                            <DropdownMenuItem
+                                                onClick={() =>
+                                                    handleDownloadSelected(
+                                                        'pdf',
+                                                    )
+                                                }
+                                            >
+                                                PDF
+                                            </DropdownMenuItem>
+                                            {sourceFileExtension && (
+                                                <DropdownMenuItem
+                                                    onClick={() =>
+                                                        handleDownloadSelected(
+                                                            'source',
+                                                        )
+                                                    }
+                                                >
+                                                    {sourceFileExtension.toUpperCase()}
+                                                </DropdownMenuItem>
+                                            )}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                     {selectedCount > 5 ? (
                                         <WarningPopover
                                             open={showViewWarning}
