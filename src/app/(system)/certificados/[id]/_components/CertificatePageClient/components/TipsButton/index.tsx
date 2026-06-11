@@ -12,26 +12,37 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 export const TIPS_STORAGE_KEY = 'certificate-tips-dismissed'
 
-const tips = [
+const tips: { title: string; description: string | React.ReactNode }[] = [
     {
         title: 'Use Variáveis',
         description:
-            'O template suporta a sintaxe <strong>Liquid</strong>, permitindo o uso de variáveis, condicionais e filtros. Exemplo: <code class="bg-blue-900 px-1 rounded">{{ nome }}</code>. Consulte a <a href="https://shopify.github.io/liquid/" target="_blank" rel="noopener noreferrer" class="underline">documentação oficial</a>.',
+            'O template suporta a sintaxe <strong>Liquid</strong>, permitindo o uso de variáveis, condicionais e filtros. Exemplo: <code class="bg-blue-900 px-1 rounded">{{ nome }}</code>. Consulte a <a href="https://shopify.dev/docs/api/liquid" target="_blank" rel="noopener noreferrer" class="underline">documentação oficial</a>.',
+    },
+    {
+        title: 'Veja a Prévia',
+        description: (
+            <>
+                Após gerar os certificados, você pode visualizá-los ou baixá-los
+                como PDF ou no formato original na seção de{' '}
+                <span
+                    className="cursor-pointer underline"
+                    onClick={() => {
+                        const el = document.getElementById(
+                            'data-source-section',
+                        )
+                        el?.scrollIntoView({ behavior: 'smooth' })
+                    }}
+                >
+                    Fonte de Dados
+                </span>
+                .
+            </>
+        ),
     },
     {
         title: 'Converta Imagens em Planilha',
         description:
             'Após adicionar uma fonte de dados com imagens, você pode convertê-las em planilha para manusear os dados.',
-    },
-    {
-        title: 'Mapeamento',
-        description:
-            'Ao adicionar variáveis no template, você pode escolher quais colunas da fonte de dados vão substituí-las na geração.',
-    },
-    {
-        title: 'Veja a Prévia',
-        description:
-            'Após gerar os certificados, você pode visualizar os PDFs gerados ou baixá-los todos de uma vez.',
     },
 ]
 
@@ -86,12 +97,18 @@ export function TipsButton() {
                         Dica {currentTip + 1}/{tips.length}:{' '}
                         {tips[currentTip].title}
                     </h4>
-                    <div
-                        className="text-zinc-200 text-xs sm:text-sm leading-relaxed"
-                        dangerouslySetInnerHTML={{
-                            __html: tips[currentTip].description,
-                        }}
-                    />
+                    {typeof tips[currentTip].description === 'string' ? (
+                        <div
+                            className="text-zinc-200 text-xs sm:text-sm leading-relaxed"
+                            dangerouslySetInnerHTML={{
+                                __html: tips[currentTip].description,
+                            }}
+                        />
+                    ) : (
+                        <div className="text-zinc-200 text-xs sm:text-sm leading-relaxed">
+                            {tips[currentTip].description}
+                        </div>
+                    )}
                     <div className="flex justify-between pt-2">
                         <div className="flex gap-1">
                             <Button
