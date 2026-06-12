@@ -14,6 +14,18 @@ export default defineConfig({
         environment: 'node',
         setupFiles: ['./src/tests/setup.unit.ts'],
         include: ['src/**/*.test.ts'],
-        exclude: ['src/**/*.integration.test.ts', 'src/**/*.e2e.test.ts', 'node_modules'], 
+        exclude: ['src/**/*.integration.test.ts', 'src/**/*.e2e.test.ts', 'node_modules'],
+        coverage: {
+            provider: 'v8',
+            include: [
+                'src/backend/application/**/*.ts',
+                'src/backend/domain/**/*.ts',
+            ],
+            exclude: [
+                'src/**/*.test.ts',
+                'src/backend/application/**/email-template.ts',
+                'src/backend/application/interfaces/**',
+            ]
+        } 
     },
 })
