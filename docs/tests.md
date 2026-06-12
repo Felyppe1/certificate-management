@@ -12,6 +12,44 @@ O projeto usa três níveis de teste com frameworks distintos:
 
 ---
 
+## Teste Funcional / Caixa-Preta
+
+Deriva casos de teste a partir dos **requisitos**, sem olhar o código. O objetivo é verificar se o sistema se comporta corretamente sob a perspectiva do usuário/domínio.
+
+### Particionamento em Classes de Equivalência
+
+Divide o domínio de entrada em grupos (classes) de valores com mesmo comportamento esperado. Se um valor de uma classe funciona, todos os valores dela funcionam — logo, basta um representante por classe.
+
+**Exemplo 1 — campo "idade" (18–65 anos)**
+
+| Classe | Valores | Tipo |
+|--------|---------|------|
+| C1 | idade < 18 | Inválida |
+| C2 | 18 ≤ idade ≤ 65 | Válida |
+| C3 | idade > 65 | Inválida |
+
+**Exemplo 2 — múltiplos campos**
+
+| Condição | Classes Válidas | Classes Inválidas |
+|----------|----------------|-------------------|
+| Tamanho (T) do e-mail | 5 ≤ T ≤ 100 **(1)** | T < 5 **(2)** e T > 100 **(3)** |
+| Altura (A) | 0,1 ≤ A ≤ 9,99 **(4)** | A < 0,1 **(5)** e A > 9,99 **(6)** |
+
+Nesse caso, um único teste cobre todas as classes válidas juntas (1 e 4), em vez de um teste por classe.
+
+### Análise do Valor Limite (AVL)
+
+Complementa o particionamento. A maioria dos defeitos ocorre nas **fronteiras** entre classes, então testa-se os valores dos limites e seus vizinhos imediatos.
+
+**Exemplo — campo "idade" (18–65 anos)**
+
+| Fronteira | Valores a testar |
+|-----------|-----------------|
+| Limite inferior | 17, 18, 19 |
+| Limite superior | 64, 65, 66 |
+
+---
+
 ## Testes Unitários
 
 ### O que testar
@@ -366,12 +404,13 @@ try {
 
 ```ts
 // src/backend/application/delete-template-use-case.test.ts
-it('should delete a template successfully', async () => {
+it('deve deletar o template da emissão de certificado com sucesso', async () => {
+    const certificateEmission = createCertificateEmission()
     const certificateEmissionsRepositoryMock: Pick<
         ICertificatesRepository,
         'getById' | 'update'
     > = {
-        getById: vi.fn().mockResolvedValue(createCertificateEmission()),
+        getById: vi.fn().mockResolvedValue(certificateEmission),
         update: vi.fn(),
     }
 
@@ -392,20 +431,17 @@ it('should delete a template successfully', async () => {
         new TransactionManagerStub(),
     )
 
-    await expect(
-        useCase.execute({ certificateId: '1', userId: '1' }),
-    ).resolves.not.toThrow()
+    await useCase.execute({ certificateId: certificateEmission.getId(), userId: '1' })
 
-    // Verifica efeito via argumento passado ao mock
-    const updateMock = certificateEmissionsRepositoryMock.update as ReturnType<typeof vi.fn>
-    expect(updateMock.mock.calls[0][0].hasTemplate()).toBe(false)
+    expect(certificateEmissionsRepositoryMock.update).toHaveBeenCalledWith(certificateEmission)
+    expect(certificateEmission.hasTemplate()).toBe(false)
 })
 ```
 
 ### Teste Unitário — Use Case (caminho de erro com dummy)
 
 ```ts
-it('should not delete a template when the certificate is not found', async () => {
+it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
     const repositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
         getById: vi.fn().mockResolvedValue(null),
         update: vi.fn(),
@@ -430,7 +466,7 @@ it('should not delete a template when the certificate is not found', async () =>
 
 ```ts
 // src/backend/application/delete-template-use-case.integration.test.ts
-it('should delete a template successfully', async () => {
+it('deve deletar o template da emissão de certificado com sucesso', async () => {
     // Arrange: cria dados diretamente no banco de teste
     await prisma.user.create({ data: { id: '1', email: 'user@gmail.com', ... } })
     await prisma.certificateEmission.create({
@@ -505,14 +541,22 @@ test.describe('Emissão de certificado', () => {
 
 Todos os testes — unitários, integração e e2e — são escritos em português. O nome do teste descreve a regra ou comportamento esperado, não o que o código faz internamente.
 
-```ts
-// correto — fala o que o negócio espera
-it('deve impedir envio quando existir destinatário inválido na lista', ...)
-test('deve criar conta, verificar e-mail e ficar autenticado', ...)
+Três regras para nomear casos de teste:
 
-// errado — descreve implementação ou usa inglês
-it('should return false when validateEmailColumnRecords receives invalid email', ...)
-test('should create account and verify email', ...)
+1. **Linguagem de domínio completa** — escreva frases completas com artigos e preposições, como se estivesse explicando o comportamento para alguém de negócio. Não omita palavras ("comer letra").
+2. **Casos de sucesso terminam com "com sucesso"** — torna imediatamente claro que o caso é o caminho feliz.
+3. **Casos de erro começam com "deve lançar erro quando..."** — descreve a condição de negócio que dispara o erro, não o tipo de exceção.
+
+```ts
+// correto — linguagem completa, "com sucesso" no caminho feliz
+it('deve cancelar a troca de email com sucesso', ...)
+it('deve lançar erro quando o usuário não for encontrado', ...)
+it('deve impedir o envio quando existir destinatário inválido na lista', ...)
+
+// errado — omite artigos/preposições ou usa inglês
+it('deve cancelar troca email', ...)           // faltam "a" e "de"
+it('deve lançar erro quando usuário não encontrado', ...) // "o" e "for" omitidos
+it('should return false when email is invalid', ...)      // em inglês
 ```
 
 `describe` / `test.describe` aninhados para agrupar cenários pelo mesmo conceito de domínio:
@@ -537,3 +581,29 @@ test.describe('Autenticação', () => {
 - Caminhos de erro que não chegam em certas dependências usam `{} as IType` (dummy explícito)
 - Use `beforeEach` + `vi.clearAllMocks()` quando os mocks são compartilhados entre testes
 - Não mockar o banco nos testes de integração — a distinção entre unitário e integração existe justamente para isso
+
+**Verificação no caminho feliz de use cases**
+
+Sempre que um use case recebe uma entidade de domínio do repositório e a modifica, a verificação do teste deve confirmar duas coisas:
+
+1. O repositório foi chamado com a entidade correta (`toHaveBeenCalledWith`)
+2. A entidade ficou com o estado esperado (getter na instância)
+
+```ts
+it('deve cancelar a troca de email com sucesso', async () => {
+    const user = createUser({ emailChangeCode: pendingCode })
+    const usersRepository: Pick<IUsersRepository, 'getById' | 'update'> = {
+        getById: vi.fn().mockResolvedValue(user),
+        update: vi.fn(),
+    }
+
+    const useCase = new CancelEmailChangeUseCase(usersRepository)
+
+    await useCase.execute({ userId: user.getId() })
+
+    expect(usersRepository.update).toHaveBeenCalledWith(user)  // repositório recebeu a entidade
+    expect(user.getEmailChangeCode()).toBeNull()               // entidade está no estado correto
+})
+```
+
+Não inspecione `mock.calls[0][0]` diretamente — armazene a entidade em uma variável antes de passá-la ao mock e use os getters do domínio para verificar o estado.
