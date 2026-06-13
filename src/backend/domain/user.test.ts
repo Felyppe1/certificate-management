@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { User, UserInput } from './user'
+import { User, UserInput, USER_CREDITS } from './user'
 import { ExternalAccount, ExternalAccountInput } from './external-account'
+import { EmailChangeCode } from './email-change-code'
 import bcrypt from 'bcrypt'
 import { ExternalAccountAlreadyExistsError } from './error/conflict-error/external-account-already-exists-error'
 import { SystemLoginNotEnabledError } from './error/validation-error/system-login-not-enabled-error'
@@ -9,6 +10,14 @@ import { EmailAlreadyVerifiedError } from './error/validation-error/email-alread
 import { CurrentPasswordIncorrectError } from './error/validation-error/current-password-incorrect-error'
 import { SystemLoginEnabledError } from './error/validation-error/system-login-enabled-error'
 import { ExternalAccountNotFoundError } from './error/not-found-error/external-account-not-found-error'
+import { EmailChangeCodeExpiredError } from './error/forbidden-error/email-change-code-expired-error'
+import { EmailChangeCodeInvalidError } from './error/forbidden-error/email-change-code-invalid-error'
+import { ResetPasswordCode } from './reset-password-code'
+import { EmailVerificationCode } from './email-verification-code'
+import { ResetPasswordCodeExpiredError } from './error/forbidden-error/reset-password-code-expired-error'
+import { ResetPasswordCodeInvalidError } from './error/forbidden-error/reset-password-code-invalid-error'
+import { VerificationCodeExpiredError } from './error/forbidden-error/verification-code-expired-error'
+import { VerificationCodeInvalidError } from './error/forbidden-error/verification-code-invalid-error'
 
 const createExternalAccountData = (
     overrides?: Partial<ExternalAccountInput>,
@@ -38,7 +47,80 @@ const createUserData = (overrides?: Partial<UserInput>): User =>
         ...overrides,
     })
 
-describe('Gerenciamento de conta do usuário', () => {
+function createExpiredEmailChangeCode(newEmail: string) {
+    return new EmailChangeCode({
+        newEmail,
+        code: '123456',
+        expiresAt: new Date(Date.now() - 1000),
+    })
+}
+
+function createExpiredResetPasswordCode() {
+    return new ResetPasswordCode({ code: '123456', expiresAt: new Date(Date.now() - 1000) })
+}
+
+function createExpiredVerificationCode() {
+    return new EmailVerificationCode({ code: '654321', expiresAt: new Date(Date.now() - 1000) })
+}
+
+describe('User', () => {
+    describe('Criar usuário', () => {
+        it('deve criar usuário sem email com créditos padrão e sem código de verificação', async () => {
+            const user = await User.create({ name: 'Novo Usuário', email: null, passwordHash: null })
+
+            expect(user.getId()).toBeTruthy()
+            expect(user.getName()).toBe('Novo Usuário')
+            expect(user.getEmail()).toBeNull()
+            expect(user.getPasswordHash()).toBeNull()
+            expect(user.getCredits()).toBe(USER_CREDITS)
+            expect(user.getEmailVerificationCode()).toBeNull()
+        })
+
+        it('deve criar usuário com email e senha com hash e código de verificação com sucesso', async () => {
+            const user = await User.create({
+                name: 'Novo Usuário',
+                email: 'user@example.com',
+                passwordHash: 'senha-clara',
+            })
+
+            expect(user.getEmail()).toBe('user@example.com')
+            expect(await user.comparePassword('senha-clara')).toBe(true)
+            expect(user.getEmailVerificationCode()).not.toBeNull()
+        })
+    })
+
+    describe('Validação', () => {
+        it('deve lançar erro quando o id não é fornecido', () => {
+            expect(() => createUserData({ id: '' })).toThrow('Entity ID is required')
+        })
+
+        it('deve lançar erro quando o nome não é fornecido', () => {
+            expect(() => createUserData({ name: '' })).toThrow('User name is required')
+        })
+
+        it('deve lançar erro quando os créditos não são fornecidos', () => {
+            expect(() => createUserData({ credits: null as any })).toThrow('User credits is required')
+        })
+
+        it('deve lançar erro quando a lista de contas externas não é fornecida', () => {
+            expect(() => createUserData({ externalAccounts: null as any })).toThrow(
+                'User external accounts list is required',
+            )
+        })
+
+        it('deve lançar erro quando o email é fornecido sem o hash de senha', () => {
+            expect(() => createUserData({ email: 'user@example.com', passwordHash: null })).toThrow(
+                'User password hash is required when email is provided',
+            )
+        })
+
+        it('deve lançar erro quando o hash de senha é fornecido sem o email', () => {
+            expect(() => createUserData({ email: null, passwordHash: 'hash' })).toThrow(
+                'User email is required when password hash is provided',
+            )
+        })
+    })
+
     describe('Adicionar login social', () => {
         it('deve adicionar uma conta do Google ao usuário', () => {
             const user = createUserData()
@@ -80,33 +162,29 @@ describe('Gerenciamento de conta do usuário', () => {
                 ],
             })
 
-            try {
+            expect(() =>
                 user.addExternalAccountWithSameEmail('GOOGLE', {
                     providerUserId: 'another-google-id',
                     accessToken: 'access-token',
                     refreshToken: 'refresh-token',
                     accessTokenExpiryDateTime: new Date(),
                     refreshTokenExpiryDateTime: new Date(),
-                })
-            } catch (error: any) {
-                expect(error).toBeInstanceOf(ExternalAccountAlreadyExistsError)
-            }
+                }),
+            ).toThrow(ExternalAccountAlreadyExistsError)
         })
 
         it('deve dar erro ao tentar vincular se não tem login por email', () => {
             const user = createUserData()
 
-            try {
+            expect(() =>
                 user.addExternalAccountWithSameEmail('GOOGLE', {
                     providerUserId: 'google-id',
                     accessToken: 'access-token',
                     refreshToken: 'refresh-token',
                     accessTokenExpiryDateTime: new Date(),
                     refreshTokenExpiryDateTime: new Date(),
-                })
-            } catch (error: any) {
-                expect(error).toBeInstanceOf(SystemLoginNotEnabledError)
-            }
+                }),
+            ).toThrow(SystemLoginNotEnabledError)
         })
     })
 
@@ -136,21 +214,17 @@ describe('Gerenciamento de conta do usuário', () => {
                 ],
             })
 
-            try {
-                user.removeExternalAccount('GOOGLE')
-            } catch (error: any) {
-                expect(error).toBeInstanceOf(LastLoginMethodError)
-            }
+            expect(() => user.removeExternalAccount('GOOGLE')).toThrow(
+                LastLoginMethodError,
+            )
         })
 
         it('deve dar erro ao tentar remover conta que não existe', () => {
             const user = createUserData()
 
-            try {
-                user.removeExternalAccount('GOOGLE')
-            } catch (error: any) {
-                expect(error).toBeInstanceOf(ExternalAccountNotFoundError)
-            }
+            expect(() => user.removeExternalAccount('GOOGLE')).toThrow(
+                ExternalAccountNotFoundError,
+            )
         })
 
         it('deve dar erro ao tentar remover última forma de login', () => {
@@ -163,11 +237,9 @@ describe('Gerenciamento de conta do usuário', () => {
                 ],
             })
 
-            try {
-                user.removeExternalAccount('GOOGLE')
-            } catch (error: any) {
-                expect(error).toBeInstanceOf(LastLoginMethodError)
-            }
+            expect(() => user.removeExternalAccount('GOOGLE')).toThrow(
+                LastLoginMethodError,
+            )
         })
     })
 
@@ -219,6 +291,113 @@ describe('Gerenciamento de conta do usuário', () => {
             expect(user.getEmailChangeCode()).not.toBeNull()
             expect(user.getEmailRequestedForChange()).toBe('newemail@gmail.com')
         })
+
+        it('deve dar erro ao tentar alterar email sem ter login por email', () => {
+            const user = createUserData({
+                externalAccounts: [
+                    new ExternalAccount(createExternalAccountData()),
+                ],
+            })
+
+            expect(() => user.changeEmail('novo@gmail.com')).toThrow(
+                SystemLoginNotEnabledError,
+            )
+        })
+    })
+
+    describe('Confirmar troca de email', () => {
+        it('deve confirmar troca de email com código válido', () => {
+            const validCode = new EmailChangeCode({
+                newEmail: 'new@gmail.com',
+                code: '654321',
+                expiresAt: new Date(Date.now() + 60_000),
+            })
+            const user = createUserData({
+                email: 'old@gmail.com',
+                passwordHash: 'password-hash',
+                isEmailVerified: true,
+                emailChangeCode: validCode,
+            })
+
+            user.confirmEmailChange('654321')
+
+            expect(user.getEmail()).toBe('new@gmail.com')
+            expect(user.getEmailChangeCode()).toBeNull()
+        })
+
+        it('deve lançar erro quando não há código de troca pendente', () => {
+            const user = createUserData({
+                email: 'old@gmail.com',
+                passwordHash: 'password-hash',
+                isEmailVerified: true,
+            })
+
+            expect(() => user.confirmEmailChange('123456')).toThrow(
+                EmailChangeCodeExpiredError,
+            )
+        })
+
+        it('deve lançar erro com código expirado', () => {
+            const user = createUserData({
+                email: 'old@gmail.com',
+                passwordHash: 'password-hash',
+                isEmailVerified: true,
+                emailChangeCode: createExpiredEmailChangeCode('new@gmail.com'),
+            })
+
+            expect(() => user.confirmEmailChange('123456')).toThrow(
+                EmailChangeCodeExpiredError,
+            )
+        })
+
+        it('deve lançar erro com código incorreto', () => {
+            const validCode = new EmailChangeCode({
+                newEmail: 'new@gmail.com',
+                code: '654321',
+                expiresAt: new Date(Date.now() + 60_000),
+            })
+            const user = createUserData({
+                email: 'old@gmail.com',
+                passwordHash: 'password-hash',
+                isEmailVerified: true,
+                emailChangeCode: validCode,
+            })
+
+            expect(() => user.confirmEmailChange('000000')).toThrow(
+                EmailChangeCodeInvalidError,
+            )
+        })
+    })
+
+    describe('Cancelar troca de email', () => {
+        it('deve cancelar troca de email pendente', () => {
+            const validCode = new EmailChangeCode({
+                newEmail: 'new@gmail.com',
+                code: '654321',
+                expiresAt: new Date(Date.now() + 60_000),
+            })
+            const user = createUserData({
+                email: 'old@gmail.com',
+                passwordHash: 'password-hash',
+                isEmailVerified: true,
+                emailChangeCode: validCode,
+            })
+
+            user.cancelEmailChange()
+
+            expect(user.getEmailChangeCode()).toBeNull()
+        })
+
+        it('não deve lançar erro quando não há troca de email pendente', () => {
+            const user = createUserData({
+                email: 'old@gmail.com',
+                passwordHash: 'password-hash',
+                isEmailVerified: true,
+            })
+
+            expect(() => user.cancelEmailChange()).not.toThrow()
+            expect(user.getEmailChangeCode()).toBeNull()
+        })
     })
 
     describe('Alterar senha', () => {
@@ -238,11 +417,9 @@ describe('Gerenciamento de conta do usuário', () => {
         it('deve dar erro ao tentar mudar senha sem ter login por email', async () => {
             const user = createUserData()
 
-            try {
-                await user.updatePassword('newpassword', 'anypassword')
-            } catch (error: any) {
-                expect(error).toBeInstanceOf(SystemLoginNotEnabledError)
-            }
+            await expect(
+                user.updatePassword('newpassword', 'anypassword'),
+            ).rejects.toThrow(SystemLoginNotEnabledError)
         })
 
         it('deve dar erro ao digitar a senha atual errada', async () => {
@@ -252,11 +429,57 @@ describe('Gerenciamento de conta do usuário', () => {
                 isEmailVerified: true,
             })
 
-            try {
-                await user.updatePassword('newpassword', 'wrongpassword')
-            } catch (error: any) {
-                expect(error).toBeInstanceOf(CurrentPasswordIncorrectError)
-            }
+            await expect(
+                user.updatePassword('newpassword', 'wrongpassword'),
+            ).rejects.toThrow(CurrentPasswordIncorrectError)
+        })
+    })
+
+    describe('Atualizar nome', () => {
+        it('deve atualizar nome com sucesso', () => {
+            const user = createUserData({
+                email: 'user@gmail.com',
+                passwordHash: 'hash',
+            })
+
+            user.updateName('Novo Nome')
+
+            expect(user.getName()).toBe('Novo Nome')
+        })
+
+        it('deve lançar erro com nome de 2 caracteres (abaixo do limite)', () => {
+            const user = createUserData({ email: 'u@g.com', passwordHash: 'h' })
+
+            expect(() => user.updateName('AB')).toThrow()
+        })
+
+        it('deve aceitar nome de 3 caracteres (limite inferior)', () => {
+            const user = createUserData({ email: 'u@g.com', passwordHash: 'h' })
+
+            expect(() => user.updateName('Ana')).not.toThrow()
+            expect(user.getName()).toBe('Ana')
+        })
+
+        it('deve aceitar nome de 50 caracteres (limite superior)', () => {
+            const user = createUserData({ email: 'u@g.com', passwordHash: 'h' })
+            const name50 = 'A'.repeat(50)
+
+            expect(() => user.updateName(name50)).not.toThrow()
+            expect(user.getName()).toBe(name50)
+        })
+
+        it('deve lançar erro com nome de 51 caracteres (acima do limite)', () => {
+            const user = createUserData({ email: 'u@g.com', passwordHash: 'h' })
+
+            expect(() => user.updateName('A'.repeat(51))).toThrow()
+        })
+
+        it('deve remover espaços do início e fim', () => {
+            const user = createUserData({ email: 'u@g.com', passwordHash: 'h' })
+
+            user.updateName('  Nome Com Espaços  ')
+
+            expect(user.getName()).toBe('Nome Com Espaços')
         })
     })
 
@@ -277,6 +500,36 @@ describe('Gerenciamento de conta do usuário', () => {
 
             const isValid = await user.comparePassword('password123')
             expect(isValid).toBe(true)
+        })
+
+        it('deve marcar email como verificado quando o email pertence à conta Google', async () => {
+            const user = createUserData({
+                externalAccounts: [
+                    new ExternalAccount(
+                        createExternalAccountData({ email: 'user@gmail.com' }),
+                    ),
+                ],
+            })
+
+            await user.setSystemLogin('user@gmail.com', 'password123')
+
+            expect(user.getIsEmailVerified()).toBe(true)
+            expect(user.getEmailVerificationCode()).toBeNull()
+        })
+
+        it('deve gerar código de verificação quando o email não pertence à conta Google', async () => {
+            const user = createUserData({
+                externalAccounts: [
+                    new ExternalAccount(
+                        createExternalAccountData({ email: 'google@gmail.com' }),
+                    ),
+                ],
+            })
+
+            await user.setSystemLogin('outro@email.com', 'password123')
+
+            expect(user.getIsEmailVerified()).toBe(false)
+            expect(user.getEmailVerificationCode()).not.toBeNull()
         })
     })
 
@@ -302,11 +555,9 @@ describe('Gerenciamento de conta do usuário', () => {
                 isEmailVerified: true,
             })
 
-            try {
-                user.linkSystemAccountWithSameEmail('GOOGLE', 'hash')
-            } catch (error: any) {
-                expect(error).toBeInstanceOf(ExternalAccountNotFoundError)
-            }
+            expect(() =>
+                user.linkSystemAccountWithSameEmail('GOOGLE', 'hash'),
+            ).toThrow(ExternalAccountNotFoundError)
         })
 
         it('deve dar erro se o usuário já tem login por email', () => {
@@ -319,11 +570,43 @@ describe('Gerenciamento de conta do usuário', () => {
                 ],
             })
 
-            try {
-                user.linkSystemAccountWithSameEmail('GOOGLE', 'new-hash')
-            } catch (error: any) {
-                expect(error).toBeInstanceOf(SystemLoginEnabledError)
-            }
+            expect(() =>
+                user.linkSystemAccountWithSameEmail('GOOGLE', 'new-hash'),
+            ).toThrow(SystemLoginEnabledError)
+        })
+    })
+
+    describe('Cancelar login por email/senha', () => {
+        it('deve limpar email, senha e código de verificação', () => {
+            const user = createUserData({
+                email: 'user@gmail.com',
+                passwordHash: 'password-hash',
+                isEmailVerified: true,
+                externalAccounts: [
+                    new ExternalAccount(createExternalAccountData()),
+                ],
+            })
+
+            user.cancelSystemLogin()
+
+            expect(user.getEmail()).toBeNull()
+            expect(user.getPasswordHash()).toBeNull()
+            expect(user.getEmailVerificationCode()).toBeNull()
+        })
+
+        it('deve marcar email como não verificado', () => {
+            const user = createUserData({
+                email: 'user@gmail.com',
+                passwordHash: 'password-hash',
+                isEmailVerified: true,
+                externalAccounts: [
+                    new ExternalAccount(createExternalAccountData()),
+                ],
+            })
+
+            user.cancelSystemLogin()
+
+            expect(user.getIsEmailVerified()).toBe(false)
         })
     })
 
@@ -354,6 +637,142 @@ describe('Gerenciamento de conta do usuário', () => {
             })
 
             expect(user.getGoogleAccessToken()).toBeNull()
+        })
+    })
+
+    describe('Gerar código de redefinição de senha', () => {
+        it('deve lançar erro quando o usuário não tem login por email/senha', () => {
+            const user = createUserData()
+
+            expect(() => user.generateResetPasswordCode()).toThrow(SystemLoginNotEnabledError)
+        })
+
+        it('deve gerar o código de redefinição de senha com sucesso', () => {
+            const user = createUserData({ email: 'user@example.com', passwordHash: 'hash' })
+
+            user.generateResetPasswordCode()
+
+            expect(user.getResetPasswordCode()).not.toBeNull()
+        })
+    })
+
+    describe('Validar código de redefinição de senha', () => {
+        it('deve lançar erro quando o usuário não tem login por email/senha', () => {
+            const user = createUserData()
+
+            expect(() => user.validateResetPasswordCode('123456')).toThrow(SystemLoginNotEnabledError)
+        })
+
+        it('deve lançar erro quando não há código pendente', () => {
+            const user = createUserData({ email: 'user@example.com', passwordHash: 'hash' })
+
+            expect(() => user.validateResetPasswordCode('123456')).toThrow(ResetPasswordCodeExpiredError)
+        })
+
+        it('deve lançar erro com código expirado', () => {
+            const user = createUserData({
+                email: 'user@example.com',
+                passwordHash: 'hash',
+                resetPasswordCode: createExpiredResetPasswordCode(),
+            })
+
+            expect(() => user.validateResetPasswordCode('123456')).toThrow(ResetPasswordCodeExpiredError)
+        })
+
+        it('deve lançar erro com código incorreto', () => {
+            const user = createUserData({
+                email: 'user@example.com',
+                passwordHash: 'hash',
+                resetPasswordCode: new ResetPasswordCode({ code: '654321', expiresAt: new Date(Date.now() + 60_000) }),
+            })
+
+            expect(() => user.validateResetPasswordCode('000000')).toThrow(ResetPasswordCodeInvalidError)
+        })
+
+        it('deve validar o código correto com sucesso', () => {
+            const user = createUserData({
+                email: 'user@example.com',
+                passwordHash: 'hash',
+                resetPasswordCode: new ResetPasswordCode({ code: '654321', expiresAt: new Date(Date.now() + 60_000) }),
+            })
+
+            expect(() => user.validateResetPasswordCode('654321')).not.toThrow()
+        })
+    })
+
+    describe('Redefinir senha', () => {
+        it('deve lançar erro com código inválido', async () => {
+            const user = createUserData({
+                email: 'user@example.com',
+                passwordHash: 'hash',
+                resetPasswordCode: new ResetPasswordCode({ code: '654321', expiresAt: new Date(Date.now() + 60_000) }),
+            })
+
+            await expect(user.resetPassword('000000', 'nova-senha')).rejects.toThrow(ResetPasswordCodeInvalidError)
+        })
+
+        it('deve redefinir a senha com código válido com sucesso', async () => {
+            const user = createUserData({
+                email: 'user@example.com',
+                passwordHash: 'hash',
+                resetPasswordCode: new ResetPasswordCode({ code: '654321', expiresAt: new Date(Date.now() + 60_000) }),
+            })
+
+            await user.resetPassword('654321', 'nova-senha')
+
+            expect(await user.comparePassword('nova-senha')).toBe(true)
+            expect(user.getResetPasswordCode()).toBeNull()
+        })
+    })
+
+    describe('Verificar email', () => {
+        it('deve lançar erro quando o email já está verificado', async () => {
+            const user = createUserData({
+                email: 'user@example.com',
+                passwordHash: 'hash',
+                isEmailVerified: true,
+            })
+
+            await expect(user.verifyEmail('123456')).rejects.toThrow(EmailAlreadyVerifiedError)
+        })
+
+        it('deve lançar erro quando não há código de verificação pendente', async () => {
+            const user = createUserData({ email: 'user@example.com', passwordHash: 'hash' })
+
+            await expect(user.verifyEmail('123456')).rejects.toThrow(VerificationCodeExpiredError)
+        })
+
+        it('deve lançar erro com código incorreto', async () => {
+            const user = createUserData({
+                email: 'user@example.com',
+                passwordHash: 'hash',
+                emailVerificationCode: new EmailVerificationCode({ code: '654321', expiresAt: new Date(Date.now() + 60_000) }),
+            })
+
+            await expect(user.verifyEmail('000000')).rejects.toThrow(VerificationCodeInvalidError)
+        })
+
+        it('deve lançar erro com código expirado', async () => {
+            const user = createUserData({
+                email: 'user@example.com',
+                passwordHash: 'hash',
+                emailVerificationCode: createExpiredVerificationCode(),
+            })
+
+            await expect(user.verifyEmail('654321')).rejects.toThrow(VerificationCodeExpiredError)
+        })
+
+        it('deve verificar o email com sucesso', async () => {
+            const user = createUserData({
+                email: 'user@example.com',
+                passwordHash: 'hash',
+                emailVerificationCode: new EmailVerificationCode({ code: '654321', expiresAt: new Date(Date.now() + 60_000) }),
+            })
+
+            await user.verifyEmail('654321')
+
+            expect(user.getIsEmailVerified()).toBe(true)
+            expect(user.getEmailVerificationCode()).toBeNull()
         })
     })
 })
