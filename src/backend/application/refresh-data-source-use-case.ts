@@ -1,4 +1,4 @@
-import { DATA_SOURCE_MIME_TYPE, DataSource } from '../domain/data-source'
+import { DataSource } from '../domain/data-source'
 import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 import { DataSourceNotFoundError } from '../domain/error/not-found-error/data-source-not-found-error'
@@ -22,28 +22,28 @@ interface RefreshDataSourceUseCaseInput {
 
 export class RefreshDataSourceUseCase {
     constructor(
-        private certificateEmissionsRepository: Pick<
+        private readonly certificateEmissionsRepository: Pick<
             ICertificatesRepository,
             'getById' | 'update'
         >,
-        private dataSourceRowsRepository: Pick<
+        private readonly dataSourceRowsRepository: Pick<
             IDataSourceRowsRepository,
             'saveMany' | 'deleteManyByCertificateEmissionId'
         >,
-        private googleDriveGateway: Pick<
+        private readonly googleDriveGateway: Pick<
             IGoogleDriveGateway,
             'getFileMetadata' | 'downloadFile'
         >,
-        private googleAuthGateway: Pick<
+        private readonly googleAuthGateway: Pick<
             IGoogleAuthGateway,
             'checkOrGetNewAccessToken'
         >,
-        private spreadsheetContentExtractorFactory: Pick<
+        private readonly spreadsheetContentExtractorFactory: Pick<
             ISpreadsheetContentExtractorFactory,
             'create'
         >,
-        private usersRepository: Pick<IUsersRepository, 'getById' | 'update'>,
-        private transactionManager: Pick<ITransactionManager, 'run'>,
+        private readonly usersRepository: Pick<IUsersRepository, 'getById' | 'update'>,
+        private readonly transactionManager: Pick<ITransactionManager, 'run'>,
     ) {}
 
     async execute(input: RefreshDataSourceUseCaseInput) {
