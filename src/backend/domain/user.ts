@@ -102,9 +102,6 @@ export class User extends AggregateRoot {
     constructor(data: UserInput) {
         super(data.id)
 
-        if (!data.id) {
-            throw new Error('User id is required')
-        }
         if (!data.name) {
             throw new Error('User name is required')
         }
