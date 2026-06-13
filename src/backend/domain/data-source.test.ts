@@ -113,7 +113,10 @@ describe('Fonte de dados', () => {
             expect(
                 () =>
                     new DataSource(
-                        makeDataSourceInput({ columnsRow: -1, dataRowStart: 2 }),
+                        makeDataSourceInput({
+                            columnsRow: -1,
+                            dataRowStart: 2,
+                        }),
                     ),
             ).toThrow('DataSource columns row must be positive')
         })
@@ -122,16 +125,20 @@ describe('Fonte de dados', () => {
             expect(
                 () =>
                     new DataSource(
-                        makeDataSourceInput({ columnsRow: 1, dataRowStart: -1 }),
+                        makeDataSourceInput({
+                            columnsRow: 1,
+                            dataRowStart: -1,
+                        }),
                     ),
             ).toThrow('DataSource data row start must be positive')
         })
 
         it('deve aceitar linha de cabeçalhos no valor zero com sucesso', () => {
-            expect(() =>
-                new DataSource(
-                    makeDataSourceInput({ columnsRow: 0, dataRowStart: 1 }),
-                ),
+            expect(
+                () =>
+                    new DataSource(
+                        makeDataSourceInput({ columnsRow: 0, dataRowStart: 1 }),
+                    ),
             ).not.toThrow()
         })
 
@@ -157,8 +164,8 @@ describe('Fonte de dados', () => {
                 { length: MAX_IMAGE_FILES + 1 },
                 (_, i) =>
                     makeFile({
-                        fileName: foto${i}.png,
-                        storageFileUrl: https://storage.example.com/foto${i}.png,
+                        fileName: `foto${i}.png`,
+                        storageFileUrl: `https://storage.example.com/foto${i}.png`,
                     }),
             )
 
@@ -193,23 +200,22 @@ describe('Fonte de dados', () => {
         })
 
         it('deve aceitar o número máximo de imagens permitido com sucesso', () => {
-            const imageFiles = Array.from(
-                { length: MAX_IMAGE_FILES },
-                (_, i) =>
-                    makeFile({
-                        fileName: foto${i}.png,
-                        storageFileUrl: https://storage.example.com/foto${i}.png,
-                    }),
+            const imageFiles = Array.from({ length: MAX_IMAGE_FILES }, (_, i) =>
+                makeFile({
+                    fileName: `foto${i}.png`,
+                    storageFileUrl: `https://storage.example.com/foto${i}.png`,
+                }),
             )
 
-            expect(() =>
-                new DataSource(
-                    makeDataSourceInput({
-                        files: imageFiles,
-                        fileMimeType: DATA_SOURCE_MIME_TYPE.PNG,
-                        columns: [makeColumn('Foto')],
-                    }),
-                ),
+            expect(
+                () =>
+                    new DataSource(
+                        makeDataSourceInput({
+                            files: imageFiles,
+                            fileMimeType: DATA_SOURCE_MIME_TYPE.PNG,
+                            columns: [makeColumn('Foto')],
+                        }),
+                    ),
             ).not.toThrow()
         })
 
@@ -218,19 +224,20 @@ describe('Fonte de dados', () => {
                 { length: MAX_IMAGE_FILES - 1 },
                 (_, i) =>
                     makeFile({
-                        fileName: foto${i}.png,
-                        storageFileUrl: https://storage.example.com/foto${i}.png,
+                        fileName: `foto${i}.png`,
+                        storageFileUrl: `https://storage.example.com/foto${i}.png`,
                     }),
             )
 
-            expect(() =>
-                new DataSource(
-                    makeDataSourceInput({
-                        files: imageFiles,
-                        fileMimeType: DATA_SOURCE_MIME_TYPE.PNG,
-                        columns: [makeColumn('Foto')],
-                    }),
-                ),
+            expect(
+                () =>
+                    new DataSource(
+                        makeDataSourceInput({
+                            files: imageFiles,
+                            fileMimeType: DATA_SOURCE_MIME_TYPE.PNG,
+                            columns: [makeColumn('Foto')],
+                        }),
+                    ),
             ).not.toThrow()
         })
     })
@@ -245,7 +252,7 @@ describe('Fonte de dados', () => {
         it('deve impedir a criação quando o número de colunas ultrapassar o limite permitido', () => {
             const columns = Array.from(
                 { length: MAX_DATA_SOURCE_COLUMNS + 1 },
-                (_, i) => Coluna${i},
+                (_, i) => `Coluna${i}`,
             )
             const rows = [Object.fromEntries(columns.map(c => [c, 'valor']))]
 
@@ -287,10 +294,10 @@ describe('Fonte de dados', () => {
         })
 
         it('deve criar com sucesso quando o número de linhas estiver no limite máximo', () => {
-            const rows = Array.from(
-                { length: MAX_DATA_SOURCE_ROWS },
-                () => ({ Nome: 'João', Email: 'joao@email.com' }),
-            )
+            const rows = Array.from({ length: MAX_DATA_SOURCE_ROWS }, () => ({
+                Nome: 'João',
+                Email: 'joao@email.com',
+            }))
 
             expect(() =>
                 DataSource.create(makeCreateInput({ rows })),
@@ -311,7 +318,7 @@ describe('Fonte de dados', () => {
         it('deve criar com sucesso quando o número de colunas estiver no limite máximo', () => {
             const columns = Array.from(
                 { length: MAX_DATA_SOURCE_COLUMNS },
-                (_, i) => Coluna${i},
+                (_, i) => `Coluna${i}`,
             )
             const rows = [Object.fromEntries(columns.map(c => [c, 'valor']))]
 
@@ -323,7 +330,7 @@ describe('Fonte de dados', () => {
         it('deve criar com sucesso quando o número de colunas estiver abaixo do limite máximo', () => {
             const columns = Array.from(
                 { length: MAX_DATA_SOURCE_COLUMNS - 1 },
-                (_, i) => Coluna${i},
+                (_, i) => `Coluna${i}`,
             )
             const rows = [Object.fromEntries(columns.map(c => [c, 'valor']))]
 
@@ -409,18 +416,30 @@ describe('Fonte de dados', () => {
     describe('Localização de armazenamento', () => {
         it('deve atualizar a localização de armazenamento do primeiro arquivo preservando a imutabilidade', () => {
             const dataSource = new DataSource(makeDataSourceInput())
-            const updated = dataSource.setStorageFileUrl('https://nova-url.com/dados.csv')
+            const updated = dataSource.setStorageFileUrl(
+                'https://nova-url.com/dados.csv',
+            )
 
-            expect(updated.getStorageFileUrl()).toBe('https://nova-url.com/dados.csv')
-            expect(dataSource.getStorageFileUrl()).toBe('https://storage.example.com/dados.csv')
+            expect(updated.getStorageFileUrl()).toBe(
+                'https://nova-url.com/dados.csv',
+            )
+            expect(dataSource.getStorageFileUrl()).toBe(
+                'https://storage.example.com/dados.csv',
+            )
         })
 
         it('deve atualizar as localizações de múltiplos arquivos preservando a imutabilidade', () => {
             const dataSource = new DataSource(
                 makeDataSourceInput({
                     files: [
-                        makeFile({ fileName: 'foto1.png', storageFileUrl: 'https://storage/foto1.png' }),
-                        makeFile({ fileName: 'foto2.png', storageFileUrl: 'https://storage/foto2.png' }),
+                        makeFile({
+                            fileName: 'foto1.png',
+                            storageFileUrl: 'https://storage/foto1.png',
+                        }),
+                        makeFile({
+                            fileName: 'foto2.png',
+                            storageFileUrl: 'https://storage/foto2.png',
+                        }),
                     ],
                     fileMimeType: DATA_SOURCE_MIME_TYPE.PNG,
                     columns: [makeColumn('Foto')],
@@ -434,14 +453,20 @@ describe('Fonte de dados', () => {
 
             expect(updated.getStorageFileUrl(0)).toBe('https://nova/foto1.png')
             expect(updated.getStorageFileUrl(1)).toBe('https://nova/foto2.png')
-            expect(dataSource.getStorageFileUrl(0)).toBe('https://storage/foto1.png')
+            expect(dataSource.getStorageFileUrl(0)).toBe(
+                'https://storage/foto1.png',
+            )
         })
 
         it('deve atualizar a thumbnail preservando a imutabilidade', () => {
             const dataSource = new DataSource(makeDataSourceInput())
-            const updated = dataSource.setThumbnailUrl('https://thumbnail.com/img.png')
+            const updated = dataSource.setThumbnailUrl(
+                'https://thumbnail.com/img.png',
+            )
 
-            expect(updated.serialize().thumbnailUrl).toBe('https://thumbnail.com/img.png')
+            expect(updated.serialize().thumbnailUrl).toBe(
+                'https://thumbnail.com/img.png',
+            )
             expect(dataSource.serialize().thumbnailUrl).toBeNull()
         })
     })
@@ -454,7 +479,9 @@ describe('Fonte de dados', () => {
         })
 
         it('deve retornar null para um link não reconhecido', () => {
-            expect(DataSource.getFileIdFromUrl('https://example.com/file')).toBeNull()
+            expect(
+                DataSource.getFileIdFromUrl('https://example.com/file'),
+            ).toBeNull()
         })
     })
 
@@ -464,7 +491,10 @@ describe('Fonte de dados', () => {
                 { label: 'CSV', mimeType: DATA_SOURCE_MIME_TYPE.CSV },
                 { label: 'XLSX', mimeType: DATA_SOURCE_MIME_TYPE.XLSX },
                 { label: 'ODS', mimeType: DATA_SOURCE_MIME_TYPE.ODS },
-                { label: 'Google Sheets', mimeType: DATA_SOURCE_MIME_TYPE.GOOGLE_SHEETS },
+                {
+                    label: 'Google Sheets',
+                    mimeType: DATA_SOURCE_MIME_TYPE.GOOGLE_SHEETS,
+                },
                 { label: 'PNG', mimeType: DATA_SOURCE_MIME_TYPE.PNG },
                 { label: 'JPEG', mimeType: DATA_SOURCE_MIME_TYPE.JPEG },
             ])('$mimeType', ({ mimeType }) => {

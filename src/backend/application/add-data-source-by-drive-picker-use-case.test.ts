@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 import { AddDataSourceByDrivePickerUseCase } from './add-data-source-by-drive-picker-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
-import { IGoogleDriveGateway, GetFileMetadataOutput } from './interfaces/igoogle-drive-gateway'
+import {
+    IGoogleDriveGateway,
+    GetFileMetadataOutput,
+} from './interfaces/igoogle-drive-gateway'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
@@ -43,7 +46,13 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
             thumbnailUrl: null,
             columnsRow: 1,
             dataRowStart: 2,
-            columns: [{ name: 'Imagem', type: 'string' as const, arrayMetadata: null }],
+            columns: [
+                {
+                    name: 'Imagem',
+                    type: 'string' as const,
+                    arrayMetadata: null,
+                },
+            ],
             googleAccountEmail: null,
         })
     }
@@ -95,8 +104,7 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
     }
 
     class GoogleDriveGatewayStub
-        implements
-            Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
+        implements Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
     {
         async getFileMetadata(): Promise<GetFileMetadataOutput> {
             return {
@@ -302,9 +310,13 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
             ICertificatesRepository,
             'getById' | 'update'
         > = {
-            getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
-            ),
+            getById: vi
+                .fn()
+                .mockResolvedValue(
+                    createCertificateEmission({
+                        status: CERTIFICATE_STATUS.EMITTED,
+                    }),
+                ),
             update: vi.fn(),
         }
 
@@ -412,7 +424,10 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
             deleteManyByCertificateEmissionId: vi.fn(),
         }
 
-        const usersRepositoryMock: Pick<IUsersRepository, 'getById' | 'update'> = {
+        const usersRepositoryMock: Pick<
+            IUsersRepository,
+            'getById' | 'update'
+        > = {
             getById: vi.fn().mockResolvedValue(createUser()),
             update: vi.fn(),
         }
@@ -481,7 +496,10 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
             async update(): Promise<void> {}
         }
 
-        const fiveImageIds = Array.from({ length: 5 }, (_, i) => image-id-${i})
+        const fiveImageIds = Array.from(
+            { length: 5 },
+            (_, i) => `image-id-${i}`,
+        )
 
         const useCase = new AddDataSourceByDrivePickerUseCase(
             certificatesRepositoryMock,

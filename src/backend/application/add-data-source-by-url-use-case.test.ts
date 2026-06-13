@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 import { AddDataSourceByUrlUseCase } from './add-data-source-by-url-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
-import { IGoogleDriveGateway, GetFileMetadataOutput } from './interfaces/igoogle-drive-gateway'
+import {
+    IGoogleDriveGateway,
+    GetFileMetadataOutput,
+} from './interfaces/igoogle-drive-gateway'
 import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
@@ -42,7 +45,9 @@ describe('AddDataSourceByUrlUseCase', () => {
             thumbnailUrl: null,
             columnsRow: 1,
             dataRowStart: 2,
-            columns: [{ name: 'Nome', type: 'string' as const, arrayMetadata: null }],
+            columns: [
+                { name: 'Nome', type: 'string' as const, arrayMetadata: null },
+            ],
             googleAccountEmail: null,
         })
     }
@@ -65,8 +70,7 @@ describe('AddDataSourceByUrlUseCase', () => {
     }
 
     class GoogleDriveGatewayStub
-        implements
-            Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
+        implements Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
     {
         async getFileMetadata(): Promise<GetFileMetadataOutput> {
             return {
@@ -218,9 +222,13 @@ describe('AddDataSourceByUrlUseCase', () => {
             ICertificatesRepository,
             'getById' | 'update'
         > = {
-            getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
-            ),
+            getById: vi
+                .fn()
+                .mockResolvedValue(
+                    createCertificateEmission({
+                        status: CERTIFICATE_STATUS.EMITTED,
+                    }),
+                ),
             update: vi.fn(),
         }
 
@@ -348,8 +356,7 @@ describe('AddDataSourceByUrlUseCase', () => {
 
         const fiveImageUrls = Array.from(
             { length: 5 },
-            (_, i) =>
-                https://drive.google.com/file/d/imageid${i}/view,
+            (_, i) => `https://drive.google.com/file/d/imageid${i}/view`,
         )
 
         const useCase = new AddDataSourceByUrlUseCase(
