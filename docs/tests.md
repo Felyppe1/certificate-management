@@ -575,6 +575,18 @@ test.describe('Autenticação', () => {
 })
 ```
 
+**Cobertura de fronteiras (obrigatório em todos os níveis)**
+
+Para qualquer campo, parâmetro ou regra com restrição de valor (tamanho, range, contagem, status permitido), sempre teste os vizinhos imediatos das fronteiras — não apenas o caminho feliz. Isso vale para unitários, integração e e2e. Veja [Análise do Valor Limite](#análise-do-valor-limite-avl).
+
+```ts
+// Exemplo: método que aceita lista de 1 a 10 destinatários
+it('deve aceitar lista com 1 destinatário (mínimo)', ...)
+it('deve aceitar lista com 10 destinatários (máximo)', ...)
+it('deve rejeitar lista vazia (abaixo do mínimo)', ...)
+it('deve rejeitar lista com 11 destinatários (acima do máximo)', ...)
+```
+
 **Dublês e dependências**
 
 - `Pick<IInterface, 'method'>` em vez de implementar a interface inteira nos dublês

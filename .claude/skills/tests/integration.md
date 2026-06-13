@@ -4,11 +4,14 @@
 
 - Use cases com repositórios Prisma reais contra um banco PostgreSQL de teste
 - Verificar que persistência, transações e queries funcionam de ponta a ponta dentro da camada de backend
+- Focar em cenários que exercitem chamadas ao banco — não replicar fluxos que passam por caminhos do banco já testados por outros casos de integração (ou cobertos em unitários)
+- Quando o use case persiste dados, verificar que **todos os campos** foram salvos corretamente no banco
 
 ## O que NÃO testar
 
 - Regras de negócio já cobertas por unitários
 - UI ou fluxos de browser
+- Caminhos que não adicionam cobertura nova de banco (combinações de cenários que já foram exercitadas em outros testes de integração)
 
 ## Configuração
 
