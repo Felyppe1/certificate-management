@@ -105,6 +105,17 @@ describe('Template', () => {
                     ),
             ).toThrow('Template variables is required')
         })
+
+        it('não deve permitir criar template sem URL de armazenamento', () => {
+            expect(
+                () =>
+                    new Template(
+                        createTemplateData({
+                            storageFileUrl: '',
+                        }),
+                    ),
+            ).toThrow('Template storage file URL is required')
+        })
     })
 
     describe('atualização da localização de armazenamento', () => {

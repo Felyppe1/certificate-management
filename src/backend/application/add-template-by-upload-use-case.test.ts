@@ -1,37 +1,31 @@
 import { describe, expect, it, vi } from 'vitest'
-import { DeleteTemplateUseCase } from './delete-template-use-case'
+import { AddTemplateByUploadUseCase } from './add-template-by-upload-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
+import { IStringVariableExtractor } from './interfaces/istring-variable-extractor'
+import {
+    IFileContentExtractorFactory,
+    IFileContentExtractorStrategy,
+} from './interfaces/ifile-content-extractor-factory'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { IBucket } from './interfaces/cloud/ibucket'
 import {
     CertificateEmission,
     CERTIFICATE_STATUS,
     INPUT_METHOD,
 } from '../domain/certificate'
-import { Template, TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
 import { DataSource, DATA_SOURCE_MIME_TYPE } from '../domain/data-source'
-import { IBucket } from './interfaces/cloud/ibucket'
-import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
+import { TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
+import { User } from '../domain/user'
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
-import { TemplateNotFoundError } from '../domain/error/not-found-error/template-not-found-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
+import { UnsupportedTemplateMimetypeError } from '../domain/error/validation-error/unsupported-template-mimetype-error'
 
-describe('DeleteTemplateUseCase', () => {
+describe('AddTemplateByUploadUseCase', () => {
     const USER_ID = '1'
     const CERTIFICATE_ID = '1'
-
-    function createTemplate() {
-        return new Template({
-            fileMimeType: TEMPLATE_FILE_MIME_TYPE.DOCX,
-            inputMethod: INPUT_METHOD.UPLOAD,
-            driveFileId: null,
-            storageFileUrl: 'https://storage/file.docx',
-            fileName: 'file.docx',
-            variables: [],
-            thumbnailUrl: null,
-            googleAccountEmail: null,
-        })
-    }
 
     function createDataSource() {
         return new DataSource({
@@ -55,17 +49,13 @@ describe('DeleteTemplateUseCase', () => {
     function createCertificateEmission(overrides?: {
         userId?: string
         status?: CERTIFICATE_STATUS
-        template?: Template | null
         dataSource?: DataSource | null
     }) {
         return new CertificateEmission({
             id: CERTIFICATE_ID,
             name: 'Name',
             userId: overrides?.userId ?? USER_ID,
-            template:
-                overrides?.template !== undefined
-                    ? overrides.template
-                    : createTemplate(),
+            template: null,
             createdAt: new Date(),
             status: overrides?.status ?? CERTIFICATE_STATUS.DRAFT,
             dataSource: overrides?.dataSource ?? null,
@@ -73,10 +63,46 @@ describe('DeleteTemplateUseCase', () => {
         })
     }
 
-    it('deve deletar o template da emissão de certificado com sucesso', async () => {
+    function createValidFile(mimeType = TEMPLATE_FILE_MIME_TYPE.DOCX as string) {
+        return new File([Buffer.from('content')], 'template.docx', {
+            type: mimeType,
+        })
+    }
+
+    class BucketStub implements Pick<IBucket, 'uploadObject'> {
+        async uploadObject(): Promise<string> {
+            return ''
+        }
+    }
+
+    class TransactionManagerStub implements Pick<ITransactionManager, 'run'> {
+        async run<T>(work: () => Promise<T>): Promise<T> {
+            return work()
+        }
+    }
+
+    class FileContentExtractorFactoryStub
+        implements Pick<IFileContentExtractorFactory, 'create'>
+    {
+        create(): IFileContentExtractorStrategy {
+            return {
+                async extractText(): Promise<string> {
+                    return '{{nome}}'
+                },
+            }
+        }
+    }
+
+    class UsersRepositoryStub implements Pick<IUsersRepository, 'getById'> {
+        async getById(): Promise<User | null> {
+            return null
+        }
+    }
+
+    it('deve adicionar um template por upload com sucesso', async () => {
         const certificateEmission = createCertificateEmission()
 
-        const certificateEmissionsRepositoryMock: Pick<
+        const certificatesRepositoryMock: Pick<
             ICertificatesRepository,
             'getById' | 'update'
         > = {
@@ -91,42 +117,34 @@ describe('DeleteTemplateUseCase', () => {
             resetProcessingStatusByCertificateEmissionId: vi.fn(),
         }
 
-        class BucketStub implements Pick<IBucket, 'deleteObject'> {
-            async deleteObject() {}
-        }
-
-        class TransactionManagerStub
-            implements Pick<ITransactionManager, 'run'>
-        {
-            async run<T>(work: () => Promise<T>): Promise<T> {
-                return work()
-            }
-        }
-
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepositoryMock,
-            dataSourceRowsRepositoryStub,
+        const useCase = new AddTemplateByUploadUseCase(
             new BucketStub(),
+            certificatesRepositoryMock,
+            dataSourceRowsRepositoryStub,
+            new FileContentExtractorFactoryStub(),
             new TransactionManagerStub(),
+            { extractVariables: () => ['nome'] },
+            new UsersRepositoryStub(),
         )
 
-        await deleteTemplateUseCase.execute({
+        await useCase.execute({
+            file: createValidFile(),
             certificateId: CERTIFICATE_ID,
             userId: USER_ID,
         })
 
-        expect(certificateEmissionsRepositoryMock.update).toHaveBeenCalledWith(
+        expect(certificatesRepositoryMock.update).toHaveBeenCalledWith(
             certificateEmission,
         )
-        expect(certificateEmission.hasTemplate()).toBe(false)
+        expect(certificateEmission.hasTemplate()).toBe(true)
     })
 
-    it('deve resetar o status de processamento das linhas da fonte de dados ao deletar o template quando houver fonte de dados vinculada', async () => {
+    it('deve resetar o status de processamento das linhas da fonte de dados ao substituir o template quando houver fonte de dados vinculada', async () => {
         const certificateEmission = createCertificateEmission({
             dataSource: createDataSource(),
         })
 
-        const certificateEmissionsRepositoryMock: Pick<
+        const certificatesRepositoryMock: Pick<
             ICertificatesRepository,
             'getById' | 'update'
         > = {
@@ -141,26 +159,18 @@ describe('DeleteTemplateUseCase', () => {
             resetProcessingStatusByCertificateEmissionId: vi.fn(),
         }
 
-        class BucketStub implements Pick<IBucket, 'deleteObject'> {
-            async deleteObject() {}
-        }
-
-        class TransactionManagerStub
-            implements Pick<ITransactionManager, 'run'>
-        {
-            async run<T>(work: () => Promise<T>): Promise<T> {
-                return work()
-            }
-        }
-
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepositoryMock,
-            dataSourceRowsRepositoryStub,
+        const useCase = new AddTemplateByUploadUseCase(
             new BucketStub(),
+            certificatesRepositoryMock,
+            dataSourceRowsRepositoryStub,
+            new FileContentExtractorFactoryStub(),
             new TransactionManagerStub(),
+            { extractVariables: () => [] },
+            new UsersRepositoryStub(),
         )
 
-        await deleteTemplateUseCase.execute({
+        await useCase.execute({
+            file: createValidFile(),
             certificateId: CERTIFICATE_ID,
             userId: USER_ID,
         })
@@ -171,7 +181,7 @@ describe('DeleteTemplateUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        const certificateEmissionsRepositoryMock: Pick<
+        const certificatesRepositoryMock: Pick<
             ICertificatesRepository,
             'getById' | 'update'
         > = {
@@ -179,25 +189,29 @@ describe('DeleteTemplateUseCase', () => {
             update: vi.fn(),
         }
 
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepositoryMock,
-            {} as IDataSourceRowsRepository,
+        const useCase = new AddTemplateByUploadUseCase(
             {} as IBucket,
+            certificatesRepositoryMock,
+            {} as IDataSourceRowsRepository,
+            {} as IFileContentExtractorFactory,
             {} as ITransactionManager,
+            {} as IStringVariableExtractor,
+            {} as IUsersRepository,
         )
 
         await expect(
-            deleteTemplateUseCase.execute({
+            useCase.execute({
+                file: createValidFile(),
                 certificateId: 'nao-existe',
                 userId: USER_ID,
             }),
         ).rejects.toThrow(CertificateNotFoundError)
 
-        expect(certificateEmissionsRepositoryMock.update).not.toHaveBeenCalled()
+        expect(certificatesRepositoryMock.update).not.toHaveBeenCalled()
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        const certificateEmissionsRepositoryMock: Pick<
+        const certificatesRepositoryMock: Pick<
             ICertificatesRepository,
             'getById' | 'update'
         > = {
@@ -209,80 +223,88 @@ describe('DeleteTemplateUseCase', () => {
             update: vi.fn(),
         }
 
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepositoryMock,
-            {} as IDataSourceRowsRepository,
+        const useCase = new AddTemplateByUploadUseCase(
             {} as IBucket,
+            certificatesRepositoryMock,
+            {} as IDataSourceRowsRepository,
+            {} as IFileContentExtractorFactory,
             {} as ITransactionManager,
+            {} as IStringVariableExtractor,
+            {} as IUsersRepository,
         )
 
         await expect(
-            deleteTemplateUseCase.execute({
+            useCase.execute({
+                file: createValidFile(),
                 certificateId: CERTIFICATE_ID,
                 userId: USER_ID,
             }),
         ).rejects.toThrow(NotCertificateOwnerError)
 
-        expect(certificateEmissionsRepositoryMock.update).not.toHaveBeenCalled()
+        expect(certificatesRepositoryMock.update).not.toHaveBeenCalled()
     })
 
     it('deve lançar erro quando a emissão de certificado já tiver sido emitida', async () => {
-        const certificateEmissionsRepositoryMock: Pick<
+        const certificatesRepositoryMock: Pick<
             ICertificatesRepository,
             'getById' | 'update'
         > = {
             getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({
-                    status: CERTIFICATE_STATUS.EMITTED,
-                }),
+                createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
             ),
             update: vi.fn(),
         }
 
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepositoryMock,
-            {} as IDataSourceRowsRepository,
+        const useCase = new AddTemplateByUploadUseCase(
             {} as IBucket,
+            certificatesRepositoryMock,
+            {} as IDataSourceRowsRepository,
+            {} as IFileContentExtractorFactory,
             {} as ITransactionManager,
+            {} as IStringVariableExtractor,
+            {} as IUsersRepository,
         )
 
         await expect(
-            deleteTemplateUseCase.execute({
+            useCase.execute({
+                file: createValidFile(),
                 certificateId: CERTIFICATE_ID,
                 userId: USER_ID,
             }),
         ).rejects.toThrow(CertificateEmittedError)
 
-        expect(certificateEmissionsRepositoryMock.update).not.toHaveBeenCalled()
+        expect(certificatesRepositoryMock.update).not.toHaveBeenCalled()
     })
 
-    it('deve lançar erro quando a emissão de certificado não tiver template vinculado', async () => {
-        const certificateEmissionsRepositoryMock: Pick<
+    it('deve lançar erro quando o formato do arquivo não for suportado como template', async () => {
+        const certificatesRepositoryMock: Pick<
             ICertificatesRepository,
             'getById' | 'update'
         > = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({ template: null }),
-                ),
+            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
             update: vi.fn(),
         }
 
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepositoryMock,
-            {} as IDataSourceRowsRepository,
+        const useCase = new AddTemplateByUploadUseCase(
             {} as IBucket,
+            certificatesRepositoryMock,
+            {} as IDataSourceRowsRepository,
+            {} as IFileContentExtractorFactory,
             {} as ITransactionManager,
+            {} as IStringVariableExtractor,
+            {} as IUsersRepository,
         )
 
+        const pdfFile = createValidFile('application/pdf')
+
         await expect(
-            deleteTemplateUseCase.execute({
+            useCase.execute({
+                file: pdfFile,
                 certificateId: CERTIFICATE_ID,
                 userId: USER_ID,
             }),
-        ).rejects.toThrow(TemplateNotFoundError)
+        ).rejects.toThrow(UnsupportedTemplateMimetypeError)
 
-        expect(certificateEmissionsRepositoryMock.update).not.toHaveBeenCalled()
+        expect(certificatesRepositoryMock.update).not.toHaveBeenCalled()
     })
 })

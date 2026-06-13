@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { DeleteTemplateUseCase } from './delete-template-use-case'
+import { UpdateDataSourceColumnsUseCase } from './update-data-source-columns-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
@@ -8,30 +8,15 @@ import {
     CERTIFICATE_STATUS,
     INPUT_METHOD,
 } from '../domain/certificate'
-import { Template, TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
 import { DataSource, DATA_SOURCE_MIME_TYPE } from '../domain/data-source'
-import { IBucket } from './interfaces/cloud/ibucket'
-import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
-import { TemplateNotFoundError } from '../domain/error/not-found-error/template-not-found-error'
+import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
+import { DataSourceNotFoundError } from '../domain/error/not-found-error/data-source-not-found-error'
 
-describe('DeleteTemplateUseCase', () => {
+describe('UpdateDataSourceColumnsUseCase', () => {
     const USER_ID = '1'
     const CERTIFICATE_ID = '1'
-
-    function createTemplate() {
-        return new Template({
-            fileMimeType: TEMPLATE_FILE_MIME_TYPE.DOCX,
-            inputMethod: INPUT_METHOD.UPLOAD,
-            driveFileId: null,
-            storageFileUrl: 'https://storage/file.docx',
-            fileName: 'file.docx',
-            variables: [],
-            thumbnailUrl: null,
-            googleAccountEmail: null,
-        })
-    }
 
     function createDataSource() {
         return new DataSource({
@@ -55,28 +40,33 @@ describe('DeleteTemplateUseCase', () => {
     function createCertificateEmission(overrides?: {
         userId?: string
         status?: CERTIFICATE_STATUS
-        template?: Template | null
         dataSource?: DataSource | null
     }) {
         return new CertificateEmission({
             id: CERTIFICATE_ID,
-            name: 'Name',
+            name: 'Certificado',
             userId: overrides?.userId ?? USER_ID,
-            template:
-                overrides?.template !== undefined
-                    ? overrides.template
-                    : createTemplate(),
+            template: null,
             createdAt: new Date(),
             status: overrides?.status ?? CERTIFICATE_STATUS.DRAFT,
-            dataSource: overrides?.dataSource ?? null,
+            dataSource:
+                overrides?.dataSource !== undefined
+                    ? overrides.dataSource
+                    : createDataSource(),
             variableColumnMapping: null,
         })
     }
 
-    it('deve deletar o template da emissão de certificado com sucesso', async () => {
+    class TransactionManagerStub implements Pick<ITransactionManager, 'run'> {
+        async run<T>(work: () => Promise<T>): Promise<T> {
+            return work()
+        }
+    }
+
+    it('deve atualizar os tipos das colunas da fonte de dados com sucesso', async () => {
         const certificateEmission = createCertificateEmission()
 
-        const certificateEmissionsRepositoryMock: Pick<
+        const certificatesRepositoryMock: Pick<
             ICertificatesRepository,
             'getById' | 'update'
         > = {
@@ -86,47 +76,35 @@ describe('DeleteTemplateUseCase', () => {
 
         const dataSourceRowsRepositoryStub: Pick<
             IDataSourceRowsRepository,
-            'resetProcessingStatusByCertificateEmissionId'
+            | 'getColumnValuesByCertificateEmissionId'
+            | 'resetProcessingStatusByCertificateEmissionId'
         > = {
+            getColumnValuesByCertificateEmissionId: vi.fn().mockResolvedValue([]),
             resetProcessingStatusByCertificateEmissionId: vi.fn(),
         }
 
-        class BucketStub implements Pick<IBucket, 'deleteObject'> {
-            async deleteObject() {}
-        }
-
-        class TransactionManagerStub
-            implements Pick<ITransactionManager, 'run'>
-        {
-            async run<T>(work: () => Promise<T>): Promise<T> {
-                return work()
-            }
-        }
-
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepositoryMock,
+        const useCase = new UpdateDataSourceColumnsUseCase(
+            certificatesRepositoryMock,
             dataSourceRowsRepositoryStub,
-            new BucketStub(),
             new TransactionManagerStub(),
         )
 
-        await deleteTemplateUseCase.execute({
+        const result = await useCase.execute({
             certificateId: CERTIFICATE_ID,
             userId: USER_ID,
+            columns: [{ name: 'Nome', type: 'string', arrayMetadata: null }],
         })
 
-        expect(certificateEmissionsRepositoryMock.update).toHaveBeenCalledWith(
+        expect(result.invalidColumns).toHaveLength(0)
+        expect(certificatesRepositoryMock.update).toHaveBeenCalledWith(
             certificateEmission,
         )
-        expect(certificateEmission.hasTemplate()).toBe(false)
     })
 
-    it('deve resetar o status de processamento das linhas da fonte de dados ao deletar o template quando houver fonte de dados vinculada', async () => {
-        const certificateEmission = createCertificateEmission({
-            dataSource: createDataSource(),
-        })
+    it('deve retornar as colunas inválidas sem persistir quando os valores existentes não forem compatíveis com o novo tipo', async () => {
+        const certificateEmission = createCertificateEmission()
 
-        const certificateEmissionsRepositoryMock: Pick<
+        const certificatesRepositoryMock: Pick<
             ICertificatesRepository,
             'getById' | 'update'
         > = {
@@ -136,42 +114,33 @@ describe('DeleteTemplateUseCase', () => {
 
         const dataSourceRowsRepositoryStub: Pick<
             IDataSourceRowsRepository,
-            'resetProcessingStatusByCertificateEmissionId'
+            | 'getColumnValuesByCertificateEmissionId'
+            | 'resetProcessingStatusByCertificateEmissionId'
         > = {
+            getColumnValuesByCertificateEmissionId: vi
+                .fn()
+                .mockResolvedValue(['texto que nao e numero', 'outro texto']),
             resetProcessingStatusByCertificateEmissionId: vi.fn(),
         }
 
-        class BucketStub implements Pick<IBucket, 'deleteObject'> {
-            async deleteObject() {}
-        }
-
-        class TransactionManagerStub
-            implements Pick<ITransactionManager, 'run'>
-        {
-            async run<T>(work: () => Promise<T>): Promise<T> {
-                return work()
-            }
-        }
-
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepositoryMock,
+        const useCase = new UpdateDataSourceColumnsUseCase(
+            certificatesRepositoryMock,
             dataSourceRowsRepositoryStub,
-            new BucketStub(),
             new TransactionManagerStub(),
         )
 
-        await deleteTemplateUseCase.execute({
+        const result = await useCase.execute({
             certificateId: CERTIFICATE_ID,
             userId: USER_ID,
+            columns: [{ name: 'Nome', type: 'number', arrayMetadata: null }],
         })
 
-        expect(
-            dataSourceRowsRepositoryStub.resetProcessingStatusByCertificateEmissionId,
-        ).toHaveBeenCalledWith(CERTIFICATE_ID)
+        expect(result.invalidColumns).toEqual([{ name: 'Nome', toType: 'number' }])
+        expect(certificatesRepositoryMock.update).not.toHaveBeenCalled()
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        const certificateEmissionsRepositoryMock: Pick<
+        const certificatesRepositoryMock: Pick<
             ICertificatesRepository,
             'getById' | 'update'
         > = {
@@ -179,25 +148,25 @@ describe('DeleteTemplateUseCase', () => {
             update: vi.fn(),
         }
 
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepositoryMock,
+        const useCase = new UpdateDataSourceColumnsUseCase(
+            certificatesRepositoryMock,
             {} as IDataSourceRowsRepository,
-            {} as IBucket,
             {} as ITransactionManager,
         )
 
         await expect(
-            deleteTemplateUseCase.execute({
+            useCase.execute({
                 certificateId: 'nao-existe',
                 userId: USER_ID,
+                columns: [],
             }),
         ).rejects.toThrow(CertificateNotFoundError)
 
-        expect(certificateEmissionsRepositoryMock.update).not.toHaveBeenCalled()
+        expect(certificatesRepositoryMock.update).not.toHaveBeenCalled()
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        const certificateEmissionsRepositoryMock: Pick<
+        const certificatesRepositoryMock: Pick<
             ICertificatesRepository,
             'getById' | 'update'
         > = {
@@ -209,80 +178,76 @@ describe('DeleteTemplateUseCase', () => {
             update: vi.fn(),
         }
 
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepositoryMock,
+        const useCase = new UpdateDataSourceColumnsUseCase(
+            certificatesRepositoryMock,
             {} as IDataSourceRowsRepository,
-            {} as IBucket,
             {} as ITransactionManager,
         )
 
         await expect(
-            deleteTemplateUseCase.execute({
+            useCase.execute({
                 certificateId: CERTIFICATE_ID,
                 userId: USER_ID,
+                columns: [],
             }),
         ).rejects.toThrow(NotCertificateOwnerError)
 
-        expect(certificateEmissionsRepositoryMock.update).not.toHaveBeenCalled()
+        expect(certificatesRepositoryMock.update).not.toHaveBeenCalled()
     })
 
     it('deve lançar erro quando a emissão de certificado já tiver sido emitida', async () => {
-        const certificateEmissionsRepositoryMock: Pick<
+        const certificatesRepositoryMock: Pick<
             ICertificatesRepository,
             'getById' | 'update'
         > = {
             getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({
-                    status: CERTIFICATE_STATUS.EMITTED,
-                }),
+                createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
             ),
             update: vi.fn(),
         }
 
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepositoryMock,
+        const useCase = new UpdateDataSourceColumnsUseCase(
+            certificatesRepositoryMock,
             {} as IDataSourceRowsRepository,
-            {} as IBucket,
             {} as ITransactionManager,
         )
 
         await expect(
-            deleteTemplateUseCase.execute({
+            useCase.execute({
                 certificateId: CERTIFICATE_ID,
                 userId: USER_ID,
+                columns: [],
             }),
         ).rejects.toThrow(CertificateEmittedError)
 
-        expect(certificateEmissionsRepositoryMock.update).not.toHaveBeenCalled()
+        expect(certificatesRepositoryMock.update).not.toHaveBeenCalled()
     })
 
-    it('deve lançar erro quando a emissão de certificado não tiver template vinculado', async () => {
-        const certificateEmissionsRepositoryMock: Pick<
+    it('deve lançar erro quando não houver fonte de dados vinculada', async () => {
+        const certificatesRepositoryMock: Pick<
             ICertificatesRepository,
             'getById' | 'update'
         > = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({ template: null }),
-                ),
+            getById: vi.fn().mockResolvedValue(
+                createCertificateEmission({ dataSource: null }),
+            ),
             update: vi.fn(),
         }
 
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepositoryMock,
+        const useCase = new UpdateDataSourceColumnsUseCase(
+            certificatesRepositoryMock,
             {} as IDataSourceRowsRepository,
-            {} as IBucket,
             {} as ITransactionManager,
         )
 
         await expect(
-            deleteTemplateUseCase.execute({
+            useCase.execute({
                 certificateId: CERTIFICATE_ID,
                 userId: USER_ID,
+                columns: [],
             }),
-        ).rejects.toThrow(TemplateNotFoundError)
+        ).rejects.toThrow(DataSourceNotFoundError)
 
-        expect(certificateEmissionsRepositoryMock.update).not.toHaveBeenCalled()
+        expect(certificatesRepositoryMock.update).not.toHaveBeenCalled()
     })
 })
