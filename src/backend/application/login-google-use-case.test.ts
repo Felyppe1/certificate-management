@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { LoginGoogleUseCase } from './login-google-use-case'
 import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
 import { ExternalAccountAlreadyExistsError } from '../domain/error/conflict-error/external-account-already-exists-error'
+import { InsufficientExternalAccountScopesError } from '../domain/error/authentication-error/insufficient-external-account-scopes-error'
 
 function createUserMock(overrides: any = {}) {
     return {
@@ -212,5 +213,15 @@ describe('LoginGoogleUseCase', () => {
         })
 
         expect(sessionsRepository.save).toHaveBeenCalled()
+    })
+
+    it('deve lançar erro se os escopos do Google forem insuficientes', async () => {
+        googleAuthGateway.getToken.mockResolvedValue(
+            createGoogleToken({ scopes: ['https://www.googleapis.com/auth/drive.file'] }),
+        )
+
+        await expect(
+            useCase.execute({ code: 'code', reAuthenticate: false }),
+        ).rejects.toThrow(InsufficientExternalAccountScopesError)
     })
 })
