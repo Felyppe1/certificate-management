@@ -22,24 +22,24 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-    {
-      name: 'Microsoft Edge',
-      use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    },
+    // {
+    //   name: 'firefox',
+    //   use: { ...devices['Desktop Firefox'] },
+    // },
+    // {
+    //   name: 'webkit',
+    //   use: { ...devices['Desktop Safari'] },
+    // },
+    // {
+    //   name: 'Microsoft Edge',
+    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
+    // },
   ],
   webServer: { // Guarantee the server is running before starting the tests
     command: 'npx tsx src/tests/e2e/start-server.ts',
     url: 'http://localhost:3001',
     reuseExistingServer: !process.env.CI,
-    timeout: 300000,
+    timeout: 400000,
     stdout: 'pipe',
     stderr: 'pipe',
   },

@@ -16,6 +16,13 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'main-personal-account' || 'develop' }}
+
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      CERTIFICATES_BUCKET: ${{ vars.CERTIFICATES_BUCKET }}
+      E2E_TEMPLATE_URL: ${{ vars.E2E_TEMPLATE_URL }}
+      E2E_DATA_SOURCE_URL: ${{ vars.E2E_DATA_SOURCE_URL }}
 
     steps:
       - name: Checkout code
@@ -38,14 +45,22 @@ jobs:
       - name: Unit tests
         run: npm run test:unit
 
-      # - name: Integration tests
-      #   run: npm run test:integration
+      - name: Integration tests
+        run: npm run test:integration
 
-      # - name: Install Playwright browsers
-      #   run: npx playwright install --with-deps chromium
+      - name: Authenticate to GCP
+        uses: ./.github/actions/gcp-auth
+        with:
+          wif_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT_EMAIL }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          export_default_credentials: 'true'
 
-      # - name: E2E tests
-      #   run: npm run test:e2e
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E tests
+        run: npx playwright test --project=chromium
 
   terraform-plan:
     runs-on: ubuntu-latest
