@@ -13,5 +13,9 @@ export default defineConfig({
         globalSetup: ['src/tests/global-setup.integration.ts'],
         setupFiles: ['src/tests/setup.integration.ts'],
         environment: 'node',
+        env: {
+            SKIP_ENV_VALIDATION: '1',
+            NEXT_PUBLIC_BASE_URL: 'http://localhost:3000',
+        },
     },
 })
