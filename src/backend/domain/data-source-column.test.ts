@@ -64,37 +64,78 @@ describe('DataSourceColumn', () => {
             ).toThrow(DataSourceInvalidColumnMetadataError)
         })
 
-        it('deve lançar erro quando o tipo for array com separador inválido', () => {
-            expect(
-                () =>
-                    new DataSourceColumn({
-                        name: 'Tags',
-                        type: 'array',
-                        arrayMetadata: { separator: '', itemType: 'string' },
-                    }),
-            ).toThrow(DataSourceInvalidColumnMetadataError)
+        describe('deve aceitar separador com comprimento válido', () => {
+            it('1 caractere (limite mínimo)', () => {
+                expect(
+                    () =>
+                        new DataSourceColumn({
+                            name: 'Tags',
+                            type: 'array',
+                            arrayMetadata: {
+                                separator: ',',
+                                itemType: 'string',
+                            },
+                        }),
+                ).not.toThrow()
+            })
 
-            expect(
-                () =>
-                    new DataSourceColumn({
-                        name: 'Tags',
-                        type: 'array',
-                        arrayMetadata: {
-                            separator: '----',
-                            itemType: 'string',
-                        },
-                    }),
-            ).toThrow(DataSourceInvalidColumnMetadataError)
+            it('2 caracteres (entre os limites)', () => {
+                expect(
+                    () =>
+                        new DataSourceColumn({
+                            name: 'Tags',
+                            type: 'array',
+                            arrayMetadata: {
+                                separator: ';;',
+                                itemType: 'string',
+                            },
+                        }),
+                ).not.toThrow()
+            })
+
+            it('3 caracteres (limite máximo)', () => {
+                expect(
+                    () =>
+                        new DataSourceColumn({
+                            name: 'Tags',
+                            type: 'array',
+                            arrayMetadata: {
+                                separator: '---',
+                                itemType: 'string',
+                            },
+                        }),
+                ).not.toThrow()
+            })
         })
 
-        it('deve aceitar separador com o comprimento máximo permitido de 3 caracteres com sucesso', () => {
-            expect(() =>
-                new DataSourceColumn({
-                    name: 'Tags',
-                    type: 'array',
-                    arrayMetadata: { separator: '---', itemType: 'string' },
-                }),
-            ).not.toThrow()
+        describe('deve lançar erro com separador de comprimento inválido', () => {
+            it('vazio — 0 caracteres (abaixo do mínimo)', () => {
+                expect(
+                    () =>
+                        new DataSourceColumn({
+                            name: 'Tags',
+                            type: 'array',
+                            arrayMetadata: {
+                                separator: '',
+                                itemType: 'string',
+                            },
+                        }),
+                ).toThrow(DataSourceInvalidColumnMetadataError)
+            })
+
+            it('4 caracteres (acima do máximo)', () => {
+                expect(
+                    () =>
+                        new DataSourceColumn({
+                            name: 'Tags',
+                            type: 'array',
+                            arrayMetadata: {
+                                separator: '----',
+                                itemType: 'string',
+                            },
+                        }),
+                ).toThrow(DataSourceInvalidColumnMetadataError)
+            })
         })
 
         it('deve lançar erro quando o tipo não for array mas arrayMetadata for fornecido', () => {
@@ -173,19 +214,13 @@ describe('DataSourceColumn', () => {
 
     describe('Detecção de colunas do tipo array', () => {
         it('deve identificar vírgula como separador quando for o mais frequente', () => {
-            const result = DataSourceColumn.detectArray([
-                'a,b,c',
-                'x,y',
-            ])
+            const result = DataSourceColumn.detectArray(['a,b,c', 'x,y'])
 
             expect(result?.separator).toBe(',')
         })
 
         it('deve identificar ponto-e-vírgula como separador quando for o mais frequente', () => {
-            const result = DataSourceColumn.detectArray([
-                'a;b;c',
-                'x;y',
-            ])
+            const result = DataSourceColumn.detectArray(['a;b;c', 'x;y'])
 
             expect(result?.separator).toBe(';')
         })

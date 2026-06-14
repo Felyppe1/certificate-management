@@ -56,17 +56,27 @@ function createExpiredEmailChangeCode(newEmail: string) {
 }
 
 function createExpiredResetPasswordCode() {
-    return new ResetPasswordCode({ code: '123456', expiresAt: new Date(Date.now() - 1000) })
+    return new ResetPasswordCode({
+        code: '123456',
+        expiresAt: new Date(Date.now() - 1000),
+    })
 }
 
 function createExpiredVerificationCode() {
-    return new EmailVerificationCode({ code: '654321', expiresAt: new Date(Date.now() - 1000) })
+    return new EmailVerificationCode({
+        code: '654321',
+        expiresAt: new Date(Date.now() - 1000),
+    })
 }
 
 describe('User', () => {
     describe('Criar usuário', () => {
         it('deve criar usuário sem email com créditos padrão e sem código de verificação', async () => {
-            const user = await User.create({ name: 'Novo Usuário', email: null, passwordHash: null })
+            const user = await User.create({
+                name: 'Novo Usuário',
+                email: null,
+                passwordHash: null,
+            })
 
             expect(user.getId()).toBeTruthy()
             expect(user.getName()).toBe('Novo Usuário')
@@ -91,33 +101,42 @@ describe('User', () => {
 
     describe('Validação', () => {
         it('deve lançar erro quando o id não é fornecido', () => {
-            expect(() => createUserData({ id: '' })).toThrow('Entity ID is required')
+            expect(() => createUserData({ id: '' })).toThrow(
+                'Entity ID is required',
+            )
         })
 
         it('deve lançar erro quando o nome não é fornecido', () => {
-            expect(() => createUserData({ name: '' })).toThrow('User name is required')
+            expect(() => createUserData({ name: '' })).toThrow(
+                'User name is required',
+            )
         })
 
         it('deve lançar erro quando os créditos não são fornecidos', () => {
-            expect(() => createUserData({ credits: null as any })).toThrow('User credits is required')
+            expect(() => createUserData({ credits: null as any })).toThrow(
+                'User credits is required',
+            )
         })
 
         it('deve lançar erro quando a lista de contas externas não é fornecida', () => {
-            expect(() => createUserData({ externalAccounts: null as any })).toThrow(
-                'User external accounts list is required',
-            )
+            expect(() =>
+                createUserData({ externalAccounts: null as any }),
+            ).toThrow('User external accounts list is required')
         })
 
         it('deve lançar erro quando o email é fornecido sem o hash de senha', () => {
-            expect(() => createUserData({ email: 'user@example.com', passwordHash: null })).toThrow(
-                'User password hash is required when email is provided',
-            )
+            expect(() =>
+                createUserData({
+                    email: 'user@example.com',
+                    passwordHash: null,
+                }),
+            ).toThrow('User password hash is required when email is provided')
         })
 
         it('deve lançar erro quando o hash de senha é fornecido sem o email', () => {
-            expect(() => createUserData({ email: null, passwordHash: 'hash' })).toThrow(
-                'User email is required when password hash is provided',
-            )
+            expect(() =>
+                createUserData({ email: null, passwordHash: 'hash' }),
+            ).toThrow('User email is required when password hash is provided')
         })
     })
 
@@ -447,31 +466,56 @@ describe('User', () => {
             expect(user.getName()).toBe('Novo Nome')
         })
 
-        it('deve lançar erro com nome de 2 caracteres (abaixo do limite)', () => {
-            const user = createUserData({ email: 'u@g.com', passwordHash: 'h' })
+        describe('deve aceitar nome válido', () => {
+            it('3 caracteres (limite mínimo)', () => {
+                const user = createUserData({
+                    email: 'u@g.com',
+                    passwordHash: 'h',
+                })
+                expect(() => user.updateName('Ana')).not.toThrow()
+            })
 
-            expect(() => user.updateName('AB')).toThrow()
+            it('4 caracteres (acima do limite mínimo)', () => {
+                const user = createUserData({
+                    email: 'u@g.com',
+                    passwordHash: 'h',
+                })
+                expect(() => user.updateName('ABCD')).not.toThrow()
+            })
+
+            it('49 caracteres (abaixo do limite máximo)', () => {
+                const user = createUserData({
+                    email: 'u@g.com',
+                    passwordHash: 'h',
+                })
+                expect(() => user.updateName('A'.repeat(49))).not.toThrow()
+            })
+
+            it('50 caracteres (limite máximo)', () => {
+                const user = createUserData({
+                    email: 'u@g.com',
+                    passwordHash: 'h',
+                })
+                expect(() => user.updateName('A'.repeat(50))).not.toThrow()
+            })
         })
 
-        it('deve aceitar nome de 3 caracteres (limite inferior)', () => {
-            const user = createUserData({ email: 'u@g.com', passwordHash: 'h' })
+        describe('deve lançar erro com nome inválido', () => {
+            it('2 caracteres (abaixo do mínimo)', () => {
+                const user = createUserData({
+                    email: 'u@g.com',
+                    passwordHash: 'h',
+                })
+                expect(() => user.updateName('AB')).toThrow()
+            })
 
-            expect(() => user.updateName('Ana')).not.toThrow()
-            expect(user.getName()).toBe('Ana')
-        })
-
-        it('deve aceitar nome de 50 caracteres (limite superior)', () => {
-            const user = createUserData({ email: 'u@g.com', passwordHash: 'h' })
-            const name50 = 'A'.repeat(50)
-
-            expect(() => user.updateName(name50)).not.toThrow()
-            expect(user.getName()).toBe(name50)
-        })
-
-        it('deve lançar erro com nome de 51 caracteres (acima do limite)', () => {
-            const user = createUserData({ email: 'u@g.com', passwordHash: 'h' })
-
-            expect(() => user.updateName('A'.repeat(51))).toThrow()
+            it('51 caracteres (acima do máximo)', () => {
+                const user = createUserData({
+                    email: 'u@g.com',
+                    passwordHash: 'h',
+                })
+                expect(() => user.updateName('A'.repeat(51))).toThrow()
+            })
         })
 
         it('deve remover espaços do início e fim', () => {
@@ -521,7 +565,9 @@ describe('User', () => {
             const user = createUserData({
                 externalAccounts: [
                     new ExternalAccount(
-                        createExternalAccountData({ email: 'google@gmail.com' }),
+                        createExternalAccountData({
+                            email: 'google@gmail.com',
+                        }),
                     ),
                 ],
             })
@@ -644,11 +690,16 @@ describe('User', () => {
         it('deve lançar erro quando o usuário não tem login por email/senha', () => {
             const user = createUserData()
 
-            expect(() => user.generateResetPasswordCode()).toThrow(SystemLoginNotEnabledError)
+            expect(() => user.generateResetPasswordCode()).toThrow(
+                SystemLoginNotEnabledError,
+            )
         })
 
         it('deve gerar o código de redefinição de senha com sucesso', () => {
-            const user = createUserData({ email: 'user@example.com', passwordHash: 'hash' })
+            const user = createUserData({
+                email: 'user@example.com',
+                passwordHash: 'hash',
+            })
 
             user.generateResetPasswordCode()
 
@@ -660,13 +711,20 @@ describe('User', () => {
         it('deve lançar erro quando o usuário não tem login por email/senha', () => {
             const user = createUserData()
 
-            expect(() => user.validateResetPasswordCode('123456')).toThrow(SystemLoginNotEnabledError)
+            expect(() => user.validateResetPasswordCode('123456')).toThrow(
+                SystemLoginNotEnabledError,
+            )
         })
 
         it('deve lançar erro quando não há código pendente', () => {
-            const user = createUserData({ email: 'user@example.com', passwordHash: 'hash' })
+            const user = createUserData({
+                email: 'user@example.com',
+                passwordHash: 'hash',
+            })
 
-            expect(() => user.validateResetPasswordCode('123456')).toThrow(ResetPasswordCodeExpiredError)
+            expect(() => user.validateResetPasswordCode('123456')).toThrow(
+                ResetPasswordCodeExpiredError,
+            )
         })
 
         it('deve lançar erro com código expirado', () => {
@@ -676,24 +734,34 @@ describe('User', () => {
                 resetPasswordCode: createExpiredResetPasswordCode(),
             })
 
-            expect(() => user.validateResetPasswordCode('123456')).toThrow(ResetPasswordCodeExpiredError)
+            expect(() => user.validateResetPasswordCode('123456')).toThrow(
+                ResetPasswordCodeExpiredError,
+            )
         })
 
         it('deve lançar erro com código incorreto', () => {
             const user = createUserData({
                 email: 'user@example.com',
                 passwordHash: 'hash',
-                resetPasswordCode: new ResetPasswordCode({ code: '654321', expiresAt: new Date(Date.now() + 60_000) }),
+                resetPasswordCode: new ResetPasswordCode({
+                    code: '654321',
+                    expiresAt: new Date(Date.now() + 60_000),
+                }),
             })
 
-            expect(() => user.validateResetPasswordCode('000000')).toThrow(ResetPasswordCodeInvalidError)
+            expect(() => user.validateResetPasswordCode('000000')).toThrow(
+                ResetPasswordCodeInvalidError,
+            )
         })
 
         it('deve validar o código correto com sucesso', () => {
             const user = createUserData({
                 email: 'user@example.com',
                 passwordHash: 'hash',
-                resetPasswordCode: new ResetPasswordCode({ code: '654321', expiresAt: new Date(Date.now() + 60_000) }),
+                resetPasswordCode: new ResetPasswordCode({
+                    code: '654321',
+                    expiresAt: new Date(Date.now() + 60_000),
+                }),
             })
 
             expect(() => user.validateResetPasswordCode('654321')).not.toThrow()
@@ -705,17 +773,25 @@ describe('User', () => {
             const user = createUserData({
                 email: 'user@example.com',
                 passwordHash: 'hash',
-                resetPasswordCode: new ResetPasswordCode({ code: '654321', expiresAt: new Date(Date.now() + 60_000) }),
+                resetPasswordCode: new ResetPasswordCode({
+                    code: '654321',
+                    expiresAt: new Date(Date.now() + 60_000),
+                }),
             })
 
-            await expect(user.resetPassword('000000', 'nova-senha')).rejects.toThrow(ResetPasswordCodeInvalidError)
+            await expect(
+                user.resetPassword('000000', 'nova-senha'),
+            ).rejects.toThrow(ResetPasswordCodeInvalidError)
         })
 
         it('deve redefinir a senha com código válido com sucesso', async () => {
             const user = createUserData({
                 email: 'user@example.com',
                 passwordHash: 'hash',
-                resetPasswordCode: new ResetPasswordCode({ code: '654321', expiresAt: new Date(Date.now() + 60_000) }),
+                resetPasswordCode: new ResetPasswordCode({
+                    code: '654321',
+                    expiresAt: new Date(Date.now() + 60_000),
+                }),
             })
 
             await user.resetPassword('654321', 'nova-senha')
@@ -733,23 +809,35 @@ describe('User', () => {
                 isEmailVerified: true,
             })
 
-            await expect(user.verifyEmail('123456')).rejects.toThrow(EmailAlreadyVerifiedError)
+            await expect(user.verifyEmail('123456')).rejects.toThrow(
+                EmailAlreadyVerifiedError,
+            )
         })
 
         it('deve lançar erro quando não há código de verificação pendente', async () => {
-            const user = createUserData({ email: 'user@example.com', passwordHash: 'hash' })
+            const user = createUserData({
+                email: 'user@example.com',
+                passwordHash: 'hash',
+            })
 
-            await expect(user.verifyEmail('123456')).rejects.toThrow(VerificationCodeExpiredError)
+            await expect(user.verifyEmail('123456')).rejects.toThrow(
+                VerificationCodeExpiredError,
+            )
         })
 
         it('deve lançar erro com código incorreto', async () => {
             const user = createUserData({
                 email: 'user@example.com',
                 passwordHash: 'hash',
-                emailVerificationCode: new EmailVerificationCode({ code: '654321', expiresAt: new Date(Date.now() + 60_000) }),
+                emailVerificationCode: new EmailVerificationCode({
+                    code: '654321',
+                    expiresAt: new Date(Date.now() + 60_000),
+                }),
             })
 
-            await expect(user.verifyEmail('000000')).rejects.toThrow(VerificationCodeInvalidError)
+            await expect(user.verifyEmail('000000')).rejects.toThrow(
+                VerificationCodeInvalidError,
+            )
         })
 
         it('deve lançar erro com código expirado', async () => {
@@ -759,14 +847,19 @@ describe('User', () => {
                 emailVerificationCode: createExpiredVerificationCode(),
             })
 
-            await expect(user.verifyEmail('654321')).rejects.toThrow(VerificationCodeExpiredError)
+            await expect(user.verifyEmail('654321')).rejects.toThrow(
+                VerificationCodeExpiredError,
+            )
         })
 
         it('deve verificar o email com sucesso', async () => {
             const user = createUserData({
                 email: 'user@example.com',
                 passwordHash: 'hash',
-                emailVerificationCode: new EmailVerificationCode({ code: '654321', expiresAt: new Date(Date.now() + 60_000) }),
+                emailVerificationCode: new EmailVerificationCode({
+                    code: '654321',
+                    expiresAt: new Date(Date.now() + 60_000),
+                }),
             })
 
             await user.verifyEmail('654321')

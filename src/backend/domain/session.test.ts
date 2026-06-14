@@ -38,30 +38,53 @@ describe('Session', () => {
     })
 
     describe('lógica de expiração', () => {
-        it('deve retornar false se a sessão não estiver expirada', () => {
-            const futureDate = new Date()
-            futureDate.setDate(futureDate.getDate() + 1)
+        describe('deve considerar a sessão expirada quando é', () => {
+            it('1ms no passado (abaixo do limite)', () => {
+                vi.useFakeTimers()
+                const now = new Date()
+                vi.setSystemTime(now)
 
-            const session = new Session({
-                token: 'token',
-                userId: 'user',
-                expiresAt: futureDate,
+                const session = new Session({
+                    token: 'token',
+                    userId: 'user',
+                    expiresAt: new Date(now.getTime() - 1),
+                })
+                expect(session.isExpired()).toBe(true)
+
+                vi.useRealTimers()
             })
 
-            expect(session.isExpired()).toBe(false)
+            it('exatamente agora (limite)', () => {
+                vi.useFakeTimers()
+                const now = new Date()
+                vi.setSystemTime(now)
+
+                const session = new Session({
+                    token: 'token',
+                    userId: 'user',
+                    expiresAt: now,
+                })
+                expect(session.isExpired()).toBe(true)
+
+                vi.useRealTimers()
+            })
         })
 
-        it('deve retornar true se a sessão estiver expirada', () => {
-            const pastDate = new Date()
-            pastDate.setDate(pastDate.getDate() - 1)
+        describe('deve considerar a sessão válida quando é', () => {
+            it('1ms no futuro (acima do limite)', () => {
+                vi.useFakeTimers()
+                const now = new Date()
+                vi.setSystemTime(now)
 
-            const session = new Session({
-                token: 'token',
-                userId: 'user',
-                expiresAt: pastDate,
+                const session = new Session({
+                    token: 'token',
+                    userId: 'user',
+                    expiresAt: new Date(now.getTime() + 1),
+                })
+                expect(session.isExpired()).toBe(false)
+
+                vi.useRealTimers()
             })
-
-            expect(session.isExpired()).toBe(true)
         })
     })
 
