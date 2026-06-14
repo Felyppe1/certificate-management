@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { CERTIFICATE_STATUS } from '../domain/certificate'
+import { TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
 import {
     GetFileMetadataOutput,
     IGoogleDriveGateway,
 } from './interfaces/igoogle-drive-gateway'
-import { TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
+import {
+    CheckOrRefreshAccessTokenOuput,
+    IGoogleAuthGateway,
+} from './interfaces/igoogle-auth-gateway'
 import {
     IFileContentExtractorFactory,
     IFileContentExtractorStrategy,
@@ -15,11 +19,11 @@ import { PrismaCertificatesRepository } from '../infrastructure/repository/prism
 import { PrismaDataSourceRowsRepository } from '../infrastructure/repository/prisma/prisma-data-source-rows-repository'
 import { PrismaTransactionManager } from '../infrastructure/repository/prisma/prisma-transaction-manager'
 import { PrismaUsersRepository } from '../infrastructure/repository/prisma/prisma-users-repository'
-import { AddTemplateByUrlUseCase } from './add-template-by-url-use-case'
+import { AddTemplateByDrivePickerUseCase } from './add-template-by-drive-picker-use-case'
 import { prisma } from '@/tests/setup.integration'
 
-describe('AddTemplateByUrlUseCase (Integration)', () => {
-    it('should create a template by url successfully', async () => {
+describe('AddTemplateByDrivePickerUseCase (Integration)', () => {
+    it('deve criar template a partir do Google Drive com todos os campos persistidos', async () => {
         await prisma.user.create({
             data: {
                 id: '1',
@@ -29,14 +33,35 @@ describe('AddTemplateByUrlUseCase (Integration)', () => {
             },
         })
 
+        await prisma.externalUserAccount.create({
+            data: {
+                user_id: '1',
+                provider: 'GOOGLE',
+                provider_user_id: 'google-user-id',
+                email: 'user@gmail.com',
+                access_token: 'access-token',
+                refresh_token: 'refresh-token',
+                access_token_expiry_datetime: new Date('2099-01-01'),
+            },
+        })
+
         await prisma.certificateEmission.create({
             data: {
                 id: '1',
-                title: 'Name',
+                title: 'Certificate',
                 user_id: '1',
                 status: CERTIFICATE_STATUS.DRAFT,
             },
         })
+
+        class GoogleAuthGatewayStub
+            implements
+                Pick<IGoogleAuthGateway, 'checkOrGetNewAccessToken'>
+        {
+            async checkOrGetNewAccessToken(): Promise<CheckOrRefreshAccessTokenOuput | null> {
+                return null
+            }
+        }
 
         class GoogleDriveGatewayStub
             implements
@@ -44,7 +69,7 @@ describe('AddTemplateByUrlUseCase (Integration)', () => {
         {
             async getFileMetadata(): Promise<GetFileMetadataOutput> {
                 return {
-                    name: 'filename',
+                    name: 'template.docx',
                     fileMimeType: TEMPLATE_FILE_MIME_TYPE.DOCX,
                     thumbnailUrl: null,
                 }
@@ -80,21 +105,22 @@ describe('AddTemplateByUrlUseCase (Integration)', () => {
             extractVariables: () => ['name', 'email'],
         }
 
-        const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
+        const useCase = new AddTemplateByDrivePickerUseCase(
             new PrismaCertificatesRepository(prisma),
-            new PrismaDataSourceRowsRepository(prisma),
             new GoogleDriveGatewayStub(),
             new FileContentExtractorFactoryStub(),
+            new PrismaUsersRepository(prisma),
+            new PrismaDataSourceRowsRepository(prisma),
+            new GoogleAuthGatewayStub(),
             new BucketStub(),
             new PrismaTransactionManager(prisma),
             stringVariableExtractorStub,
-            new PrismaUsersRepository(prisma),
         )
 
-        await addTemplateByUrlUseCase.execute({
+        await useCase.execute({
             certificateId: '1',
+            fileId: 'drive-file-id',
             userId: '1',
-            fileUrl: 'https://drive.google.com/file/d/abc123/view',
         })
 
         const template = await prisma.template.findFirst({
@@ -102,7 +128,13 @@ describe('AddTemplateByUrlUseCase (Integration)', () => {
         })
 
         expect(template).toBeDefined()
-        expect(template?.file_name).toBe('filename')
+        expect(template?.file_name).toBe('template.docx')
+        expect(template?.file_extension).toBe(TEMPLATE_FILE_MIME_TYPE.DOCX)
+        expect(template?.drive_file_id).toBe('drive-file-id')
+        expect(template?.input_method).toBe('GOOGLE_DRIVE')
+        expect(template?.google_account_email).toBe('user@gmail.com')
+        expect(template?.storage_file_url).toBeDefined()
+        expect(template?.thumbnail_url).toBeNull()
     })
 
     it('deve reverter alterações no banco quando a última operação da transação falhar', async () => {
@@ -110,10 +142,22 @@ describe('AddTemplateByUrlUseCase (Integration)', () => {
             data: { id: '1', email: 'user@gmail.com', password_hash: 'password', name: 'User' },
         })
 
+        await prisma.externalUserAccount.create({
+            data: {
+                user_id: '1',
+                provider: 'GOOGLE',
+                provider_user_id: 'google-user-id',
+                email: 'user@gmail.com',
+                access_token: 'access-token',
+                refresh_token: 'refresh-token',
+                access_token_expiry_datetime: new Date('2099-01-01'),
+            },
+        })
+
         await prisma.certificateEmission.create({
             data: {
                 id: '1',
-                title: 'Name',
+                title: 'Certificate',
                 user_id: '1',
                 status: CERTIFICATE_STATUS.DRAFT,
                 DataSource: {
@@ -135,14 +179,22 @@ describe('AddTemplateByUrlUseCase (Integration)', () => {
             },
         })
 
+        class GoogleAuthGatewayStub
+            implements Pick<IGoogleAuthGateway, 'checkOrGetNewAccessToken'>
+        {
+            async checkOrGetNewAccessToken(): Promise<CheckOrRefreshAccessTokenOuput | null> {
+                return null
+            }
+        }
+
         class GoogleDriveGatewayStub
             implements Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
         {
             async getFileMetadata(): Promise<GetFileMetadataOutput> {
-                return { name: 'filename', fileMimeType: TEMPLATE_FILE_MIME_TYPE.DOCX, thumbnailUrl: null }
+                return { name: 'template.docx', fileMimeType: TEMPLATE_FILE_MIME_TYPE.DOCX, thumbnailUrl: null }
             }
             async downloadFile(): Promise<Buffer> {
-                return Buffer.from('file content')
+                return Buffer.from('content')
             }
         }
 
@@ -150,7 +202,7 @@ describe('AddTemplateByUrlUseCase (Integration)', () => {
             implements Pick<IFileContentExtractorFactory, 'create'>
         {
             create(): IFileContentExtractorStrategy {
-                return { async extractText(): Promise<string> { return '{{name}} {{email}}' } }
+                return { async extractText(): Promise<string> { return '{{name}}' } }
             }
         }
 
@@ -165,22 +217,23 @@ describe('AddTemplateByUrlUseCase (Integration)', () => {
         }
 
         const stringVariableExtractorStub: Pick<IStringVariableExtractor, 'extractVariables'> = {
-            extractVariables: () => ['name', 'email'],
+            extractVariables: () => ['name'],
         }
 
-        const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
+        const useCase = new AddTemplateByDrivePickerUseCase(
             new CertificatesRepositoryThrowingOnUpdate(new PrismaCertificatesRepository(prisma)),
-            new PrismaDataSourceRowsRepository(prisma),
             new GoogleDriveGatewayStub(),
             new FileContentExtractorFactoryStub(),
+            new PrismaUsersRepository(prisma),
+            new PrismaDataSourceRowsRepository(prisma),
+            new GoogleAuthGatewayStub(),
             new BucketStub(),
             new PrismaTransactionManager(prisma),
             stringVariableExtractorStub,
-            new PrismaUsersRepository(prisma),
         )
 
         await expect(
-            addTemplateByUrlUseCase.execute({ certificateId: '1', userId: '1', fileUrl: 'https://drive.google.com/file/d/abc123/view' }),
+            useCase.execute({ certificateId: '1', fileId: 'drive-file-id', userId: '1' }),
         ).rejects.toThrow()
 
         const rows = await prisma.dataSourceRow.findMany({ where: { data_source_id: '1' } })
