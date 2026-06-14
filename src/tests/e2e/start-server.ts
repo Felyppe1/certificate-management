@@ -46,6 +46,12 @@ async function startServer() {
         GOOGLE_CLIENT_SECRET:
             process.env.GOOGLE_CLIENT_SECRET ?? 'test-client-secret',
         GCP_PROJECT_ID: process.env.GCP_PROJECT_ID ?? 'test-project',
+        GCP_PROJECT_NUMBER: process.env.GCP_PROJECT_NUMBER ?? '000000000000',
+        CLOUD_RUN_APP_URL:
+            process.env.CLOUD_RUN_APP_URL ?? 'http://localhost:3001',
+        CLOUD_FUNCTIONS_SA_EMAIL:
+            process.env.CLOUD_FUNCTIONS_SA_EMAIL ??
+            'placeholder@placeholder.iam.gserviceaccount.com',
         CERTIFICATES_BUCKET: process.env.CERTIFICATES_BUCKET ?? '',
         GEMINI_API_KEY: process.env.GEMINI_API_KEY ?? 'test-key',
         RESEND_API_KEY: process.env.RESEND_API_KEY ?? 'test-key',

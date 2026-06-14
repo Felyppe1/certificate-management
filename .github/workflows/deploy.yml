@@ -23,6 +23,7 @@ jobs:
       CERTIFICATES_BUCKET: ${{ vars.CERTIFICATES_BUCKET }}
       E2E_TEMPLATE_URL: ${{ vars.E2E_TEMPLATE_URL }}
       E2E_DATA_SOURCE_URL: ${{ vars.E2E_DATA_SOURCE_URL }}
+      SKIP_ENV_VALIDATION: '1'
 
     steps:
       - name: Checkout code
