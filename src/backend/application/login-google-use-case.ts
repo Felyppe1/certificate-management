@@ -16,7 +16,7 @@ interface LoginGoogleUseCaseInput {
 
 export class LoginGoogleUseCase {
     constructor(
-        private usersRepository: Pick<
+        private readonly usersRepository: Pick<
             IUsersRepository,
             | 'save'
             | 'update'
@@ -24,12 +24,12 @@ export class LoginGoogleUseCase {
             | 'getById'
             | 'getByExternalAccount'
         >,
-        private sessionsRepository: Pick<ISessionsRepository, 'save'>,
-        private googleAuthGateway: Pick<
+        private readonly sessionsRepository: Pick<ISessionsRepository, 'save'>,
+        private readonly googleAuthGateway: Pick<
             IGoogleAuthGateway,
             'getToken' | 'getUserInfo'
         >,
-        private transactionManager: Pick<ITransactionManager, 'run'>,
+        private readonly transactionManager: Pick<ITransactionManager, 'run'>,
     ) {}
 
     async execute({ code, reAuthenticate, userId }: LoginGoogleUseCaseInput) {
@@ -80,7 +80,15 @@ export class LoginGoogleUseCase {
             }
 
             user = authenticatedUser
-            if (!user.hasExternalAccount('GOOGLE')) {
+            if (user.hasExternalAccount('GOOGLE')) {
+                user.updateExternalAccountTokens('GOOGLE', {
+                    accessToken: tokenData.accessToken,
+                    accessTokenExpiryDateTime:
+                        tokenData.accessTokenExpiryDateTime,
+                    refreshToken:
+                        tokenData.refreshToken ?? user.getGoogleRefreshToken(),
+                })
+            } else {
                 user.addExternalAccount({
                     provider: 'GOOGLE',
                     providerUserId: userInfo.providerUserId,
@@ -90,14 +98,6 @@ export class LoginGoogleUseCase {
                     accessTokenExpiryDateTime:
                         tokenData.accessTokenExpiryDateTime,
                     refreshTokenExpiryDateTime: null,
-                })
-            } else {
-                user.updateExternalAccountTokens('GOOGLE', {
-                    accessToken: tokenData.accessToken,
-                    accessTokenExpiryDateTime:
-                        tokenData.accessTokenExpiryDateTime,
-                    refreshToken:
-                        tokenData.refreshToken ?? user.getGoogleRefreshToken(),
                 })
             }
         } else {
