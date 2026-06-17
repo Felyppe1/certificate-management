@@ -69,7 +69,7 @@ export class User extends AggregateRoot {
     private isEmailVerified: boolean
     private name: string
     private passwordHash: string | null
-    private credits: number
+    private readonly credits: number
     private externalAccounts: ExternalAccount[]
     private emailVerificationCode: EmailVerificationCode | null
     private resetPasswordCode: ResetPasswordCode | null
@@ -237,7 +237,7 @@ export class User extends AggregateRoot {
 
     confirmEmailChange(code: string): void {
         if (!this.emailChangeCode) {
-            throw new EmailChangeCodeExpiredError() // TODO: this error message is not accurate because the code might not be expired but just not exist, should we have a different error message for that case?
+            throw new EmailChangeCodeExpiredError() // this error message is not accurate because the code might not be expired but just not exist, should we have a different error message for that case?
         }
 
         if (this.emailChangeCode.isExpired()) {
@@ -340,7 +340,7 @@ export class User extends AggregateRoot {
         }
 
         if (!this.isEmailVerified) {
-            this.generateEmailVerificationCode() // TODO: I think this is wrong, what should be done is mark email as verified because if the user hasn't verified it yet and then tries to login with that same email via social login, it means that the email is valid and belongs to the user, so it should be marked as verified
+            this.generateEmailVerificationCode() // I think this is wrong, what should be done is mark email as verified because if the user hasn't verified it yet and then tries to login with that same email via social login, it means that the email is valid and belongs to the user, so it should be marked as verified
         }
 
         this.externalAccounts.push(
