@@ -71,8 +71,6 @@ export interface CreateDataSourceInput
     columns: string[]
 }
 
-// export interface UpdateDataSourceInput
-//     extends Partial<Omit<DataSourceInput>> {}
 
 export class DataSource extends ValueObject<DataSource> {
     private readonly files: DataSourceFile[]
@@ -95,7 +93,7 @@ export class DataSource extends ValueObject<DataSource> {
 
         data.rows.some(row => {
             Object.keys(row).some(key => {
-                if (data.columns.indexOf(key) === -1) {
+                if (!data.columns.includes(key)) {
                     throw new DataSourceColumnsNotFoundError()
                 }
             })
@@ -135,10 +133,8 @@ export class DataSource extends ValueObject<DataSource> {
             if (data.files.length > MAX_IMAGE_FILES) {
                 throw new DataSourceImageFilesExceededError()
             }
-        } else {
-            if (data.files.length !== 1) {
-                throw new DataSourceImageFilesExceededError()
-            }
+        } else if (data.files.length !== 1) {
+            throw new DataSourceImageFilesExceededError()
         }
 
         if (data.columnsRow === undefined || data.columnsRow === null) {
@@ -200,11 +196,6 @@ export class DataSource extends ValueObject<DataSource> {
             const oldColumn = this.columns.find(
                 c => c.getName() === newColumn.getName(),
             )!
-
-            // TODO: removed it just because an easier logic for the array type is to always check it if it changes
-            // if (oldColumn.getType() === newColumn.getType()) {
-            //     continue
-            // }
 
             const forbiddenTargets = FORBIDDEN_TYPE_CHANGE[oldColumn.getType()]
             if (forbiddenTargets.includes(newColumn.getType())) {
@@ -338,7 +329,7 @@ export class DataSource extends ValueObject<DataSource> {
     }
 
     static getFileIdFromUrl(url: string): string | null {
-        const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/)
+        const match = /\/d\/([a-zA-Z0-9-_]+)/.exec(url)
         return match ? match[1] : null
     }
 
@@ -348,14 +339,6 @@ export class DataSource extends ValueObject<DataSource> {
             mimeType === DATA_SOURCE_MIME_TYPE.JPEG
         )
     }
-
-    // static extractVariablesFromContent(content: string): string[] {
-    //     const matches = [...content.matchAll(/\{\{\s*([\w.-]+)\s*\}\}/g)]
-    //     const columns = matches.map(match => match[1])
-    //     const uniqueVariables = Array.from(new Set(columns))
-
-    //     return uniqueVariables
-    // }
 
     static isValidFileMimeType(
         fileMimeType: string,
