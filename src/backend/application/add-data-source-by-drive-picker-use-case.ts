@@ -30,29 +30,32 @@ interface AddDataSourceByDrivePickerUseCaseInput {
 
 export class AddDataSourceByDrivePickerUseCase {
     constructor(
-        private certificateEmissionsRepository: Pick<
+        private readonly certificateEmissionsRepository: Pick<
             ICertificatesRepository,
             'getById' | 'update'
         >,
-        private dataSourceRowsRepository: Pick<
+        private readonly dataSourceRowsRepository: Pick<
             IDataSourceRowsRepository,
             'saveMany' | 'deleteManyByCertificateEmissionId'
         >,
-        private googleDriveGateway: Pick<
+        private readonly googleDriveGateway: Pick<
             IGoogleDriveGateway,
             'getFileMetadata' | 'downloadFile'
         >,
-        private spreadsheetContentExtractorFactory: Pick<
+        private readonly spreadsheetContentExtractorFactory: Pick<
             ISpreadsheetContentExtractorFactory,
             'create'
         >,
-        private usersRepository: Pick<IUsersRepository, 'getById' | 'update'>,
-        private googleAuthGateway: Pick<
+        private readonly usersRepository: Pick<
+            IUsersRepository,
+            'getById' | 'update'
+        >,
+        private readonly googleAuthGateway: Pick<
             IGoogleAuthGateway,
             'checkOrGetNewAccessToken'
         >,
-        private bucket: Pick<IBucket, 'deleteObject'>,
-        private transactionManager: Pick<ITransactionManager, 'run'>,
+        private readonly bucket: Pick<IBucket, 'deleteObject'>,
+        private readonly transactionManager: Pick<ITransactionManager, 'run'>,
     ) {}
 
     async execute(input: AddDataSourceByDrivePickerUseCaseInput) {
@@ -128,10 +131,8 @@ export class AddDataSourceByDrivePickerUseCase {
             if (!allFilesAreImages) {
                 throw new DataSourceAllFilesNotImagesError()
             }
-        } else {
-            if (filesMetadata.length !== 1) {
-                throw new DataSourceAllFilesNotImagesError()
-            }
+        } else if (filesMetadata.length !== 1) {
+            throw new DataSourceAllFilesNotImagesError()
         }
 
         const buffers = await Promise.all(
