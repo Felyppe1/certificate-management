@@ -25,6 +25,7 @@ export default defineConfig({
                 'src/**/*.test.ts',
                 'src/backend/application/**/email-template.ts',
                 'src/backend/application/interfaces/**',
+                'src/**/error/**',
             ]
         } 
     },

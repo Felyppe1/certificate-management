@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "packageManager": "npm",
+  "reporters": ["html", "clear-text", "progress"],
+  "testRunner": "vitest",
+  "vitest": {
+    "configFile": "vitest.config.unit.ts"
+  },
+  "coverageAnalysis": "perTest",
+  "mutate": [
+    "src/backend/domain/**/*.ts",
+    "!src/backend/domain/**/*.test.ts",
+    "!src/backend/domain/primitives/**",
+    "!src/backend/domain/error/**",
+    "!src/backend/domain/events/**"
+  ],
+  "ignorePatterns": [
+    "cloud-functions/**",
+    "terraform/**",
+    "docs/**",
+    ".claude/**",
+    "**/.venv/**"
+  ]
+}
