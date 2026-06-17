@@ -1,162 +1,227 @@
-import { ISessionsRepository } from './interfaces/repository/isessions-repository'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { LoginGoogleUseCase } from './login-google-use-case'
 import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
-import { InsufficientExternalAccountScopesError } from '../domain/error/authentication-error/insufficient-external-account-scopes-error'
 import { ExternalAccountAlreadyExistsError } from '../domain/error/conflict-error/external-account-already-exists-error'
-import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
-import { ITransactionManager } from './interfaces/repository/itransaction-manager'
-import { User } from '../domain/user'
-import { Session } from '../domain/session'
+import { InsufficientExternalAccountScopesError } from '../domain/error/authentication-error/insufficient-external-account-scopes-error'
 
-interface LoginGoogleUseCaseInput {
-    code: string
-    reAuthenticate: boolean
-    userId?: string
-}
-
-export class LoginGoogleUseCase {
-    constructor(
-        private readonly usersRepository: Pick<
-            IUsersRepository,
-            | 'save'
-            | 'update'
-            | 'getByEmail'
-            | 'getById'
-            | 'getByExternalAccount'
-        >,
-        private readonly sessionsRepository: Pick<ISessionsRepository, 'save'>,
-        private readonly googleAuthGateway: Pick<
-            IGoogleAuthGateway,
-            'getToken' | 'getUserInfo'
-        >,
-        private readonly transactionManager: Pick<ITransactionManager, 'run'>,
-    ) {}
-
-    async execute({ code, reAuthenticate, userId }: LoginGoogleUseCaseInput) {
-        let authenticatedUser: User | null = null
-
-        if (userId) {
-            authenticatedUser = await this.usersRepository.getById(userId)
-            if (!authenticatedUser) {
-                throw new UserNotFoundError()
-            }
-        }
-
-        const tokenData = await this.googleAuthGateway.getToken({
-            code,
-            reAuthenticate,
-        })
-
-        const hasAllScopes = [
-            'https://www.googleapis.com/auth/drive.file',
-            'https://www.googleapis.com/auth/drive.readonly',
-        ].every(scope => tokenData.scopes.includes(scope))
-
-        if (!hasAllScopes) {
-            throw new InsufficientExternalAccountScopesError()
-        }
-
-        const userInfo = await this.googleAuthGateway.getUserInfo({
-            idToken: tokenData.idToken,
-        })
-
-        let user: User
-        let isNewUser = false
-        let suggestLinkingEmail: string | null = null
-
-        if (authenticatedUser) {
-            // Re-auth: linking Google to an already authenticated user
-            const existingOwner =
-                await this.usersRepository.getByExternalAccount(
-                    'GOOGLE',
-                    userInfo.providerUserId,
-                )
-
-            if (
-                existingOwner &&
-                existingOwner.getId() !== authenticatedUser.getId()
-            ) {
-                throw new ExternalAccountAlreadyExistsError()
-            }
-
-            user = authenticatedUser
-            if (user.hasExternalAccount('GOOGLE')) {
-                user.updateExternalAccountTokens('GOOGLE', {
-                    accessToken: tokenData.accessToken,
-                    accessTokenExpiryDateTime:
-                        tokenData.accessTokenExpiryDateTime,
-                    refreshToken:
-                        tokenData.refreshToken ?? user.getGoogleRefreshToken(),
-                })
-            } else {
-                user.addExternalAccount({
-                    provider: 'GOOGLE',
-                    providerUserId: userInfo.providerUserId,
-                    email: userInfo.email,
-                    accessToken: tokenData.accessToken,
-                    refreshToken: tokenData.refreshToken,
-                    accessTokenExpiryDateTime:
-                        tokenData.accessTokenExpiryDateTime,
-                    refreshTokenExpiryDateTime: null,
-                })
-            }
-        } else {
-            // Login flow: look up by (provider, providerUserId) — the stable identifier
-            const existingUser =
-                await this.usersRepository.getByExternalAccount(
-                    'GOOGLE',
-                    userInfo.providerUserId,
-                )
-
-            if (existingUser) {
-                user = existingUser
-                user.updateExternalAccountTokens('GOOGLE', {
-                    accessToken: tokenData.accessToken,
-                    accessTokenExpiryDateTime:
-                        tokenData.accessTokenExpiryDateTime,
-                    refreshToken:
-                        tokenData.refreshToken ?? user.getGoogleRefreshToken(),
-                })
-            } else {
-                const systemUser = await this.usersRepository.getByEmail(
-                    userInfo.email,
-                )
-                if (systemUser && !systemUser.hasExternalAccount('GOOGLE')) {
-                    suggestLinkingEmail = userInfo.email
-                }
-
-                isNewUser = true
-                user = await User.create({
-                    email: null,
-                    name: userInfo.name,
-                    passwordHash: null,
-                })
-
-                user.addExternalAccount({
-                    provider: 'GOOGLE',
-                    providerUserId: userInfo.providerUserId,
-                    email: userInfo.email,
-                    accessToken: tokenData.accessToken,
-                    refreshToken: tokenData.refreshToken,
-                    accessTokenExpiryDateTime:
-                        tokenData.accessTokenExpiryDateTime,
-                    refreshTokenExpiryDateTime: null,
-                })
-            }
-        }
-
-        const session = Session.create(user.getId())
-
-        await this.transactionManager.run(async () => {
-            if (isNewUser) {
-                await this.usersRepository.save(user)
-            } else {
-                await this.usersRepository.update(user)
-            }
-
-            await this.sessionsRepository.save(session)
-        })
-
-        return { sessionToken: session.getToken(), suggestLinkingEmail }
+function createUserMock(overrides: any = {}) {
+    return {
+        getId: () => 'user-1',
+        hasExternalAccount: () => false,
+        addExternalAccount: vi.fn(),
+        updateExternalAccountTokens: vi.fn(),
+        getGoogleRefreshToken: () => 'old-refresh',
+        ...overrides,
     }
 }
+
+function createGoogleToken(overrides: any = {}) {
+    return {
+        accessToken: 'access',
+        refreshToken: 'refresh',
+        idToken: 'id',
+        scopes: [
+            'https://www.googleapis.com/auth/drive.file',
+            'https://www.googleapis.com/auth/drive.readonly',
+        ],
+        accessTokenExpiryDateTime: new Date(),
+        ...overrides,
+    }
+}
+
+function createGoogleUserInfo(overrides: any = {}) {
+    return {
+        providerUserId: 'google-123',
+        email: 'test@test.com',
+        name: 'User',
+        ...overrides,
+    }
+}
+
+describe('LoginGoogleUseCase', () => {
+    const usersRepository = {
+        save: vi.fn(),
+        update: vi.fn(),
+        getByEmail: vi.fn(),
+        getById: vi.fn(),
+        getByExternalAccount: vi.fn(),
+    }
+
+    const sessionsRepository = {
+        save: vi.fn(),
+    }
+
+    const googleAuthGateway = {
+        getToken: vi.fn(),
+        getUserInfo: vi.fn(),
+    }
+
+    const transactionManager = {
+        run: vi.fn(async (fn: any) => fn()),
+    }
+
+    let useCase: LoginGoogleUseCase
+
+    beforeEach(() => {
+        vi.clearAllMocks()
+
+        googleAuthGateway.getToken.mockResolvedValue(createGoogleToken())
+
+        googleAuthGateway.getUserInfo.mockResolvedValue(createGoogleUserInfo())
+
+        useCase = new LoginGoogleUseCase(
+            usersRepository as any,
+            sessionsRepository as any,
+            googleAuthGateway as any,
+            transactionManager as any,
+        )
+    })
+
+    it('deve lançar erro se usuário não existir no re-auth', async () => {
+        usersRepository.getById.mockResolvedValue(null)
+
+        await expect(
+            useCase.execute({
+                code: 'code',
+                reAuthenticate: true,
+                userId: 'invalid',
+            }),
+        ).rejects.toThrow(UserNotFoundError)
+    })
+
+    it('deve lançar conflito se conta Google já pertencer a outro usuário', async () => {
+        const loggedUser = createUserMock()
+
+        usersRepository.getById.mockResolvedValue(loggedUser)
+
+        usersRepository.getByExternalAccount.mockResolvedValue({
+            getId: () => 'user-2',
+        })
+
+        googleAuthGateway.getToken.mockResolvedValue(createGoogleToken())
+
+        await expect(
+            useCase.execute({
+                code: 'code',
+                reAuthenticate: true,
+                userId: 'user-1',
+            }),
+        ).rejects.toThrow(ExternalAccountAlreadyExistsError)
+    })
+
+    it('deve criar novo usuário quando não existir', async () => {
+        usersRepository.getByExternalAccount.mockResolvedValue(null)
+        usersRepository.getByEmail.mockResolvedValue(null)
+
+        const result = await useCase.execute({
+            code: 'code',
+            reAuthenticate: false,
+        })
+
+        expect(result.sessionToken).toBeDefined()
+        expect(usersRepository.save).toHaveBeenCalled()
+        expect(sessionsRepository.save).toHaveBeenCalled()
+    })
+
+    it('deve sugerir link de email se usuário existir sem Google', async () => {
+        usersRepository.getByExternalAccount.mockResolvedValue(null)
+
+        usersRepository.getByEmail.mockResolvedValue(
+            createUserMock({
+                hasExternalAccount: () => false,
+            }),
+        )
+
+        googleAuthGateway.getUserInfo.mockResolvedValue(
+            createGoogleUserInfo({
+                email: 'existente@test.com',
+            }),
+        )
+
+        const result = await useCase.execute({
+            code: 'code',
+            reAuthenticate: false,
+        })
+
+        expect(result.suggestLinkingEmail).toBe('existente@test.com')
+    })
+
+    it('deve atualizar usuário existente com Google (login)', async () => {
+        const existingUser = createUserMock({
+            hasExternalAccount: () => true,
+        })
+
+        usersRepository.getByExternalAccount.mockResolvedValue(existingUser)
+
+        googleAuthGateway.getToken.mockResolvedValue(
+            createGoogleToken({ refreshToken: null }),
+        )
+
+        const result = await useCase.execute({
+            code: 'code',
+            reAuthenticate: false,
+        })
+
+        expect(result.sessionToken).toBeDefined()
+        expect(usersRepository.update).toHaveBeenCalled()
+    })
+
+    it('deve adicionar conta Google no re-auth quando usuário não tem', async () => {
+        const userMock = createUserMock({
+            hasExternalAccount: () => false,
+        })
+
+        usersRepository.getById.mockResolvedValue(userMock)
+        usersRepository.getByExternalAccount.mockResolvedValue(null)
+
+        await useCase.execute({
+            code: 'code',
+            reAuthenticate: true,
+            userId: 'user-1',
+        })
+
+        expect(userMock.addExternalAccount).toHaveBeenCalled()
+    })
+
+    it('deve atualizar conta Google no re-auth quando já existe', async () => {
+        const userMock = createUserMock({
+            hasExternalAccount: () => true,
+        })
+
+        usersRepository.getById.mockResolvedValue(userMock)
+        usersRepository.getByExternalAccount.mockResolvedValue(null)
+
+        googleAuthGateway.getToken.mockResolvedValue(
+            createGoogleToken({ refreshToken: null }),
+        )
+
+        await useCase.execute({
+            code: 'code',
+            reAuthenticate: true,
+            userId: 'user-1',
+        })
+
+        expect(userMock.updateExternalAccountTokens).toHaveBeenCalled()
+    })
+
+    it('deve sempre criar sessão', async () => {
+        usersRepository.getByExternalAccount.mockResolvedValue(createUserMock())
+
+        await useCase.execute({
+            code: 'code',
+            reAuthenticate: false,
+        })
+
+        expect(sessionsRepository.save).toHaveBeenCalled()
+    })
+
+    it('deve lançar erro se os escopos do Google forem insuficientes', async () => {
+        googleAuthGateway.getToken.mockResolvedValue(
+            createGoogleToken({ scopes: ['https://www.googleapis.com/auth/drive.file'] }),
+        )
+
+        await expect(
+            useCase.execute({ code: 'code', reAuthenticate: false }),
+        ).rejects.toThrow(InsufficientExternalAccountScopesError)
+    })
+})
