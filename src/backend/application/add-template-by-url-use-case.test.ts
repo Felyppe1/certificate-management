@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { AddTemplateByUrlUseCase } from './add-template-by-url-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
@@ -48,7 +48,9 @@ describe('AddTemplateByUrlUseCase', () => {
             thumbnailUrl: null,
             columnsRow: 1,
             dataRowStart: 2,
-            columns: [{ name: 'Nome', type: 'string' as const, arrayMetadata: null }],
+            columns: [
+                { name: 'Nome', type: 'string' as const, arrayMetadata: null },
+            ],
             googleAccountEmail: null,
         })
     }
@@ -95,89 +97,99 @@ describe('AddTemplateByUrlUseCase', () => {
         })
     }
 
-    it('deve adicionar um template por URL do Drive com sucesso', async () => {
-        const certificateEmission = createCertificateEmission()
+    let certificateEmissionsRepositoryMock: {
+        getById: Mock<ICertificatesRepository['getById']>
+        update: Mock<ICertificatesRepository['update']>
+    }
 
-        const certificateEmissionsRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
+    let googleDriveGatewayStub: Pick<
+        IGoogleDriveGateway,
+        'getFileMetadata' | 'downloadFile'
+    >
+
+    let fileContentExtractorFactoryStub: Pick<
+        IFileContentExtractorFactory,
+        'create'
+    >
+
+    let bucketStub: Pick<IBucket, 'uploadObject'>
+
+    let transactionManagerStub: Pick<ITransactionManager, 'run'>
+
+    let usersRepositoryStub: Pick<IUsersRepository, 'getById'>
+
+    let dataSourceRowsRepositoryStub: Pick<
+        IDataSourceRowsRepository,
+        'resetProcessingStatusByCertificateEmissionId'
+    >
+
+    beforeEach(() => {
+        certificateEmissionsRepositoryMock = {
+            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
             update: vi.fn(),
         }
 
-        const dataSourceRowsRepositoryStub: Pick<
-            IDataSourceRowsRepository,
-            'resetProcessingStatusByCertificateEmissionId'
-        > = {
-            resetProcessingStatusByCertificateEmissionId: vi.fn(),
-        }
-
-        class GoogleDriveGatewayStub
-            implements
-                Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
-        {
+        googleDriveGatewayStub = {
             async getFileMetadata(): Promise<GetFileMetadataOutput> {
                 return {
                     name: 'filename',
                     fileMimeType: TEMPLATE_FILE_MIME_TYPE.DOCX,
                     thumbnailUrl: null,
                 }
-            }
-
+            },
             async downloadFile(): Promise<Buffer> {
                 return Buffer.from('file content')
-            }
+            },
         }
 
-        class FileContentExtractorFactoryStub
-            implements Pick<IFileContentExtractorFactory, 'create'>
-        {
+        fileContentExtractorFactoryStub = {
             create(): IFileContentExtractorStrategy {
                 return {
                     async extractText(): Promise<string> {
                         return '{{name}} {{email}}'
                     },
                 }
-            }
+            },
         }
 
-        class BucketStub implements Pick<IBucket, 'uploadObject'> {
+        bucketStub = {
             async uploadObject(): Promise<string> {
                 return ''
-            }
+            },
         }
 
-        class TransactionManagerStub
-            implements Pick<ITransactionManager, 'run'>
-        {
+        transactionManagerStub = {
             async run<T>(work: () => Promise<T>): Promise<T> {
                 return work()
-            }
+            },
         }
 
-        class UsersRepositoryStub implements Pick<IUsersRepository, 'getById'> {
+        usersRepositoryStub = {
             async getById(): Promise<User | null> {
                 return createUser()
-            }
+            },
         }
 
-        const stringVariableExtractorStub: Pick<
-            IStringVariableExtractor,
-            'extractVariables'
-        > = {
-            extractVariables: () => ['name', 'email'],
+        dataSourceRowsRepositoryStub = {
+            async resetProcessingStatusByCertificateEmissionId() {},
         }
+    })
+
+    it('deve adicionar um template por URL do Drive com sucesso', async () => {
+        const certificateEmission = createCertificateEmission()
+        certificateEmissionsRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificateEmissionsRepositoryMock,
             dataSourceRowsRepositoryStub,
-            new GoogleDriveGatewayStub(),
-            new FileContentExtractorFactoryStub(),
-            new BucketStub(),
-            new TransactionManagerStub(),
-            stringVariableExtractorStub,
-            new UsersRepositoryStub(),
+            googleDriveGatewayStub,
+            fileContentExtractorFactoryStub,
+            bucketStub,
+            transactionManagerStub,
+            { extractVariables: () => ['name', 'email'] },
+            usersRepositoryStub,
         )
 
         await addTemplateByUrlUseCase.execute({
@@ -196,80 +208,27 @@ describe('AddTemplateByUrlUseCase', () => {
         const certificateEmission = createCertificateEmission({
             dataSource: createDataSource(),
         })
+        certificateEmissionsRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
-        const certificateEmissionsRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsRepositoryStub: Pick<
-            IDataSourceRowsRepository,
-            'resetProcessingStatusByCertificateEmissionId'
-        > = {
+        const dataSourceRowsRepositoryMock: {
+            resetProcessingStatusByCertificateEmissionId: Mock<
+                IDataSourceRowsRepository['resetProcessingStatusByCertificateEmissionId']
+            >
+        } = {
             resetProcessingStatusByCertificateEmissionId: vi.fn(),
-        }
-
-        class GoogleDriveGatewayStub
-            implements
-                Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
-        {
-            async getFileMetadata(): Promise<GetFileMetadataOutput> {
-                return {
-                    name: 'filename',
-                    fileMimeType: TEMPLATE_FILE_MIME_TYPE.DOCX,
-                    thumbnailUrl: null,
-                }
-            }
-
-            async downloadFile(): Promise<Buffer> {
-                return Buffer.from('')
-            }
-        }
-
-        class FileContentExtractorFactoryStub
-            implements Pick<IFileContentExtractorFactory, 'create'>
-        {
-            create(): IFileContentExtractorStrategy {
-                return {
-                    async extractText(): Promise<string> {
-                        return ''
-                    },
-                }
-            }
-        }
-
-        class BucketStub implements Pick<IBucket, 'uploadObject'> {
-            async uploadObject(): Promise<string> {
-                return ''
-            }
-        }
-
-        class TransactionManagerStub
-            implements Pick<ITransactionManager, 'run'>
-        {
-            async run<T>(work: () => Promise<T>): Promise<T> {
-                return work()
-            }
-        }
-
-        class UsersRepositoryStub implements Pick<IUsersRepository, 'getById'> {
-            async getById(): Promise<User | null> {
-                return createUser()
-            }
         }
 
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificateEmissionsRepositoryMock,
-            dataSourceRowsRepositoryStub,
-            new GoogleDriveGatewayStub(),
-            new FileContentExtractorFactoryStub(),
-            new BucketStub(),
-            new TransactionManagerStub(),
+            dataSourceRowsRepositoryMock,
+            googleDriveGatewayStub,
+            fileContentExtractorFactoryStub,
+            bucketStub,
+            transactionManagerStub,
             { extractVariables: () => [] },
-            new UsersRepositoryStub(),
+            usersRepositoryStub,
         )
 
         await addTemplateByUrlUseCase.execute({
@@ -279,22 +238,14 @@ describe('AddTemplateByUrlUseCase', () => {
         })
 
         expect(
-            dataSourceRowsRepositoryStub.resetProcessingStatusByCertificateEmissionId,
+            dataSourceRowsRepositoryMock.resetProcessingStatusByCertificateEmissionId,
         ).toHaveBeenCalledWith(CERTIFICATE_ID)
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        const certificateEmissionsRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({ userId: 'outro-usuario' }),
-                ),
-            update: vi.fn(),
-        }
+        certificateEmissionsRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ userId: 'outro-usuario' }),
+        )
 
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificateEmissionsRepositoryMock,
@@ -319,17 +270,9 @@ describe('AddTemplateByUrlUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado já tiver sido emitida', async () => {
-        const certificateEmissionsRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({
-                    status: CERTIFICATE_STATUS.EMITTED,
-                }),
-            ),
-            update: vi.fn(),
-        }
+        certificateEmissionsRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
+        )
 
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificateEmissionsRepositoryMock,
@@ -354,13 +297,7 @@ describe('AddTemplateByUrlUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        const certificateEmissionsRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(null),
-            update: vi.fn(),
-        }
+        certificateEmissionsRepositoryMock.getById.mockResolvedValue(null)
 
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificateEmissionsRepositoryMock,
@@ -385,14 +322,6 @@ describe('AddTemplateByUrlUseCase', () => {
     })
 
     it('deve lançar erro quando não for possível extrair o ID de arquivo do Drive a partir da URL', async () => {
-        const certificateEmissionsRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificateEmissionsRepositoryMock,
             {} as IDataSourceRowsRepository,
@@ -416,46 +345,21 @@ describe('AddTemplateByUrlUseCase', () => {
     })
 
     it('deve lançar erro quando o formato do arquivo não for suportado como template', async () => {
-        const certificateEmissionsRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
-        class GoogleDriveGatewayStub
-            implements
-                Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
-        {
-            async getFileMetadata(): Promise<GetFileMetadataOutput> {
-                return {
-                    name: 'filename',
-                    fileMimeType: 'application/pdf',
-                    thumbnailUrl: null,
-                }
-            }
-
-            async downloadFile(): Promise<Buffer> {
-                return Buffer.from('')
-            }
-        }
-
-        class UsersRepositoryStub implements Pick<IUsersRepository, 'getById'> {
-            async getById(): Promise<User | null> {
-                return createUser()
-            }
-        }
+        googleDriveGatewayStub.getFileMetadata = async () => ({
+            name: 'filename',
+            fileMimeType: 'application/pdf',
+            thumbnailUrl: null,
+        })
 
         const addTemplateByUrlUseCase = new AddTemplateByUrlUseCase(
             certificateEmissionsRepositoryMock,
             {} as IDataSourceRowsRepository,
-            new GoogleDriveGatewayStub(),
+            googleDriveGatewayStub,
             {} as IFileContentExtractorFactory,
             {} as IBucket,
             {} as ITransactionManager,
             {} as IStringVariableExtractor,
-            new UsersRepositoryStub(),
+            usersRepositoryStub,
         )
 
         await expect(

@@ -1,18 +1,54 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, Mock } from 'vitest'
 import { LoginGoogleUseCase } from './login-google-use-case'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { ISessionsRepository } from './interfaces/repository/isessions-repository'
+import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
 import { ExternalAccountAlreadyExistsError } from '../domain/error/conflict-error/external-account-already-exists-error'
 import { InsufficientExternalAccountScopesError } from '../domain/error/authentication-error/insufficient-external-account-scopes-error'
+import { User, UserInput } from '../domain/user'
+import { ExternalAccount } from '../domain/external-account'
 
-function createUserMock(overrides: any = {}) {
-    return {
-        getId: () => 'user-1',
-        hasExternalAccount: () => false,
-        addExternalAccount: vi.fn(),
-        updateExternalAccountTokens: vi.fn(),
-        getGoogleRefreshToken: () => 'old-refresh',
+function createUser(overrides?: Partial<UserInput>): User {
+    return new User({
+        id: 'user-1',
+        email: null,
+        isEmailVerified: false,
+        name: 'User',
+        passwordHash: null,
+        credits: 300,
+        externalAccounts: [],
+        emailVerificationCode: null,
+        resetPasswordCode: null,
+        emailChangeCode: null,
         ...overrides,
-    }
+    })
+}
+
+function createGoogleUser(overrides?: Partial<UserInput>): User {
+    return new User({
+        id: 'user-1',
+        email: null,
+        isEmailVerified: false,
+        name: 'User',
+        passwordHash: null,
+        credits: 300,
+        externalAccounts: [
+            new ExternalAccount({
+                provider: 'GOOGLE',
+                providerUserId: 'google-123',
+                email: 'test@test.com',
+                accessToken: 'access',
+                refreshToken: 'old-refresh',
+                accessTokenExpiryDateTime: new Date(),
+                refreshTokenExpiryDateTime: null,
+            }),
+        ],
+        emailVerificationCode: null,
+        resetPasswordCode: null,
+        emailChangeCode: null,
+        ...overrides,
+    })
 }
 
 function createGoogleToken(overrides: any = {}) {
@@ -39,47 +75,50 @@ function createGoogleUserInfo(overrides: any = {}) {
 }
 
 describe('LoginGoogleUseCase', () => {
-    const usersRepository = {
-        save: vi.fn(),
-        update: vi.fn(),
-        getByEmail: vi.fn(),
-        getById: vi.fn(),
-        getByExternalAccount: vi.fn(),
+    let usersRepository: {
+        save: Mock<IUsersRepository['save']>
+        update: Mock<IUsersRepository['update']>
+        getByEmail: Mock<IUsersRepository['getByEmail']>
+        getById: Mock<IUsersRepository['getById']>
+        getByExternalAccount: Mock<IUsersRepository['getByExternalAccount']>
+    }
+    let sessionsRepository: { save: Mock<ISessionsRepository['save']> }
+    let googleAuthGateway: {
+        getToken: Mock<IGoogleAuthGateway['getToken']>
+        getUserInfo: Mock<IGoogleAuthGateway['getUserInfo']>
     }
 
-    const sessionsRepository = {
-        save: vi.fn(),
-    }
-
-    const googleAuthGateway = {
-        getToken: vi.fn(),
-        getUserInfo: vi.fn(),
-    }
-
-    const transactionManager = {
-        run: vi.fn(async (fn: any) => fn()),
+    const transactionManagerStub = {
+        async run(fn: any) {
+            return fn()
+        },
     }
 
     let useCase: LoginGoogleUseCase
 
     beforeEach(() => {
-        vi.clearAllMocks()
-
-        googleAuthGateway.getToken.mockResolvedValue(createGoogleToken())
-
-        googleAuthGateway.getUserInfo.mockResolvedValue(createGoogleUserInfo())
+        usersRepository = {
+            save: vi.fn(),
+            update: vi.fn(),
+            getByEmail: vi.fn().mockResolvedValue(null),
+            getById: vi.fn().mockResolvedValue(null),
+            getByExternalAccount: vi.fn().mockResolvedValue(null),
+        }
+        sessionsRepository = { save: vi.fn() }
+        googleAuthGateway = {
+            getToken: vi.fn().mockResolvedValue(createGoogleToken()),
+            getUserInfo: vi.fn().mockResolvedValue(createGoogleUserInfo()),
+        }
 
         useCase = new LoginGoogleUseCase(
             usersRepository as any,
             sessionsRepository as any,
             googleAuthGateway as any,
-            transactionManager as any,
+            transactionManagerStub as any,
         )
     })
 
     it('deve lançar erro se usuário não existir no re-auth', async () => {
-        usersRepository.getById.mockResolvedValue(null)
-
         await expect(
             useCase.execute({
                 code: 'code',
@@ -90,15 +129,11 @@ describe('LoginGoogleUseCase', () => {
     })
 
     it('deve lançar conflito se conta Google já pertencer a outro usuário', async () => {
-        const loggedUser = createUserMock()
-
+        const loggedUser = createUser()
         usersRepository.getById.mockResolvedValue(loggedUser)
-
-        usersRepository.getByExternalAccount.mockResolvedValue({
-            getId: () => 'user-2',
-        })
-
-        googleAuthGateway.getToken.mockResolvedValue(createGoogleToken())
+        usersRepository.getByExternalAccount.mockResolvedValue(
+            createUser({ id: 'user-2' }),
+        )
 
         await expect(
             useCase.execute({
@@ -110,9 +145,6 @@ describe('LoginGoogleUseCase', () => {
     })
 
     it('deve criar novo usuário quando não existir', async () => {
-        usersRepository.getByExternalAccount.mockResolvedValue(null)
-        usersRepository.getByEmail.mockResolvedValue(null)
-
         const result = await useCase.execute({
             code: 'code',
             reAuthenticate: false,
@@ -124,14 +156,7 @@ describe('LoginGoogleUseCase', () => {
     })
 
     it('deve sugerir link de email se usuário existir sem Google', async () => {
-        usersRepository.getByExternalAccount.mockResolvedValue(null)
-
-        usersRepository.getByEmail.mockResolvedValue(
-            createUserMock({
-                hasExternalAccount: () => false,
-            }),
-        )
-
+        usersRepository.getByEmail.mockResolvedValue(createUser())
         googleAuthGateway.getUserInfo.mockResolvedValue(
             createGoogleUserInfo({
                 email: 'existente@test.com',
@@ -147,12 +172,8 @@ describe('LoginGoogleUseCase', () => {
     })
 
     it('deve atualizar usuário existente com Google (login)', async () => {
-        const existingUser = createUserMock({
-            hasExternalAccount: () => true,
-        })
-
+        const existingUser = createGoogleUser()
         usersRepository.getByExternalAccount.mockResolvedValue(existingUser)
-
         googleAuthGateway.getToken.mockResolvedValue(
             createGoogleToken({ refreshToken: null }),
         )
@@ -167,12 +188,9 @@ describe('LoginGoogleUseCase', () => {
     })
 
     it('deve adicionar conta Google no re-auth quando usuário não tem', async () => {
-        const userMock = createUserMock({
-            hasExternalAccount: () => false,
-        })
-
-        usersRepository.getById.mockResolvedValue(userMock)
-        usersRepository.getByExternalAccount.mockResolvedValue(null)
+        const user = createUser()
+        usersRepository.getById.mockResolvedValue(user)
+        const spy = vi.spyOn(user, 'addExternalAccount')
 
         await useCase.execute({
             code: 'code',
@@ -180,20 +198,16 @@ describe('LoginGoogleUseCase', () => {
             userId: 'user-1',
         })
 
-        expect(userMock.addExternalAccount).toHaveBeenCalled()
+        expect(spy).toHaveBeenCalled()
     })
 
     it('deve atualizar conta Google no re-auth quando já existe', async () => {
-        const userMock = createUserMock({
-            hasExternalAccount: () => true,
-        })
-
-        usersRepository.getById.mockResolvedValue(userMock)
-        usersRepository.getByExternalAccount.mockResolvedValue(null)
-
+        const user = createGoogleUser()
+        usersRepository.getById.mockResolvedValue(user)
         googleAuthGateway.getToken.mockResolvedValue(
             createGoogleToken({ refreshToken: null }),
         )
+        const spy = vi.spyOn(user, 'updateExternalAccountTokens')
 
         await useCase.execute({
             code: 'code',
@@ -201,11 +215,13 @@ describe('LoginGoogleUseCase', () => {
             userId: 'user-1',
         })
 
-        expect(userMock.updateExternalAccountTokens).toHaveBeenCalled()
+        expect(spy).toHaveBeenCalled()
     })
 
     it('deve sempre criar sessão', async () => {
-        usersRepository.getByExternalAccount.mockResolvedValue(createUserMock())
+        usersRepository.getByExternalAccount.mockResolvedValue(
+            createGoogleUser(),
+        )
 
         await useCase.execute({
             code: 'code',
@@ -217,7 +233,9 @@ describe('LoginGoogleUseCase', () => {
 
     it('deve lançar erro se os escopos do Google forem insuficientes', async () => {
         googleAuthGateway.getToken.mockResolvedValue(
-            createGoogleToken({ scopes: ['https://www.googleapis.com/auth/drive.file'] }),
+            createGoogleToken({
+                scopes: ['https://www.googleapis.com/auth/drive.file'],
+            }),
         )
 
         await expect(

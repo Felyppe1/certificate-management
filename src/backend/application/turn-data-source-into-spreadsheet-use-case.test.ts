@@ -1,9 +1,12 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { TurnDataSourceIntoSpreadsheetUseCase } from './turn-data-source-into-spreadsheet-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
 import { IBucket } from './interfaces/cloud/ibucket'
-import { ISpreadsheetGeneratorFactory, ISpreadsheetContentExtractorStrategy } from './interfaces/ispreadsheet-content-extractor-factory'
+import {
+    ISpreadsheetGeneratorFactory,
+    ISpreadsheetContentExtractorStrategy,
+} from './interfaces/ispreadsheet-content-extractor-factory'
 import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
 import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
@@ -40,7 +43,9 @@ describe('TurnDataSourceIntoSpreadsheetUseCase', () => {
             thumbnailUrl: null,
             columnsRow: 1,
             dataRowStart: 2,
-            columns: [{ name: 'Nome', type: 'string' as const, arrayMetadata: null }],
+            columns: [
+                { name: 'Nome', type: 'string' as const, arrayMetadata: null },
+            ],
             googleAccountEmail: null,
         })
     }
@@ -59,7 +64,9 @@ describe('TurnDataSourceIntoSpreadsheetUseCase', () => {
             thumbnailUrl: null,
             columnsRow: 1,
             dataRowStart: 2,
-            columns: [{ name: 'Nome', type: 'string' as const, arrayMetadata: null }],
+            columns: [
+                { name: 'Nome', type: 'string' as const, arrayMetadata: null },
+            ],
             googleAccountEmail: null,
         })
     }
@@ -113,61 +120,95 @@ describe('TurnDataSourceIntoSpreadsheetUseCase', () => {
         })
     }
 
-    class DataSourceRowsReadRepositoryStub
-        implements
-            Pick<IDataSourceRowsReadRepository, 'getAllRawByCertificateEmissionId'>
-    {
-        async getAllRawByCertificateEmissionId() {
-            return [{ id: 'row-1', data: { Nome: 'João' } }]
-        }
+    let certificatesRepositoryMock: {
+        getById: Mock<ICertificatesRepository['getById']>
+        update: Mock<ICertificatesRepository['update']>
     }
 
-    class SpreadsheetGeneratorFactoryStub
-        implements Pick<ISpreadsheetGeneratorFactory, 'create'>
-    {
-        create(): ISpreadsheetContentExtractorStrategy {
-            return {
-                async extractColumns() {
-                    return { columns: [], rows: [] }
-                },
-                async generate(): Promise<Buffer> {
-                    return Buffer.from('spreadsheet-content')
-                },
-            }
-        }
-    }
+    let dataSourceRowsReadRepositoryStub: Pick<
+        IDataSourceRowsReadRepository,
+        'getAllRawByCertificateEmissionId'
+    >
 
-    class BucketStub implements Pick<IBucket, 'uploadObject' | 'deleteObject'> {
-        async uploadObject(): Promise<string> {
-            return ''
-        }
-        async deleteObject(): Promise<void> {}
-    }
+    let spreadsheetGeneratorFactoryStub: Pick<
+        ISpreadsheetGeneratorFactory,
+        'create'
+    >
 
-    class GoogleAuthGatewayStub
-        implements Pick<IGoogleAuthGateway, 'checkOrGetNewAccessToken'>
-    {
-        async checkOrGetNewAccessToken() {
-            return null
-        }
-    }
+    let bucketStub: Pick<IBucket, 'uploadObject' | 'deleteObject'>
 
-    it('deve converter fonte de dados de imagens para planilha com destino local com sucesso', async () => {
-        const certificateEmission = createCertificateEmission()
+    let googleAuthGatewayStub: Pick<
+        IGoogleAuthGateway,
+        'checkOrGetNewAccessToken'
+    >
 
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
+    let googleDriveGatewayStub: Pick<IGoogleDriveGateway, 'uploadFile'>
+
+    let usersRepositoryStub: Pick<IUsersRepository, 'getById' | 'update'>
+
+    beforeEach(() => {
+        certificatesRepositoryMock = {
+            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
             update: vi.fn(),
         }
 
+        dataSourceRowsReadRepositoryStub = {
+            async getAllRawByCertificateEmissionId() {
+                return [{ id: 'row-1', data: { Nome: 'João' } }]
+            },
+        }
+
+        spreadsheetGeneratorFactoryStub = {
+            create(): ISpreadsheetContentExtractorStrategy {
+                return {
+                    async extractColumns() {
+                        return { columns: [], rows: [] }
+                    },
+                    async generate(): Promise<Buffer> {
+                        return Buffer.from('spreadsheet-content')
+                    },
+                }
+            },
+        }
+
+        bucketStub = {
+            async uploadObject(): Promise<string> {
+                return ''
+            },
+            async deleteObject(): Promise<void> {},
+        }
+
+        googleAuthGatewayStub = {
+            async checkOrGetNewAccessToken() {
+                return null
+            },
+        }
+
+        googleDriveGatewayStub = {
+            async uploadFile() {
+                return { fileId: 'new-drive-file-id', webViewLink: '' }
+            },
+        }
+
+        usersRepositoryStub = {
+            async getById(): Promise<User | null> {
+                return createUser()
+            },
+            async update(): Promise<void> {},
+        }
+    })
+
+    it('deve converter fonte de dados de imagens para planilha com destino local com sucesso', async () => {
+        const certificateEmission = createCertificateEmission()
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
+
         const useCase = new TurnDataSourceIntoSpreadsheetUseCase(
             certificatesRepositoryMock,
-            new DataSourceRowsReadRepositoryStub(),
-            new BucketStub(),
-            new SpreadsheetGeneratorFactoryStub(),
+            dataSourceRowsReadRepositoryStub,
+            bucketStub,
+            spreadsheetGeneratorFactoryStub,
             {} as IGoogleDriveGateway,
             {} as IUsersRepository,
             {} as IGoogleAuthGateway,
@@ -188,40 +229,18 @@ describe('TurnDataSourceIntoSpreadsheetUseCase', () => {
 
     it('deve converter fonte de dados de imagens para planilha com destino Drive com sucesso', async () => {
         const certificateEmission = createCertificateEmission()
-
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        class UsersRepositoryStub
-            implements Pick<IUsersRepository, 'getById' | 'update'>
-        {
-            async getById(): Promise<User | null> {
-                return createUser()
-            }
-            async update(): Promise<void> {}
-        }
-
-        class GoogleDriveGatewayStub
-            implements Pick<IGoogleDriveGateway, 'uploadFile'>
-        {
-            async uploadFile() {
-                return { fileId: 'new-drive-file-id', webViewLink: '' }
-            }
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
         const useCase = new TurnDataSourceIntoSpreadsheetUseCase(
             certificatesRepositoryMock,
-            new DataSourceRowsReadRepositoryStub(),
-            new BucketStub(),
-            new SpreadsheetGeneratorFactoryStub(),
-            new GoogleDriveGatewayStub(),
-            new UsersRepositoryStub(),
-            new GoogleAuthGatewayStub(),
+            dataSourceRowsReadRepositoryStub,
+            bucketStub,
+            spreadsheetGeneratorFactoryStub,
+            googleDriveGatewayStub,
+            usersRepositoryStub,
+            googleAuthGatewayStub,
         )
 
         await useCase.execute({
@@ -238,13 +257,7 @@ describe('TurnDataSourceIntoSpreadsheetUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(null),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(null)
 
         const useCase = new TurnDataSourceIntoSpreadsheetUseCase(
             certificatesRepositoryMock,
@@ -269,17 +282,9 @@ describe('TurnDataSourceIntoSpreadsheetUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({ userId: 'outro-usuario' }),
-                ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ userId: 'outro-usuario' }),
+        )
 
         const useCase = new TurnDataSourceIntoSpreadsheetUseCase(
             certificatesRepositoryMock,
@@ -304,15 +309,9 @@ describe('TurnDataSourceIntoSpreadsheetUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado já tiver sido emitida', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
-            ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
+        )
 
         const useCase = new TurnDataSourceIntoSpreadsheetUseCase(
             certificatesRepositoryMock,
@@ -337,15 +336,9 @@ describe('TurnDataSourceIntoSpreadsheetUseCase', () => {
     })
 
     it('deve lançar erro quando não houver fonte de dados vinculada', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({ dataSource: null }),
-            ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ dataSource: null }),
+        )
 
         const useCase = new TurnDataSourceIntoSpreadsheetUseCase(
             certificatesRepositoryMock,
@@ -370,15 +363,9 @@ describe('TurnDataSourceIntoSpreadsheetUseCase', () => {
     })
 
     it('deve lançar erro quando a fonte de dados não for do tipo imagem', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({ dataSource: createDataSourceCsv() }),
-            ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ dataSource: createDataSourceCsv() }),
+        )
 
         const useCase = new TurnDataSourceIntoSpreadsheetUseCase(
             certificatesRepositoryMock,
@@ -403,21 +390,14 @@ describe('TurnDataSourceIntoSpreadsheetUseCase', () => {
     })
 
     it('deve lançar erro quando o destino for Drive e o usuário não tiver conta Google vinculada', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
+        const usersRepositoryWithoutGoogleStub: Pick<
+            IUsersRepository,
             'getById' | 'update'
         > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
-        class UsersRepositoryStub
-            implements Pick<IUsersRepository, 'getById' | 'update'>
-        {
             async getById(): Promise<User | null> {
                 return createUser(false)
-            }
-            async update(): Promise<void> {}
+            },
+            async update(): Promise<void> {},
         }
 
         const useCase = new TurnDataSourceIntoSpreadsheetUseCase(
@@ -426,7 +406,7 @@ describe('TurnDataSourceIntoSpreadsheetUseCase', () => {
             {} as IBucket,
             {} as ISpreadsheetGeneratorFactory,
             {} as IGoogleDriveGateway,
-            new UsersRepositoryStub(),
+            usersRepositoryWithoutGoogleStub,
             {} as IGoogleAuthGateway,
         )
 
@@ -444,42 +424,35 @@ describe('TurnDataSourceIntoSpreadsheetUseCase', () => {
 
     it('deve atualizar os tokens do usuário quando o token do Google precisar ser renovado ao exportar para o Drive', async () => {
         const certificateEmission = createCertificateEmission()
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const usersRepositoryMock: Pick<IUsersRepository, 'getById' | 'update'> = {
+        const usersRepositoryMock: {
+            getById: Mock<IUsersRepository['getById']>
+            update: Mock<IUsersRepository['update']>
+        } = {
             getById: vi.fn().mockResolvedValue(createUser()),
             update: vi.fn(),
         }
 
-        const googleAuthGatewayMock: Pick<
-            IGoogleAuthGateway,
-            'checkOrGetNewAccessToken'
-        > = {
+        const googleAuthGatewayMock: {
+            checkOrGetNewAccessToken: Mock<
+                IGoogleAuthGateway['checkOrGetNewAccessToken']
+            >
+        } = {
             checkOrGetNewAccessToken: vi.fn().mockResolvedValue({
                 newAccessToken: 'refreshed-token',
                 newAccessTokenExpiryDateTime: new Date(),
             }),
         }
 
-        class GoogleDriveGatewayStub implements Pick<IGoogleDriveGateway, 'uploadFile'> {
-            async uploadFile() {
-                return { fileId: 'new-drive-file-id', webViewLink: '' }
-            }
-        }
-
         const useCase = new TurnDataSourceIntoSpreadsheetUseCase(
             certificatesRepositoryMock,
-            new DataSourceRowsReadRepositoryStub(),
-            new BucketStub(),
-            new SpreadsheetGeneratorFactoryStub(),
-            new GoogleDriveGatewayStub(),
+            dataSourceRowsReadRepositoryStub,
+            bucketStub,
+            spreadsheetGeneratorFactoryStub,
+            googleDriveGatewayStub,
             usersRepositoryMock,
             googleAuthGatewayMock,
         )

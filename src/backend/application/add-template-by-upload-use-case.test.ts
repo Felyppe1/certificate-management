@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { AddTemplateByUploadUseCase } from './add-template-by-upload-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
@@ -41,7 +41,9 @@ describe('AddTemplateByUploadUseCase', () => {
             thumbnailUrl: null,
             columnsRow: 1,
             dataRowStart: 2,
-            columns: [{ name: 'Nome', type: 'string' as const, arrayMetadata: null }],
+            columns: [
+                { name: 'Nome', type: 'string' as const, arrayMetadata: null },
+            ],
             googleAccountEmail: null,
         })
     }
@@ -63,68 +65,88 @@ describe('AddTemplateByUploadUseCase', () => {
         })
     }
 
-    function createValidFile(mimeType = TEMPLATE_FILE_MIME_TYPE.DOCX as string) {
+    function createValidFile(
+        mimeType = TEMPLATE_FILE_MIME_TYPE.DOCX as string,
+    ) {
         return new File([Buffer.from('content')], 'template.docx', {
             type: mimeType,
         })
     }
 
-    class BucketStub implements Pick<IBucket, 'uploadObject'> {
-        async uploadObject(): Promise<string> {
-            return ''
-        }
+    let certificatesRepositoryMock: {
+        getById: Mock<ICertificatesRepository['getById']>
+        update: Mock<ICertificatesRepository['update']>
     }
 
-    class TransactionManagerStub implements Pick<ITransactionManager, 'run'> {
-        async run<T>(work: () => Promise<T>): Promise<T> {
-            return work()
-        }
-    }
+    let bucketStub: Pick<IBucket, 'uploadObject'>
 
-    class FileContentExtractorFactoryStub
-        implements Pick<IFileContentExtractorFactory, 'create'>
-    {
-        create(): IFileContentExtractorStrategy {
-            return {
-                async extractText(): Promise<string> {
-                    return '{{nome}}'
-                },
-            }
-        }
-    }
+    let transactionManagerStub: Pick<ITransactionManager, 'run'>
 
-    class UsersRepositoryStub implements Pick<IUsersRepository, 'getById'> {
-        async getById(): Promise<User | null> {
-            return null
-        }
-    }
+    let fileContentExtractorFactoryStub: Pick<
+        IFileContentExtractorFactory,
+        'create'
+    >
 
-    it('deve adicionar um template por upload com sucesso', async () => {
-        const certificateEmission = createCertificateEmission()
+    let usersRepositoryStub: Pick<IUsersRepository, 'getById'>
 
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
+    let dataSourceRowsRepositoryStub: Pick<
+        IDataSourceRowsRepository,
+        'resetProcessingStatusByCertificateEmissionId'
+    >
+
+    beforeEach(() => {
+        certificatesRepositoryMock = {
+            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
             update: vi.fn(),
         }
 
-        const dataSourceRowsRepositoryStub: Pick<
-            IDataSourceRowsRepository,
-            'resetProcessingStatusByCertificateEmissionId'
-        > = {
-            resetProcessingStatusByCertificateEmissionId: vi.fn(),
+        bucketStub = {
+            async uploadObject(): Promise<string> {
+                return ''
+            },
         }
 
+        transactionManagerStub = {
+            async run<T>(work: () => Promise<T>): Promise<T> {
+                return work()
+            },
+        }
+
+        fileContentExtractorFactoryStub = {
+            create(): IFileContentExtractorStrategy {
+                return {
+                    async extractText(): Promise<string> {
+                        return '{{nome}}'
+                    },
+                }
+            },
+        }
+
+        usersRepositoryStub = {
+            async getById(): Promise<User | null> {
+                return null
+            },
+        }
+
+        dataSourceRowsRepositoryStub = {
+            async resetProcessingStatusByCertificateEmissionId() {},
+        }
+    })
+
+    it('deve adicionar um template por upload com sucesso', async () => {
+        const certificateEmission = createCertificateEmission()
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
+
         const useCase = new AddTemplateByUploadUseCase(
-            new BucketStub(),
+            bucketStub,
             certificatesRepositoryMock,
             dataSourceRowsRepositoryStub,
-            new FileContentExtractorFactoryStub(),
-            new TransactionManagerStub(),
+            fileContentExtractorFactoryStub,
+            transactionManagerStub,
             { extractVariables: () => ['nome'] },
-            new UsersRepositoryStub(),
+            usersRepositoryStub,
         )
 
         await useCase.execute({
@@ -143,30 +165,26 @@ describe('AddTemplateByUploadUseCase', () => {
         const certificateEmission = createCertificateEmission({
             dataSource: createDataSource(),
         })
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsRepositoryStub: Pick<
-            IDataSourceRowsRepository,
-            'resetProcessingStatusByCertificateEmissionId'
-        > = {
+        const dataSourceRowsRepositoryMock: {
+            resetProcessingStatusByCertificateEmissionId: Mock<
+                IDataSourceRowsRepository['resetProcessingStatusByCertificateEmissionId']
+            >
+        } = {
             resetProcessingStatusByCertificateEmissionId: vi.fn(),
         }
 
         const useCase = new AddTemplateByUploadUseCase(
-            new BucketStub(),
+            bucketStub,
             certificatesRepositoryMock,
-            dataSourceRowsRepositoryStub,
-            new FileContentExtractorFactoryStub(),
-            new TransactionManagerStub(),
+            dataSourceRowsRepositoryMock,
+            fileContentExtractorFactoryStub,
+            transactionManagerStub,
             { extractVariables: () => [] },
-            new UsersRepositoryStub(),
+            usersRepositoryStub,
         )
 
         await useCase.execute({
@@ -176,18 +194,12 @@ describe('AddTemplateByUploadUseCase', () => {
         })
 
         expect(
-            dataSourceRowsRepositoryStub.resetProcessingStatusByCertificateEmissionId,
+            dataSourceRowsRepositoryMock.resetProcessingStatusByCertificateEmissionId,
         ).toHaveBeenCalledWith(CERTIFICATE_ID)
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(null),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(null)
 
         const useCase = new AddTemplateByUploadUseCase(
             {} as IBucket,
@@ -211,17 +223,9 @@ describe('AddTemplateByUploadUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({ userId: 'outro-usuario' }),
-                ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ userId: 'outro-usuario' }),
+        )
 
         const useCase = new AddTemplateByUploadUseCase(
             {} as IBucket,
@@ -245,15 +249,9 @@ describe('AddTemplateByUploadUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado já tiver sido emitida', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
-            ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
+        )
 
         const useCase = new AddTemplateByUploadUseCase(
             {} as IBucket,
@@ -277,14 +275,6 @@ describe('AddTemplateByUploadUseCase', () => {
     })
 
     it('deve lançar erro quando o formato do arquivo não for suportado como template', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
         const useCase = new AddTemplateByUploadUseCase(
             {} as IBucket,
             certificatesRepositoryMock,

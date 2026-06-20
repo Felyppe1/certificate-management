@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, Mock, vi, beforeEach } from 'vitest'
 import { ViewCertificateEmissionUseCase } from './view-certificate-emission-use-case'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
@@ -82,21 +82,35 @@ describe('ViewCertificateEmissionUseCase', () => {
         }
     }
 
-    let certificateRepositoryMock: Pick<ICertificatesRepository, 'getById'>
-    let dataSourceRowsRepositoryMock: Pick<IDataSourceRowsRepository, 'getById'>
-    let bucketMock: Pick<IBucket, 'generateSignedUrl'>
+    let certificateRepositoryStub: Pick<ICertificatesRepository, 'getById'>
+    let dataSourceRowsRepositoryStub: Pick<IDataSourceRowsRepository, 'getById'>
+    let bucketMock: {
+        generateSignedUrl: Mock<IBucket['generateSignedUrl']>
+    }
 
-    beforeEach(() => vi.clearAllMocks())
+    beforeEach(() => {
+        certificateRepositoryStub = {
+            async getById() {
+                return createCertificateEmission()
+            },
+        }
+        dataSourceRowsRepositoryStub = {
+            async getById() {
+                return createDataSourceRowMock() as never
+            },
+        }
+        bucketMock = {
+            generateSignedUrl: vi.fn(),
+        }
+    })
 
     it('deve lançar erro quando a linha não for encontrada', async () => {
-        dataSourceRowsRepositoryMock = {
-            getById: vi.fn().mockResolvedValue(null),
-        }
+        dataSourceRowsRepositoryStub.getById = async () => null
 
         const useCase = new ViewCertificateEmissionUseCase(
-            {} as IBucket,
-            {} as ICertificatesRepository,
-            dataSourceRowsRepositoryMock,
+            bucketMock,
+            certificateRepositoryStub,
+            dataSourceRowsRepositoryStub,
         )
 
         await expect(
@@ -105,18 +119,12 @@ describe('ViewCertificateEmissionUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        dataSourceRowsRepositoryMock = {
-            getById: vi.fn().mockResolvedValue(createDataSourceRowMock()),
-        }
-
-        certificateRepositoryMock = {
-            getById: vi.fn().mockResolvedValue(null),
-        }
+        certificateRepositoryStub.getById = async () => null
 
         const useCase = new ViewCertificateEmissionUseCase(
-            {} as IBucket,
-            certificateRepositoryMock,
-            dataSourceRowsRepositoryMock,
+            bucketMock,
+            certificateRepositoryStub,
+            dataSourceRowsRepositoryStub,
         )
 
         await expect(
@@ -125,22 +133,13 @@ describe('ViewCertificateEmissionUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        dataSourceRowsRepositoryMock = {
-            getById: vi.fn().mockResolvedValue(createDataSourceRowMock()),
-        }
-
-        certificateRepositoryMock = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({ userId: 'outro-usuario' }),
-                ),
-        }
+        certificateRepositoryStub.getById = async () =>
+            createCertificateEmission({ userId: 'outro-usuario' })
 
         const useCase = new ViewCertificateEmissionUseCase(
-            {} as IBucket,
-            certificateRepositoryMock,
-            dataSourceRowsRepositoryMock,
+            bucketMock,
+            certificateRepositoryStub,
+            dataSourceRowsRepositoryStub,
         )
 
         await expect(
@@ -151,22 +150,12 @@ describe('ViewCertificateEmissionUseCase', () => {
     it('deve retornar a URL assinada para visualização no caminho feliz', async () => {
         const SIGNED_URL = 'https://storage.googleapis.com/signed-url-view'
 
-        dataSourceRowsRepositoryMock = {
-            getById: vi.fn().mockResolvedValue(createDataSourceRowMock()),
-        }
-
-        certificateRepositoryMock = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-        }
-
-        bucketMock = {
-            generateSignedUrl: vi.fn().mockResolvedValue(SIGNED_URL),
-        }
+        bucketMock.generateSignedUrl.mockResolvedValue(SIGNED_URL)
 
         const useCase = new ViewCertificateEmissionUseCase(
             bucketMock,
-            certificateRepositoryMock,
-            dataSourceRowsRepositoryMock,
+            certificateRepositoryStub,
+            dataSourceRowsRepositoryStub,
         )
 
         const result = await useCase.execute({ userId: USER_ID, rowId: ROW_ID })

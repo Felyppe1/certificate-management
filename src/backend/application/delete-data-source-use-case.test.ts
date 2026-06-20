@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { DeleteDataSourceUseCase } from './delete-data-source-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IBucket } from './interfaces/cloud/ibucket'
@@ -30,7 +30,9 @@ describe('DeleteDataSourceUseCase', () => {
             thumbnailUrl: null,
             columnsRow: 1,
             dataRowStart: 2,
-            columns: [{ name: 'Nome', type: 'string' as const, arrayMetadata: null }],
+            columns: [
+                { name: 'Nome', type: 'string' as const, arrayMetadata: null },
+            ],
             googleAccountEmail: null,
         })
     }
@@ -52,27 +54,38 @@ describe('DeleteDataSourceUseCase', () => {
         })
     }
 
-    it('deve remover a fonte de dados da emissão de certificado com sucesso', async () => {
-        const certificateEmission = createCertificateEmission()
+    let certificatesRepositoryMock: {
+        getById: Mock<ICertificatesRepository['getById']>
+        update: Mock<ICertificatesRepository['update']>
+    }
 
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
+    let bucketStub: Pick<IBucket, 'deleteObject'>
+
+    beforeEach(() => {
+        certificatesRepositoryMock = {
+            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
             update: vi.fn(),
         }
-
-        class BucketStub implements Pick<IBucket, 'deleteObject'> {
-            async deleteObject() {}
+        bucketStub = {
+            async deleteObject() {},
         }
+    })
+
+    it('deve remover a fonte de dados da emissão de certificado com sucesso', async () => {
+        const certificateEmission = createCertificateEmission()
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
         const useCase = new DeleteDataSourceUseCase(
             certificatesRepositoryMock,
-            new BucketStub(),
+            bucketStub,
         )
 
-        await useCase.execute({ certificateId: CERTIFICATE_ID, userId: USER_ID })
+        await useCase.execute({
+            certificateId: CERTIFICATE_ID,
+            userId: USER_ID,
+        })
 
         expect(certificatesRepositoryMock.update).toHaveBeenCalledWith(
             certificateEmission,
@@ -81,13 +94,7 @@ describe('DeleteDataSourceUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(null),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(null)
 
         const useCase = new DeleteDataSourceUseCase(
             certificatesRepositoryMock,
@@ -102,17 +109,9 @@ describe('DeleteDataSourceUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({ userId: 'outro-usuario' }),
-                ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ userId: 'outro-usuario' }),
+        )
 
         const useCase = new DeleteDataSourceUseCase(
             certificatesRepositoryMock,
@@ -127,15 +126,9 @@ describe('DeleteDataSourceUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado já tiver sido emitida', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
-            ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
+        )
 
         const useCase = new DeleteDataSourceUseCase(
             certificatesRepositoryMock,

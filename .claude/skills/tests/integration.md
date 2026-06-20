@@ -39,7 +39,7 @@ src/backend/application/add-data-source-by-drive-picker-use-case.integration.tes
 
 ```ts
 // src/backend/application/delete-template-use-case.integration.test.ts
-it('should delete a template successfully', async () => {
+it('deve deletar o template com sucesso', async () => {
     // Arrange: cria dados diretamente no banco de teste
     await prisma.user.create({ data: { id: '1', email: 'user@gmail.com', ... } })
     await prisma.certificateEmission.create({

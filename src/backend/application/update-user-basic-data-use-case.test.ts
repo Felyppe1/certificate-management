@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { UpdateUserBasicDataUseCase } from './update-user-basic-data-use-case'
 import { User, UserInput } from '../domain/user'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
@@ -21,49 +21,52 @@ function createUser(overrides?: Partial<UserInput>): User {
 }
 
 describe('UpdateUserBasicDataUseCase', () => {
-    it('deve lançar erro quando o usuário não é encontrado', async () => {
-        const usersRepository: Pick<IUsersRepository, 'getById' | 'update'> = {
+    let usersRepositoryMock: {
+        getById: Mock<IUsersRepository['getById']>
+        update: Mock<IUsersRepository['update']>
+    }
+
+    beforeEach(() => {
+        usersRepositoryMock = {
             getById: vi.fn().mockResolvedValue(null),
             update: vi.fn(),
         }
+    })
 
-        const useCase = new UpdateUserBasicDataUseCase(usersRepository)
+    it('deve lançar erro quando o usuário não é encontrado', async () => {
+        usersRepositoryMock.getById.mockResolvedValue(null)
+
+        const useCase = new UpdateUserBasicDataUseCase(usersRepositoryMock)
 
         await expect(
             useCase.execute({ userId: 'id-inexistente', name: 'Novo Nome' }),
         ).rejects.toThrow(UserNotFoundError)
 
-        expect(usersRepository.update).not.toHaveBeenCalled()
+        expect(usersRepositoryMock.update).not.toHaveBeenCalled()
     })
 
     it('deve lançar erro quando o nome é inválido', async () => {
         const user = createUser()
-        const usersRepository: Pick<IUsersRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(user),
-            update: vi.fn(),
-        }
+        usersRepositoryMock.getById.mockResolvedValue(user)
 
-        const useCase = new UpdateUserBasicDataUseCase(usersRepository)
+        const useCase = new UpdateUserBasicDataUseCase(usersRepositoryMock)
 
         await expect(
             useCase.execute({ userId: user.getId(), name: 'AB' }),
         ).rejects.toThrow()
 
-        expect(usersRepository.update).not.toHaveBeenCalled()
+        expect(usersRepositoryMock.update).not.toHaveBeenCalled()
     })
 
     it('deve atualizar o nome com sucesso', async () => {
         const user = createUser()
-        const usersRepository: Pick<IUsersRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(user),
-            update: vi.fn(),
-        }
+        usersRepositoryMock.getById.mockResolvedValue(user)
 
-        const useCase = new UpdateUserBasicDataUseCase(usersRepository)
+        const useCase = new UpdateUserBasicDataUseCase(usersRepositoryMock)
 
         await useCase.execute({ userId: user.getId(), name: 'Nome Atualizado' })
 
-        expect(usersRepository.update).toHaveBeenCalledWith(user)
+        expect(usersRepositoryMock.update).toHaveBeenCalledWith(user)
         expect(user.getName()).toBe('Nome Atualizado')
     })
 })

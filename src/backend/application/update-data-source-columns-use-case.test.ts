@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { UpdateDataSourceColumnsUseCase } from './update-data-source-columns-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
@@ -32,7 +32,9 @@ describe('UpdateDataSourceColumnsUseCase', () => {
             thumbnailUrl: null,
             columnsRow: 1,
             dataRowStart: 2,
-            columns: [{ name: 'Nome', type: 'string' as const, arrayMetadata: null }],
+            columns: [
+                { name: 'Nome', type: 'string' as const, arrayMetadata: null },
+            ],
             googleAccountEmail: null,
         })
     }
@@ -57,36 +59,50 @@ describe('UpdateDataSourceColumnsUseCase', () => {
         })
     }
 
-    class TransactionManagerStub implements Pick<ITransactionManager, 'run'> {
-        async run<T>(work: () => Promise<T>): Promise<T> {
-            return work()
-        }
+    let transactionManagerStub: Pick<ITransactionManager, 'run'>
+
+    let certificatesRepositoryMock: {
+        getById: Mock<ICertificatesRepository['getById']>
+        update: Mock<ICertificatesRepository['update']>
     }
+
+    let dataSourceRowsRepositoryStub: Pick<
+        IDataSourceRowsRepository,
+        | 'getColumnValuesByCertificateEmissionId'
+        | 'resetProcessingStatusByCertificateEmissionId'
+    >
+
+    beforeEach(() => {
+        transactionManagerStub = {
+            async run<T>(work: () => Promise<T>): Promise<T> {
+                return work()
+            },
+        }
+
+        certificatesRepositoryMock = {
+            getById: vi.fn().mockResolvedValue(null),
+            update: vi.fn(),
+        }
+
+        dataSourceRowsRepositoryStub = {
+            async getColumnValuesByCertificateEmissionId() {
+                return []
+            },
+            async resetProcessingStatusByCertificateEmissionId() {},
+        }
+    })
 
     it('deve atualizar os tipos das colunas da fonte de dados com sucesso', async () => {
         const certificateEmission = createCertificateEmission()
 
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsRepositoryStub: Pick<
-            IDataSourceRowsRepository,
-            | 'getColumnValuesByCertificateEmissionId'
-            | 'resetProcessingStatusByCertificateEmissionId'
-        > = {
-            getColumnValuesByCertificateEmissionId: vi.fn().mockResolvedValue([]),
-            resetProcessingStatusByCertificateEmissionId: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
         const useCase = new UpdateDataSourceColumnsUseCase(
             certificatesRepositoryMock,
             dataSourceRowsRepositoryStub,
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
 
         const result = await useCase.execute({
@@ -104,29 +120,16 @@ describe('UpdateDataSourceColumnsUseCase', () => {
     it('deve retornar as colunas inválidas sem persistir quando os valores existentes não forem compatíveis com o novo tipo', async () => {
         const certificateEmission = createCertificateEmission()
 
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsRepositoryStub: Pick<
-            IDataSourceRowsRepository,
-            | 'getColumnValuesByCertificateEmissionId'
-            | 'resetProcessingStatusByCertificateEmissionId'
-        > = {
-            getColumnValuesByCertificateEmissionId: vi
-                .fn()
-                .mockResolvedValue(['texto que nao e numero', 'outro texto']),
-            resetProcessingStatusByCertificateEmissionId: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
+        dataSourceRowsRepositoryStub.getColumnValuesByCertificateEmissionId =
+            async () => ['texto que nao e numero', 'outro texto']
 
         const useCase = new UpdateDataSourceColumnsUseCase(
             certificatesRepositoryMock,
             dataSourceRowsRepositoryStub,
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
 
         const result = await useCase.execute({
@@ -135,19 +138,13 @@ describe('UpdateDataSourceColumnsUseCase', () => {
             columns: [{ name: 'Nome', type: 'number', arrayMetadata: null }],
         })
 
-        expect(result.invalidColumns).toEqual([{ name: 'Nome', toType: 'number' }])
+        expect(result.invalidColumns).toEqual([
+            { name: 'Nome', toType: 'number' },
+        ])
         expect(certificatesRepositoryMock.update).not.toHaveBeenCalled()
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(null),
-            update: vi.fn(),
-        }
-
         const useCase = new UpdateDataSourceColumnsUseCase(
             certificatesRepositoryMock,
             {} as IDataSourceRowsRepository,
@@ -166,17 +163,9 @@ describe('UpdateDataSourceColumnsUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({ userId: 'outro-usuario' }),
-                ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ userId: 'outro-usuario' }),
+        )
 
         const useCase = new UpdateDataSourceColumnsUseCase(
             certificatesRepositoryMock,
@@ -196,15 +185,9 @@ describe('UpdateDataSourceColumnsUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado já tiver sido emitida', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
-            ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
+        )
 
         const useCase = new UpdateDataSourceColumnsUseCase(
             certificatesRepositoryMock,
@@ -224,15 +207,9 @@ describe('UpdateDataSourceColumnsUseCase', () => {
     })
 
     it('deve lançar erro quando não houver fonte de dados vinculada', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({ dataSource: null }),
-            ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ dataSource: null }),
+        )
 
         const useCase = new UpdateDataSourceColumnsUseCase(
             certificatesRepositoryMock,

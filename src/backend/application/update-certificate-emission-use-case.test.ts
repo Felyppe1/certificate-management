@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { UpdateCertificateEmissionUseCase } from './update-certificate-emission-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
@@ -16,11 +16,33 @@ describe('UpdateCertificateEmissionUseCase', () => {
     const USER_ID = '1'
     const CERTIFICATE_ID = '1'
 
-    class TransactionManagerStub implements Pick<ITransactionManager, 'run'> {
-        async run<T>(work: () => Promise<T>): Promise<T> {
-            return work()
-        }
+    let certificatesRepositoryMock: {
+        getById: Mock<ICertificatesRepository['getById']>
+        update: Mock<ICertificatesRepository['update']>
     }
+
+    let dataSourceRowsRepositoryMock: {
+        resetProcessingStatusByCertificateEmissionId: Mock<
+            IDataSourceRowsRepository['resetProcessingStatusByCertificateEmissionId']
+        >
+    }
+
+    let transactionManagerStub: Pick<ITransactionManager, 'run'>
+
+    beforeEach(() => {
+        certificatesRepositoryMock = {
+            getById: vi.fn().mockResolvedValue(null),
+            update: vi.fn(),
+        }
+        dataSourceRowsRepositoryMock = {
+            resetProcessingStatusByCertificateEmissionId: vi.fn(),
+        }
+        transactionManagerStub = {
+            async run<T>(work: () => Promise<T>): Promise<T> {
+                return work()
+            },
+        }
+    })
 
     function createDataSource() {
         return new DataSource({
@@ -36,7 +58,9 @@ describe('UpdateCertificateEmissionUseCase', () => {
             thumbnailUrl: null,
             columnsRow: 1,
             dataRowStart: 2,
-            columns: [{ name: 'Nome', type: 'string' as const, arrayMetadata: null }],
+            columns: [
+                { name: 'Nome', type: 'string' as const, arrayMetadata: null },
+            ],
             googleAccountEmail: null,
         })
     }
@@ -54,39 +78,43 @@ describe('UpdateCertificateEmissionUseCase', () => {
             template: null,
             createdAt: new Date(),
             status: overrides?.status ?? CERTIFICATE_STATUS.DRAFT,
-            dataSource: overrides?.dataSource !== undefined ? overrides.dataSource : null,
-            variableColumnMapping: overrides?.variableColumnMapping !== undefined
-                ? overrides.variableColumnMapping
-                : null,
+            dataSource:
+                overrides?.dataSource !== undefined
+                    ? overrides.dataSource
+                    : null,
+            variableColumnMapping:
+                overrides?.variableColumnMapping !== undefined
+                    ? overrides.variableColumnMapping
+                    : null,
         })
     }
 
     it('deve atualizar o nome da emissão de certificado com sucesso', async () => {
         const certificateEmission = createCertificateEmission()
 
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsRepositoryMock: Pick<
-            IDataSourceRowsRepository,
-            'resetProcessingStatusByCertificateEmissionId'
-        > = {
-            resetProcessingStatusByCertificateEmissionId: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
         const useCase = new UpdateCertificateEmissionUseCase(
             certificatesRepositoryMock,
             dataSourceRowsRepositoryMock,
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
 
-        await useCase.execute({ userId: USER_ID, id: CERTIFICATE_ID, name: 'Novo Nome' })
+        await useCase.execute({
+            userId: USER_ID,
+            id: CERTIFICATE_ID,
+            name: 'Novo Nome',
+        })
 
-        expect(certificatesRepositoryMock.update).toHaveBeenCalledWith(certificateEmission)
+        expect(certificatesRepositoryMock.update).toHaveBeenCalledWith(
+            certificateEmission,
+        )
         expect(certificateEmission.getName()).toBe('Novo Nome')
-        expect(dataSourceRowsRepositoryMock.resetProcessingStatusByCertificateEmissionId).not.toHaveBeenCalled()
+        expect(
+            dataSourceRowsRepositoryMock.resetProcessingStatusByCertificateEmissionId,
+        ).not.toHaveBeenCalled()
     })
 
     it('deve atualizar o mapeamento de variáveis com sucesso', async () => {
@@ -96,22 +124,14 @@ describe('UpdateCertificateEmissionUseCase', () => {
             variableColumnMapping: null,
         })
 
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsRepositoryMock: Pick<
-            IDataSourceRowsRepository,
-            'resetProcessingStatusByCertificateEmissionId'
-        > = {
-            resetProcessingStatusByCertificateEmissionId: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
         const useCase = new UpdateCertificateEmissionUseCase(
             certificatesRepositoryMock,
             dataSourceRowsRepositoryMock,
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
 
         // null → {} muda o JSON, dispara transação; datasource existe → reset é chamado
@@ -121,9 +141,12 @@ describe('UpdateCertificateEmissionUseCase', () => {
             variableColumnMapping: {},
         })
 
-        expect(dataSourceRowsRepositoryMock.resetProcessingStatusByCertificateEmissionId)
-            .toHaveBeenCalledWith(CERTIFICATE_ID)
-        expect(certificatesRepositoryMock.update).toHaveBeenCalledWith(certificateEmission)
+        expect(
+            dataSourceRowsRepositoryMock.resetProcessingStatusByCertificateEmissionId,
+        ).toHaveBeenCalledWith(CERTIFICATE_ID)
+        expect(certificatesRepositoryMock.update).toHaveBeenCalledWith(
+            certificateEmission,
+        )
     })
 
     it('deve atualizar o mapeamento de variáveis com sucesso quando não há fonte de dados vinculada', async () => {
@@ -133,22 +156,14 @@ describe('UpdateCertificateEmissionUseCase', () => {
             variableColumnMapping: null,
         })
 
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsRepositoryMock: Pick<
-            IDataSourceRowsRepository,
-            'resetProcessingStatusByCertificateEmissionId'
-        > = {
-            resetProcessingStatusByCertificateEmissionId: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
         const useCase = new UpdateCertificateEmissionUseCase(
             certificatesRepositoryMock,
             dataSourceRowsRepositoryMock,
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
 
         // null → {} muda o JSON, dispara transação; sem datasource → reset NÃO é chamado
@@ -158,30 +173,28 @@ describe('UpdateCertificateEmissionUseCase', () => {
             variableColumnMapping: {},
         })
 
-        expect(dataSourceRowsRepositoryMock.resetProcessingStatusByCertificateEmissionId).not.toHaveBeenCalled()
-        expect(certificatesRepositoryMock.update).toHaveBeenCalledWith(certificateEmission)
+        expect(
+            dataSourceRowsRepositoryMock.resetProcessingStatusByCertificateEmissionId,
+        ).not.toHaveBeenCalled()
+        expect(certificatesRepositoryMock.update).toHaveBeenCalledWith(
+            certificateEmission,
+        )
     })
 
     it('deve não resetar o processamento quando o mapeamento de variáveis não muda', async () => {
         // variableColumnMapping: null → passa null → JSON.stringify iguais → sem transação
-        const certificateEmission = createCertificateEmission({ variableColumnMapping: null })
+        const certificateEmission = createCertificateEmission({
+            variableColumnMapping: null,
+        })
 
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsRepositoryMock: Pick<
-            IDataSourceRowsRepository,
-            'resetProcessingStatusByCertificateEmissionId'
-        > = {
-            resetProcessingStatusByCertificateEmissionId: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
         const useCase = new UpdateCertificateEmissionUseCase(
             certificatesRepositoryMock,
             dataSourceRowsRepositoryMock,
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
 
         await useCase.execute({
@@ -190,15 +203,16 @@ describe('UpdateCertificateEmissionUseCase', () => {
             variableColumnMapping: null,
         })
 
-        expect(dataSourceRowsRepositoryMock.resetProcessingStatusByCertificateEmissionId).not.toHaveBeenCalled()
-        expect(certificatesRepositoryMock.update).toHaveBeenCalledWith(certificateEmission)
+        expect(
+            dataSourceRowsRepositoryMock.resetProcessingStatusByCertificateEmissionId,
+        ).not.toHaveBeenCalled()
+        expect(certificatesRepositoryMock.update).toHaveBeenCalledWith(
+            certificateEmission,
+        )
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(null),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(null)
 
         const useCase = new UpdateCertificateEmissionUseCase(
             certificatesRepositoryMock,
@@ -207,17 +221,20 @@ describe('UpdateCertificateEmissionUseCase', () => {
         )
 
         await expect(
-            useCase.execute({ userId: USER_ID, id: 'nao-existe', name: 'Novo Nome' }),
+            useCase.execute({
+                userId: USER_ID,
+                id: 'nao-existe',
+                name: 'Novo Nome',
+            }),
         ).rejects.toThrow(CertificateNotFoundError)
 
         expect(certificatesRepositoryMock.update).not.toHaveBeenCalled()
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission({ userId: 'outro-usuario' })),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ userId: 'outro-usuario' }),
+        )
 
         const useCase = new UpdateCertificateEmissionUseCase(
             certificatesRepositoryMock,
@@ -226,7 +243,11 @@ describe('UpdateCertificateEmissionUseCase', () => {
         )
 
         await expect(
-            useCase.execute({ userId: USER_ID, id: CERTIFICATE_ID, name: 'Novo Nome' }),
+            useCase.execute({
+                userId: USER_ID,
+                id: CERTIFICATE_ID,
+                name: 'Novo Nome',
+            }),
         ).rejects.toThrow(NotCertificateOwnerError)
 
         expect(certificatesRepositoryMock.update).not.toHaveBeenCalled()

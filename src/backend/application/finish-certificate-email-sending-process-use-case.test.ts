@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { FinishCertificateEmailSendingProcessUseCase } from './finish-certificate-email-sending-process-use-case'
 import { IEmailsRepository } from './interfaces/repository/iemails-repository'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
@@ -9,10 +9,7 @@ import {
     EMAIL_ERROR_TYPE_ENUM,
     PROCESSING_STATUS_ENUM,
 } from '../domain/email'
-import {
-    CertificateEmission,
-    CERTIFICATE_STATUS,
-} from '../domain/certificate'
+import { CertificateEmission, CERTIFICATE_STATUS } from '../domain/certificate'
 import { EmailNotFoundError } from '../domain/error/not-found-error/email-not-found-error'
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 
@@ -21,11 +18,7 @@ describe('FinishCertificateEmailSendingProcessUseCase', () => {
     const CERTIFICATE_ID = '1'
     const EMAIL_ID = 'email-1'
 
-    class TransactionManagerStub implements Pick<ITransactionManager, 'run'> {
-        async run<T>(work: () => Promise<T>): Promise<T> {
-            return work()
-        }
-    }
+    let transactionManagerStub: Pick<ITransactionManager, 'run'>
 
     function createEmail(overrides?: { status?: PROCESSING_STATUS_ENUM }) {
         return new Email({
@@ -40,7 +33,9 @@ describe('FinishCertificateEmailSendingProcessUseCase', () => {
         })
     }
 
-    function createCertificateEmission(overrides?: { status?: CERTIFICATE_STATUS }) {
+    function createCertificateEmission(overrides?: {
+        status?: CERTIFICATE_STATUS
+    }) {
         return new CertificateEmission({
             id: CERTIFICATE_ID,
             name: 'Certificado',
@@ -53,29 +48,56 @@ describe('FinishCertificateEmailSendingProcessUseCase', () => {
         })
     }
 
+    let emailsRepositoryMock: {
+        getById: Mock<IEmailsRepository['getById']>
+        update: Mock<IEmailsRepository['update']>
+    }
+
+    let certificatesRepositoryMock: {
+        getById: Mock<ICertificatesRepository['getById']>
+        update: Mock<ICertificatesRepository['update']>
+    }
+
+    let usersRepositoryMock: {
+        upsertDailyUsage: Mock<IUsersRepository['upsertDailyUsage']>
+    }
+
+    beforeEach(() => {
+        transactionManagerStub = {
+            async run<T>(work: () => Promise<T>): Promise<T> {
+                return work()
+            },
+        }
+
+        emailsRepositoryMock = {
+            getById: vi.fn().mockResolvedValue(createEmail()),
+            update: vi.fn(),
+        }
+
+        certificatesRepositoryMock = {
+            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
+            update: vi.fn(),
+        }
+
+        usersRepositoryMock = {
+            upsertDailyUsage: vi.fn(),
+        }
+    })
+
     it('deve finalizar o processo de envio de e-mails com sucesso', async () => {
         const email = createEmail()
         const certificateEmission = createCertificateEmission()
 
-        const emailsRepositoryMock: Pick<IEmailsRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(email),
-            update: vi.fn(),
-        }
-
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const usersRepositoryMock: Pick<IUsersRepository, 'upsertDailyUsage'> = {
-            upsertDailyUsage: vi.fn(),
-        }
+        emailsRepositoryMock.getById.mockResolvedValue(email)
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
         const useCase = new FinishCertificateEmailSendingProcessUseCase(
             emailsRepositoryMock,
             certificatesRepositoryMock,
             usersRepositoryMock,
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
 
         await useCase.execute({
@@ -87,7 +109,10 @@ describe('FinishCertificateEmailSendingProcessUseCase', () => {
 
         expect(email.serialize().status).toBe(PROCESSING_STATUS_ENUM.COMPLETED)
         expect(emailsRepositoryMock.update).toHaveBeenCalledWith(email)
-        expect(usersRepositoryMock.upsertDailyUsage).toHaveBeenCalledWith(USER_ID, { emailsSentCount: 2 })
+        expect(usersRepositoryMock.upsertDailyUsage).toHaveBeenCalledWith(
+            USER_ID,
+            { emailsSentCount: 2 },
+        )
         expect(certificatesRepositoryMock.update).not.toHaveBeenCalled()
     })
 
@@ -95,25 +120,16 @@ describe('FinishCertificateEmailSendingProcessUseCase', () => {
         const email = createEmail()
         const certificateEmission = createCertificateEmission()
 
-        const emailsRepositoryMock: Pick<IEmailsRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(email),
-            update: vi.fn(),
-        }
-
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const usersRepositoryMock: Pick<IUsersRepository, 'upsertDailyUsage'> = {
-            upsertDailyUsage: vi.fn(),
-        }
+        emailsRepositoryMock.getById.mockResolvedValue(email)
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
         const useCase = new FinishCertificateEmailSendingProcessUseCase(
             emailsRepositoryMock,
             certificatesRepositoryMock,
             usersRepositoryMock,
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
 
         await useCase.execute({
@@ -122,18 +138,21 @@ describe('FinishCertificateEmailSendingProcessUseCase', () => {
         })
 
         expect(email.serialize().status).toBe(PROCESSING_STATUS_ENUM.FAILED)
-        expect(email.serialize().emailErrorType).toBe(EMAIL_ERROR_TYPE_ENUM.INTERNAL_ERROR)
-        expect(certificateEmission.serialize().status).toBe(CERTIFICATE_STATUS.GENERATED)
-        expect(certificatesRepositoryMock.update).toHaveBeenCalledWith(certificateEmission)
+        expect(email.serialize().emailErrorType).toBe(
+            EMAIL_ERROR_TYPE_ENUM.INTERNAL_ERROR,
+        )
+        expect(certificateEmission.serialize().status).toBe(
+            CERTIFICATE_STATUS.GENERATED,
+        )
+        expect(certificatesRepositoryMock.update).toHaveBeenCalledWith(
+            certificateEmission,
+        )
         expect(emailsRepositoryMock.update).toHaveBeenCalledWith(email)
         expect(usersRepositoryMock.upsertDailyUsage).not.toHaveBeenCalled()
     })
 
     it('deve lançar erro quando o e-mail não for encontrado', async () => {
-        const emailsRepositoryMock: Pick<IEmailsRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(null),
-            update: vi.fn(),
-        }
+        emailsRepositoryMock.getById.mockResolvedValue(null)
 
         const useCase = new FinishCertificateEmailSendingProcessUseCase(
             emailsRepositoryMock,
@@ -143,20 +162,15 @@ describe('FinishCertificateEmailSendingProcessUseCase', () => {
         )
 
         await expect(
-            useCase.execute({ emailId: 'nao-existe', status: PROCESSING_STATUS_ENUM.COMPLETED }),
+            useCase.execute({
+                emailId: 'nao-existe',
+                status: PROCESSING_STATUS_ENUM.COMPLETED,
+            }),
         ).rejects.toThrow(EmailNotFoundError)
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        const emailsRepositoryMock: Pick<IEmailsRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(createEmail()),
-            update: vi.fn(),
-        }
-
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(null),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(null)
 
         const useCase = new FinishCertificateEmailSendingProcessUseCase(
             emailsRepositoryMock,
@@ -166,7 +180,10 @@ describe('FinishCertificateEmailSendingProcessUseCase', () => {
         )
 
         await expect(
-            useCase.execute({ emailId: EMAIL_ID, status: PROCESSING_STATUS_ENUM.COMPLETED }),
+            useCase.execute({
+                emailId: EMAIL_ID,
+                status: PROCESSING_STATUS_ENUM.COMPLETED,
+            }),
         ).rejects.toThrow(CertificateNotFoundError)
     })
 })

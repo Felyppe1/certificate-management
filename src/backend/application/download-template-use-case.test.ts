@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, Mock, vi, beforeEach } from 'vitest'
 import { DownloadTemplateUseCase } from './download-template-use-case'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
@@ -72,19 +72,32 @@ describe('DownloadTemplateUseCase', () => {
         })
     }
 
-    let certificateRepositoryMock: Pick<ICertificatesRepository, 'getById'>
-    let bucketMock: Pick<IBucket, 'generateSignedUrl'>
+    let certificateRepositoryStub: Pick<ICertificatesRepository, 'getById'>
+    let bucketMock: {
+        generateSignedUrl: Mock<IBucket['generateSignedUrl']>
+    }
 
-    beforeEach(() => vi.clearAllMocks())
+    beforeEach(() => {
+        certificateRepositoryStub = {
+            async getById() {
+                return createCertificateEmission()
+            },
+        }
+        bucketMock = {
+            generateSignedUrl: vi
+                .fn()
+                .mockResolvedValue(
+                    'https://storage.googleapis.com/signed-url-template',
+                ),
+        }
+    })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        certificateRepositoryMock = {
-            getById: vi.fn().mockResolvedValue(null),
-        }
+        certificateRepositoryStub.getById = async () => null
 
         const useCase = new DownloadTemplateUseCase(
             {} as IBucket,
-            certificateRepositoryMock,
+            certificateRepositoryStub,
         )
 
         await expect(
@@ -96,17 +109,12 @@ describe('DownloadTemplateUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        certificateRepositoryMock = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({ userId: 'outro-usuario' }),
-                ),
-        }
+        certificateRepositoryStub.getById = async () =>
+            createCertificateEmission({ userId: 'outro-usuario' })
 
         const useCase = new DownloadTemplateUseCase(
             {} as IBucket,
-            certificateRepositoryMock,
+            certificateRepositoryStub,
         )
 
         await expect(
@@ -118,17 +126,12 @@ describe('DownloadTemplateUseCase', () => {
     })
 
     it('deve lançar erro quando não houver template vinculado', async () => {
-        certificateRepositoryMock = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({ template: null }),
-                ),
-        }
+        certificateRepositoryStub.getById = async () =>
+            createCertificateEmission({ template: null })
 
         const useCase = new DownloadTemplateUseCase(
             {} as IBucket,
-            certificateRepositoryMock,
+            certificateRepositoryStub,
         )
 
         await expect(
@@ -142,17 +145,11 @@ describe('DownloadTemplateUseCase', () => {
     it('deve retornar a URL assinada do template com sucesso', async () => {
         const SIGNED_URL = 'https://storage.googleapis.com/signed-url-template'
 
-        certificateRepositoryMock = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-        }
-
-        bucketMock = {
-            generateSignedUrl: vi.fn().mockResolvedValue(SIGNED_URL),
-        }
+        bucketMock.generateSignedUrl.mockResolvedValue(SIGNED_URL)
 
         const useCase = new DownloadTemplateUseCase(
             bucketMock,
-            certificateRepositoryMock,
+            certificateRepositoryStub,
         )
 
         const result = await useCase.execute({

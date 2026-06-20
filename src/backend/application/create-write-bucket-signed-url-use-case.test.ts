@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, Mock } from 'vitest'
 import { CreateWriteBucketSignedUrlUseCase } from './create-write-bucket-signed-url-use-case'
 import { IBucket } from './interfaces/cloud/ibucket'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
@@ -48,24 +48,27 @@ describe('CreateWriteBucketSignedUrlUseCase', () => {
         })
     }
 
-    let bucket: Pick<IBucket, 'generateSignedUrl'>
-    let certificateRepository: Pick<ICertificatesRepository, 'getById'>
+    let bucket: { generateSignedUrl: Mock<IBucket['generateSignedUrl']> }
+    let certificateRepositoryStub: Pick<ICertificatesRepository, 'getById'>
 
     beforeEach(() => {
-        vi.clearAllMocks()
         bucket = { generateSignedUrl: vi.fn() }
-        certificateRepository = { getById: vi.fn() }
+        certificateRepositoryStub = {
+            async getById() {
+                return null
+            },
+        }
     })
 
     function makeUseCase() {
         return new CreateWriteBucketSignedUrlUseCase(
             bucket,
-            certificateRepository,
+            certificateRepositoryStub,
         )
     }
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        vi.mocked(certificateRepository.getById).mockResolvedValue(null)
+        certificateRepositoryStub.getById = async () => null
 
         await expect(
             makeUseCase().execute({
@@ -79,9 +82,8 @@ describe('CreateWriteBucketSignedUrlUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        vi.mocked(certificateRepository.getById).mockResolvedValue(
-            createCertificateEmission({ userId: 'outro-usuario' }),
-        )
+        certificateRepositoryStub.getById = async () =>
+            createCertificateEmission({ userId: 'outro-usuario' })
 
         await expect(
             makeUseCase().execute({
@@ -95,10 +97,9 @@ describe('CreateWriteBucketSignedUrlUseCase', () => {
     })
 
     it('deve gerar URL assinada para upload de template PPTX', async () => {
-        vi.mocked(certificateRepository.getById).mockResolvedValue(
-            createCertificateEmission(),
-        )
-        vi.mocked(bucket.generateSignedUrl).mockResolvedValue(
+        certificateRepositoryStub.getById = async () =>
+            createCertificateEmission()
+        bucket.generateSignedUrl.mockResolvedValue(
             'https://signed-url/upload.pptx',
         )
 
@@ -120,10 +121,9 @@ describe('CreateWriteBucketSignedUrlUseCase', () => {
     })
 
     it('deve gerar URL assinada para upload de template DOCX', async () => {
-        vi.mocked(certificateRepository.getById).mockResolvedValue(
-            createCertificateEmission(),
-        )
-        vi.mocked(bucket.generateSignedUrl).mockResolvedValue(
+        certificateRepositoryStub.getById = async () =>
+            createCertificateEmission()
+        bucket.generateSignedUrl.mockResolvedValue(
             'https://signed-url/upload.docx',
         )
 

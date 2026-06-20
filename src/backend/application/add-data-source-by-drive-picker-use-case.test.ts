@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { AddDataSourceByDrivePickerUseCase } from './add-data-source-by-drive-picker-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
@@ -103,88 +103,113 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
         })
     }
 
-    class GoogleDriveGatewayStub
-        implements Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
-    {
-        async getFileMetadata(): Promise<GetFileMetadataOutput> {
-            return {
-                name: 'dados.csv',
-                fileMimeType: DATA_SOURCE_MIME_TYPE.CSV,
-                thumbnailUrl: null,
-            }
-        }
-
-        async downloadFile(): Promise<Buffer> {
-            return Buffer.from('')
-        }
+    let certificatesRepositoryMock: {
+        getById: Mock<ICertificatesRepository['getById']>
+        update: Mock<ICertificatesRepository['update']>
     }
 
-    class SpreadsheetContentExtractorFactoryStub
-        implements Pick<ISpreadsheetContentExtractorFactory, 'create'>
-    {
-        create() {
-            return {
-                async extractColumns() {
-                    return {
-                        columns: ['Nome'],
-                        rows: [{ Nome: 'João' }],
-                    }
-                },
-            }
-        }
-    }
+    let dataSourceRowsRepositoryStub: Pick<
+        IDataSourceRowsRepository,
+        'saveMany' | 'deleteManyByCertificateEmissionId'
+    >
 
-    class TransactionManagerStub implements Pick<ITransactionManager, 'run'> {
-        async run<T>(work: () => Promise<T>): Promise<T> {
-            return work()
-        }
-    }
+    let googleDriveGatewayStub: Pick<
+        IGoogleDriveGateway,
+        'getFileMetadata' | 'downloadFile'
+    >
 
-    class GoogleAuthGatewayStub
-        implements Pick<IGoogleAuthGateway, 'checkOrGetNewAccessToken'>
-    {
-        async checkOrGetNewAccessToken() {
-            return null
-        }
-    }
+    let spreadsheetContentExtractorFactoryStub: Pick<
+        ISpreadsheetContentExtractorFactory,
+        'create'
+    >
 
-    it('deve adicionar uma fonte de dados via Drive Picker com sucesso', async () => {
-        const certificateEmission = createCertificateEmission()
+    let transactionManagerStub: Pick<ITransactionManager, 'run'>
 
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
+    let googleAuthGatewayStub: Pick<
+        IGoogleAuthGateway,
+        'checkOrGetNewAccessToken'
+    >
+
+    let usersRepositoryStub: Pick<IUsersRepository, 'getById' | 'update'>
+
+    let bucketStub: Pick<IBucket, 'deleteObject'>
+
+    beforeEach(() => {
+        certificatesRepositoryMock = {
+            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
             update: vi.fn(),
         }
 
-        const dataSourceRowsRepositoryStub: Pick<
-            IDataSourceRowsRepository,
-            'saveMany' | 'deleteManyByCertificateEmissionId'
-        > = {
-            saveMany: vi.fn(),
-            deleteManyByCertificateEmissionId: vi.fn(),
+        dataSourceRowsRepositoryStub = {
+            async saveMany() {},
+            async deleteManyByCertificateEmissionId() {},
         }
 
-        class UsersRepositoryStub
-            implements Pick<IUsersRepository, 'getById' | 'update'>
-        {
+        googleDriveGatewayStub = {
+            async getFileMetadata(): Promise<GetFileMetadataOutput> {
+                return {
+                    name: 'dados.csv',
+                    fileMimeType: DATA_SOURCE_MIME_TYPE.CSV,
+                    thumbnailUrl: null,
+                }
+            },
+            async downloadFile(): Promise<Buffer> {
+                return Buffer.from('')
+            },
+        }
+
+        spreadsheetContentExtractorFactoryStub = {
+            create() {
+                return {
+                    async extractColumns() {
+                        return {
+                            columns: ['Nome'],
+                            rows: [{ Nome: 'João' }],
+                        }
+                    },
+                }
+            },
+        }
+
+        transactionManagerStub = {
+            async run<T>(work: () => Promise<T>): Promise<T> {
+                return work()
+            },
+        }
+
+        googleAuthGatewayStub = {
+            async checkOrGetNewAccessToken() {
+                return null
+            },
+        }
+
+        usersRepositoryStub = {
             async getById(): Promise<User | null> {
                 return createUser()
-            }
-            async update(): Promise<void> {}
+            },
+            async update(): Promise<void> {},
         }
+
+        bucketStub = {
+            async deleteObject() {},
+        }
+    })
+
+    it('deve adicionar uma fonte de dados via Drive Picker com sucesso', async () => {
+        const certificateEmission = createCertificateEmission()
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
         const useCase = new AddDataSourceByDrivePickerUseCase(
             certificatesRepositoryMock,
             dataSourceRowsRepositoryStub,
-            new GoogleDriveGatewayStub(),
-            new SpreadsheetContentExtractorFactoryStub(),
-            new UsersRepositoryStub(),
-            new GoogleAuthGatewayStub(),
-            { async deleteObject() {} } as Pick<IBucket, 'deleteObject'>,
-            new TransactionManagerStub(),
+            googleDriveGatewayStub,
+            spreadsheetContentExtractorFactoryStub,
+            usersRepositoryStub,
+            googleAuthGatewayStub,
+            bucketStub,
+            transactionManagerStub,
         )
 
         await useCase.execute({
@@ -200,13 +225,7 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(null),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(null)
 
         const useCase = new AddDataSourceByDrivePickerUseCase(
             certificatesRepositoryMock,
@@ -231,17 +250,9 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({ userId: 'outro-usuario' }),
-                ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ userId: 'outro-usuario' }),
+        )
 
         const useCase = new AddDataSourceByDrivePickerUseCase(
             certificatesRepositoryMock,
@@ -266,29 +277,14 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não tiver conta Google vinculada', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
-        class UsersRepositoryStub
-            implements Pick<IUsersRepository, 'getById' | 'update'>
-        {
-            async getById(): Promise<User | null> {
-                return createUser(false)
-            }
-            async update(): Promise<void> {}
-        }
+        usersRepositoryStub.getById = async () => createUser(false)
 
         const useCase = new AddDataSourceByDrivePickerUseCase(
             certificatesRepositoryMock,
             {} as IDataSourceRowsRepository,
             {} as IGoogleDriveGateway,
             {} as ISpreadsheetContentExtractorFactory,
-            new UsersRepositoryStub(),
+            usersRepositoryStub,
             {} as IGoogleAuthGateway,
             {} as IBucket,
             {} as ITransactionManager,
@@ -306,35 +302,16 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado já tiver sido emitida', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({
-                        status: CERTIFICATE_STATUS.EMITTED,
-                    }),
-                ),
-            update: vi.fn(),
-        }
-
-        class UsersRepositoryStub
-            implements Pick<IUsersRepository, 'getById' | 'update'>
-        {
-            async getById(): Promise<User | null> {
-                return createUser()
-            }
-            async update(): Promise<void> {}
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
+        )
 
         const useCase = new AddDataSourceByDrivePickerUseCase(
             certificatesRepositoryMock,
             {} as IDataSourceRowsRepository,
             {} as IGoogleDriveGateway,
             {} as ISpreadsheetContentExtractorFactory,
-            new UsersRepositoryStub(),
+            usersRepositoryStub,
             {} as IGoogleAuthGateway,
             {} as IBucket,
             {} as ITransactionManager,
@@ -352,46 +329,29 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
     })
 
     it('deve lançar erro quando o formato do arquivo do Drive não for suportado como fonte de dados', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
+        const pdfDriveGatewayStub: Pick<
+            IGoogleDriveGateway,
+            'getFileMetadata' | 'downloadFile'
         > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
-        class PdfDriveGatewayStub
-            implements
-                Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
-        {
             async getFileMetadata(): Promise<GetFileMetadataOutput> {
                 return {
                     name: 'doc.pdf',
                     fileMimeType: 'application/pdf',
                     thumbnailUrl: null,
                 }
-            }
+            },
             async downloadFile(): Promise<Buffer> {
                 return Buffer.from('')
-            }
-        }
-
-        class UsersRepositoryStub
-            implements Pick<IUsersRepository, 'getById' | 'update'>
-        {
-            async getById(): Promise<User | null> {
-                return createUser()
-            }
-            async update(): Promise<void> {}
+            },
         }
 
         const useCase = new AddDataSourceByDrivePickerUseCase(
             certificatesRepositoryMock,
             {} as IDataSourceRowsRepository,
-            new PdfDriveGatewayStub(),
+            pdfDriveGatewayStub,
             {} as ISpreadsheetContentExtractorFactory,
-            new UsersRepositoryStub(),
-            new GoogleAuthGatewayStub(),
+            usersRepositoryStub,
+            googleAuthGatewayStub,
             {} as IBucket,
             {} as ITransactionManager,
         )
@@ -408,34 +368,19 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
     })
 
     it('deve atualizar os tokens do usuário quando o token do Google precisar ser renovado', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsRepositoryStub: Pick<
-            IDataSourceRowsRepository,
-            'saveMany' | 'deleteManyByCertificateEmissionId'
-        > = {
-            saveMany: vi.fn(),
-            deleteManyByCertificateEmissionId: vi.fn(),
-        }
-
-        const usersRepositoryMock: Pick<
-            IUsersRepository,
-            'getById' | 'update'
-        > = {
+        const usersRepositoryMock: {
+            getById: Mock<IUsersRepository['getById']>
+            update: Mock<IUsersRepository['update']>
+        } = {
             getById: vi.fn().mockResolvedValue(createUser()),
             update: vi.fn(),
         }
 
-        const googleAuthGatewayMock: Pick<
-            IGoogleAuthGateway,
-            'checkOrGetNewAccessToken'
-        > = {
+        const googleAuthGatewayMock: {
+            checkOrGetNewAccessToken: Mock<
+                IGoogleAuthGateway['checkOrGetNewAccessToken']
+            >
+        } = {
             checkOrGetNewAccessToken: vi.fn().mockResolvedValue({
                 newAccessToken: 'refreshed-token',
                 newAccessTokenExpiryDateTime: new Date(),
@@ -445,12 +390,12 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
         const useCase = new AddDataSourceByDrivePickerUseCase(
             certificatesRepositoryMock,
             dataSourceRowsRepositoryStub,
-            new GoogleDriveGatewayStub(),
-            new SpreadsheetContentExtractorFactoryStub(),
+            googleDriveGatewayStub,
+            spreadsheetContentExtractorFactoryStub,
             usersRepositoryMock,
             googleAuthGatewayMock,
-            { async deleteObject() {} } as Pick<IBucket, 'deleteObject'>,
-            new TransactionManagerStub(),
+            bucketStub,
+            transactionManagerStub,
         )
 
         await useCase.execute({
@@ -463,37 +408,20 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
     })
 
     it('deve lançar erro quando o número de imagens ultrapassar o limite permitido', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
+        const imageDriveGatewayStub: Pick<
+            IGoogleDriveGateway,
+            'getFileMetadata' | 'downloadFile'
         > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
-        class ImageDriveGatewayStub
-            implements
-                Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
-        {
             async getFileMetadata(): Promise<GetFileMetadataOutput> {
                 return {
                     name: 'foto.png',
                     fileMimeType: DATA_SOURCE_MIME_TYPE.PNG,
                     thumbnailUrl: null,
                 }
-            }
+            },
             async downloadFile(): Promise<Buffer> {
                 return Buffer.from('')
-            }
-        }
-
-        class UsersRepositoryStub
-            implements Pick<IUsersRepository, 'getById' | 'update'>
-        {
-            async getById(): Promise<User | null> {
-                return createUser()
-            }
-            async update(): Promise<void> {}
+            },
         }
 
         const fiveImageIds = Array.from(
@@ -504,10 +432,10 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
         const useCase = new AddDataSourceByDrivePickerUseCase(
             certificatesRepositoryMock,
             {} as IDataSourceRowsRepository,
-            new ImageDriveGatewayStub(),
+            imageDriveGatewayStub,
             {} as ISpreadsheetContentExtractorFactory,
-            new UsersRepositoryStub(),
-            new GoogleAuthGatewayStub(),
+            usersRepositoryStub,
+            googleAuthGatewayStub,
             {} as IBucket,
             {} as ITransactionManager,
         )
@@ -524,28 +452,11 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
     })
 
     it('deve lançar erro quando os arquivos enviados não forem todos imagens', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
-        class UsersRepositoryStub
-            implements Pick<IUsersRepository, 'getById' | 'update'>
-        {
-            async getById(): Promise<User | null> {
-                return createUser()
-            }
-            async update(): Promise<void> {}
-        }
-
         let callCount = 0
-        class MixedDriveGatewayStub
-            implements
-                Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
-        {
+        const mixedDriveGatewayStub: Pick<
+            IGoogleDriveGateway,
+            'getFileMetadata' | 'downloadFile'
+        > = {
             async getFileMetadata(): Promise<GetFileMetadataOutput> {
                 return {
                     name: 'file',
@@ -555,19 +466,19 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
                             : DATA_SOURCE_MIME_TYPE.CSV,
                     thumbnailUrl: null,
                 }
-            }
+            },
             async downloadFile(): Promise<Buffer> {
                 return Buffer.from('')
-            }
+            },
         }
 
         const useCase = new AddDataSourceByDrivePickerUseCase(
             certificatesRepositoryMock,
             {} as IDataSourceRowsRepository,
-            new MixedDriveGatewayStub(),
+            mixedDriveGatewayStub,
             {} as ISpreadsheetContentExtractorFactory,
-            new UsersRepositoryStub(),
-            new GoogleAuthGatewayStub(),
+            usersRepositoryStub,
+            googleAuthGatewayStub,
             {} as IBucket,
             {} as ITransactionManager,
         )
@@ -584,30 +495,13 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
     })
 
     it('deve lançar erro quando forem enviados múltiplos arquivos que não sejam imagens', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
-        class UsersRepositoryStub
-            implements Pick<IUsersRepository, 'getById' | 'update'>
-        {
-            async getById(): Promise<User | null> {
-                return createUser()
-            }
-            async update(): Promise<void> {}
-        }
-
         const useCase = new AddDataSourceByDrivePickerUseCase(
             certificatesRepositoryMock,
             {} as IDataSourceRowsRepository,
-            new GoogleDriveGatewayStub(),
+            googleDriveGatewayStub,
             {} as ISpreadsheetContentExtractorFactory,
-            new UsersRepositoryStub(),
-            new GoogleAuthGatewayStub(),
+            usersRepositoryStub,
+            googleAuthGatewayStub,
             {} as IBucket,
             {} as ITransactionManager,
         )
@@ -627,45 +521,25 @@ describe('AddDataSourceByDrivePickerUseCase', () => {
         const certificateEmission = createCertificateEmission({
             dataSource: createDataSource(),
         })
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsRepositoryStub: Pick<
-            IDataSourceRowsRepository,
-            'saveMany' | 'deleteManyByCertificateEmissionId'
-        > = {
-            saveMany: vi.fn(),
-            deleteManyByCertificateEmissionId: vi.fn(),
-        }
-
-        class UsersRepositoryStub
-            implements Pick<IUsersRepository, 'getById' | 'update'>
-        {
-            async getById(): Promise<User | null> {
-                return createUser()
-            }
-            async update(): Promise<void> {}
-        }
-
-        const bucketMock: Pick<IBucket, 'deleteObject'> = {
+        const bucketMock: {
+            deleteObject: Mock<IBucket['deleteObject']>
+        } = {
             deleteObject: vi.fn(),
         }
 
         const useCase = new AddDataSourceByDrivePickerUseCase(
             certificatesRepositoryMock,
             dataSourceRowsRepositoryStub,
-            new GoogleDriveGatewayStub(),
-            new SpreadsheetContentExtractorFactoryStub(),
-            new UsersRepositoryStub(),
-            new GoogleAuthGatewayStub(),
+            googleDriveGatewayStub,
+            spreadsheetContentExtractorFactoryStub,
+            usersRepositoryStub,
+            googleAuthGatewayStub,
             bucketMock,
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
 
         await useCase.execute({

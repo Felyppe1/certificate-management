@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi, Mock } from 'vitest'
 import { LinkSystemToGoogleAccountUseCase } from './link-system-to-google-account-use-case'
 import { User, UserInput } from '../domain/user'
 import { ExternalAccount } from '../domain/external-account'
@@ -9,12 +9,10 @@ import { UserNotFoundError } from '../domain/error/authentication-error/user-not
 import { SystemLoginNotEnabledError } from '../domain/error/validation-error/system-login-not-enabled-error'
 import { ExternalAccountNotFoundError } from '../domain/error/not-found-error/external-account-not-found-error'
 
-class TransactionManagerStub
-    implements Pick<ITransactionManager, 'run'>
-{
+const transactionManagerStub: Pick<ITransactionManager, 'run'> = {
     async run<T>(work: () => Promise<T>): Promise<T> {
         return work()
-    }
+    },
 }
 
 function createGoogleUser(): User {
@@ -59,28 +57,42 @@ function createSystemUser(overrides?: Partial<UserInput>): User {
 }
 
 describe('LinkSystemToGoogleAccountUseCase', () => {
-    it('deve lançar erro quando o usuário do sistema não for encontrado', async () => {
-        const usersRepository: Pick<
-            IUsersRepository,
-            'getById' | 'getByExternalAccountEmail' | 'update' | 'delete'
-        > = {
+    let usersRepositoryMock: {
+        getById: Mock<IUsersRepository['getById']>
+        getByExternalAccountEmail: Mock<
+            IUsersRepository['getByExternalAccountEmail']
+        >
+        update: Mock<IUsersRepository['update']>
+        delete: Mock<IUsersRepository['delete']>
+    }
+    let sessionsRepositoryMock: { save: Mock<ISessionsRepository['save']> }
+
+    beforeEach(() => {
+        usersRepositoryMock = {
             getById: vi.fn().mockResolvedValue(null),
-            getByExternalAccountEmail: vi.fn(),
+            getByExternalAccountEmail: vi.fn().mockResolvedValue(null),
             update: vi.fn(),
             delete: vi.fn(),
         }
+        sessionsRepositoryMock = {
+            save: vi.fn(),
+        }
+    })
+
+    it('deve lançar erro quando o usuário do sistema não for encontrado', async () => {
+        usersRepositoryMock.getById.mockResolvedValue(null)
 
         const useCase = new LinkSystemToGoogleAccountUseCase(
-            usersRepository,
-            { save: vi.fn() },
-            new TransactionManagerStub(),
+            usersRepositoryMock,
+            sessionsRepositoryMock,
+            transactionManagerStub,
         )
 
         await expect(
             useCase.execute({ currentUserId: 'id-inexistente' }),
         ).rejects.toThrow(UserNotFoundError)
 
-        expect(usersRepository.delete).not.toHaveBeenCalled()
+        expect(usersRepositoryMock.delete).not.toHaveBeenCalled()
     })
 
     it('deve lançar erro quando o usuário não tem login por email', async () => {
@@ -99,20 +111,12 @@ describe('LinkSystemToGoogleAccountUseCase', () => {
                 }),
             ],
         })
-        const usersRepository: Pick<
-            IUsersRepository,
-            'getById' | 'getByExternalAccountEmail' | 'update' | 'delete'
-        > = {
-            getById: vi.fn().mockResolvedValue(userWithoutEmail),
-            getByExternalAccountEmail: vi.fn(),
-            update: vi.fn(),
-            delete: vi.fn(),
-        }
+        usersRepositoryMock.getById.mockResolvedValue(userWithoutEmail)
 
         const useCase = new LinkSystemToGoogleAccountUseCase(
-            usersRepository,
-            { save: vi.fn() },
-            new TransactionManagerStub(),
+            usersRepositoryMock,
+            sessionsRepositoryMock,
+            transactionManagerStub,
         )
 
         await expect(
@@ -122,20 +126,13 @@ describe('LinkSystemToGoogleAccountUseCase', () => {
 
     it('deve lançar erro quando não existe conta Google com o mesmo email', async () => {
         const systemUser = createSystemUser()
-        const usersRepository: Pick<
-            IUsersRepository,
-            'getById' | 'getByExternalAccountEmail' | 'update' | 'delete'
-        > = {
-            getById: vi.fn().mockResolvedValue(systemUser),
-            getByExternalAccountEmail: vi.fn().mockResolvedValue(null),
-            update: vi.fn(),
-            delete: vi.fn(),
-        }
+        usersRepositoryMock.getById.mockResolvedValue(systemUser)
+        usersRepositoryMock.getByExternalAccountEmail.mockResolvedValue(null)
 
         const useCase = new LinkSystemToGoogleAccountUseCase(
-            usersRepository,
-            { save: vi.fn() },
-            new TransactionManagerStub(),
+            usersRepositoryMock,
+            sessionsRepositoryMock,
+            transactionManagerStub,
         )
 
         await expect(
@@ -146,23 +143,15 @@ describe('LinkSystemToGoogleAccountUseCase', () => {
     it('deve vincular conta do sistema com conta Google com sucesso', async () => {
         const systemUser = createSystemUser()
         const googleUser = createGoogleUser()
-        const sessionsRepository: Pick<ISessionsRepository, 'save'> = {
-            save: vi.fn(),
-        }
-        const usersRepository: Pick<
-            IUsersRepository,
-            'getById' | 'getByExternalAccountEmail' | 'update' | 'delete'
-        > = {
-            getById: vi.fn().mockResolvedValue(systemUser),
-            getByExternalAccountEmail: vi.fn().mockResolvedValue(googleUser),
-            update: vi.fn(),
-            delete: vi.fn(),
-        }
+        usersRepositoryMock.getById.mockResolvedValue(systemUser)
+        usersRepositoryMock.getByExternalAccountEmail.mockResolvedValue(
+            googleUser,
+        )
 
         const useCase = new LinkSystemToGoogleAccountUseCase(
-            usersRepository,
-            sessionsRepository,
-            new TransactionManagerStub(),
+            usersRepositoryMock,
+            sessionsRepositoryMock,
+            transactionManagerStub,
         )
 
         const token = await useCase.execute({
@@ -170,8 +159,12 @@ describe('LinkSystemToGoogleAccountUseCase', () => {
         })
 
         expect(token).toBeDefined()
-        expect(usersRepository.delete).toHaveBeenCalledWith(systemUser.getId())
-        expect(usersRepository.update).toHaveBeenCalledWith(googleUser)
-        expect(sessionsRepository.save).toHaveBeenCalledWith(expect.objectContaining({ userId: googleUser.getId() }))
+        expect(usersRepositoryMock.delete).toHaveBeenCalledWith(
+            systemUser.getId(),
+        )
+        expect(usersRepositoryMock.update).toHaveBeenCalledWith(googleUser)
+        expect(sessionsRepositoryMock.save).toHaveBeenCalledWith(
+            expect.objectContaining({ userId: googleUser.getId() }),
+        )
     })
 })

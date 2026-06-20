@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { CreateEmailUseCase } from './create-email-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
@@ -23,12 +23,6 @@ describe('CreateEmailUseCase', () => {
     const USER_ID = '1'
     const CERTIFICATE_ID = '1'
 
-    class TransactionManagerStub implements Pick<ITransactionManager, 'run'> {
-        async run<T>(work: () => Promise<T>): Promise<T> {
-            return work()
-        }
-    }
-
     function createDataSource() {
         return new DataSource({
             files: [
@@ -43,7 +37,9 @@ describe('CreateEmailUseCase', () => {
             thumbnailUrl: null,
             columnsRow: 1,
             dataRowStart: 2,
-            columns: [{ name: 'Email', type: 'string' as const, arrayMetadata: null }],
+            columns: [
+                { name: 'Email', type: 'string' as const, arrayMetadata: null },
+            ],
             googleAccountEmail: null,
         })
     }
@@ -60,7 +56,10 @@ describe('CreateEmailUseCase', () => {
             template: null,
             createdAt: new Date(),
             status: overrides?.status ?? CERTIFICATE_STATUS.DRAFT,
-            dataSource: overrides?.dataSource !== undefined ? overrides.dataSource : createDataSource(),
+            dataSource:
+                overrides?.dataSource !== undefined
+                    ? overrides.dataSource
+                    : createDataSource(),
             variableColumnMapping: null,
         })
     }
@@ -78,42 +77,84 @@ describe('CreateEmailUseCase', () => {
         scheduledAt: null as Date | null,
     }
 
-    it('deve criar o e-mail e enfileirar o envio imediato com sucesso', async () => {
-        const certificateEmission = createCertificateEmission()
+    let certificatesRepositoryMock: {
+        getById: Mock<ICertificatesRepository['getById']>
+        update: Mock<ICertificatesRepository['update']>
+    }
 
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
+    let dataSourceRowsReadRepositoryStub: Pick<
+        IDataSourceRowsReadRepository,
+        'countByCertificateEmissionId' | 'getManyByCertificateEmissionId'
+    >
+
+    let emailsRepositoryMock: {
+        save: Mock<IEmailsRepository['save']>
+    }
+
+    let queueMock: {
+        enqueueSendCertificateEmails: Mock<
+            IQueue['enqueueSendCertificateEmails']
+        >
+    }
+
+    let transactionManagerStub: Pick<ITransactionManager, 'run'>
+
+    beforeEach(() => {
+        certificatesRepositoryMock = {
+            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
             update: vi.fn(),
         }
-
-        const dataSourceRowsReadRepositoryMock: Pick<
-            IDataSourceRowsReadRepository,
-            'countByCertificateEmissionId' | 'getManyByCertificateEmissionId'
-        > = {
-            countByCertificateEmissionId: vi.fn().mockResolvedValue(2),
-            getManyByCertificateEmissionId: vi.fn().mockResolvedValue({
-                data: [createRow('r1', 'a@exemplo.com'), createRow('r2', 'b@exemplo.com')],
-                nextCursor: null,
-            }),
+        dataSourceRowsReadRepositoryStub = {
+            async countByCertificateEmissionId() {
+                return 1
+            },
+            async getManyByCertificateEmissionId() {
+                return {
+                    data: [createRow('r1', 'a@exemplo.com')],
+                    nextCursor: null,
+                }
+            },
         }
-
-        const emailsRepositoryMock: Pick<IEmailsRepository, 'save'> = {
+        emailsRepositoryMock = {
             save: vi.fn(),
         }
-
-        const queueMock: Pick<IQueue, 'enqueueSendCertificateEmails'> = {
+        queueMock = {
             enqueueSendCertificateEmails: vi.fn(),
         }
+        transactionManagerStub = {
+            async run<T>(work: () => Promise<T>): Promise<T> {
+                return work()
+            },
+        }
+    })
 
-        const useCase = new CreateEmailUseCase(
+    function createUseCase() {
+        return new CreateEmailUseCase(
             certificatesRepositoryMock,
-            dataSourceRowsReadRepositoryMock,
+            dataSourceRowsReadRepositoryStub,
             emailsRepositoryMock,
             queueMock,
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
+    }
 
-        await useCase.execute({ ...BASE_INPUT, scheduledAt: null })
+    it('deve criar o e-mail e enfileirar o envio imediato com sucesso', async () => {
+        const certificateEmission = createCertificateEmission()
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
+        dataSourceRowsReadRepositoryStub.countByCertificateEmissionId =
+            async () => 2
+        dataSourceRowsReadRepositoryStub.getManyByCertificateEmissionId =
+            async () => ({
+                data: [
+                    createRow('r1', 'a@exemplo.com'),
+                    createRow('r2', 'b@exemplo.com'),
+                ],
+                nextCursor: null,
+            })
+
+        await createUseCase().execute({ ...BASE_INPUT, scheduledAt: null })
 
         expect(queueMock.enqueueSendCertificateEmails).toHaveBeenCalledTimes(1)
         expect(queueMock.enqueueSendCertificateEmails).toHaveBeenCalledWith(
@@ -128,58 +169,30 @@ describe('CreateEmailUseCase', () => {
         )
         expect(certificateEmission.isEmitted()).toBe(true)
         expect(emailsRepositoryMock.save).toHaveBeenCalledTimes(1)
-        expect(certificatesRepositoryMock.update).toHaveBeenCalledWith(certificateEmission)
+        expect(certificatesRepositoryMock.update).toHaveBeenCalledWith(
+            certificateEmission,
+        )
     })
 
     it('deve criar o e-mail e agendar o envio com sucesso', async () => {
         const certificateEmission = createCertificateEmission()
-
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsReadRepositoryMock: Pick<
-            IDataSourceRowsReadRepository,
-            'countByCertificateEmissionId' | 'getManyByCertificateEmissionId'
-        > = {
-            countByCertificateEmissionId: vi.fn().mockResolvedValue(2),
-            getManyByCertificateEmissionId: vi.fn().mockResolvedValue({
-                data: [createRow('r1', 'a@exemplo.com')],
-                nextCursor: null,
-            }),
-        }
-
-        const emailsRepositoryMock: Pick<IEmailsRepository, 'save'> = {
-            save: vi.fn(),
-        }
-
-        const queueMock: Pick<IQueue, 'enqueueSendCertificateEmails'> = {
-            enqueueSendCertificateEmails: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
         const scheduledAt = new Date(Date.now() + 3_600_000)
 
-        const useCase = new CreateEmailUseCase(
-            certificatesRepositoryMock,
-            dataSourceRowsReadRepositoryMock,
-            emailsRepositoryMock,
-            queueMock,
-            new TransactionManagerStub(),
-        )
-
-        await useCase.execute({ ...BASE_INPUT, scheduledAt })
+        await createUseCase().execute({ ...BASE_INPUT, scheduledAt })
 
         expect(queueMock.enqueueSendCertificateEmails).not.toHaveBeenCalled()
-        expect(certificateEmission.serialize().status).toBe(CERTIFICATE_STATUS.SCHEDULED)
+        expect(certificateEmission.serialize().status).toBe(
+            CERTIFICATE_STATUS.SCHEDULED,
+        )
         expect(emailsRepositoryMock.save).toHaveBeenCalledTimes(1)
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(null),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(null)
 
         const useCase = new CreateEmailUseCase(
             certificatesRepositoryMock,
@@ -189,14 +202,15 @@ describe('CreateEmailUseCase', () => {
             {} as ITransactionManager,
         )
 
-        await expect(useCase.execute(BASE_INPUT)).rejects.toThrow(CertificateNotFoundError)
+        await expect(useCase.execute(BASE_INPUT)).rejects.toThrow(
+            CertificateNotFoundError,
+        )
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission({ userId: 'outro-usuario' })),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ userId: 'outro-usuario' }),
+        )
 
         const useCase = new CreateEmailUseCase(
             certificatesRepositoryMock,
@@ -206,16 +220,15 @@ describe('CreateEmailUseCase', () => {
             {} as ITransactionManager,
         )
 
-        await expect(useCase.execute(BASE_INPUT)).rejects.toThrow(NotCertificateOwnerError)
+        await expect(useCase.execute(BASE_INPUT)).rejects.toThrow(
+            NotCertificateOwnerError,
+        )
     })
 
     it('deve lançar erro quando a emissão de certificado já tiver sido emitida', async () => {
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
-            ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
+        )
 
         const useCase = new CreateEmailUseCase(
             certificatesRepositoryMock,
@@ -225,114 +238,90 @@ describe('CreateEmailUseCase', () => {
             {} as ITransactionManager,
         )
 
-        await expect(useCase.execute(BASE_INPUT)).rejects.toThrow(CertificateEmittedError)
+        await expect(useCase.execute(BASE_INPUT)).rejects.toThrow(
+            CertificateEmittedError,
+        )
     })
 
     it('deve lançar erro quando não houver fonte de dados vinculada à emissão', async () => {
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission({ dataSource: null })),
-            update: vi.fn(),
-        }
-
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ dataSource: null }),
+        )
         // countByCertificateEmissionId é chamado ANTES do check hasDataSource
-        const dataSourceRowsReadRepositoryMock: Pick<
-            IDataSourceRowsReadRepository,
-            'countByCertificateEmissionId' | 'getManyByCertificateEmissionId'
-        > = {
-            countByCertificateEmissionId: vi.fn().mockResolvedValue(0),
-            getManyByCertificateEmissionId: vi.fn(),
-        }
+        dataSourceRowsReadRepositoryStub.countByCertificateEmissionId =
+            async () => 0
 
         const useCase = new CreateEmailUseCase(
             certificatesRepositoryMock,
-            dataSourceRowsReadRepositoryMock,
+            dataSourceRowsReadRepositoryStub,
             {} as IEmailsRepository,
             {} as IQueue,
             {} as ITransactionManager,
         )
 
-        await expect(useCase.execute(BASE_INPUT)).rejects.toThrow(DataSourceNotFoundError)
+        await expect(useCase.execute(BASE_INPUT)).rejects.toThrow(
+            DataSourceNotFoundError,
+        )
     })
 
     it('deve lançar erro quando não houver linhas na fonte de dados e o envio for agendado', async () => {
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsReadRepositoryMock: Pick<
-            IDataSourceRowsReadRepository,
-            'countByCertificateEmissionId' | 'getManyByCertificateEmissionId'
-        > = {
-            countByCertificateEmissionId: vi.fn().mockResolvedValue(0),
-            getManyByCertificateEmissionId: vi.fn(),
-        }
+        dataSourceRowsReadRepositoryStub.countByCertificateEmissionId =
+            async () => 0
 
         const useCase = new CreateEmailUseCase(
             certificatesRepositoryMock,
-            dataSourceRowsReadRepositoryMock,
+            dataSourceRowsReadRepositoryStub,
             {} as IEmailsRepository,
             {} as IQueue,
             {} as ITransactionManager,
         )
 
         await expect(
-            useCase.execute({ ...BASE_INPUT, scheduledAt: new Date(Date.now() + 3_600_000) }),
+            useCase.execute({
+                ...BASE_INPUT,
+                scheduledAt: new Date(Date.now() + 3_600_000),
+            }),
         ).rejects.toThrow(NoDataSourceRowsError)
     })
 
     it('deve lançar erro quando a coluna de e-mail não existir na fonte de dados', async () => {
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsReadRepositoryMock: Pick<
-            IDataSourceRowsReadRepository,
-            'countByCertificateEmissionId' | 'getManyByCertificateEmissionId'
-        > = {
-            countByCertificateEmissionId: vi.fn().mockResolvedValue(1),
-            getManyByCertificateEmissionId: vi.fn(),
-        }
+        dataSourceRowsReadRepositoryStub.getManyByCertificateEmissionId =
+            (async () =>
+                undefined) as unknown as IDataSourceRowsReadRepository['getManyByCertificateEmissionId']
 
         const useCase = new CreateEmailUseCase(
             certificatesRepositoryMock,
-            dataSourceRowsReadRepositoryMock,
+            dataSourceRowsReadRepositoryStub,
             {} as IEmailsRepository,
             {} as IQueue,
             {} as ITransactionManager,
         )
 
         await expect(
-            useCase.execute({ ...BASE_INPUT, emailColumn: 'ColunaInexistente' }),
+            useCase.execute({
+                ...BASE_INPUT,
+                emailColumn: 'ColunaInexistente',
+            }),
         ).rejects.toThrow(UnexistentDataSourceColumnError)
     })
 
     it('deve lançar erro quando existir destinatário com e-mail inválido', async () => {
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsReadRepositoryMock: Pick<
-            IDataSourceRowsReadRepository,
-            'countByCertificateEmissionId' | 'getManyByCertificateEmissionId'
-        > = {
-            countByCertificateEmissionId: vi.fn().mockResolvedValue(1),
-            getManyByCertificateEmissionId: vi.fn().mockResolvedValue({
+        dataSourceRowsReadRepositoryStub.getManyByCertificateEmissionId =
+            async () => ({
                 data: [createRow('r1', 'email-invalido')],
                 nextCursor: null,
-            }),
-        }
+            })
 
         const useCase = new CreateEmailUseCase(
             certificatesRepositoryMock,
-            dataSourceRowsReadRepositoryMock,
+            dataSourceRowsReadRepositoryStub,
             {} as IEmailsRepository,
             {} as IQueue,
             {} as ITransactionManager,
         )
 
-        await expect(useCase.execute(BASE_INPUT)).rejects.toThrow(InvalidRecipientEmailError)
+        await expect(useCase.execute(BASE_INPUT)).rejects.toThrow(
+            InvalidRecipientEmailError,
+        )
     })
 })

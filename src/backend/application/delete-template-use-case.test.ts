@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { DeleteTemplateUseCase } from './delete-template-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
@@ -47,7 +47,9 @@ describe('DeleteTemplateUseCase', () => {
             thumbnailUrl: null,
             columnsRow: 1,
             dataRowStart: 2,
-            columns: [{ name: 'Nome', type: 'string' as const, arrayMetadata: null }],
+            columns: [
+                { name: 'Nome', type: 'string' as const, arrayMetadata: null },
+            ],
             googleAccountEmail: null,
         })
     }
@@ -73,44 +75,55 @@ describe('DeleteTemplateUseCase', () => {
         })
     }
 
-    it('deve deletar o template da emissão de certificado com sucesso', async () => {
-        const certificateEmission = createCertificateEmission()
+    let certificateEmissionsRepositoryMock: {
+        getById: Mock<ICertificatesRepository['getById']>
+        update: Mock<ICertificatesRepository['update']>
+    }
 
-        const certificateEmissionsRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
+    let dataSourceRowsRepositoryMock: {
+        resetProcessingStatusByCertificateEmissionId: Mock<
+            IDataSourceRowsRepository['resetProcessingStatusByCertificateEmissionId']
+        >
+    }
+
+    let bucketStub: Pick<IBucket, 'deleteObject'>
+
+    let transactionManagerStub: Pick<ITransactionManager, 'run'>
+
+    beforeEach(() => {
+        certificateEmissionsRepositoryMock = {
+            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
             update: vi.fn(),
         }
-
-        const dataSourceRowsRepositoryStub: Pick<
-            IDataSourceRowsRepository,
-            'resetProcessingStatusByCertificateEmissionId'
-        > = {
+        dataSourceRowsRepositoryMock = {
             resetProcessingStatusByCertificateEmissionId: vi.fn(),
         }
-
-        class BucketStub implements Pick<IBucket, 'deleteObject'> {
-            async deleteObject() {}
+        bucketStub = {
+            async deleteObject() {},
         }
-
-        class TransactionManagerStub
-            implements Pick<ITransactionManager, 'run'>
-        {
+        transactionManagerStub = {
             async run<T>(work: () => Promise<T>): Promise<T> {
                 return work()
-            }
+            },
         }
+    })
 
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
+    function createUseCase() {
+        return new DeleteTemplateUseCase(
             certificateEmissionsRepositoryMock,
-            dataSourceRowsRepositoryStub,
-            new BucketStub(),
-            new TransactionManagerStub(),
+            dataSourceRowsRepositoryMock,
+            bucketStub,
+            transactionManagerStub,
+        )
+    }
+
+    it('deve deletar o template da emissão de certificado com sucesso', async () => {
+        const certificateEmission = createCertificateEmission()
+        certificateEmissionsRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
         )
 
-        await deleteTemplateUseCase.execute({
+        await createUseCase().execute({
             certificateId: CERTIFICATE_ID,
             userId: USER_ID,
         })
@@ -122,72 +135,27 @@ describe('DeleteTemplateUseCase', () => {
     })
 
     it('deve resetar o status de processamento das linhas da fonte de dados ao deletar o template quando houver fonte de dados vinculada', async () => {
-        const certificateEmission = createCertificateEmission({
-            dataSource: createDataSource(),
-        })
-
-        const certificateEmissionsRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsRepositoryStub: Pick<
-            IDataSourceRowsRepository,
-            'resetProcessingStatusByCertificateEmissionId'
-        > = {
-            resetProcessingStatusByCertificateEmissionId: vi.fn(),
-        }
-
-        class BucketStub implements Pick<IBucket, 'deleteObject'> {
-            async deleteObject() {}
-        }
-
-        class TransactionManagerStub
-            implements Pick<ITransactionManager, 'run'>
-        {
-            async run<T>(work: () => Promise<T>): Promise<T> {
-                return work()
-            }
-        }
-
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepositoryMock,
-            dataSourceRowsRepositoryStub,
-            new BucketStub(),
-            new TransactionManagerStub(),
+        certificateEmissionsRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({
+                dataSource: createDataSource(),
+            }),
         )
 
-        await deleteTemplateUseCase.execute({
+        await createUseCase().execute({
             certificateId: CERTIFICATE_ID,
             userId: USER_ID,
         })
 
         expect(
-            dataSourceRowsRepositoryStub.resetProcessingStatusByCertificateEmissionId,
+            dataSourceRowsRepositoryMock.resetProcessingStatusByCertificateEmissionId,
         ).toHaveBeenCalledWith(CERTIFICATE_ID)
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        const certificateEmissionsRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(null),
-            update: vi.fn(),
-        }
-
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepositoryMock,
-            {} as IDataSourceRowsRepository,
-            {} as IBucket,
-            {} as ITransactionManager,
-        )
+        certificateEmissionsRepositoryMock.getById.mockResolvedValue(null)
 
         await expect(
-            deleteTemplateUseCase.execute({
+            createUseCase().execute({
                 certificateId: 'nao-existe',
                 userId: USER_ID,
             }),
@@ -197,27 +165,12 @@ describe('DeleteTemplateUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        const certificateEmissionsRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({ userId: 'outro-usuario' }),
-                ),
-            update: vi.fn(),
-        }
-
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepositoryMock,
-            {} as IDataSourceRowsRepository,
-            {} as IBucket,
-            {} as ITransactionManager,
+        certificateEmissionsRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ userId: 'outro-usuario' }),
         )
 
         await expect(
-            deleteTemplateUseCase.execute({
+            createUseCase().execute({
                 certificateId: CERTIFICATE_ID,
                 userId: USER_ID,
             }),
@@ -227,27 +180,14 @@ describe('DeleteTemplateUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado já tiver sido emitida', async () => {
-        const certificateEmissionsRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({
-                    status: CERTIFICATE_STATUS.EMITTED,
-                }),
-            ),
-            update: vi.fn(),
-        }
-
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepositoryMock,
-            {} as IDataSourceRowsRepository,
-            {} as IBucket,
-            {} as ITransactionManager,
+        certificateEmissionsRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({
+                status: CERTIFICATE_STATUS.EMITTED,
+            }),
         )
 
         await expect(
-            deleteTemplateUseCase.execute({
+            createUseCase().execute({
                 certificateId: CERTIFICATE_ID,
                 userId: USER_ID,
             }),
@@ -257,27 +197,12 @@ describe('DeleteTemplateUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado não tiver template vinculado', async () => {
-        const certificateEmissionsRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({ template: null }),
-                ),
-            update: vi.fn(),
-        }
-
-        const deleteTemplateUseCase = new DeleteTemplateUseCase(
-            certificateEmissionsRepositoryMock,
-            {} as IDataSourceRowsRepository,
-            {} as IBucket,
-            {} as ITransactionManager,
+        certificateEmissionsRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ template: null }),
         )
 
         await expect(
-            deleteTemplateUseCase.execute({
+            createUseCase().execute({
                 certificateId: CERTIFICATE_ID,
                 userId: USER_ID,
             }),

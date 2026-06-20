@@ -1,78 +1,120 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, Mock } from 'vitest'
 import { RefreshGoogleAccessTokenUseCase } from './refresh-google-access-token-use-case'
+import { User, UserInput } from '../domain/user'
+import { ExternalAccount } from '../domain/external-account'
+import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
 import { GoogleAccountNotFoundError } from '../domain/error/forbidden-error/google-account-not-found-error'
 
-function createUserMock(overrides: Record<string, unknown> = {}) {
-    return {
-        getId: () => 'user-id',
-        hasExternalAccount: vi.fn().mockReturnValue(true),
-        getGoogleAccessToken: vi.fn().mockReturnValue('access-token'),
-        getGoogleRefreshToken: vi.fn().mockReturnValue('refresh-token'),
-        getGoogleAccessTokenExpiryDateTime: vi.fn().mockReturnValue(new Date()),
-        updateExternalAccountTokens: vi.fn(),
+function createGoogleAccount() {
+    return new ExternalAccount({
+        provider: 'GOOGLE',
+        providerUserId: 'google-id',
+        email: 'user@example.com',
+        accessToken: 'current-access-token',
+        refreshToken: 'refresh-token',
+        accessTokenExpiryDateTime: new Date(),
+        refreshTokenExpiryDateTime: new Date(),
+    })
+}
+
+function createUser(overrides?: Partial<UserInput>): User {
+    return new User({
+        id: 'user-id',
+        email: 'user@example.com',
+        isEmailVerified: true,
+        name: 'Test User',
+        passwordHash: 'hash',
+        credits: 300,
+        externalAccounts: [createGoogleAccount()],
+        emailVerificationCode: null,
+        resetPasswordCode: null,
+        emailChangeCode: null,
         ...overrides,
-    }
+    })
 }
 
 describe('RefreshGoogleAccessTokenUseCase', () => {
-    const usersRepository = {
-        getById: vi.fn(),
-        update: vi.fn(),
+    let usersRepositoryMock: {
+        getById: Mock<IUsersRepository['getById']>
+        update: Mock<IUsersRepository['update']>
     }
-
-    const googleAuthGateway = {
-        checkOrGetNewAccessToken: vi.fn(),
-    }
-
-    let useCase: RefreshGoogleAccessTokenUseCase
+    let googleAuthGatewayStub: Pick<
+        IGoogleAuthGateway,
+        'checkOrGetNewAccessToken'
+    >
 
     beforeEach(() => {
-        vi.clearAllMocks()
-        useCase = new RefreshGoogleAccessTokenUseCase(usersRepository, googleAuthGateway)
+        usersRepositoryMock = {
+            getById: vi.fn().mockResolvedValue(null),
+            update: vi.fn(),
+        }
+        googleAuthGatewayStub = {
+            checkOrGetNewAccessToken: async () => null,
+        }
     })
 
-    it('deve lançar erro se o usuário não for encontrado', async () => {
-        usersRepository.getById.mockResolvedValue(null)
+    it('deve lançar erro quando usuário não encontrado', async () => {
+        usersRepositoryMock.getById.mockResolvedValue(null)
+
+        const useCase = new RefreshGoogleAccessTokenUseCase(
+            usersRepositoryMock,
+            googleAuthGatewayStub as IGoogleAuthGateway,
+        )
 
         await expect(
-            useCase.execute({ userId: 'invalido' }),
+            useCase.execute({ userId: 'id-inexistente' }),
         ).rejects.toThrow(GoogleAccountNotFoundError)
     })
 
-    it('deve lançar erro se o usuário não tiver conta Google', async () => {
-        const user = createUserMock({ hasExternalAccount: vi.fn().mockReturnValue(false) })
-        usersRepository.getById.mockResolvedValue(user)
+    it('deve lançar erro quando usuário não tem conta Google', async () => {
+        const user = createUser({ externalAccounts: [] })
+        usersRepositoryMock.getById.mockResolvedValue(user)
 
-        await expect(
-            useCase.execute({ userId: 'user-id' }),
-        ).rejects.toThrow(GoogleAccountNotFoundError)
+        const useCase = new RefreshGoogleAccessTokenUseCase(
+            usersRepositoryMock,
+            googleAuthGatewayStub as IGoogleAuthGateway,
+        )
+
+        await expect(useCase.execute({ userId: 'user-id' })).rejects.toThrow(
+            GoogleAccountNotFoundError,
+        )
     })
 
-    it('deve retornar o token atual sem atualizar se ainda válido', async () => {
-        const user = createUserMock()
-        usersRepository.getById.mockResolvedValue(user)
-        googleAuthGateway.checkOrGetNewAccessToken.mockResolvedValue(null)
+    it('deve retornar o token atual sem chamar update quando token ainda é válido', async () => {
+        const user = createUser()
+        usersRepositoryMock.getById.mockResolvedValue(user)
+        googleAuthGatewayStub.checkOrGetNewAccessToken = async () => null
 
-        const result = await useCase.execute({ userId: 'user-id' })
+        const useCase = new RefreshGoogleAccessTokenUseCase(
+            usersRepositoryMock,
+            googleAuthGatewayStub as IGoogleAuthGateway,
+        )
 
-        expect(result).toBe('access-token')
-        expect(usersRepository.update).not.toHaveBeenCalled()
+        const token = await useCase.execute({ userId: 'user-id' })
+
+        expect(token).toBe('current-access-token')
+        expect(usersRepositoryMock.update).not.toHaveBeenCalled()
     })
 
-    it('deve atualizar tokens e retornar novo access token quando expirado', async () => {
-        const user = createUserMock()
-        usersRepository.getById.mockResolvedValue(user)
-        googleAuthGateway.checkOrGetNewAccessToken.mockResolvedValue({
-            newAccessToken: 'novo-access-token',
-            newAccessTokenExpiryDateTime: new Date(),
+    it('deve atualizar e persistir o novo token quando o token expirou', async () => {
+        const user = createUser()
+        usersRepositoryMock.getById.mockResolvedValue(user)
+        const newExpiryDate = new Date(Date.now() + 3600_000)
+        googleAuthGatewayStub.checkOrGetNewAccessToken = async () => ({
+            newAccessToken: 'new-access-token',
+            newAccessTokenExpiryDateTime: newExpiryDate,
         })
 
-        user.getGoogleAccessToken = vi.fn().mockReturnValue('novo-access-token')
+        const useCase = new RefreshGoogleAccessTokenUseCase(
+            usersRepositoryMock,
+            googleAuthGatewayStub as IGoogleAuthGateway,
+        )
 
-        const result = await useCase.execute({ userId: 'user-id' })
+        const token = await useCase.execute({ userId: 'user-id' })
 
-        expect(user.updateExternalAccountTokens).toHaveBeenCalled()
-        expect(usersRepository.update).toHaveBeenCalledWith(user)
-        expect(result).toBe('novo-access-token')
+        expect(token).toBe('new-access-token')
+        expect(usersRepositoryMock.update).toHaveBeenCalledOnce()
+        expect(user.getGoogleAccessToken()).toBe('new-access-token')
     })
 })

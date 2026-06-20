@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { DeleteCertificateEmissionUseCase } from './delete-certificate-emission-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IBucket } from './interfaces/cloud/ibucket'
@@ -46,7 +46,9 @@ describe('DeleteCertificateEmissionUseCase', () => {
             thumbnailUrl: null,
             columnsRow: 1,
             dataRowStart: 2,
-            columns: [{ name: 'Nome', type: 'string' as const, arrayMetadata: null }],
+            columns: [
+                { name: 'Nome', type: 'string' as const, arrayMetadata: null },
+            ],
             googleAccountEmail: null,
         })
     }
@@ -61,37 +63,61 @@ describe('DeleteCertificateEmissionUseCase', () => {
             id: CERTIFICATE_ID,
             name: 'Meu Certificado',
             userId: overrides?.userId ?? USER_ID,
-            template: overrides?.template !== undefined ? overrides.template : createTemplate(),
+            template:
+                overrides?.template !== undefined
+                    ? overrides.template
+                    : createTemplate(),
             createdAt: new Date(),
             status: overrides?.status ?? CERTIFICATE_STATUS.DRAFT,
-            dataSource: overrides?.dataSource !== undefined ? overrides.dataSource : null,
+            dataSource:
+                overrides?.dataSource !== undefined
+                    ? overrides.dataSource
+                    : null,
             variableColumnMapping: null,
         })
     }
 
-    it('deve deletar a emissão com template e sem fonte de dados com sucesso', async () => {
-        const certificateEmission = createCertificateEmission({
-            template: createTemplate(),
-            dataSource: null,
-        })
+    let certificatesRepositoryMock: {
+        getById: Mock<ICertificatesRepository['getById']>
+        delete: Mock<ICertificatesRepository['delete']>
+    }
 
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'delete'> = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
+    let bucketMock: {
+        deleteObject: Mock<IBucket['deleteObject']>
+    }
+
+    beforeEach(() => {
+        certificatesRepositoryMock = {
+            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
             delete: vi.fn(),
         }
 
-        const bucketMock: Pick<IBucket, 'deleteObject'> = {
+        bucketMock = {
             deleteObject: vi.fn().mockResolvedValue(undefined),
         }
+    })
+
+    it('deve deletar a emissão com template e sem fonte de dados com sucesso', async () => {
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({
+                template: createTemplate(),
+                dataSource: null,
+            }),
+        )
 
         const useCase = new DeleteCertificateEmissionUseCase(
             certificatesRepositoryMock,
             bucketMock,
         )
 
-        await useCase.execute({ certificateId: CERTIFICATE_ID, userId: USER_ID })
+        await useCase.execute({
+            certificateId: CERTIFICATE_ID,
+            userId: USER_ID,
+        })
 
-        expect(certificatesRepositoryMock.delete).toHaveBeenCalledWith(CERTIFICATE_ID)
+        expect(certificatesRepositoryMock.delete).toHaveBeenCalledWith(
+            CERTIFICATE_ID,
+        )
         expect(bucketMock.deleteObject).toHaveBeenCalledTimes(1)
         expect(bucketMock.deleteObject).toHaveBeenCalledWith(
             expect.objectContaining({ objectName: TEMPLATE_STORAGE_URL }),
@@ -99,28 +125,26 @@ describe('DeleteCertificateEmissionUseCase', () => {
     })
 
     it('deve deletar a emissão com fonte de dados e sem template com sucesso', async () => {
-        const certificateEmission = createCertificateEmission({
-            template: null,
-            dataSource: createDataSource(),
-        })
-
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'delete'> = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            delete: vi.fn(),
-        }
-
-        const bucketMock: Pick<IBucket, 'deleteObject'> = {
-            deleteObject: vi.fn().mockResolvedValue(undefined),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({
+                template: null,
+                dataSource: createDataSource(),
+            }),
+        )
 
         const useCase = new DeleteCertificateEmissionUseCase(
             certificatesRepositoryMock,
             bucketMock,
         )
 
-        await useCase.execute({ certificateId: CERTIFICATE_ID, userId: USER_ID })
+        await useCase.execute({
+            certificateId: CERTIFICATE_ID,
+            userId: USER_ID,
+        })
 
-        expect(certificatesRepositoryMock.delete).toHaveBeenCalledWith(CERTIFICATE_ID)
+        expect(certificatesRepositoryMock.delete).toHaveBeenCalledWith(
+            CERTIFICATE_ID,
+        )
         expect(bucketMock.deleteObject).toHaveBeenCalledTimes(1)
         expect(bucketMock.deleteObject).toHaveBeenCalledWith(
             expect.objectContaining({ objectName: DATASOURCE_STORAGE_URL }),
@@ -128,36 +152,28 @@ describe('DeleteCertificateEmissionUseCase', () => {
     })
 
     it('deve deletar a emissão sem template e sem fonte de dados com sucesso', async () => {
-        const certificateEmission = createCertificateEmission({
-            template: null,
-            dataSource: null,
-        })
-
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'delete'> = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            delete: vi.fn(),
-        }
-
-        const bucketMock: Pick<IBucket, 'deleteObject'> = {
-            deleteObject: vi.fn().mockResolvedValue(undefined),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ template: null, dataSource: null }),
+        )
 
         const useCase = new DeleteCertificateEmissionUseCase(
             certificatesRepositoryMock,
             bucketMock,
         )
 
-        await useCase.execute({ certificateId: CERTIFICATE_ID, userId: USER_ID })
+        await useCase.execute({
+            certificateId: CERTIFICATE_ID,
+            userId: USER_ID,
+        })
 
-        expect(certificatesRepositoryMock.delete).toHaveBeenCalledWith(CERTIFICATE_ID)
+        expect(certificatesRepositoryMock.delete).toHaveBeenCalledWith(
+            CERTIFICATE_ID,
+        )
         expect(bucketMock.deleteObject).not.toHaveBeenCalled()
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'delete'> = {
-            getById: vi.fn().mockResolvedValue(null),
-            delete: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(null)
 
         const useCase = new DeleteCertificateEmissionUseCase(
             certificatesRepositoryMock,
@@ -172,10 +188,9 @@ describe('DeleteCertificateEmissionUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'delete'> = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission({ userId: 'outro-usuario' })),
-            delete: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ userId: 'outro-usuario' }),
+        )
 
         const useCase = new DeleteCertificateEmissionUseCase(
             certificatesRepositoryMock,
@@ -190,12 +205,9 @@ describe('DeleteCertificateEmissionUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado já tiver sido emitida', async () => {
-        const certificatesRepositoryMock: Pick<ICertificatesRepository, 'getById' | 'delete'> = {
-            getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
-            ),
-            delete: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
+        )
 
         const useCase = new DeleteCertificateEmissionUseCase(
             certificatesRepositoryMock,

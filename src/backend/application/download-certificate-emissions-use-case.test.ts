@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, beforeEach } from 'vitest'
 import { PassThrough } from 'stream'
 import { DownloadCertificateEmissionsUseCase } from './download-certificate-emissions-use-case'
 import { IBucket } from './interfaces/cloud/ibucket'
@@ -74,19 +74,34 @@ describe('DownloadCertificateEmissionsUseCase', () => {
         })
     }
 
-    let certificateRepositoryMock: Pick<ICertificatesRepository, 'getById'>
-    let bucketMock: Pick<IBucket, 'getObjectsWithPrefix'>
+    let certificateRepositoryStub: Pick<ICertificatesRepository, 'getById'>
+    let bucketStub: Pick<IBucket, 'getObjectsWithPrefix'>
 
-    beforeEach(() => vi.clearAllMocks())
+    beforeEach(() => {
+        certificateRepositoryStub = {
+            async getById() {
+                return createCertificateEmission()
+            },
+        }
+
+        bucketStub = {
+            async getObjectsWithPrefix() {
+                return [
+                    {
+                        name: `users/${USER_ID}/certificates/${CERTIFICATE_ID}/certificate-row-1.pdf`,
+                        createReadStream: () => new PassThrough(),
+                    },
+                ]
+            },
+        }
+    })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        certificateRepositoryMock = {
-            getById: vi.fn().mockResolvedValue(null),
-        }
+        certificateRepositoryStub.getById = async () => null
 
         const useCase = new DownloadCertificateEmissionsUseCase(
             {} as IBucket,
-            certificateRepositoryMock,
+            certificateRepositoryStub,
             {} as IDataSourceRowsRepository,
         )
 
@@ -101,17 +116,12 @@ describe('DownloadCertificateEmissionsUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        certificateRepositoryMock = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({ userId: 'outro-usuario' }),
-                ),
-        }
+        certificateRepositoryStub.getById = async () =>
+            createCertificateEmission({ userId: 'outro-usuario' })
 
         const useCase = new DownloadCertificateEmissionsUseCase(
             {} as IBucket,
-            certificateRepositoryMock,
+            certificateRepositoryStub,
             {} as IDataSourceRowsRepository,
         )
 
@@ -126,22 +136,9 @@ describe('DownloadCertificateEmissionsUseCase', () => {
     })
 
     it('deve retornar um stream para download com sucesso', async () => {
-        certificateRepositoryMock = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-        }
-
-        bucketMock = {
-            getObjectsWithPrefix: vi.fn().mockResolvedValue([
-                {
-                    name: `users/${USER_ID}/certificates/${CERTIFICATE_ID}/certificate-row-1.pdf`,
-                    createReadStream: () => new PassThrough(),
-                },
-            ]),
-        }
-
         const useCase = new DownloadCertificateEmissionsUseCase(
-            bucketMock,
-            certificateRepositoryMock,
+            bucketStub,
+            certificateRepositoryStub,
             {} as IDataSourceRowsRepository,
         )
 

@@ -14,16 +14,7 @@
 
 Arquivo: `vitest.config.unit.ts`
 
-```ts
-// include
-'src/**/*.test.ts'
-
-// exclude
-'src/**/*.integration.test.ts'
-'src/**/*.e2e.test.ts'
-```
-
-Setup em `src/tests/setup.unit.ts` — define variáveis de ambiente estáticas (credenciais fictícias de GCP, banco, OAuth).
+Setup em `src/tests/setup.unit.ts` — define variáveis de ambiente estáticas.
 
 Rodar: `npm run test:unit`
 
@@ -44,17 +35,22 @@ src/backend/application/login-google-use-case.test.ts
 ### Domínio — regra de negócio pura
 
 ```ts
-// src/backend/domain/email.test.ts
-describe('Email Domain', () => {
-    describe('Validação de destinatários', () => {
-        it('deve permitir envio quando todos os destinatários informados forem válidos', () => {
-            const result = Email.validateEmailColumnRecords(['user@email.com'])
-            expect(result).toBe(true)
+// src/backend/domain/product.test.ts
+describe('Product Domain', () => {
+    describe('Criação', () => {
+        it('deve criar produto com sucesso', () => {
+            const product = Product.create({ name: 'Camiseta', priceInCents: 4990, stock: 10 })
+            expect(product.name).toBe('Camiseta')
+            expect(product.priceInCents).toBe(4990)
+            expect(product.stock).toBe(10)
         })
 
-        it('deve impedir envio quando existir destinatário inválido na lista', () => {
-            const result = Email.validateEmailColumnRecords(['invalid-email'])
-            expect(result).toBe(false)
+        describe('Validações', () => {
+            it('deve dar erro quando o nome estiver vazio', () => {
+                expect(() => Product.create({ name: '', priceInCents: 4990, stock: 10 }))
+                    .toThrow(InvalidProductNameError)
+            })
+            ...
         })
     })
 })
@@ -90,12 +86,6 @@ it('deve dar erro ao digitar a senha atual errada', async () => {
 })
 ```
 
-Pode-se checar a categoria quando o teste não depende do erro exato:
-
-```ts
-expect(() => user.changeEmail('user@gmail.com')).toThrow(ValidationError)
-```
-
 **Anti-padrão — `try/catch`**: se a função não lançar, o bloco `catch` nunca executa e o teste passa sem verificar nada.
 
 ```ts
@@ -111,7 +101,7 @@ try {
 
 ```ts
 // src/backend/application/delete-template-use-case.test.ts
-it('should delete a template successfully', async () => {
+it('deve deletar o template com sucesso', async () => {
     const certificateEmissionsRepositoryMock: Pick<
         ICertificatesRepository,
         'getById' | 'update'
@@ -120,21 +110,21 @@ it('should delete a template successfully', async () => {
         update: vi.fn(),
     }
 
-    class BucketStub implements Pick<IBucket, 'deleteObject'> {
-        async deleteObject() {}
+    const bucketStub: Pick<IBucket, 'deleteObject'> = {
+        async deleteObject() {},
     }
 
-    class TransactionManagerStub implements Pick<ITransactionManager, 'run'> {
+    const transactionManagerStub: Pick<ITransactionManager, 'run'> = {
         async run<T>(work: () => Promise<T>): Promise<T> {
             return work()
-        }
+        },
     }
 
     const useCase = new DeleteTemplateUseCase(
         certificateEmissionsRepositoryMock,
         { resetProcessingStatusByCertificateEmissionId: vi.fn() },
-        new BucketStub(),
-        new TransactionManagerStub(),
+        bucketStub,
+        transactionManagerStub,
     )
 
     await expect(
@@ -149,7 +139,7 @@ it('should delete a template successfully', async () => {
 ### Use Case — caminho de erro (dummy)
 
 ```ts
-it('should not delete a template when the certificate is not found', async () => {
+it('não deve deletar o template quando o certificado não foi encontrado', async () => {
     const repositoryMock: Pick<ICertificatesRepository, 'getById' | 'update'> = {
         getById: vi.fn().mockResolvedValue(null),
         update: vi.fn(),

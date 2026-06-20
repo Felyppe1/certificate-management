@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, Mock } from 'vitest'
 import { ResendEmailsUseCase } from './resend-emails-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
@@ -95,16 +95,26 @@ describe('ResendEmailsUseCase', () => {
         }
     }
 
-    let certificateEmissionsRepository: Pick<ICertificatesRepository, 'getById'>
-    let dataSourceRowsReadRepository: Pick<
-        IDataSourceRowsReadRepository,
-        'getManyByCertificateEmissionId'
-    >
-    let emailsRepository: Pick<IEmailsRepository, 'getByCertificateEmissionId'>
-    let queue: Pick<IQueue, 'enqueueSendCertificateEmails'>
+    let certificateEmissionsRepository: {
+        getById: Mock<ICertificatesRepository['getById']>
+    }
+    let dataSourceRowsReadRepository: {
+        getManyByCertificateEmissionId: Mock<
+            IDataSourceRowsReadRepository['getManyByCertificateEmissionId']
+        >
+    }
+    let emailsRepository: {
+        getByCertificateEmissionId: Mock<
+            IEmailsRepository['getByCertificateEmissionId']
+        >
+    }
+    let queue: {
+        enqueueSendCertificateEmails: Mock<
+            IQueue['enqueueSendCertificateEmails']
+        >
+    }
 
     beforeEach(() => {
-        vi.clearAllMocks()
         certificateEmissionsRepository = { getById: vi.fn() }
         dataSourceRowsReadRepository = {
             getManyByCertificateEmissionId: vi.fn(),
@@ -133,9 +143,7 @@ describe('ResendEmailsUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
-            null,
-        )
+        certificateEmissionsRepository.getById.mockResolvedValue(null)
 
         await expect(
             makeUseCase().execute({
@@ -147,7 +155,7 @@ describe('ResendEmailsUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({ userId: 'outro-usuario' }),
         )
 
@@ -161,7 +169,7 @@ describe('ResendEmailsUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado não tiver sido enviada', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({ status: CERTIFICATE_STATUS.DRAFT }),
         )
 
@@ -175,7 +183,7 @@ describe('ResendEmailsUseCase', () => {
     })
 
     it('deve lançar erro quando não houver fonte de dados vinculada', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({
                 status: CERTIFICATE_STATUS.EMITTED,
                 dataSource: null,
@@ -192,15 +200,13 @@ describe('ResendEmailsUseCase', () => {
     })
 
     it('deve lançar erro quando a configuração de e-mail não for encontrada', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({
                 status: CERTIFICATE_STATUS.EMITTED,
                 dataSource: createDataSource(),
             }),
         )
-        vi.mocked(
-            emailsRepository.getByCertificateEmissionId,
-        ).mockResolvedValue(null)
+        emailsRepository.getByCertificateEmissionId.mockResolvedValue(null)
 
         await expect(
             makeUseCase().execute({
@@ -212,16 +218,16 @@ describe('ResendEmailsUseCase', () => {
     })
 
     it('deve lançar erro quando a coluna de e-mail não existir na fonte de dados', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({
                 status: CERTIFICATE_STATUS.EMITTED,
                 dataSource: createDataSource([{ name: 'Nome' }]),
             }),
         )
         const emailMock = createEmailMock()
-        vi.mocked(
-            emailsRepository.getByCertificateEmissionId,
-        ).mockResolvedValue(emailMock as any)
+        emailsRepository.getByCertificateEmissionId.mockResolvedValue(
+            emailMock as any,
+        )
 
         await expect(
             makeUseCase().execute({
@@ -233,22 +239,22 @@ describe('ResendEmailsUseCase', () => {
     })
 
     it('deve lançar erro quando algum dos IDs de linha não for encontrado', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({
                 status: CERTIFICATE_STATUS.EMITTED,
                 dataSource: createDataSource([{ name: 'Email' }]),
             }),
         )
         const emailMock = createEmailMock()
-        vi.mocked(
-            emailsRepository.getByCertificateEmissionId,
-        ).mockResolvedValue(emailMock as any)
-        vi.mocked(
-            dataSourceRowsReadRepository.getManyByCertificateEmissionId,
-        ).mockResolvedValue({
-            data: [{ id: 'row-1', data: { Email: 'a@example.com' } }],
-            nextCursor: null,
-        })
+        emailsRepository.getByCertificateEmissionId.mockResolvedValue(
+            emailMock as any,
+        )
+        dataSourceRowsReadRepository.getManyByCertificateEmissionId.mockResolvedValue(
+            {
+                data: [{ id: 'row-1', data: { Email: 'a@example.com' } }],
+                nextCursor: null,
+            },
+        )
 
         await expect(
             makeUseCase().execute({
@@ -260,23 +266,23 @@ describe('ResendEmailsUseCase', () => {
     })
 
     it('deve enfileirar o envio de e-mails no caminho feliz', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({
                 status: CERTIFICATE_STATUS.EMITTED,
                 dataSource: createDataSource([{ name: 'Email' }]),
             }),
         )
         const emailMock = createEmailMock()
-        vi.mocked(
-            emailsRepository.getByCertificateEmissionId,
-        ).mockResolvedValue(emailMock as any)
-        vi.mocked(
-            dataSourceRowsReadRepository.getManyByCertificateEmissionId,
-        ).mockResolvedValue({
-            data: [{ id: 'row-1', data: { Email: 'a@example.com' } }],
-            nextCursor: null,
-        })
-        vi.mocked(queue.enqueueSendCertificateEmails).mockResolvedValue()
+        emailsRepository.getByCertificateEmissionId.mockResolvedValue(
+            emailMock as any,
+        )
+        dataSourceRowsReadRepository.getManyByCertificateEmissionId.mockResolvedValue(
+            {
+                data: [{ id: 'row-1', data: { Email: 'a@example.com' } }],
+                nextCursor: null,
+            },
+        )
+        queue.enqueueSendCertificateEmails.mockResolvedValue()
 
         await makeUseCase().execute({
             userId: USER_ID,

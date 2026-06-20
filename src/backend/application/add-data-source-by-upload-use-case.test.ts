@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { AddDataSourceByUploadUseCase } from './add-data-source-by-upload-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
@@ -39,7 +39,9 @@ describe('AddDataSourceByUploadUseCase', () => {
             thumbnailUrl: null,
             columnsRow: 1,
             dataRowStart: 2,
-            columns: [{ name: 'Nome', type: 'string' as const, arrayMetadata: null }],
+            columns: [
+                { name: 'Nome', type: 'string' as const, arrayMetadata: null },
+            ],
             googleAccountEmail: null,
         })
     }
@@ -68,69 +70,89 @@ describe('AddDataSourceByUploadUseCase', () => {
     }
 
     function createImageFile(mimeType = DATA_SOURCE_MIME_TYPE.PNG) {
-        return new File([Buffer.from('imgdata')], 'foto.png', { type: mimeType })
+        return new File([Buffer.from('imgdata')], 'foto.png', {
+            type: mimeType,
+        })
     }
 
-    class BucketStub implements Pick<IBucket, 'uploadObject' | 'deleteObject'> {
-        async uploadObject(): Promise<string> {
-            return ''
-        }
-        async deleteObject(): Promise<void> {}
+    let certificatesRepositoryMock: {
+        getById: Mock<ICertificatesRepository['getById']>
+        update: Mock<ICertificatesRepository['update']>
     }
 
-    class TransactionManagerStub implements Pick<ITransactionManager, 'run'> {
-        async run<T>(work: () => Promise<T>): Promise<T> {
-            return work()
-        }
-    }
+    let bucketStub: Pick<IBucket, 'uploadObject' | 'deleteObject'>
 
-    class SpreadsheetContentExtractorFactoryStub
-        implements Pick<ISpreadsheetContentExtractorFactory, 'create'>
-    {
-        create() {
-            return {
-                async extractColumns() {
-                    return {
-                        columns: ['Nome'],
-                        rows: [{ Nome: 'João' }],
-                    }
-                },
-            }
-        }
-    }
+    let transactionManagerStub: Pick<ITransactionManager, 'run'>
 
-    class UsersRepositoryStub implements Pick<IUsersRepository, 'getById'> {
-        async getById(): Promise<User | null> {
-            return null
-        }
-    }
+    let spreadsheetContentExtractorFactoryStub: Pick<
+        ISpreadsheetContentExtractorFactory,
+        'create'
+    >
 
-    it('deve adicionar uma fonte de dados por upload com sucesso', async () => {
-        const certificateEmission = createCertificateEmission()
+    let usersRepositoryStub: Pick<IUsersRepository, 'getById'>
 
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
+    let dataSourceRowsRepositoryStub: Pick<
+        IDataSourceRowsRepository,
+        'saveMany' | 'deleteManyByCertificateEmissionId'
+    >
+
+    beforeEach(() => {
+        certificatesRepositoryMock = {
+            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
             update: vi.fn(),
         }
 
-        const dataSourceRowsRepositoryStub: Pick<
-            IDataSourceRowsRepository,
-            'saveMany' | 'deleteManyByCertificateEmissionId'
-        > = {
-            saveMany: vi.fn(),
-            deleteManyByCertificateEmissionId: vi.fn(),
+        bucketStub = {
+            async uploadObject(): Promise<string> {
+                return ''
+            },
+            async deleteObject(): Promise<void> {},
         }
 
+        transactionManagerStub = {
+            async run<T>(work: () => Promise<T>): Promise<T> {
+                return work()
+            },
+        }
+
+        spreadsheetContentExtractorFactoryStub = {
+            create() {
+                return {
+                    async extractColumns() {
+                        return {
+                            columns: ['Nome'],
+                            rows: [{ Nome: 'João' }],
+                        }
+                    },
+                }
+            },
+        }
+
+        usersRepositoryStub = {
+            async getById(): Promise<User | null> {
+                return null
+            },
+        }
+
+        dataSourceRowsRepositoryStub = {
+            async saveMany() {},
+            async deleteManyByCertificateEmissionId() {},
+        }
+    })
+
+    it('deve adicionar uma fonte de dados por upload com sucesso', async () => {
+        const certificateEmission = createCertificateEmission()
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
+
         const useCase = new AddDataSourceByUploadUseCase(
-            new BucketStub(),
+            bucketStub,
             certificatesRepositoryMock,
             dataSourceRowsRepositoryStub,
-            new SpreadsheetContentExtractorFactoryStub(),
-            new TransactionManagerStub(),
-            new UsersRepositoryStub(),
+            spreadsheetContentExtractorFactoryStub,
+            transactionManagerStub,
+            usersRepositoryStub,
         )
 
         await useCase.execute({
@@ -146,13 +168,7 @@ describe('AddDataSourceByUploadUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(null),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(null)
 
         const useCase = new AddDataSourceByUploadUseCase(
             {} as IBucket,
@@ -175,17 +191,9 @@ describe('AddDataSourceByUploadUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({ userId: 'outro-usuario' }),
-                ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ userId: 'outro-usuario' }),
+        )
 
         const useCase = new AddDataSourceByUploadUseCase(
             {} as IBucket,
@@ -208,15 +216,9 @@ describe('AddDataSourceByUploadUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado já tiver sido emitida', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
-            ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
+        )
 
         const useCase = new AddDataSourceByUploadUseCase(
             {} as IBucket,
@@ -239,14 +241,6 @@ describe('AddDataSourceByUploadUseCase', () => {
     })
 
     it('deve lançar erro quando nenhum arquivo for enviado', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
         const useCase = new AddDataSourceByUploadUseCase(
             {} as IBucket,
             certificatesRepositoryMock,
@@ -268,14 +262,6 @@ describe('AddDataSourceByUploadUseCase', () => {
     })
 
     it('deve lançar erro quando o formato do arquivo não for suportado como fonte de dados', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
         const useCase = new AddDataSourceByUploadUseCase(
             {} as IBucket,
             certificatesRepositoryMock,
@@ -301,14 +287,6 @@ describe('AddDataSourceByUploadUseCase', () => {
     })
 
     it('deve lançar erro quando o número de imagens ultrapassar o limite permitido', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
         const useCase = new AddDataSourceByUploadUseCase(
             {} as IBucket,
             certificatesRepositoryMock,
@@ -332,14 +310,6 @@ describe('AddDataSourceByUploadUseCase', () => {
     })
 
     it('deve lançar erro quando os arquivos enviados não forem todos imagens', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
         const useCase = new AddDataSourceByUploadUseCase(
             {} as IBucket,
             certificatesRepositoryMock,
@@ -361,14 +331,6 @@ describe('AddDataSourceByUploadUseCase', () => {
     })
 
     it('deve lançar erro quando forem enviados múltiplos arquivos que não sejam planilhas individuais', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
         const useCase = new AddDataSourceByUploadUseCase(
             {} as IBucket,
             certificatesRepositoryMock,
@@ -393,24 +355,14 @@ describe('AddDataSourceByUploadUseCase', () => {
         const certificateEmission = createCertificateEmission({
             dataSource: createDataSourceWithStorage(),
         })
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsRepositoryStub: Pick<
-            IDataSourceRowsRepository,
-            'saveMany' | 'deleteManyByCertificateEmissionId'
-        > = {
-            saveMany: vi.fn(),
-            deleteManyByCertificateEmissionId: vi.fn(),
-        }
-
-        const bucketMock: Pick<IBucket, 'uploadObject' | 'deleteObject'> = {
+        const bucketMock: {
+            uploadObject: Mock<IBucket['uploadObject']>
+            deleteObject: Mock<IBucket['deleteObject']>
+        } = {
             uploadObject: vi.fn().mockResolvedValue(''),
             deleteObject: vi.fn(),
         }
@@ -419,9 +371,9 @@ describe('AddDataSourceByUploadUseCase', () => {
             bucketMock,
             certificatesRepositoryMock,
             dataSourceRowsRepositoryStub,
-            new SpreadsheetContentExtractorFactoryStub(),
-            new TransactionManagerStub(),
-            new UsersRepositoryStub(),
+            spreadsheetContentExtractorFactoryStub,
+            transactionManagerStub,
+            usersRepositoryStub,
         )
 
         await useCase.execute({

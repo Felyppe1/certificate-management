@@ -506,7 +506,9 @@ describe('User', () => {
                     email: 'u@g.com',
                     passwordHash: 'h',
                 })
-                expect(() => user.updateName('AB')).toThrow()
+                expect(() => user.updateName('AB')).toThrow(
+                    'Invalid name: min 3 chars, max 50 chars',
+                )
             })
 
             it('51 caracteres (acima do máximo)', () => {
@@ -514,7 +516,9 @@ describe('User', () => {
                     email: 'u@g.com',
                     passwordHash: 'h',
                 })
-                expect(() => user.updateName('A'.repeat(51))).toThrow()
+                expect(() => user.updateName('A'.repeat(51))).toThrow(
+                    'Invalid name: min 3 chars, max 50 chars',
+                )
             })
         })
 

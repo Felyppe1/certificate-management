@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, Mock } from 'vitest'
 import { FinishCertificatesGenerationUseCase } from './finish-certificates-generation-use-case'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
@@ -22,18 +22,24 @@ describe('FinishCertificatesGenerationUseCase', () => {
         }
     }
 
-    let dataSourceRowsRepository: Pick<
-        IDataSourceRowsRepository,
-        'getById' | 'update' | 'allRowsFinishedProcessing'
-    >
-    let certificatesRepository: Pick<
-        ICertificatesRepository,
-        'checkIfExistsById' | 'markAsGeneratedIfNotAlready'
-    >
-    let usersRepository: Pick<IUsersRepository, 'upsertDailyUsage'>
+    let dataSourceRowsRepository: {
+        getById: Mock<IDataSourceRowsRepository['getById']>
+        update: Mock<IDataSourceRowsRepository['update']>
+        allRowsFinishedProcessing: Mock<
+            IDataSourceRowsRepository['allRowsFinishedProcessing']
+        >
+    }
+    let certificatesRepository: {
+        checkIfExistsById: Mock<ICertificatesRepository['checkIfExistsById']>
+        markAsGeneratedIfNotAlready: Mock<
+            ICertificatesRepository['markAsGeneratedIfNotAlready']
+        >
+    }
+    let usersRepository: {
+        upsertDailyUsage: Mock<IUsersRepository['upsertDailyUsage']>
+    }
 
     beforeEach(() => {
-        vi.clearAllMocks()
         dataSourceRowsRepository = {
             getById: vi.fn(),
             update: vi.fn(),
@@ -56,7 +62,7 @@ describe('FinishCertificatesGenerationUseCase', () => {
     }
 
     it('deve lançar erro quando a linha não for encontrada', async () => {
-        vi.mocked(dataSourceRowsRepository.getById).mockResolvedValue(null)
+        dataSourceRowsRepository.getById.mockResolvedValue(null)
 
         await expect(
             makeUseCase().execute({
@@ -68,7 +74,7 @@ describe('FinishCertificatesGenerationUseCase', () => {
     })
 
     it('deve lançar erro quando bytes não forem informados em caso de sucesso', async () => {
-        vi.mocked(dataSourceRowsRepository.getById).mockResolvedValue(
+        dataSourceRowsRepository.getById.mockResolvedValue(
             createDataSourceRowMock() as any,
         )
 
@@ -79,12 +85,8 @@ describe('FinishCertificatesGenerationUseCase', () => {
 
     it('deve lançar erro quando a emissão de certificado não existir', async () => {
         const rowMock = createDataSourceRowMock()
-        vi.mocked(dataSourceRowsRepository.getById).mockResolvedValue(
-            rowMock as any,
-        )
-        vi.mocked(certificatesRepository.checkIfExistsById).mockResolvedValue(
-            false,
-        )
+        dataSourceRowsRepository.getById.mockResolvedValue(rowMock as any)
+        certificatesRepository.checkIfExistsById.mockResolvedValue(false)
 
         await expect(
             makeUseCase().execute({
@@ -97,15 +99,11 @@ describe('FinishCertificatesGenerationUseCase', () => {
 
     it('deve marcar a linha como concluída com sucesso', async () => {
         const rowMock = createDataSourceRowMock()
-        vi.mocked(dataSourceRowsRepository.getById).mockResolvedValue(
-            rowMock as any,
+        dataSourceRowsRepository.getById.mockResolvedValue(rowMock as any)
+        certificatesRepository.checkIfExistsById.mockResolvedValue(true)
+        dataSourceRowsRepository.allRowsFinishedProcessing.mockResolvedValue(
+            false,
         )
-        vi.mocked(certificatesRepository.checkIfExistsById).mockResolvedValue(
-            true,
-        )
-        vi.mocked(
-            dataSourceRowsRepository.allRowsFinishedProcessing,
-        ).mockResolvedValue(false)
 
         await makeUseCase().execute({
             dataSourceRowId: ROW_ID,
@@ -118,15 +116,11 @@ describe('FinishCertificatesGenerationUseCase', () => {
 
     it('deve marcar a linha como falha', async () => {
         const rowMock = createDataSourceRowMock()
-        vi.mocked(dataSourceRowsRepository.getById).mockResolvedValue(
-            rowMock as any,
+        dataSourceRowsRepository.getById.mockResolvedValue(rowMock as any)
+        certificatesRepository.checkIfExistsById.mockResolvedValue(true)
+        dataSourceRowsRepository.allRowsFinishedProcessing.mockResolvedValue(
+            false,
         )
-        vi.mocked(certificatesRepository.checkIfExistsById).mockResolvedValue(
-            true,
-        )
-        vi.mocked(
-            dataSourceRowsRepository.allRowsFinishedProcessing,
-        ).mockResolvedValue(false)
 
         await makeUseCase().execute({ dataSourceRowId: ROW_ID, success: false })
 
@@ -135,15 +129,11 @@ describe('FinishCertificatesGenerationUseCase', () => {
 
     it('deve registrar uso diário quando sucesso com userId', async () => {
         const rowMock = createDataSourceRowMock()
-        vi.mocked(dataSourceRowsRepository.getById).mockResolvedValue(
-            rowMock as any,
+        dataSourceRowsRepository.getById.mockResolvedValue(rowMock as any)
+        certificatesRepository.checkIfExistsById.mockResolvedValue(true)
+        dataSourceRowsRepository.allRowsFinishedProcessing.mockResolvedValue(
+            false,
         )
-        vi.mocked(certificatesRepository.checkIfExistsById).mockResolvedValue(
-            true,
-        )
-        vi.mocked(
-            dataSourceRowsRepository.allRowsFinishedProcessing,
-        ).mockResolvedValue(false)
 
         await makeUseCase().execute({
             dataSourceRowId: ROW_ID,
@@ -162,15 +152,11 @@ describe('FinishCertificatesGenerationUseCase', () => {
 
     it('deve não registrar uso quando userId não for informado', async () => {
         const rowMock = createDataSourceRowMock()
-        vi.mocked(dataSourceRowsRepository.getById).mockResolvedValue(
-            rowMock as any,
+        dataSourceRowsRepository.getById.mockResolvedValue(rowMock as any)
+        certificatesRepository.checkIfExistsById.mockResolvedValue(true)
+        dataSourceRowsRepository.allRowsFinishedProcessing.mockResolvedValue(
+            false,
         )
-        vi.mocked(certificatesRepository.checkIfExistsById).mockResolvedValue(
-            true,
-        )
-        vi.mocked(
-            dataSourceRowsRepository.allRowsFinishedProcessing,
-        ).mockResolvedValue(false)
 
         await makeUseCase().execute({
             dataSourceRowId: ROW_ID,
@@ -183,15 +169,11 @@ describe('FinishCertificatesGenerationUseCase', () => {
 
     it('deve marcar o certificado como gerado quando todas as linhas terminarem', async () => {
         const rowMock = createDataSourceRowMock()
-        vi.mocked(dataSourceRowsRepository.getById).mockResolvedValue(
-            rowMock as any,
-        )
-        vi.mocked(certificatesRepository.checkIfExistsById).mockResolvedValue(
+        dataSourceRowsRepository.getById.mockResolvedValue(rowMock as any)
+        certificatesRepository.checkIfExistsById.mockResolvedValue(true)
+        dataSourceRowsRepository.allRowsFinishedProcessing.mockResolvedValue(
             true,
         )
-        vi.mocked(
-            dataSourceRowsRepository.allRowsFinishedProcessing,
-        ).mockResolvedValue(true)
 
         await makeUseCase().execute({ dataSourceRowId: ROW_ID, success: false })
 
@@ -202,15 +184,11 @@ describe('FinishCertificatesGenerationUseCase', () => {
 
     it('deve não marcar o certificado quando ainda há linhas em processamento', async () => {
         const rowMock = createDataSourceRowMock()
-        vi.mocked(dataSourceRowsRepository.getById).mockResolvedValue(
-            rowMock as any,
+        dataSourceRowsRepository.getById.mockResolvedValue(rowMock as any)
+        certificatesRepository.checkIfExistsById.mockResolvedValue(true)
+        dataSourceRowsRepository.allRowsFinishedProcessing.mockResolvedValue(
+            false,
         )
-        vi.mocked(certificatesRepository.checkIfExistsById).mockResolvedValue(
-            true,
-        )
-        vi.mocked(
-            dataSourceRowsRepository.allRowsFinishedProcessing,
-        ).mockResolvedValue(false)
 
         await makeUseCase().execute({ dataSourceRowId: ROW_ID, success: false })
 

@@ -1,17 +1,17 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, Mock } from 'vitest'
 import { GetCertificateEmissionsMetricsUseCase } from './get-certificate-emissions-metrics-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 
 describe('GetCertificateEmissionsMetricsUseCase', () => {
     const USER_ID = 'user-1'
 
-    let certificateEmissionsRepository: Pick<
-        ICertificatesRepository,
-        'getCertificateEmissionsMetricsByUserId'
-    >
+    let certificateEmissionsRepository: {
+        getCertificateEmissionsMetricsByUserId: Mock<
+            ICertificatesRepository['getCertificateEmissionsMetricsByUserId']
+        >
+    }
 
     beforeEach(() => {
-        vi.clearAllMocks()
         certificateEmissionsRepository = {
             getCertificateEmissionsMetricsByUserId: vi.fn(),
         }
@@ -31,9 +31,9 @@ describe('GetCertificateEmissionsMetricsUseCase', () => {
             dailyEmails: [{ date: new Date('2026-06-01'), quantity: 2 }],
         }
 
-        vi.mocked(
-            certificateEmissionsRepository.getCertificateEmissionsMetricsByUserId,
-        ).mockResolvedValue(metrics)
+        certificateEmissionsRepository.getCertificateEmissionsMetricsByUserId.mockResolvedValue(
+            metrics,
+        )
 
         const result = await makeUseCase().execute({ userId: USER_ID })
 

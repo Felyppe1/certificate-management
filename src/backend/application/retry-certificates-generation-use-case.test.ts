@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, Mock } from 'vitest'
 import { RetryCertificatesGenerationUseCase } from './retry-certificates-generation-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
@@ -81,19 +81,29 @@ describe('RetryCertificatesGenerationUseCase', () => {
         })
     }
 
-    let certificateEmissionsRepository: Pick<ICertificatesRepository, 'getById'>
-    let dataSourceRowsRepository: Pick<
-        IDataSourceRowsRepository,
-        'updateManyProcessingStatus'
-    >
-    let dataSourceRowsReadRepository: Pick<
-        IDataSourceRowsReadRepository,
-        'getManyByCertificateEmissionId' | 'countWithStatuses'
-    >
-    let queue: Pick<IQueue, 'enqueueGenerateCertificatePDF'>
+    let certificateEmissionsRepository: {
+        getById: Mock<ICertificatesRepository['getById']>
+    }
+    let dataSourceRowsRepository: {
+        updateManyProcessingStatus: Mock<
+            IDataSourceRowsRepository['updateManyProcessingStatus']
+        >
+    }
+    let dataSourceRowsReadRepository: {
+        getManyByCertificateEmissionId: Mock<
+            IDataSourceRowsReadRepository['getManyByCertificateEmissionId']
+        >
+        countWithStatuses: Mock<
+            IDataSourceRowsReadRepository['countWithStatuses']
+        >
+    }
+    let queue: {
+        enqueueGenerateCertificatePDF: Mock<
+            IQueue['enqueueGenerateCertificatePDF']
+        >
+    }
 
     beforeEach(() => {
-        vi.clearAllMocks()
         certificateEmissionsRepository = { getById: vi.fn() }
         dataSourceRowsRepository = { updateManyProcessingStatus: vi.fn() }
         dataSourceRowsReadRepository = {
@@ -113,9 +123,7 @@ describe('RetryCertificatesGenerationUseCase', () => {
     }
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
-            null,
-        )
+        certificateEmissionsRepository.getById.mockResolvedValue(null)
 
         await expect(
             makeUseCase().execute({
@@ -126,7 +134,7 @@ describe('RetryCertificatesGenerationUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({ userId: 'outro-usuario' }),
         )
 
@@ -139,7 +147,7 @@ describe('RetryCertificatesGenerationUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão já tiver sido enviada', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
         )
 
@@ -152,7 +160,7 @@ describe('RetryCertificatesGenerationUseCase', () => {
     })
 
     it('deve lançar erro quando não houver template vinculado', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({ template: null }),
         )
 
@@ -165,7 +173,7 @@ describe('RetryCertificatesGenerationUseCase', () => {
     })
 
     it('deve lançar erro quando não houver fonte de dados vinculada', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({ dataSource: null }),
         )
 
@@ -178,12 +186,10 @@ describe('RetryCertificatesGenerationUseCase', () => {
     })
 
     it('deve lançar erro quando não houver linhas com falha', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({ dataSource: createDataSource() }),
         )
-        vi.mocked(
-            dataSourceRowsReadRepository.countWithStatuses,
-        ).mockResolvedValue(0)
+        dataSourceRowsReadRepository.countWithStatuses.mockResolvedValue(0)
 
         await expect(
             makeUseCase().execute({
@@ -194,22 +200,18 @@ describe('RetryCertificatesGenerationUseCase', () => {
     })
 
     it('deve enfileirar o retry das linhas com falha e retornar o total', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({ dataSource: createDataSource() }),
         )
-        vi.mocked(
-            dataSourceRowsReadRepository.countWithStatuses,
-        ).mockResolvedValue(1)
-        vi.mocked(
-            dataSourceRowsReadRepository.getManyByCertificateEmissionId,
-        ).mockResolvedValue({
-            data: [{ id: 'row-failed', data: {} }],
-            nextCursor: null,
-        })
-        vi.mocked(queue.enqueueGenerateCertificatePDF).mockResolvedValue()
-        vi.mocked(
-            dataSourceRowsRepository.updateManyProcessingStatus,
-        ).mockResolvedValue()
+        dataSourceRowsReadRepository.countWithStatuses.mockResolvedValue(1)
+        dataSourceRowsReadRepository.getManyByCertificateEmissionId.mockResolvedValue(
+            {
+                data: [{ id: 'row-failed', data: {} }],
+                nextCursor: null,
+            },
+        )
+        queue.enqueueGenerateCertificatePDF.mockResolvedValue()
+        dataSourceRowsRepository.updateManyProcessingStatus.mockResolvedValue()
 
         const result = await makeUseCase().execute({
             certificateEmissionId: CERTIFICATE_ID,

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, Mock } from 'vitest'
 import { GenerateCertificatesUseCase } from './generate-certificates-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IUsersRepository } from './interfaces/repository/iusers-repository'
@@ -85,23 +85,38 @@ describe('GenerateCertificatesUseCase', () => {
         })
     }
 
-    let certificateEmissionsRepository: Pick<ICertificatesRepository, 'getById'>
-    let usersRepository: Pick<IUsersRepository, 'deductCredits'>
-    let dataSourceRowsRepository: Pick<
-        IDataSourceRowsRepository,
-        'updateManyProcessingStatus'
-    >
-    let dataSourceRowsReadRepository: Pick<
-        IDataSourceRowsReadRepository,
-        | 'getManyByCertificateEmissionId'
-        | 'countByCertificateEmissionId'
-        | 'countWithStatuses'
-    >
-    let bucket: Pick<IBucket, 'deleteObjectsWithPrefix'>
-    let queue: Pick<IQueue, 'enqueueGenerateCertificatePDF'>
+    let certificateEmissionsRepository: {
+        getById: Mock<ICertificatesRepository['getById']>
+    }
+    let usersRepository: {
+        deductCredits: Mock<IUsersRepository['deductCredits']>
+    }
+    let dataSourceRowsRepository: {
+        updateManyProcessingStatus: Mock<
+            IDataSourceRowsRepository['updateManyProcessingStatus']
+        >
+    }
+    let dataSourceRowsReadRepository: {
+        getManyByCertificateEmissionId: Mock<
+            IDataSourceRowsReadRepository['getManyByCertificateEmissionId']
+        >
+        countByCertificateEmissionId: Mock<
+            IDataSourceRowsReadRepository['countByCertificateEmissionId']
+        >
+        countWithStatuses: Mock<
+            IDataSourceRowsReadRepository['countWithStatuses']
+        >
+    }
+    let bucket: {
+        deleteObjectsWithPrefix: Mock<IBucket['deleteObjectsWithPrefix']>
+    }
+    let queue: {
+        enqueueGenerateCertificatePDF: Mock<
+            IQueue['enqueueGenerateCertificatePDF']
+        >
+    }
 
     beforeEach(() => {
-        vi.clearAllMocks()
         certificateEmissionsRepository = { getById: vi.fn() }
         usersRepository = { deductCredits: vi.fn() }
         dataSourceRowsRepository = { updateManyProcessingStatus: vi.fn() }
@@ -126,9 +141,7 @@ describe('GenerateCertificatesUseCase', () => {
     }
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
-            null,
-        )
+        certificateEmissionsRepository.getById.mockResolvedValue(null)
 
         await expect(
             makeUseCase().execute({
@@ -139,7 +152,7 @@ describe('GenerateCertificatesUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({ userId: 'outro-usuario' }),
         )
 
@@ -152,7 +165,7 @@ describe('GenerateCertificatesUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão já tiver sido enviada', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
         )
 
@@ -165,7 +178,7 @@ describe('GenerateCertificatesUseCase', () => {
     })
 
     it('deve lançar erro quando não houver template vinculado', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({ template: null }),
         )
 
@@ -178,7 +191,7 @@ describe('GenerateCertificatesUseCase', () => {
     })
 
     it('deve lançar erro quando não houver fonte de dados vinculada', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({ dataSource: null }),
         )
 
@@ -191,12 +204,12 @@ describe('GenerateCertificatesUseCase', () => {
     })
 
     it('deve lançar erro quando não houver linhas na fonte de dados', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({ dataSource: createDataSource() }),
         )
-        vi.mocked(
-            dataSourceRowsReadRepository.countByCertificateEmissionId,
-        ).mockResolvedValue(0)
+        dataSourceRowsReadRepository.countByCertificateEmissionId.mockResolvedValue(
+            0,
+        )
 
         await expect(
             makeUseCase().execute({
@@ -207,15 +220,13 @@ describe('GenerateCertificatesUseCase', () => {
     })
 
     it('deve lançar erro quando nem todas as linhas estiverem com status pendente', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({ dataSource: createDataSource() }),
         )
-        vi.mocked(
-            dataSourceRowsReadRepository.countByCertificateEmissionId,
-        ).mockResolvedValue(3)
-        vi.mocked(
-            dataSourceRowsReadRepository.countWithStatuses,
-        ).mockResolvedValue(2)
+        dataSourceRowsReadRepository.countByCertificateEmissionId.mockResolvedValue(
+            3,
+        )
+        dataSourceRowsReadRepository.countWithStatuses.mockResolvedValue(2)
 
         await expect(
             makeUseCase().execute({
@@ -226,16 +237,14 @@ describe('GenerateCertificatesUseCase', () => {
     })
 
     it('deve lançar erro quando não houver créditos suficientes', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({ dataSource: createDataSource() }),
         )
-        vi.mocked(
-            dataSourceRowsReadRepository.countByCertificateEmissionId,
-        ).mockResolvedValue(2)
-        vi.mocked(
-            dataSourceRowsReadRepository.countWithStatuses,
-        ).mockResolvedValue(2)
-        vi.mocked(usersRepository.deductCredits).mockResolvedValue(false)
+        dataSourceRowsReadRepository.countByCertificateEmissionId.mockResolvedValue(
+            2,
+        )
+        dataSourceRowsReadRepository.countWithStatuses.mockResolvedValue(2)
+        usersRepository.deductCredits.mockResolvedValue(false)
 
         await expect(
             makeUseCase().execute({
@@ -246,30 +255,26 @@ describe('GenerateCertificatesUseCase', () => {
     })
 
     it('deve enfileirar os jobs e atualizar o status das linhas para RUNNING com sucesso', async () => {
-        vi.mocked(certificateEmissionsRepository.getById).mockResolvedValue(
+        certificateEmissionsRepository.getById.mockResolvedValue(
             createCertificateEmission({ dataSource: createDataSource() }),
         )
-        vi.mocked(
-            dataSourceRowsReadRepository.countByCertificateEmissionId,
-        ).mockResolvedValue(2)
-        vi.mocked(
-            dataSourceRowsReadRepository.countWithStatuses,
-        ).mockResolvedValue(2)
-        vi.mocked(usersRepository.deductCredits).mockResolvedValue(true)
-        vi.mocked(bucket.deleteObjectsWithPrefix).mockResolvedValue()
-        vi.mocked(
-            dataSourceRowsReadRepository.getManyByCertificateEmissionId,
-        ).mockResolvedValue({
-            data: [
-                { id: 'row-1', data: {} },
-                { id: 'row-2', data: {} },
-            ],
-            nextCursor: null,
-        })
-        vi.mocked(queue.enqueueGenerateCertificatePDF).mockResolvedValue()
-        vi.mocked(
-            dataSourceRowsRepository.updateManyProcessingStatus,
-        ).mockResolvedValue()
+        dataSourceRowsReadRepository.countByCertificateEmissionId.mockResolvedValue(
+            2,
+        )
+        dataSourceRowsReadRepository.countWithStatuses.mockResolvedValue(2)
+        usersRepository.deductCredits.mockResolvedValue(true)
+        bucket.deleteObjectsWithPrefix.mockResolvedValue()
+        dataSourceRowsReadRepository.getManyByCertificateEmissionId.mockResolvedValue(
+            {
+                data: [
+                    { id: 'row-1', data: {} },
+                    { id: 'row-2', data: {} },
+                ],
+                nextCursor: null,
+            },
+        )
+        queue.enqueueGenerateCertificatePDF.mockResolvedValue()
+        dataSourceRowsRepository.updateManyProcessingStatus.mockResolvedValue()
 
         await makeUseCase().execute({
             certificateEmissionId: CERTIFICATE_ID,

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { UpdateDataSourceRowsUseCase } from './update-data-source-rows-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
@@ -91,39 +91,51 @@ describe('UpdateDataSourceRowsUseCase', () => {
         })
     }
 
-    class TransactionManagerStub implements Pick<ITransactionManager, 'run'> {
-        async run<T>(work: () => Promise<T>): Promise<T> {
-            return work()
-        }
+    let transactionManagerStub: Pick<ITransactionManager, 'run'>
+
+    let certificatesRepositoryMock: {
+        getById: Mock<ICertificatesRepository['getById']>
+        update: Mock<ICertificatesRepository['update']>
     }
+
+    let dataSourceRowsRepositoryMock: {
+        getByIds: Mock<IDataSourceRowsRepository['getByIds']>
+        updateMany: Mock<IDataSourceRowsRepository['updateMany']>
+        resetProcessingStatusByCertificateEmissionId: Mock<
+            IDataSourceRowsRepository['resetProcessingStatusByCertificateEmissionId']
+        >
+    }
+
+    beforeEach(() => {
+        transactionManagerStub = {
+            async run<T>(work: () => Promise<T>): Promise<T> {
+                return work()
+            },
+        }
+        certificatesRepositoryMock = {
+            getById: vi.fn().mockResolvedValue(null),
+            update: vi.fn(),
+        }
+        dataSourceRowsRepositoryMock = {
+            getByIds: vi.fn().mockResolvedValue([]),
+            updateMany: vi.fn(),
+            resetProcessingStatusByCertificateEmissionId: vi.fn(),
+        }
+    })
 
     it('deve atualizar os dados das linhas da fonte de dados com sucesso', async () => {
         const certificateEmission = createCertificateEmission()
         const row = createDataSourceRow()
 
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsRepositoryMock: Pick<
-            IDataSourceRowsRepository,
-            | 'getByIds'
-            | 'updateMany'
-            | 'resetProcessingStatusByCertificateEmissionId'
-        > = {
-            getByIds: vi.fn().mockResolvedValue([row]),
-            updateMany: vi.fn(),
-            resetProcessingStatusByCertificateEmissionId: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
+        dataSourceRowsRepositoryMock.getByIds.mockResolvedValue([row])
 
         const useCase = new UpdateDataSourceRowsUseCase(
             certificatesRepositoryMock,
             dataSourceRowsRepositoryMock,
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
 
         await useCase.execute({
@@ -140,35 +152,22 @@ describe('UpdateDataSourceRowsUseCase', () => {
         expect(certificatesRepositoryMock.update).toHaveBeenCalledWith(
             certificateEmission,
         )
-        expect(dataSourceRowsRepositoryMock.updateMany).toHaveBeenCalledWith([row])
+        expect(dataSourceRowsRepositoryMock.updateMany).toHaveBeenCalledWith([
+            row,
+        ])
     })
 
     it('deve encerrar sem chamar o repositório quando a lista de linhas editadas for vazia', async () => {
         const certificateEmission = createCertificateEmission()
 
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsRepositoryMock: Pick<
-            IDataSourceRowsRepository,
-            | 'getByIds'
-            | 'updateMany'
-            | 'resetProcessingStatusByCertificateEmissionId'
-        > = {
-            getByIds: vi.fn(),
-            updateMany: vi.fn(),
-            resetProcessingStatusByCertificateEmissionId: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
         const useCase = new UpdateDataSourceRowsUseCase(
             certificatesRepositoryMock,
             dataSourceRowsRepositoryMock,
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
 
         await useCase.execute({
@@ -182,13 +181,7 @@ describe('UpdateDataSourceRowsUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(null),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(null)
 
         const useCase = new UpdateDataSourceRowsUseCase(
             certificatesRepositoryMock,
@@ -208,17 +201,9 @@ describe('UpdateDataSourceRowsUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({ userId: 'outro-usuario' }),
-                ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ userId: 'outro-usuario' }),
+        )
 
         const useCase = new UpdateDataSourceRowsUseCase(
             certificatesRepositoryMock,
@@ -238,15 +223,9 @@ describe('UpdateDataSourceRowsUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado já tiver sido emitida', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
-            ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
+        )
 
         const useCase = new UpdateDataSourceRowsUseCase(
             certificatesRepositoryMock,
@@ -266,15 +245,9 @@ describe('UpdateDataSourceRowsUseCase', () => {
     })
 
     it('deve lançar erro quando a fonte de dados não for do método UPLOAD', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(
-                createCertificateEmission({ dataSource: createDataSourceDrive() }),
-            ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ dataSource: createDataSourceDrive() }),
+        )
 
         const useCase = new UpdateDataSourceRowsUseCase(
             certificatesRepositoryMock,
@@ -296,29 +269,15 @@ describe('UpdateDataSourceRowsUseCase', () => {
     it('deve lançar erro quando algum ID de linha não for encontrado no repositório', async () => {
         const certificateEmission = createCertificateEmission()
 
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsRepositoryMock: Pick<
-            IDataSourceRowsRepository,
-            | 'getByIds'
-            | 'updateMany'
-            | 'resetProcessingStatusByCertificateEmissionId'
-        > = {
-            getByIds: vi.fn().mockResolvedValue([]),
-            updateMany: vi.fn(),
-            resetProcessingStatusByCertificateEmissionId: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
+        dataSourceRowsRepositoryMock.getByIds.mockResolvedValue([])
 
         const useCase = new UpdateDataSourceRowsUseCase(
             certificatesRepositoryMock,
             dataSourceRowsRepositoryMock,
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
 
         await expect(

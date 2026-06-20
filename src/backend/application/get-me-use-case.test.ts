@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { GetMeUseCase } from './get-me-use-case'
 import { User, UserInput } from '../domain/user'
 import { EmailChangeCode } from '../domain/email-change-code'
@@ -22,12 +22,18 @@ function createUser(overrides?: Partial<UserInput>): User {
 }
 
 describe('GetMeUseCase', () => {
-    it('deve lançar erro quando usuário não encontrado', async () => {
-        const usersRepository: Pick<IUsersRepository, 'getById'> = {
-            getById: vi.fn().mockResolvedValue(null),
-        }
+    let usersRepositoryStub: Pick<IUsersRepository, 'getById'>
 
-        const useCase = new GetMeUseCase(usersRepository)
+    beforeEach(() => {
+        usersRepositoryStub = {
+            getById: async () => null,
+        }
+    })
+
+    it('deve lançar erro quando usuário não encontrado', async () => {
+        usersRepositoryStub.getById = async () => null
+
+        const useCase = new GetMeUseCase(usersRepositoryStub)
 
         await expect(
             useCase.execute({ userId: 'id-inexistente' }),
@@ -36,11 +42,9 @@ describe('GetMeUseCase', () => {
 
     it('deve retornar os dados do usuário sem informações sensíveis', async () => {
         const user = createUser()
-        const usersRepository: Pick<IUsersRepository, 'getById'> = {
-            getById: vi.fn().mockResolvedValue(user),
-        }
+        usersRepositoryStub.getById = async () => user
 
-        const useCase = new GetMeUseCase(usersRepository)
+        const useCase = new GetMeUseCase(usersRepositoryStub)
 
         const result = await useCase.execute({ userId: 'user-id' })
 
@@ -61,11 +65,9 @@ describe('GetMeUseCase', () => {
                 expiresAt,
             }),
         })
-        const usersRepository: Pick<IUsersRepository, 'getById'> = {
-            getById: vi.fn().mockResolvedValue(user),
-        }
+        usersRepositoryStub.getById = async () => user
 
-        const useCase = new GetMeUseCase(usersRepository)
+        const useCase = new GetMeUseCase(usersRepositoryStub)
 
         const result = await useCase.execute({ userId: 'user-id' })
 

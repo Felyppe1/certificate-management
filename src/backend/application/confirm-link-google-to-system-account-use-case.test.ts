@@ -10,10 +10,10 @@ import { UserNotFoundError } from '../domain/error/not-found-error/user-not-foun
 import { NoGoogleAccountError } from '../domain/error/validation-error/no-google-account-error'
 import { ExternalAccountAlreadyExistsError } from '../domain/error/conflict-error/external-account-already-exists-error'
 
-class TransactionManagerStub implements Pick<ITransactionManager, 'run'> {
+const transactionManagerStub: Pick<ITransactionManager, 'run'> = {
     async run<T>(work: () => Promise<T>): Promise<T> {
         return work()
-    }
+    },
 }
 
 function createGoogleUser(overrides?: Partial<UserInput>): User {
@@ -73,7 +73,7 @@ describe('ConfirmLinkGoogleToSystemAccountUseCase', () => {
         const useCase = new ConfirmLinkGoogleToSystemAccountUseCase(
             usersRepository,
             { save: vi.fn() },
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
 
         await expect(
@@ -98,7 +98,7 @@ describe('ConfirmLinkGoogleToSystemAccountUseCase', () => {
         const useCase = new ConfirmLinkGoogleToSystemAccountUseCase(
             usersRepository,
             { save: vi.fn() },
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
 
         await expect(
@@ -121,7 +121,7 @@ describe('ConfirmLinkGoogleToSystemAccountUseCase', () => {
         const useCase = new ConfirmLinkGoogleToSystemAccountUseCase(
             usersRepository,
             { save: vi.fn() },
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
 
         await expect(
@@ -157,7 +157,7 @@ describe('ConfirmLinkGoogleToSystemAccountUseCase', () => {
         const useCase = new ConfirmLinkGoogleToSystemAccountUseCase(
             usersRepository,
             { save: vi.fn() },
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
 
         await expect(
@@ -186,7 +186,7 @@ describe('ConfirmLinkGoogleToSystemAccountUseCase', () => {
         const useCase = new ConfirmLinkGoogleToSystemAccountUseCase(
             usersRepository,
             sessionsRepository,
-            new TransactionManagerStub(),
+            transactionManagerStub,
         )
 
         const token = await useCase.execute({ userId: googleUser.getId() })

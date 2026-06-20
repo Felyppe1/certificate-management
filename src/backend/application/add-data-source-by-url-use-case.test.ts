@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { AddDataSourceByUrlUseCase } from './add-data-source-by-url-use-case'
 import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
 import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
@@ -69,76 +69,100 @@ describe('AddDataSourceByUrlUseCase', () => {
         })
     }
 
-    class GoogleDriveGatewayStub
-        implements Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
-    {
-        async getFileMetadata(): Promise<GetFileMetadataOutput> {
-            return {
-                name: 'dados.csv',
-                fileMimeType: DATA_SOURCE_MIME_TYPE.CSV,
-                thumbnailUrl: null,
-            }
-        }
-
-        async downloadFile(): Promise<Buffer> {
-            return Buffer.from('')
-        }
+    let certificatesRepositoryMock: {
+        getById: Mock<ICertificatesRepository['getById']>
+        update: Mock<ICertificatesRepository['update']>
     }
 
-    class SpreadsheetContentExtractorFactoryStub
-        implements Pick<ISpreadsheetContentExtractorFactory, 'create'>
-    {
-        create() {
-            return {
-                async extractColumns() {
-                    return {
-                        columns: ['Nome'],
-                        rows: [{ Nome: 'João' }],
-                    }
-                },
-            }
-        }
-    }
+    let googleDriveGatewayStub: Pick<
+        IGoogleDriveGateway,
+        'getFileMetadata' | 'downloadFile'
+    >
 
-    class TransactionManagerStub implements Pick<ITransactionManager, 'run'> {
-        async run<T>(work: () => Promise<T>): Promise<T> {
-            return work()
-        }
-    }
+    let spreadsheetContentExtractorFactoryStub: Pick<
+        ISpreadsheetContentExtractorFactory,
+        'create'
+    >
 
-    class UsersRepositoryStub implements Pick<IUsersRepository, 'getById'> {
-        async getById(): Promise<User | null> {
-            return null
-        }
-    }
+    let transactionManagerStub: Pick<ITransactionManager, 'run'>
 
-    it('deve adicionar uma fonte de dados por URL do Drive com sucesso', async () => {
-        const certificateEmission = createCertificateEmission()
+    let usersRepositoryStub: Pick<IUsersRepository, 'getById'>
 
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
+    let dataSourceRowsRepositoryStub: Pick<
+        IDataSourceRowsRepository,
+        'saveMany' | 'deleteManyByCertificateEmissionId'
+    >
+
+    let bucketStub: Pick<IBucket, 'deleteObject'>
+
+    beforeEach(() => {
+        certificatesRepositoryMock = {
+            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
             update: vi.fn(),
         }
 
-        const dataSourceRowsRepositoryStub: Pick<
-            IDataSourceRowsRepository,
-            'saveMany' | 'deleteManyByCertificateEmissionId'
-        > = {
-            saveMany: vi.fn(),
-            deleteManyByCertificateEmissionId: vi.fn(),
+        googleDriveGatewayStub = {
+            async getFileMetadata(): Promise<GetFileMetadataOutput> {
+                return {
+                    name: 'dados.csv',
+                    fileMimeType: DATA_SOURCE_MIME_TYPE.CSV,
+                    thumbnailUrl: null,
+                }
+            },
+            async downloadFile(): Promise<Buffer> {
+                return Buffer.from('')
+            },
         }
+
+        spreadsheetContentExtractorFactoryStub = {
+            create() {
+                return {
+                    async extractColumns() {
+                        return {
+                            columns: ['Nome'],
+                            rows: [{ Nome: 'João' }],
+                        }
+                    },
+                }
+            },
+        }
+
+        transactionManagerStub = {
+            async run<T>(work: () => Promise<T>): Promise<T> {
+                return work()
+            },
+        }
+
+        usersRepositoryStub = {
+            async getById(): Promise<User | null> {
+                return null
+            },
+        }
+
+        dataSourceRowsRepositoryStub = {
+            async saveMany() {},
+            async deleteManyByCertificateEmissionId() {},
+        }
+
+        bucketStub = {
+            async deleteObject() {},
+        }
+    })
+
+    it('deve adicionar uma fonte de dados por URL do Drive com sucesso', async () => {
+        const certificateEmission = createCertificateEmission()
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
         const useCase = new AddDataSourceByUrlUseCase(
             certificatesRepositoryMock,
             dataSourceRowsRepositoryStub,
-            new GoogleDriveGatewayStub(),
-            new SpreadsheetContentExtractorFactoryStub(),
-            { async deleteObject() {} } as Pick<IBucket, 'deleteObject'>,
-            new TransactionManagerStub(),
-            new UsersRepositoryStub(),
+            googleDriveGatewayStub,
+            spreadsheetContentExtractorFactoryStub,
+            bucketStub,
+            transactionManagerStub,
+            usersRepositoryStub,
         )
 
         await useCase.execute({
@@ -154,13 +178,7 @@ describe('AddDataSourceByUrlUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado não for encontrada', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(null),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(null)
 
         const useCase = new AddDataSourceByUrlUseCase(
             certificatesRepositoryMock,
@@ -184,17 +202,9 @@ describe('AddDataSourceByUrlUseCase', () => {
     })
 
     it('deve lançar erro quando o usuário não for o dono do certificado', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({ userId: 'outro-usuario' }),
-                ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ userId: 'outro-usuario' }),
+        )
 
         const useCase = new AddDataSourceByUrlUseCase(
             certificatesRepositoryMock,
@@ -218,19 +228,9 @@ describe('AddDataSourceByUrlUseCase', () => {
     })
 
     it('deve lançar erro quando a emissão de certificado já tiver sido emitida', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi
-                .fn()
-                .mockResolvedValue(
-                    createCertificateEmission({
-                        status: CERTIFICATE_STATUS.EMITTED,
-                    }),
-                ),
-            update: vi.fn(),
-        }
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            createCertificateEmission({ status: CERTIFICATE_STATUS.EMITTED }),
+        )
 
         const useCase = new AddDataSourceByUrlUseCase(
             certificatesRepositoryMock,
@@ -254,14 +254,6 @@ describe('AddDataSourceByUrlUseCase', () => {
     })
 
     it('deve lançar erro quando a URL não contiver um ID válido do Drive', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
         const useCase = new AddDataSourceByUrlUseCase(
             certificatesRepositoryMock,
             {} as IDataSourceRowsRepository,
@@ -284,38 +276,30 @@ describe('AddDataSourceByUrlUseCase', () => {
     })
 
     it('deve lançar erro quando o formato do arquivo do Drive não for suportado', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
+        const pdfDriveGatewayStub: Pick<
+            IGoogleDriveGateway,
+            'getFileMetadata' | 'downloadFile'
         > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
-        class PdfDriveGatewayStub
-            implements
-                Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
-        {
             async getFileMetadata(): Promise<GetFileMetadataOutput> {
                 return {
                     name: 'doc.pdf',
                     fileMimeType: 'application/pdf',
                     thumbnailUrl: null,
                 }
-            }
+            },
             async downloadFile(): Promise<Buffer> {
                 return Buffer.from('')
-            }
+            },
         }
 
         const useCase = new AddDataSourceByUrlUseCase(
             certificatesRepositoryMock,
             {} as IDataSourceRowsRepository,
-            new PdfDriveGatewayStub(),
+            pdfDriveGatewayStub,
             {} as ISpreadsheetContentExtractorFactory,
             {} as IBucket,
             {} as ITransactionManager,
-            new UsersRepositoryStub(),
+            usersRepositoryStub,
         )
 
         await expect(
@@ -330,28 +314,20 @@ describe('AddDataSourceByUrlUseCase', () => {
     })
 
     it('deve lançar erro quando o número de imagens ultrapassar o limite permitido', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
+        const imageDriveGatewayStub: Pick<
+            IGoogleDriveGateway,
+            'getFileMetadata' | 'downloadFile'
         > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
-        class ImageDriveGatewayStub
-            implements
-                Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
-        {
             async getFileMetadata(): Promise<GetFileMetadataOutput> {
                 return {
                     name: 'foto.png',
                     fileMimeType: DATA_SOURCE_MIME_TYPE.PNG,
                     thumbnailUrl: null,
                 }
-            }
+            },
             async downloadFile(): Promise<Buffer> {
                 return Buffer.from('')
-            }
+            },
         }
 
         const fiveImageUrls = Array.from(
@@ -362,11 +338,11 @@ describe('AddDataSourceByUrlUseCase', () => {
         const useCase = new AddDataSourceByUrlUseCase(
             certificatesRepositoryMock,
             {} as IDataSourceRowsRepository,
-            new ImageDriveGatewayStub(),
+            imageDriveGatewayStub,
             {} as ISpreadsheetContentExtractorFactory,
             {} as IBucket,
             {} as ITransactionManager,
-            new UsersRepositoryStub(),
+            usersRepositoryStub,
         )
 
         await expect(
@@ -381,19 +357,11 @@ describe('AddDataSourceByUrlUseCase', () => {
     })
 
     it('deve lançar erro quando os arquivos enviados não forem todos imagens', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
         let callCount = 0
-        class MixedDriveGatewayStub
-            implements
-                Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
-        {
+        const mixedDriveGatewayStub: Pick<
+            IGoogleDriveGateway,
+            'getFileMetadata' | 'downloadFile'
+        > = {
             async getFileMetadata(): Promise<GetFileMetadataOutput> {
                 return {
                     name: 'file',
@@ -403,10 +371,10 @@ describe('AddDataSourceByUrlUseCase', () => {
                             : DATA_SOURCE_MIME_TYPE.CSV,
                     thumbnailUrl: null,
                 }
-            }
+            },
             async downloadFile(): Promise<Buffer> {
                 return Buffer.from('')
-            }
+            },
         }
 
         const twoUrls = [
@@ -417,11 +385,11 @@ describe('AddDataSourceByUrlUseCase', () => {
         const useCase = new AddDataSourceByUrlUseCase(
             certificatesRepositoryMock,
             {} as IDataSourceRowsRepository,
-            new MixedDriveGatewayStub(),
+            mixedDriveGatewayStub,
             {} as ISpreadsheetContentExtractorFactory,
             {} as IBucket,
             {} as ITransactionManager,
-            new UsersRepositoryStub(),
+            usersRepositoryStub,
         )
 
         await expect(
@@ -436,14 +404,6 @@ describe('AddDataSourceByUrlUseCase', () => {
     })
 
     it('deve lançar erro quando forem enviados múltiplos arquivos que não sejam planilhas individuais', async () => {
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(createCertificateEmission()),
-            update: vi.fn(),
-        }
-
         const twoCsvUrls = [
             'https://drive.google.com/file/d/csv-id-1/view',
             'https://drive.google.com/file/d/csv-id-2/view',
@@ -452,11 +412,11 @@ describe('AddDataSourceByUrlUseCase', () => {
         const useCase = new AddDataSourceByUrlUseCase(
             certificatesRepositoryMock,
             {} as IDataSourceRowsRepository,
-            new GoogleDriveGatewayStub(),
+            googleDriveGatewayStub,
             {} as ISpreadsheetContentExtractorFactory,
             {} as IBucket,
             {} as ITransactionManager,
-            new UsersRepositoryStub(),
+            usersRepositoryStub,
         )
 
         await expect(
@@ -474,35 +434,24 @@ describe('AddDataSourceByUrlUseCase', () => {
         const certificateEmission = createCertificateEmission({
             dataSource: createDataSourceWithStorage(),
         })
+        certificatesRepositoryMock.getById.mockResolvedValue(
+            certificateEmission,
+        )
 
-        const certificatesRepositoryMock: Pick<
-            ICertificatesRepository,
-            'getById' | 'update'
-        > = {
-            getById: vi.fn().mockResolvedValue(certificateEmission),
-            update: vi.fn(),
-        }
-
-        const dataSourceRowsRepositoryStub: Pick<
-            IDataSourceRowsRepository,
-            'saveMany' | 'deleteManyByCertificateEmissionId'
-        > = {
-            saveMany: vi.fn(),
-            deleteManyByCertificateEmissionId: vi.fn(),
-        }
-
-        const bucketMock: Pick<IBucket, 'deleteObject'> = {
+        const bucketMock: {
+            deleteObject: Mock<IBucket['deleteObject']>
+        } = {
             deleteObject: vi.fn(),
         }
 
         const useCase = new AddDataSourceByUrlUseCase(
             certificatesRepositoryMock,
             dataSourceRowsRepositoryStub,
-            new GoogleDriveGatewayStub(),
-            new SpreadsheetContentExtractorFactoryStub(),
+            googleDriveGatewayStub,
+            spreadsheetContentExtractorFactoryStub,
             bucketMock,
-            new TransactionManagerStub(),
-            new UsersRepositoryStub(),
+            transactionManagerStub,
+            usersRepositoryStub,
         )
 
         await useCase.execute({
