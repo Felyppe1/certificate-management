@@ -36,7 +36,7 @@ export function EmailForm({
     const {
         register,
         setValue,
-        formState: { errors, isValid, isSubmitting },
+        formState: { errors, isSubmitting },
         handleSubmit,
     } = form
 
@@ -179,7 +179,7 @@ export function EmailForm({
                     data-testid="email-send-button"
                     type="submit"
                     size="lg"
-                    disabled={isDisabled || isSubmitting || !isValid}
+                    disabled={isDisabled || isSubmitting}
                 >
                     {isSubmitting ? (
                         <>

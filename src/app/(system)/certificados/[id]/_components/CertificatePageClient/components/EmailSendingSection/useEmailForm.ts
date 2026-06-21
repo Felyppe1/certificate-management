@@ -7,9 +7,9 @@ import { queryKeys } from '@/lib/query-keys'
 import { createEmailAction } from '@/backend/infrastructure/server-actions/create-email-action'
 
 export const emailFormSchema = z.object({
-    subject: z.string().min(1, 'O assunto é obrigatório').max(255),
-    body: z.string().min(1, 'O corpo do e-mail é obrigatório'),
-    emailColumn: z.string().min(1, 'Selecione a coluna de e-mail').max(100),
+    subject: z.string().min(1, 'O assunto é obrigatório').max(255, 'Máximo de 255 caracteres ultrapassado'),
+    body: z.string({ error: 'O corpo do e-mail é obrigatório' }).min(1, 'O corpo do e-mail é obrigatório').max(800, 'Máximo de 800 caracteres ultrapassado'),
+    emailColumn: z.string({ error: 'A coluna de e-mail é obrigatória' }).min(1, 'Selecione a coluna de e-mail').max(100),
     scheduledDate: z.string().optional(),
     scheduledTime: z.string().optional(),
 })

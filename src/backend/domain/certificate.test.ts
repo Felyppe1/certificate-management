@@ -119,6 +119,74 @@ describe('Emissão de Certifcado', () => {
             })
         })
 
+        describe('Validação do comprimento do nome', () => {
+            describe('deve aceitar nome válido', () => {
+                it('1 caractere (limite mínimo)', () => {
+                    expect(
+                        () =>
+                            new CertificateEmission({
+                                ...makeValidCertificate(),
+                                name: 'A',
+                            }),
+                    ).not.toThrow()
+                })
+
+                it('2 caracteres (acima do limite mínimo)', () => {
+                    expect(
+                        () =>
+                            new CertificateEmission({
+                                ...makeValidCertificate(),
+                                name: 'AB',
+                            }),
+                    ).not.toThrow()
+                })
+
+                it('99 caracteres (abaixo do limite máximo)', () => {
+                    expect(
+                        () =>
+                            new CertificateEmission({
+                                ...makeValidCertificate(),
+                                name: 'A'.repeat(99),
+                            }),
+                    ).not.toThrow()
+                })
+
+                it('100 caracteres (limite máximo)', () => {
+                    expect(
+                        () =>
+                            new CertificateEmission({
+                                ...makeValidCertificate(),
+                                name: 'A'.repeat(100),
+                            }),
+                    ).not.toThrow()
+                })
+            })
+
+            describe('deve lançar erro com nome inválido', () => {
+                it('0 caracteres / string vazia (abaixo do mínimo)', () => {
+                    expect(
+                        () =>
+                            new CertificateEmission({
+                                ...makeValidCertificate(),
+                                name: '',
+                            }),
+                    ).toThrow('Certificate name is required')
+                })
+
+                it('101 caracteres (acima do máximo)', () => {
+                    expect(
+                        () =>
+                            new CertificateEmission({
+                                ...makeValidCertificate(),
+                                name: 'A'.repeat(101),
+                            }),
+                    ).toThrow(
+                        'Certificate name must have at most 100 characters',
+                    )
+                })
+            })
+        })
+
         describe('Controle de propriedade', () => {
             it('deve permitir acesso ao proprietário da emissão', () => {
                 const certificate = new CertificateEmission(
@@ -262,6 +330,26 @@ describe('Emissão de Certifcado', () => {
                 })
 
                 expect(certificate.getName()).toBe('Novo Nome')
+            })
+
+            it('deve rejeitar nome vazio na atualização', () => {
+                const certificate = new CertificateEmission(
+                    makeValidCertificate(),
+                )
+
+                expect(() => certificate.update({ name: '' })).toThrow(
+                    'Certificate name is required',
+                )
+            })
+
+            it('deve rejeitar nome com 101 caracteres na atualização (acima do máximo)', () => {
+                const certificate = new CertificateEmission(
+                    makeValidCertificate(),
+                )
+
+                expect(() =>
+                    certificate.update({ name: 'A'.repeat(101) }),
+                ).toThrow('Certificate name must have at most 100 characters')
             })
         })
     })
