@@ -19,7 +19,7 @@ const schema = z.object({
     name: z
         .string()
         .min(3, 'Mínimo de 3 caracteres')
-        .max(50, 'Máximo de 50 caracteres'),
+        .max(100, 'Máximo de 100 caracteres'),
 })
 
 type FormData = z.infer<typeof schema>
@@ -80,6 +80,7 @@ export function BasicData() {
                     <Label htmlFor="basic-name">Nome</Label>
                     <Input
                         id="basic-name"
+                        data-testid="basic-name-input"
                         type="text"
                         placeholder="Seu nome"
                         {...register('name')}

@@ -98,6 +98,46 @@ describe('User', () => {
             expect(user.getEmailVerificationCode()).not.toBeNull()
         })
 
+        describe('deve aceitar nome válido na criação', () => {
+            it('3 caracteres (limite mínimo)', async () => {
+                await expect(
+                    User.create({ name: 'Ana', email: null, passwordHash: null }),
+                ).resolves.toBeDefined()
+            })
+
+            it('4 caracteres (acima do limite mínimo)', async () => {
+                await expect(
+                    User.create({ name: 'ABCD', email: null, passwordHash: null }),
+                ).resolves.toBeDefined()
+            })
+
+            it('99 caracteres (abaixo do limite máximo)', async () => {
+                await expect(
+                    User.create({ name: 'A'.repeat(99), email: null, passwordHash: null }),
+                ).resolves.toBeDefined()
+            })
+
+            it('100 caracteres (limite máximo)', async () => {
+                await expect(
+                    User.create({ name: 'A'.repeat(100), email: null, passwordHash: null }),
+                ).resolves.toBeDefined()
+            })
+        })
+
+        describe('deve lançar erro com nome inválido na criação', () => {
+            it('2 caracteres (abaixo do mínimo)', async () => {
+                await expect(
+                    User.create({ name: 'AB', email: null, passwordHash: null }),
+                ).rejects.toThrow('Invalid name: min 3 chars, max 100 chars')
+            })
+
+            it('101 caracteres (acima do máximo)', async () => {
+                await expect(
+                    User.create({ name: 'A'.repeat(101), email: null, passwordHash: null }),
+                ).rejects.toThrow('Invalid name: min 3 chars, max 100 chars')
+            })
+        })
+            
         describe('deve aceitar senha válida na criação', () => {
             it('6 caracteres (limite mínimo)', async () => {
                 await expect(
@@ -597,17 +637,6 @@ describe('User', () => {
     })
 
     describe('Atualizar nome', () => {
-        it('deve atualizar nome com sucesso', () => {
-            const user = createUserData({
-                email: 'user@gmail.com',
-                passwordHash: 'hash',
-            })
-
-            user.updateName('Novo Nome')
-
-            expect(user.getName()).toBe('Novo Nome')
-        })
-
         describe('deve aceitar nome válido', () => {
             it('3 caracteres (limite mínimo)', () => {
                 const user = createUserData({
@@ -625,12 +654,12 @@ describe('User', () => {
                 expect(() => user.updateName('ABCD')).not.toThrow()
             })
 
-            it('49 caracteres (abaixo do limite máximo)', () => {
+            it('99 caracteres (abaixo do limite máximo)', () => {
                 const user = createUserData({
                     email: 'u@g.com',
                     passwordHash: 'h',
                 })
-                expect(() => user.updateName('A'.repeat(49))).not.toThrow()
+                expect(() => user.updateName('A'.repeat(99))).not.toThrow()
             })
 
             it('100 caracteres (limite máximo)', () => {
