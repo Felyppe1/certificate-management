@@ -45,7 +45,7 @@ describe('ResetPasswordUseCase', () => {
             useCase.execute({
                 email: 'nao@existe.com',
                 code: '123456',
-                newPassword: 'nova',
+                newPassword: 'nova-senha',
             }),
         ).rejects.toThrow(UserNotFoundError)
     })
@@ -58,10 +58,10 @@ describe('ResetPasswordUseCase', () => {
         await useCase.execute({
             email: 'user@example.com',
             code: '123456',
-            newPassword: 'nova',
+            newPassword: 'nova-senha',
         })
 
-        expect(spy).toHaveBeenCalledWith('123456', 'nova')
+        expect(spy).toHaveBeenCalledWith('123456', 'nova-senha')
         expect(usersRepository.update).toHaveBeenCalledWith(user)
     })
 })
