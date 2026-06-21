@@ -146,16 +146,16 @@ export const createEmailSchema = z.object({
 
 // Auth
 export const loginSchema = z.object({
-    email: z.email('Invalid email format'),
+    email: z.email('Formato de e-mail inválido'),
     password: z
         .string()
-        .min(2, 'Password must have at least 6 characters')
-        .max(100, 'Password must have at most 100 characters'),
+        .min(6, 'Senha deve ter pelo menos 6 caracteres')
+        .max(100, 'Senha deve ter no máximo 100 caracteres'),
 })
 
 export const signUpSchema = z.object({
-    name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
-    email: z.string().email('Formato de email inválido'),
+    name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres').max(100, 'Nome deve ter no máximo 100 caracteres'),
+    email: z.email('Formato de e-mail inválido'),
     password: z
         .string()
         .min(6, 'Senha deve ter pelo menos 6 caracteres')
