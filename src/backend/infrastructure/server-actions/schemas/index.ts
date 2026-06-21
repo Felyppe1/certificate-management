@@ -139,7 +139,7 @@ export const downloadCertificateUrlSchema = z.object({
 export const createEmailSchema = z.object({
     certificateId: z.string().min(1),
     subject: z.string().min(1).max(255),
-    body: z.string().min(1),
+    body: z.string().min(1).max(800),
     emailColumn: z.string().min(1).max(100),
     scheduledAt: z.date().nullable(),
 })

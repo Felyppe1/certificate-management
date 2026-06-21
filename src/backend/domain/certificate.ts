@@ -123,6 +123,15 @@ export class CertificateEmission extends AggregateRoot {
         return certificate
     }
 
+    private static validateName(name: string): void {
+        if (!name) {
+            throw new Error('Certificate name is required')
+        }
+        if (name.length > 100) {
+            throw new Error('Certificate name must have at most 100 characters')
+        }
+    }
+
     constructor(data: CertificateInput) {
         super(data.id)
 
@@ -130,9 +139,7 @@ export class CertificateEmission extends AggregateRoot {
             throw new Error('Certificate ID is required')
         }
 
-        if (!data.name) {
-            throw new Error('Certificate name is required')
-        }
+        CertificateEmission.validateName(data.name)
 
         if (!data.userId) {
             throw new Error('Certificate user ID is required')
@@ -194,7 +201,10 @@ export class CertificateEmission extends AggregateRoot {
     }
 
     update(data: UpdateCertificateInput) {
-        if (data.name !== undefined) this.name = data.name
+        if (data.name !== undefined) {
+            CertificateEmission.validateName(data.name)
+            this.name = data.name
+        }
         if (data.variableColumnMapping !== undefined) {
             this.variableColumnMapping = data.variableColumnMapping
             this.validateVariableColumnMapping()

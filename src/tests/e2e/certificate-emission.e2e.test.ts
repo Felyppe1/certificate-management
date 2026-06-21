@@ -27,11 +27,40 @@ test.describe('Emissão de certificado', () => {
 
         await page.goto('/')
         await page.getByTestId('create-emission-button').click()
+
+        // Fronteira inferior (min-1): nome vazio
+        await page.getByTestId('create-emission-submit').click()
+        await expect(page.getByText('Esse campo é obrigatório')).toBeVisible()
+
+        // Fronteira superior (max+1): 101 caracteres
+        await page.getByLabel('Nome da emissão').fill('A'.repeat(101))
+        await page.getByTestId('create-emission-submit').click()
+        await expect(
+            page.getByText('Máximo de 100 caracteres ultrapassado'),
+        ).toBeVisible()
+
+        // Valor válido
         await page.getByLabel('Nome da emissão').fill(initialName)
         await page.getByTestId('create-emission-submit').click()
         await page.waitForURL(/\/certificados\/.+/)
 
         await page.getByTestId('certificate-edit-name-button').click()
+
+        // Fronteira inferior (min-1): nome vazio
+        await page.getByRole('textbox').fill('')
+        await page.getByRole('textbox').press('Enter')
+        await expect(page.getByText('O nome não pode ser vazio')).toBeVisible({
+            timeout: 5000,
+        })
+
+        // Fronteira superior (max+1): 101 caracteres
+        await page.getByRole('textbox').fill('A'.repeat(101))
+        await page.getByRole('textbox').press('Enter')
+        await expect(
+            page.getByText('O nome deve ter no máximo 100 caracteres'),
+        ).toBeVisible({ timeout: 5000 })
+
+        // Valor válido
         await page.getByRole('textbox').fill(renamedName)
         await page.getByRole('textbox').press('Enter')
         await expect(page.getByText('Nome atualizado com sucesso')).toBeVisible(
@@ -99,10 +128,30 @@ test.describe('Emissão de certificado', () => {
 
         await expect(page.getByText('A geração de certificados finalizou')).toBeVisible({ timeout: 10000 })
 
+        // Etapa 1: sem campos preenchidos — valida obrigatoriedade
+        await page.getByTestId('email-send-button').click()
+        await expect(page.getByText('A coluna de e-mail é obrigatória')).toBeVisible({ timeout: 5000 })
+        await expect(page.getByText('O assunto é obrigatório')).toBeVisible({ timeout: 5000 })
+        await expect(page.getByText('O corpo do e-mail é obrigatório')).toBeVisible({ timeout: 5000 })
+
+        // Etapa 2: fronteiras superiores de assunto (max+1: 256 chars) e corpo (max+1: 801 chars)
         await page.getByTestId('email-column-select').click()
         await page.getByRole('option', { name: 'E-mail' }).click()
+        await page.locator('#email-subject-now').fill('A'.repeat(256))
+        await page.getByTestId('email-body-editor').locator('[contenteditable="true"]').click()
+        await page.keyboard.type('A'.repeat(801))
+        await page.getByTestId('email-send-button').click()
+        await expect(
+            page.getByText('Máximo de 255 caracteres ultrapassado'),
+        ).toBeVisible({ timeout: 5000 })
+        await expect(
+            page.getByText('Máximo de 800 caracteres ultrapassado'),
+        ).toBeVisible({ timeout: 5000 })
+
+        // Etapa 3: fluxo válido — corrige assunto e substitui corpo
         await page.locator('#email-subject-now').fill('Seu certificado está pronto!')
         await page.getByTestId('email-body-editor').locator('[contenteditable="true"]').click()
+        await page.keyboard.press('Control+a')
         await page.keyboard.type('Olá! Seu certificado está disponível em anexo.')
         await page.getByTestId('email-send-button').click()
 

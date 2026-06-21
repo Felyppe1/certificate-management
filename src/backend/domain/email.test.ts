@@ -107,6 +107,240 @@ describe('Email Domain', () => {
                 ).toThrow('emailErrorType is required')
             })
         })
+
+        describe('Validação do comprimento do assunto', () => {
+            describe('deve aceitar assunto válido', () => {
+                it('1 caractere (limite mínimo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                subject: 'A',
+                            }),
+                    ).not.toThrow()
+                })
+
+                it('2 caracteres (acima do limite mínimo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                subject: 'AB',
+                            }),
+                    ).not.toThrow()
+                })
+
+                it('254 caracteres (abaixo do limite máximo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                subject: 'A'.repeat(254),
+                            }),
+                    ).not.toThrow()
+                })
+
+                it('255 caracteres (limite máximo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                subject: 'A'.repeat(255),
+                            }),
+                    ).not.toThrow()
+                })
+            })
+
+            describe('deve lançar erro com assunto inválido', () => {
+                it('0 caracteres / string vazia (abaixo do mínimo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                subject: '',
+                            }),
+                    ).toThrow('Email subject is required')
+                })
+
+                it('256 caracteres (acima do máximo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                subject: 'A'.repeat(256),
+                            }),
+                    ).toThrow('Email subject must have at most 255 characters')
+                })
+            })
+        })
+
+        describe('Validação do comprimento da coluna de e-mail', () => {
+            describe('deve aceitar coluna válida', () => {
+                it('1 caractere (limite mínimo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                emailColumn: 'A',
+                            }),
+                    ).not.toThrow()
+                })
+
+                it('2 caracteres (acima do limite mínimo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                emailColumn: 'AB',
+                            }),
+                    ).not.toThrow()
+                })
+
+                it('99 caracteres (abaixo do limite máximo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                emailColumn: 'A'.repeat(99),
+                            }),
+                    ).not.toThrow()
+                })
+
+                it('100 caracteres (limite máximo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                emailColumn: 'A'.repeat(100),
+                            }),
+                    ).not.toThrow()
+                })
+            })
+
+            describe('deve lançar erro com coluna inválida', () => {
+                it('0 caracteres / string vazia (abaixo do mínimo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                emailColumn: '',
+                            }),
+                    ).toThrow('Email column is required')
+                })
+
+                it('101 caracteres (acima do máximo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                emailColumn: 'A'.repeat(101),
+                            }),
+                    ).toThrow('Email column must have at most 100 characters')
+                })
+            })
+        })
+
+        describe('Validação do comprimento do corpo', () => {
+            describe('deve aceitar corpo válido', () => {
+                it('1 caractere (limite mínimo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                body: 'A',
+                            }),
+                    ).not.toThrow()
+                })
+
+                it('2 caracteres (acima do limite mínimo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                body: 'AB',
+                            }),
+                    ).not.toThrow()
+                })
+
+                it('799 caracteres (abaixo do limite máximo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                body: 'A'.repeat(799),
+                            }),
+                    ).not.toThrow()
+                })
+
+                it('800 caracteres (limite máximo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                body: 'A'.repeat(800),
+                            }),
+                    ).not.toThrow()
+                })
+            })
+
+            describe('deve lançar erro com corpo inválido', () => {
+                it('0 caracteres / string vazia (abaixo do mínimo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                body: '',
+                            }),
+                    ).toThrow('Email body is required')
+                })
+
+                it('801 caracteres (acima do máximo)', () => {
+                    expect(
+                        () =>
+                            new Email({
+                                ...validData,
+                                id: '1',
+                                status: PROCESSING_STATUS_ENUM.PENDING,
+                                body: 'A'.repeat(801),
+                            }),
+                    ).toThrow('Email body must have at most 800 characters')
+                })
+            })
+        })
     })
 
     describe('Validação de destinatários', () => {

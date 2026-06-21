@@ -62,6 +62,33 @@ export class Email extends AggregateRoot {
         return email
     }
 
+    private static validateSubject(subject: string): void {
+        if (!subject) {
+            throw new Error('Email subject is required')
+        }
+        if (subject.length > 255) {
+            throw new Error('Email subject must have at most 255 characters')
+        }
+    }
+
+    private static validateBody(body: string): void {
+        if (!body) {
+            throw new Error('Email body is required')
+        }
+        if (body.length > 800) {
+            throw new Error('Email body must have at most 800 characters')
+        }
+    }
+
+    private static validateEmailColumn(emailColumn: string): void {
+        if (!emailColumn) {
+            throw new Error('Email column is required')
+        }
+        if (emailColumn.length > 100) {
+            throw new Error('Email column must have at most 100 characters')
+        }
+    }
+
     constructor(data: EmailInput) {
         super(data.id)
 
@@ -69,17 +96,9 @@ export class Email extends AggregateRoot {
             throw new Error('Email certificateEmissionId is required')
         }
 
-        if (!data.subject) {
-            throw new Error('Email subject is required')
-        }
-
-        if (!data.body) {
-            throw new Error('Email body is required')
-        }
-
-        if (!data.emailColumn) {
-            throw new Error('Email column is required')
-        }
+        Email.validateSubject(data.subject)
+        Email.validateBody(data.body)
+        Email.validateEmailColumn(data.emailColumn)
 
         if (data.scheduledAt === undefined) {
             throw new Error('Email scheduledAt is required')
