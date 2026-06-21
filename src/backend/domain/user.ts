@@ -79,6 +79,7 @@ export class User extends AggregateRoot {
         let passwordHash: string | null = null
 
         if (data.passwordHash) {
+            User.validatePassword(data.passwordHash)
             passwordHash = await bcrypt.hash(data.passwordHash, 10)
         }
 
@@ -99,12 +100,29 @@ export class User extends AggregateRoot {
         })
     }
 
+    private static validatePassword(password: string): void {
+        if (!password) {
+            throw new Error('Password is required')
+        }
+        if (password.length < 6 || password.length > 100) {
+            throw new Error('Invalid password: min 6 chars, max 100 chars')
+        }
+    }
+
+    private static validateName(name: string): void {
+        const trimmed = name?.trim() ?? ''
+        if (!trimmed) {
+            throw new Error('User name is required')
+        }
+        if (trimmed.length < 3 || trimmed.length > 100) {
+            throw new Error('Invalid name: min 3 chars, max 100 chars')
+        }
+    }
+
     constructor(data: UserInput) {
         super(data.id)
 
-        if (!data.name) {
-            throw new Error('User name is required')
-        }
+        User.validateName(data.name)
         if (data.credits === undefined || data.credits === null) {
             throw new Error('User credits is required')
         }
@@ -135,6 +153,7 @@ export class User extends AggregateRoot {
     }
 
     async setSystemLogin(email: string, plainPassword: string): Promise<void> {
+        User.validatePassword(plainPassword)
         this.passwordHash = await bcrypt.hash(plainPassword, 10)
 
         const isEmailFromExternalAccount = this.externalAccounts.some(
@@ -231,6 +250,7 @@ export class User extends AggregateRoot {
 
     async resetPassword(code: string, newPassword: string): Promise<void> {
         this.validateResetPasswordCode(code)
+        User.validatePassword(newPassword)
         this.passwordHash = await bcrypt.hash(newPassword, 10)
         this.resetPasswordCode = null
     }
@@ -288,12 +308,8 @@ export class User extends AggregateRoot {
     }
 
     updateName(name: string): void {
-        const trimmed = name.trim()
-        if (trimmed.length < 3 || trimmed.length > 50) {
-            throw new Error('Invalid name: min 3 chars, max 50 chars')
-        }
-
-        this.name = trimmed
+        User.validateName(name)
+        this.name = name.trim()
     }
 
     async updatePassword(
@@ -313,6 +329,7 @@ export class User extends AggregateRoot {
             throw new CurrentPasswordIncorrectError()
         }
 
+        User.validatePassword(newPassword)
         this.passwordHash = await bcrypt.hash(newPassword, 10)
     }
 
