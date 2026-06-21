@@ -97,6 +97,46 @@ describe('User', () => {
             expect(await user.comparePassword('senha-clara')).toBe(true)
             expect(user.getEmailVerificationCode()).not.toBeNull()
         })
+
+        describe('deve aceitar senha válida na criação', () => {
+            it('6 caracteres (limite mínimo)', async () => {
+                await expect(
+                    User.create({ name: 'Ana Silva', email: 'a@b.com', passwordHash: 'Ab@1xy' }),
+                ).resolves.toBeDefined()
+            })
+
+            it('7 caracteres (acima do limite mínimo)', async () => {
+                await expect(
+                    User.create({ name: 'Ana Silva', email: 'a@b.com', passwordHash: 'Ab@1xyz' }),
+                ).resolves.toBeDefined()
+            })
+
+            it('99 caracteres (abaixo do limite máximo)', async () => {
+                await expect(
+                    User.create({ name: 'Ana Silva', email: 'a@b.com', passwordHash: 'A'.repeat(99) }),
+                ).resolves.toBeDefined()
+            })
+
+            it('100 caracteres (limite máximo)', async () => {
+                await expect(
+                    User.create({ name: 'Ana Silva', email: 'a@b.com', passwordHash: 'A'.repeat(100) }),
+                ).resolves.toBeDefined()
+            })
+        })
+
+        describe('deve lançar erro com senha inválida na criação', () => {
+            it('5 caracteres (abaixo do mínimo)', async () => {
+                await expect(
+                    User.create({ name: 'Ana Silva', email: 'a@b.com', passwordHash: 'Ab@1x' }),
+                ).rejects.toThrow('Invalid password: min 6 chars, max 100 chars')
+            })
+
+            it('101 caracteres (acima do máximo)', async () => {
+                await expect(
+                    User.create({ name: 'Ana Silva', email: 'a@b.com', passwordHash: 'A'.repeat(101) }),
+                ).rejects.toThrow('Invalid password: min 6 chars, max 100 chars')
+            })
+        })
     })
 
     describe('Validação', () => {
@@ -452,6 +492,40 @@ describe('User', () => {
                 user.updatePassword('newpassword', 'wrongpassword'),
             ).rejects.toThrow(CurrentPasswordIncorrectError)
         })
+
+        describe('deve aceitar nova senha válida', () => {
+            it('6 caracteres (limite mínimo)', async () => {
+                const user = createUserData({ email: 'u@g.com', passwordHash: await bcrypt.hash('oldpass', 10), isEmailVerified: true })
+                await expect(user.updatePassword('Ab@1xy', 'oldpass')).resolves.toBeUndefined()
+            })
+
+            it('7 caracteres (acima do limite mínimo)', async () => {
+                const user = createUserData({ email: 'u@g.com', passwordHash: await bcrypt.hash('oldpass', 10), isEmailVerified: true })
+                await expect(user.updatePassword('Ab@1xyz', 'oldpass')).resolves.toBeUndefined()
+            })
+
+            it('99 caracteres (abaixo do limite máximo)', async () => {
+                const user = createUserData({ email: 'u@g.com', passwordHash: await bcrypt.hash('oldpass', 10), isEmailVerified: true })
+                await expect(user.updatePassword('A'.repeat(99), 'oldpass')).resolves.toBeUndefined()
+            })
+
+            it('100 caracteres (limite máximo)', async () => {
+                const user = createUserData({ email: 'u@g.com', passwordHash: await bcrypt.hash('oldpass', 10), isEmailVerified: true })
+                await expect(user.updatePassword('A'.repeat(100), 'oldpass')).resolves.toBeUndefined()
+            })
+        })
+
+        describe('deve lançar erro com nova senha inválida', () => {
+            it('5 caracteres (abaixo do mínimo)', async () => {
+                const user = createUserData({ email: 'u@g.com', passwordHash: await bcrypt.hash('oldpass', 10), isEmailVerified: true })
+                await expect(user.updatePassword('Ab@1x', 'oldpass')).rejects.toThrow('Invalid password: min 6 chars, max 100 chars')
+            })
+
+            it('101 caracteres (acima do máximo)', async () => {
+                const user = createUserData({ email: 'u@g.com', passwordHash: await bcrypt.hash('oldpass', 10), isEmailVerified: true })
+                await expect(user.updatePassword('A'.repeat(101), 'oldpass')).rejects.toThrow('Invalid password: min 6 chars, max 100 chars')
+            })
+        })
     })
 
     describe('Atualizar nome', () => {
@@ -580,6 +654,43 @@ describe('User', () => {
 
             expect(user.getIsEmailVerified()).toBe(false)
             expect(user.getEmailVerificationCode()).not.toBeNull()
+        })
+
+        const makeUserWithoutSystemLogin = () =>
+            createUserData({
+                email: null,
+                passwordHash: null,
+                externalAccounts: [
+                    new ExternalAccount(createExternalAccountData()),
+                ],
+            })
+
+        describe('deve aceitar senha válida ao definir login', () => {
+            it('6 caracteres (limite mínimo)', async () => {
+                await expect(makeUserWithoutSystemLogin().setSystemLogin('a@b.com', 'Ab@1xy')).resolves.toBeUndefined()
+            })
+
+            it('7 caracteres (acima do limite mínimo)', async () => {
+                await expect(makeUserWithoutSystemLogin().setSystemLogin('a@b.com', 'Ab@1xyz')).resolves.toBeUndefined()
+            })
+
+            it('99 caracteres (abaixo do limite máximo)', async () => {
+                await expect(makeUserWithoutSystemLogin().setSystemLogin('a@b.com', 'A'.repeat(99))).resolves.toBeUndefined()
+            })
+
+            it('100 caracteres (limite máximo)', async () => {
+                await expect(makeUserWithoutSystemLogin().setSystemLogin('a@b.com', 'A'.repeat(100))).resolves.toBeUndefined()
+            })
+        })
+
+        describe('deve lançar erro com senha inválida ao definir login', () => {
+            it('5 caracteres (abaixo do mínimo)', async () => {
+                await expect(makeUserWithoutSystemLogin().setSystemLogin('a@b.com', 'Ab@1x')).rejects.toThrow('Invalid password: min 6 chars, max 100 chars')
+            })
+
+            it('101 caracteres (acima do máximo)', async () => {
+                await expect(makeUserWithoutSystemLogin().setSystemLogin('a@b.com', 'A'.repeat(101))).rejects.toThrow('Invalid password: min 6 chars, max 100 chars')
+            })
         })
     })
 
@@ -802,6 +913,44 @@ describe('User', () => {
 
             expect(await user.comparePassword('nova-senha')).toBe(true)
             expect(user.getResetPasswordCode()).toBeNull()
+        })
+
+        const makeUserWithCode = () =>
+            createUserData({
+                email: 'user@example.com',
+                passwordHash: 'hash',
+                resetPasswordCode: new ResetPasswordCode({
+                    code: '654321',
+                    expiresAt: new Date(Date.now() + 60_000),
+                }),
+            })
+
+        describe('deve aceitar nova senha válida', () => {
+            it('6 caracteres (limite mínimo)', async () => {
+                await expect(makeUserWithCode().resetPassword('654321', 'Ab@1xy')).resolves.toBeUndefined()
+            })
+
+            it('7 caracteres (acima do limite mínimo)', async () => {
+                await expect(makeUserWithCode().resetPassword('654321', 'Ab@1xyz')).resolves.toBeUndefined()
+            })
+
+            it('99 caracteres (abaixo do limite máximo)', async () => {
+                await expect(makeUserWithCode().resetPassword('654321', 'A'.repeat(99))).resolves.toBeUndefined()
+            })
+
+            it('100 caracteres (limite máximo)', async () => {
+                await expect(makeUserWithCode().resetPassword('654321', 'A'.repeat(100))).resolves.toBeUndefined()
+            })
+        })
+
+        describe('deve lançar erro com nova senha inválida', () => {
+            it('5 caracteres (abaixo do mínimo)', async () => {
+                await expect(makeUserWithCode().resetPassword('654321', 'Ab@1x')).rejects.toThrow('Invalid password: min 6 chars, max 100 chars')
+            })
+
+            it('101 caracteres (acima do máximo)', async () => {
+                await expect(makeUserWithCode().resetPassword('654321', 'A'.repeat(101))).rejects.toThrow('Invalid password: min 6 chars, max 100 chars')
+            })
         })
     })
 

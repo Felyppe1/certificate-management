@@ -15,7 +15,7 @@ import { AlertMessage } from '@/components/ui/alert-message'
 
 const signUpSchema = z
     .object({
-        name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+        name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres').max(100, 'Nome deve ter no máximo 100 caracteres'),
         email: z.string().email('Formato de email inválido'),
         password: z
             .string()
