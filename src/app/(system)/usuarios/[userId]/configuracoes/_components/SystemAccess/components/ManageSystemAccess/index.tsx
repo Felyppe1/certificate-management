@@ -31,7 +31,7 @@ const changeEmailSchema = z.object({
 const changePasswordSchema = z
     .object({
         currentPassword: z.string().min(1, 'Campo obrigatório'),
-        newPassword: z.string().min(6, 'Mínimo de 6 caracteres').max(100),
+        newPassword: z.string().min(6, 'Mínimo de 6 caracteres').max(100, 'Máximo de 100 caracteres'),
         confirmNewPassword: z.string(),
     })
     .refine(d => d.newPassword === d.confirmNewPassword, {
