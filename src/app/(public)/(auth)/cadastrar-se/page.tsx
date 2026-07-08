@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Logo } from '@/components/Logo'
-import { SignUpForm } from './_components/signup-form'
+import { SignUpForm } from './SignupForm'
 import { GoogleButton } from '@/components/GoogleButton'
 import { Metadata } from 'next'
 import { RequestAccessModal } from '@/components/RequestAccessModal'

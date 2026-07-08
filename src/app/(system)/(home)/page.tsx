@@ -1,5 +1,5 @@
-import { CertificateEmissionsList } from './_components/CertificateEmissionsList'
-import { Metrics } from './_components/Metrics'
+import { CertificateEmissionsList } from './CertificateEmissionsList'
+import { Metrics } from './Metrics'
 import {
     dehydrate,
     HydrationBoundary,

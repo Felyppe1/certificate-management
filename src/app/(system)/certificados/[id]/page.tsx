@@ -4,7 +4,7 @@ import {
     QueryClient,
 } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
-import { CertificatePageClient } from './_components/CertificatePageClient'
+import { CertificatePageClient } from './CertificatePageClient'
 import { Metadata } from 'next'
 import { getCertificateEmissionAction } from '@/backend/infrastructure/server-actions/get-certificate-emission-action'
 

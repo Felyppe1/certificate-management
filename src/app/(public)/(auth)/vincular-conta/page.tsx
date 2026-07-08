@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Logo } from '@/components/Logo'
-import { LinkGoogleConfirmCard } from './_components/LinkGoogleConfirmCard'
+import { LinkGoogleConfirmCard } from './LinkGoogleConfirmCard'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {

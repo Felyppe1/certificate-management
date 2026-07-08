@@ -3,7 +3,7 @@ import { Logo } from '@/components/Logo'
 import { GoogleButton } from '@/components/GoogleButton'
 import { Card } from '@/components/ui/card'
 import { RequestAccessModal } from '@/components/RequestAccessModal'
-import { LoginForm } from './_components/login-form'
+import { LoginForm } from './LoginForm'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {

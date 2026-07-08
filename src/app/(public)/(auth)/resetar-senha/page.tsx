@@ -1,7 +1,7 @@
 import { Logo } from '@/components/Logo'
 import { Card } from '@/components/ui/card'
 import { Metadata } from 'next'
-import { ResetPasswordForm } from './_components/ResetPasswordForm'
+import { ResetPasswordForm } from './ResetPasswordForm'
 import Link from 'next/link'
 
 export const metadata: Metadata = {

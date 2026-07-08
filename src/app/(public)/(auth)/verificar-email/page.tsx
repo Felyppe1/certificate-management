@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Logo } from '@/components/Logo'
 import { Card } from '@/components/ui/card'
 import { Metadata } from 'next'
-import { VerifyEmailCard } from './_components/VerifyEmailCard'
+import { VerifyEmailCard } from './VerifyEmailCard'
 
 export const metadata: Metadata = {
     title: 'Verificação do e-mail',

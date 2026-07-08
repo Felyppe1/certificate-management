@@ -1,10 +1,10 @@
 import Link from 'next/link'
-import { DeleteAccount } from './_components/DeleteAccount'
-import { GrantAccess } from './_components/GrantAccess'
+import { DeleteAccount } from './DeleteAccount'
+import { GrantAccess } from './GrantAccess'
 import { GoBackButton } from '@/components/GoBackButton'
-import { SystemAccess } from './_components/SystemAccess'
-import { Account } from './_components/Account'
-import { BasicData } from './_components/BasicData'
+import { SystemAccess } from './SystemAccess'
+import { Account } from './Account'
+import { BasicData } from './BasicData'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
