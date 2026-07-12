@@ -1,15 +1,11 @@
 import { ISessionsRepository } from '@/backend/application/interfaces/repository/write/isessions-repository'
-import { PrismaExecutor } from '@/backend/infrastructure/repository/prisma'
-import { transactionStorage } from '../prisma-transaction-manager'
 import { Session } from '@/backend/domain/session'
+import { PrismaRepository } from '../prisma-repository'
 
-export class PrismaSessionsRepository implements ISessionsRepository {
-    constructor(private readonly defaultPrisma: PrismaExecutor) {}
-
-    private get prisma() {
-        return transactionStorage.getStore() || this.defaultPrisma
-    }
-
+export class PrismaSessionsRepository
+    extends PrismaRepository
+    implements ISessionsRepository
+{
     async getById(token: string) {
         const session = await this.prisma.session.findUnique({
             where: {

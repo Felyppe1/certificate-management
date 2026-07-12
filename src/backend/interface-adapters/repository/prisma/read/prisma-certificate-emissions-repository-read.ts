@@ -8,12 +8,36 @@ import {
     PROCESSING_STATUS_ENUM,
 } from '@/backend/domain/email'
 import { PROCESSING_STATUS_ENUM as DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
-import { PrismaExecutor } from '@/backend/infrastructure/repository/prisma'
+import { getCertificateEmissionsMetricsByUserId } from '@/backend/infrastructure/repository/prisma/client/sql'
+import { PrismaRepository } from '../prisma-repository'
 
 export class PrismaCertificateEmissionsRepositoryRead
+    extends PrismaRepository
     implements ICertificateEmissionsReadRepository
 {
-    constructor(private readonly prisma: PrismaExecutor) {}
+    async getCertificateEmissionsMetricsByUserId(userId: string) {
+        type DailyItem = { date: string; quantity: number }
+
+        const [row] = await this.prisma.$queryRawTyped(
+            getCertificateEmissionsMetricsByUserId(userId),
+        )
+
+        const dailyCertificates = (row.daily_certificates ?? []) as DailyItem[]
+        const dailyEmails = (row.daily_emails ?? []) as DailyItem[]
+
+        return {
+            totalCertificatesGenerated: row.certificates_total ?? 0,
+            totalEmailsSent: row.emails_total ?? 0,
+            dailyCertificates: dailyCertificates.map(item => ({
+                date: new Date(item.date),
+                quantity: item.quantity,
+            })),
+            dailyEmails: dailyEmails.map(item => ({
+                date: new Date(item.date),
+                quantity: item.quantity,
+            })),
+        }
+    }
 
     async listByOwner(userId: string) {
         const certificateEmissions =

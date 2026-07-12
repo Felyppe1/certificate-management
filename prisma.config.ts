@@ -6,6 +6,9 @@ export default defineConfig({
     migrations: {
         path: 'src/backend/infrastructure/repository/prisma/migrations',
     },
+    typedSql: {
+        path: 'src/backend/infrastructure/repository/prisma/sql',
+    },
     datasource: {
         url: env('DB_URL'),
     },

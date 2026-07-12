@@ -1,13 +1,13 @@
 import { describe, expect, it, vi, beforeEach, Mock } from 'vitest'
 import { GetCertificateEmissionsMetricsUseCase } from './get-certificate-emissions-metrics-use-case'
-import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { ICertificateEmissionsReadRepository } from './interfaces/repository/read/icertificate-emissions-read-repository'
 
 describe('GetCertificateEmissionsMetricsUseCase', () => {
     const USER_ID = 'user-1'
 
     let certificateEmissionsRepository: {
         getCertificateEmissionsMetricsByUserId: Mock<
-            ICertificatesRepository['getCertificateEmissionsMetricsByUserId']
+            ICertificateEmissionsReadRepository['getCertificateEmissionsMetricsByUserId']
         >
     }
 

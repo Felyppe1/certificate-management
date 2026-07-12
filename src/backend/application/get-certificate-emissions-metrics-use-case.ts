@@ -1,4 +1,4 @@
-import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { ICertificateEmissionsReadRepository } from './interfaces/repository/read/icertificate-emissions-read-repository'
 
 interface GetCertificateEmissionsMetricsUseCaseInput {
     userId: string
@@ -7,7 +7,7 @@ interface GetCertificateEmissionsMetricsUseCaseInput {
 export class GetCertificateEmissionsMetricsUseCase {
     constructor(
         private certificateEmissionsRepository: Pick<
-            ICertificatesRepository,
+            ICertificateEmissionsReadRepository,
             'getCertificateEmissionsMetricsByUserId'
         >,
     ) {}

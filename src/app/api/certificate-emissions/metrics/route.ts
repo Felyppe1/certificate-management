@@ -2,7 +2,7 @@
 
 import { GetCertificateEmissionsMetricsUseCase } from '@/backend/application/get-certificate-emissions-metrics-use-case'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { PrismaCertificatesRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-certificates-repository'
+import { PrismaCertificateEmissionsRepositoryRead } from '@/backend/interface-adapters/repository/prisma/read/prisma-certificate-emissions-repository-read'
 
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
@@ -25,10 +25,13 @@ export async function GET(
     try {
         const { userId } = await validateSessionToken(request)
 
-        const certificatesRepository = new PrismaCertificatesRepository(prisma)
+        const certificateEmissionsRepositoryRead =
+            new PrismaCertificateEmissionsRepositoryRead(prisma)
 
         const getAllCertificatesUseCase =
-            new GetCertificateEmissionsMetricsUseCase(certificatesRepository)
+            new GetCertificateEmissionsMetricsUseCase(
+                certificateEmissionsRepositoryRead,
+            )
 
         const certificateEmissionsMetrics =
             await getAllCertificatesUseCase.execute({

@@ -7,21 +7,13 @@ import {
 } from '@/backend/application/interfaces/repository/write/iusers-repository'
 import { User } from '@/backend/domain/user'
 import { ExternalAccount, Provider } from '@/backend/domain/external-account'
-import {
-    isPrismaClient,
-    PrismaExecutor,
-    TRANSACTION_OPTIONS,
-} from '@/backend/infrastructure/repository/prisma'
-import { transactionStorage } from '../prisma-transaction-manager'
-import { Prisma } from '@/backend/infrastructure/repository/prisma/client/browser'
+import { TransactionClient } from '@/backend/infrastructure/repository/prisma/client/internal/prismaNamespace'
+import { PrismaRepository } from '../prisma-repository'
 
-export class PrismaUsersRepository implements IUsersRepository {
-    constructor(private readonly defaultPrisma: PrismaExecutor) {}
-
-    private get prisma() {
-        return transactionStorage.getStore() || this.defaultPrisma
-    }
-
+export class PrismaUsersRepository
+    extends PrismaRepository
+    implements IUsersRepository
+{
     private mapUser(user: {
         id: string
         email: string | null
@@ -259,7 +251,7 @@ export class PrismaUsersRepository implements IUsersRepository {
 
         const currentProviders = externalAccounts.map(a => a.provider)
 
-        const execute = async (tx: Prisma.TransactionClient) => {
+        const execute = async (tx: TransactionClient) => {
             if (!emailVerificationCode) {
                 await tx.emailVerificationCode.deleteMany({
                     where: { user_id: id },
@@ -351,11 +343,7 @@ export class PrismaUsersRepository implements IUsersRepository {
             })
         }
 
-        if (isPrismaClient(this.prisma)) {
-            await this.prisma.$transaction(execute, TRANSACTION_OPTIONS)
-        } else {
-            await execute(this.prisma)
-        }
+        await this.runTransactionally(execute)
     }
 
     async delete(id: string): Promise<void> {

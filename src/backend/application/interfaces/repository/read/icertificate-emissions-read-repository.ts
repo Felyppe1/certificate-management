@@ -66,9 +66,19 @@ export interface CertificateEmissionDetailsOutput {
     } | null
 }
 
+export interface GetCertificateEmissionsMetricsByUserIdOutput {
+    totalCertificatesGenerated: number
+    totalEmailsSent: number
+    dailyCertificates: { date: Date; quantity: number }[]
+    dailyEmails: { date: Date; quantity: number }[]
+}
+
 export interface ICertificateEmissionsReadRepository {
     listByOwner(userId: string): Promise<CertificateEmissionListItemOutput[]>
     getDetailsById(
         certificateId: string,
     ): Promise<CertificateEmissionDetailsOutput | null>
+    getCertificateEmissionsMetricsByUserId(
+        userId: string,
+    ): Promise<GetCertificateEmissionsMetricsByUserIdOutput>
 }

@@ -1,9 +1,3 @@
-import {
-    isPrismaClient,
-    PrismaExecutor,
-    TRANSACTION_OPTIONS,
-} from '@/backend/infrastructure/repository/prisma'
-import { transactionStorage } from '../prisma-transaction-manager'
 import { IDataSourceRowsRepository } from '@/backend/application/interfaces/repository/write/idata-source-rows-repository'
 import {
     DataSourceRow,
@@ -11,18 +5,14 @@ import {
 } from '@/backend/domain/data-source-row'
 import { TransactionClient } from '@/backend/infrastructure/repository/prisma/client/internal/prismaNamespace'
 import { IDataSourceRowsReadRepository } from '@/backend/application/interfaces/repository/read/idata-source-rows-read-repository'
+import { PrismaRepository } from '../prisma-repository'
 
 const GET_MANY_DEFAULT_LIMIT = 100
 
 export class PrismaDataSourceRowsRepository
+    extends PrismaRepository
     implements IDataSourceRowsRepository, IDataSourceRowsReadRepository
 {
-    constructor(private readonly defaultPrisma: PrismaExecutor) {}
-
-    private get prisma() {
-        return transactionStorage.getStore() || this.defaultPrisma
-    }
-
     async saveMany(dataSourceRows: DataSourceRow[]): Promise<void> {
         const execute = async (tx: TransactionClient) => {
             // Create new rows
@@ -64,11 +54,7 @@ export class PrismaDataSourceRowsRepository
             })
         }
 
-        if (isPrismaClient(this.prisma)) {
-            await this.prisma.$transaction(execute, TRANSACTION_OPTIONS)
-        } else {
-            await execute(this.prisma)
-        }
+        await this.runTransactionally(execute)
     }
 
     async getById(id: string): Promise<DataSourceRow | null> {
@@ -165,11 +151,7 @@ export class PrismaDataSourceRowsRepository
             }
         }
 
-        if (isPrismaClient(this.prisma)) {
-            await this.prisma.$transaction(execute, TRANSACTION_OPTIONS)
-        } else {
-            await execute(this.prisma)
-        }
+        await this.runTransactionally(execute)
     }
 
     async updateMany(dataSourceRows: DataSourceRow[]): Promise<void> {
@@ -210,61 +192,8 @@ export class PrismaDataSourceRowsRepository
             }
         }
 
-        if (isPrismaClient(this.prisma)) {
-            await this.prisma.$transaction(execute, TRANSACTION_OPTIONS)
-        } else {
-            await execute(this.prisma)
-        }
+        await this.runTransactionally(execute)
     }
-
-    // async getManyByCertificateEmissionId(
-    //     certificateEmissionId: string,
-    // ): Promise<DataSourceRow[]> {
-    //     // Query through DataSourceValue since that's where the certificate_emission_id (data_source_id) is stored
-    //     const dataSourceRows = await this.prisma.dataSourceRow.findMany({
-    //         where: {
-    //             data_source_id: certificateEmissionId,
-    //         },
-    //         include: {
-    //             DataSourceValue: {
-    //                 where: {
-    //                     data_source_id: certificateEmissionId,
-    //                 },
-    //                 include: {
-    //                     DataSourceColumn: true,
-    //                 },
-    //             },
-    //         },
-    //     })
-
-    //     // Get the data source columns once (all rows have the same columns)
-    //     const dataSourceColumns = await this.prisma.dataSourceColumn.findMany({
-    //         where: {
-    //             data_source_id: certificateEmissionId,
-    //         },
-    //     })
-
-    //     const columns = dataSourceColumns.map(col => ({
-    //         name: col.name,
-    //         type: col.type.toLowerCase() as ColumnType,
-    //     }))
-
-    //     return dataSourceRows.map(row => {
-    //         const data: Record<string, string> = {}
-    //         for (const value of row.DataSourceValue) {
-    //             data[value.column_name] = value.value
-    //         }
-
-    //         return new DataSourceRow({
-    //             id: row.id,
-    //             certificateEmissionId,
-    //             fileBytes: row.file_bytes,
-    //             data,
-    //             dataSourceColumns: columns,
-    //             processingStatus: row.processing_status as any,
-    //         })
-    //     })
-    // }
 
     async updateManyProcessingStatus(
         ids: string[],
@@ -298,27 +227,11 @@ export class PrismaDataSourceRowsRepository
     async deleteManyByCertificateEmissionId(
         certificateEmissionId: string,
     ): Promise<void> {
-        console.log(certificateEmissionId)
-        const execute = async (tx: TransactionClient) => {
-            const result = await tx.dataSourceRow.deleteMany({
-                where: {
-                    data_source_id: certificateEmissionId,
-                },
-            })
-            console.log('result', result)
-
-            // await tx.dataSourceColumns.deleteMany({
-            //     where: {
-            //         data_source_id: certificateEmissionId,
-            //     },
-            // })
-        }
-
-        if (isPrismaClient(this.prisma)) {
-            await this.prisma.$transaction(execute, TRANSACTION_OPTIONS)
-        } else {
-            await execute(this.prisma)
-        }
+        await this.prisma.dataSourceRow.deleteMany({
+            where: {
+                data_source_id: certificateEmissionId,
+            },
+        })
     }
 
     async getColumnValuesByCertificateEmissionId(
@@ -341,26 +254,17 @@ export class PrismaDataSourceRowsRepository
     async allRowsFinishedProcessing(
         certificateEmissionId: string,
     ): Promise<boolean> {
-        let count: number = 0
-        const execute = async (tx: TransactionClient) => {
-            count = await tx.dataSourceRow.count({
-                where: {
-                    data_source_id: certificateEmissionId,
-                    processing_status: {
-                        notIn: [
-                            PROCESSING_STATUS_ENUM.COMPLETED,
-                            PROCESSING_STATUS_ENUM.FAILED,
-                        ],
-                    },
+        const count = await this.prisma.dataSourceRow.count({
+            where: {
+                data_source_id: certificateEmissionId,
+                processing_status: {
+                    notIn: [
+                        PROCESSING_STATUS_ENUM.COMPLETED,
+                        PROCESSING_STATUS_ENUM.FAILED,
+                    ],
                 },
-            })
-        }
-
-        if (isPrismaClient(this.prisma)) {
-            await this.prisma.$transaction(execute, TRANSACTION_OPTIONS)
-        } else {
-            await execute(this.prisma)
-        }
+            },
+        })
 
         return count === 0
     }

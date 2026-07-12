@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import { GetCertificateEmissionsMetricsUseCase } from './get-certificate-emissions-metrics-use-case'
-import { PrismaCertificatesRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-certificates-repository'
+import { PrismaCertificateEmissionsRepositoryRead } from '@/backend/interface-adapters/repository/prisma/read/prisma-certificate-emissions-repository-read'
 import { prisma } from '@/tests/setup.integration'
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 
 function makeUseCase() {
     return new GetCertificateEmissionsMetricsUseCase(
-        new PrismaCertificatesRepository(prisma),
+        new PrismaCertificateEmissionsRepositoryRead(prisma),
     )
 }
 
