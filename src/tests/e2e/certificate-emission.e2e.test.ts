@@ -1,117 +1,93 @@
 import { test, expect } from './fixtures'
 import { faker } from '@faker-js/faker'
-import path from 'path'
-import {
-    setupAuth,
-    setupCertificate,
-    uploadTemplate,
-    uploadDataSource,
-} from './helpers'
+import { BASE_URL } from './config'
+import { createEmission } from './helpers/auth-helpers'
 
 const TEMPLATE_URL = process.env.E2E_TEMPLATE_URL
 const DATA_SOURCE_URL = process.env.E2E_DATA_SOURCE_URL
 
-// const TEMPLATE_FIXTURE = path.resolve('src/tests/e2e/fixtures/template.docx')
-// const DATA_SOURCE_FIXTURE = path.resolve('src/tests/e2e/fixtures/data-source.csv')
-
 test.describe('Emissão de certificado', () => {
+    // Depends on a user with no emissions (empty-list assertion), so it uses its
+    // own isolated user instead of the worker's shared user.
     test('CRUD - deve criar, renomear, listar e excluir uma emissão de certificado', async ({
         page,
-        context,
-        prisma,
+        authProviderClient,
+        dashboardPage,
+        certificatePage,
     }) => {
-        const { userId } = await setupAuth(prisma, context)
+        const { userId } = await authProviderClient.createUser()
+        await authProviderClient.authenticate(userId)
 
         const initialName = faker.commerce.productName()
         const renamedName = `${initialName} Renammed`
 
-        await page.goto('/')
-        await page.getByTestId('create-emission-button').click()
+        await dashboardPage.goto()
+        await dashboardPage.openCreateEmission()
 
-        // Fronteira inferior (min-1): nome vazio
-        await page.getByTestId('create-emission-submit').click()
-        await expect(page.getByText('Esse campo é obrigatório')).toBeVisible()
+        // Lower boundary (min-1): empty name
+        await dashboardPage.submitCreateEmission()
+        await expect(dashboardPage.nameRequiredError).toBeVisible()
 
-        // Fronteira superior (max+1): 101 caracteres
-        await page.getByLabel('Nome da emissão').fill('A'.repeat(101))
-        await page.getByTestId('create-emission-submit').click()
-        await expect(
-            page.getByText('Máximo de 100 caracteres ultrapassado'),
-        ).toBeVisible()
+        // Upper boundary (max+1): 101 characters
+        await dashboardPage.fillEmissionName('A'.repeat(101))
+        await dashboardPage.submitCreateEmission()
+        await expect(dashboardPage.nameMaxError).toBeVisible()
 
-        // Valor válido
-        await page.getByLabel('Nome da emissão').fill(initialName)
-        await page.getByTestId('create-emission-submit').click()
+        // Valid value
+        await dashboardPage.fillEmissionName(initialName)
+        await dashboardPage.submitCreateEmission()
         await page.waitForURL(/\/certificados\/.+/)
 
-        await page.getByTestId('certificate-edit-name-button').click()
+        await certificatePage.openEditName()
 
-        // Fronteira inferior (min-1): nome vazio
-        await page.getByRole('textbox').fill('')
-        await page.getByRole('textbox').press('Enter')
-        await expect(page.getByText('O nome não pode ser vazio')).toBeVisible({
-            timeout: 5000,
-        })
+        // Lower boundary (min-1): empty name
+        await certificatePage.submitName('')
+        await expect(certificatePage.nameEmptyError).toBeVisible()
 
-        // Fronteira superior (max+1): 101 caracteres
-        await page.getByRole('textbox').fill('A'.repeat(101))
-        await page.getByRole('textbox').press('Enter')
-        await expect(
-            page.getByText('O nome deve ter no máximo 100 caracteres'),
-        ).toBeVisible({ timeout: 5000 })
+        // Upper boundary (max+1): 101 characters
+        await certificatePage.submitName('A'.repeat(101))
+        await expect(certificatePage.nameMaxError).toBeVisible()
 
-        // Valor válido
-        await page.getByRole('textbox').fill(renamedName)
-        await page.getByRole('textbox').press('Enter')
-        await expect(page.getByText('Nome atualizado com sucesso')).toBeVisible(
-            { timeout: 20000 },
-        )
+        // Valid value
+        await certificatePage.submitName(renamedName)
+        await expect(certificatePage.renameSuccess).toBeVisible()
 
-        await page.goto('/')
-        const emissionLink = page.getByRole('link', { name: renamedName })
+        await dashboardPage.goto()
+        const emissionLink = dashboardPage.emissionLink(renamedName)
         await expect(emissionLink).toBeVisible()
 
         await emissionLink.click()
         await page.waitForURL(/\/certificados\/.+/)
-        await page.getByTestId('certificate-delete-button').click()
-        const continueButton = page.getByTestId('warning-popover-confirm')
-        await expect(continueButton).toBeVisible()
-        await continueButton.click()
-        await expect(
-            page.getByText('Certificado excluído com sucesso'),
-        ).toBeVisible({ timeout: 10000 })
 
-        await page.waitForURL('http://localhost:3001/')
+        await certificatePage.delete()
+        await expect(certificatePage.deleteSuccess).toBeVisible()
+
+        await page.waitForURL(`${BASE_URL}/`)
         await expect(emissionLink).not.toBeVisible()
-        await expect(
-            page.getByText('Nenhuma emissão de certificado criada'),
-        ).toBeVisible()
-
-        await prisma.user.delete({ where: { id: userId } })
+        await expect(dashboardPage.emptyMessage).toBeVisible()
     })
 
     test('deve realizar o fluxo completo de geração e emissão de certificados', async ({
         page,
-        context,
         prisma,
+        loggedInUser,
+        certificatePage,
     }) => {
-        const { userId, emissionId } = await setupCertificate(prisma, context)
+        const { emissionId } = await createEmission(prisma, loggedInUser.userId)
 
-        await page.goto(`/certificados/${emissionId}`)
+        await certificatePage.goto(emissionId)
 
-        await uploadTemplate(page)
-        await uploadDataSource(page)
+        await certificatePage.uploadTemplate()
+        await certificatePage.uploadDataSource()
 
-        // Map the two variables not auto-mapped
-        await page.getByTestId('mapping-select-nome').click()
-        await page.getByRole('option', { name: 'Nome Participante' }).click()
-        await page.getByTestId('mapping-select-data').click()
-        await page.getByRole('option', { name: 'Data do Evento' }).click()
-        await page.getByTestId('mapping-save-button').click()
-        await expect(page.getByText('Mapeamento salvo com sucesso')).toBeVisible({ timeout: 10000 })
+        // Map the two variables that were not auto-mapped
+        await certificatePage.mapVariable('nome', 'Nome Participante')
+        await certificatePage.mapVariable('data', 'Data do Evento')
+        await certificatePage.saveMapping()
+        await expect(certificatePage.mappingSuccess).toBeVisible()
 
-        await page.getByTestId('generate-certificates-button').click()
-        await expect(page.getByText('Gerando certificados...')).toBeVisible({ timeout: 10000 })
+        await certificatePage.generate()
+        await expect(certificatePage.generatingMessage).toBeVisible()
 
         const rows = await prisma.dataSourceRow.findMany({
             where: { data_source_id: emissionId },
@@ -119,41 +95,42 @@ test.describe('Emissão de certificado', () => {
         })
 
         for (const row of rows) {
-            await page.request.fetch(`/api/internal/data-source-rows/${row.id}/generations`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                data: { success: true, totalBytes: 1024, userId },
-            })
+            await page.request.fetch(
+                `/api/internal/data-source-rows/${row.id}/generations`,
+                {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    data: {
+                        success: true,
+                        totalBytes: 1024,
+                        userId: loggedInUser.userId,
+                    },
+                },
+            )
         }
 
-        await expect(page.getByText('A geração de certificados finalizou')).toBeVisible({ timeout: 10000 })
+        await expect(certificatePage.generationFinished).toBeVisible()
 
-        // Etapa 1: sem campos preenchidos — valida obrigatoriedade
-        await page.getByTestId('email-send-button').click()
-        await expect(page.getByText('A coluna de e-mail é obrigatória')).toBeVisible({ timeout: 5000 })
-        await expect(page.getByText('O assunto é obrigatório')).toBeVisible({ timeout: 5000 })
-        await expect(page.getByText('O corpo do e-mail é obrigatório')).toBeVisible({ timeout: 5000 })
+        // Step 1: no fields filled — validates required fields
+        await certificatePage.sendEmail()
+        await expect(certificatePage.emailColumnRequiredError).toBeVisible()
+        await expect(certificatePage.subjectRequiredError).toBeVisible()
+        await expect(certificatePage.bodyRequiredError).toBeVisible()
 
-        // Etapa 2: fronteiras superiores de assunto (max+1: 256 chars) e corpo (max+1: 801 chars)
-        await page.getByTestId('email-column-select').click()
-        await page.getByRole('option', { name: 'E-mail' }).click()
-        await page.locator('#email-subject-now').fill('A'.repeat(256))
-        await page.getByTestId('email-body-editor').locator('[contenteditable="true"]').click()
-        await page.keyboard.type('A'.repeat(801))
-        await page.getByTestId('email-send-button').click()
-        await expect(
-            page.getByText('Máximo de 255 caracteres ultrapassado'),
-        ).toBeVisible({ timeout: 5000 })
-        await expect(
-            page.getByText('Máximo de 800 caracteres ultrapassado'),
-        ).toBeVisible({ timeout: 5000 })
+        // Step 2: subject (max+1: 256) and body (max+1: 801) upper boundaries
+        await certificatePage.selectEmailColumn('E-mail')
+        await certificatePage.fillSubject('A'.repeat(256))
+        await certificatePage.typeBody('A'.repeat(801))
+        await certificatePage.sendEmail()
+        await expect(certificatePage.subjectMaxError).toBeVisible()
+        await expect(certificatePage.bodyMaxError).toBeVisible()
 
-        // Etapa 3: fluxo válido — corrige assunto e substitui corpo
-        await page.locator('#email-subject-now').fill('Seu certificado está pronto!')
-        await page.getByTestId('email-body-editor').locator('[contenteditable="true"]').click()
-        await page.keyboard.press('Control+a')
-        await page.keyboard.type('Olá! Seu certificado está disponível em anexo.')
-        await page.getByTestId('email-send-button').click()
+        // Step 3: valid flow — fixes subject and replaces body
+        await certificatePage.fillSubject('Seu certificado está pronto!')
+        await certificatePage.replaceBody(
+            'Olá! Seu certificado está disponível em anexo.',
+        )
+        await certificatePage.sendEmail()
 
         const email = await prisma.email.findFirst({
             where: { certificate_emission_id: emissionId },
@@ -164,81 +141,57 @@ test.describe('Emissão de certificado', () => {
             await page.request.fetch(`/api/internal/emails/${email.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                data: { status: 'COMPLETED', emailsSentCount: rows.length, userId },
+                data: {
+                    status: 'COMPLETED',
+                    emailsSentCount: rows.length,
+                    userId: loggedInUser.userId,
+                },
             })
         }
 
-        await expect(page.getByTestId('toaster').getByText('Emails enviados com sucesso')).toBeVisible({ timeout: 10000 })
-
-        await prisma.user.delete({ where: { id: userId } })
+        await expect(certificatePage.emailSentSuccess).toBeVisible()
     })
 
     test('deve adicionar template por upload, editar por url e excluir', async ({
-        page,
-        context,
         prisma,
+        loggedInUser,
+        certificatePage,
     }) => {
         if (!TEMPLATE_URL)
             throw new Error(
                 'E2E_TEMPLATE_URL env var is required to run this test',
             )
 
-        const { userId, emissionId } = await setupCertificate(prisma, context)
+        const { emissionId } = await createEmission(prisma, loggedInUser.userId)
 
-        await page.goto(`/certificados/${emissionId}`)
+        await certificatePage.goto(emissionId)
 
-        await uploadTemplate(page)
+        await certificatePage.uploadTemplate()
 
-        // await page.getByTestId('template-edit-button').click()
-        // await page.getByTestId('template-link-option').click()
-        // await page.getByTestId('url-input-0').fill(TEMPLATE_URL!)
-        // await page.getByTestId('url-form-confirm').click()
-        // await expect(page.getByText('Template atualizado com sucesso')).toBeVisible({ timeout: 10000 })
-
-        await page.getByTestId('template-remove-button').click()
-        await expect(
-            page.getByText('Template removido com sucesso'),
-        ).toBeVisible({ timeout: 10000 })
-
-        await prisma.user.delete({ where: { id: userId } })
+        await certificatePage.removeTemplate()
+        await expect(certificatePage.templateRemovedSuccess).toBeVisible()
     })
 
     test('deve adicionar fonte de dados por upload, editar por url, alterar coluna e excluir', async ({
-        page,
-        context,
         prisma,
+        loggedInUser,
+        certificatePage,
     }) => {
         if (!DATA_SOURCE_URL)
             throw new Error(
                 'E2E_DATA_SOURCE_URL env var is required to run this test',
             )
 
-        const { userId, emissionId } = await setupCertificate(prisma, context)
+        const { emissionId } = await createEmission(prisma, loggedInUser.userId)
 
-        await page.goto(`/certificados/${emissionId}`)
+        await certificatePage.goto(emissionId)
 
-        await uploadDataSource(page)
+        await certificatePage.uploadDataSource()
 
-        // await page.getByTestId('data-source-edit-button').click()
-        // await page.getByTestId('data-source-link-option').click()
-        // await page.getByTestId('url-input-0').fill(DATA_SOURCE_URL!)
-        // await page.getByTestId('url-form-confirm').click()
-        // await expect(page.getByText('Fonte de dados atualizada com sucesso')).toBeVisible({ timeout: 10000 })
+        await certificatePage.configureColumnAsArray('palestras', '/')
+        await expect(certificatePage.columnConfigSuccess).toBeVisible()
 
-        await page.getByTestId('column-header-palestras').click()
-        await page.getByTestId('column-type-option-array').click()
-        await page.getByTestId('column-array-separator-input').fill('/')
-        await page.keyboard.press('Escape')
-        await page.getByTestId('columns-save-button').click()
-        await expect(
-            page.getByText('Configuração salva com sucesso'),
-        ).toBeVisible({ timeout: 10000 })
-
-        await page.getByTestId('data-source-remove-button').click()
-        await expect(
-            page.getByText('Fonte de dados removida com sucesso'),
-        ).toBeVisible({ timeout: 10000 })
-
-        await prisma.user.delete({ where: { id: userId } })
+        await certificatePage.removeDataSource()
+        await expect(certificatePage.dataSourceRemovedSuccess).toBeVisible()
     })
 })
