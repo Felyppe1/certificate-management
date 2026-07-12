@@ -1,6 +1,7 @@
 import { vi, describe, it, expect, beforeAll } from 'vitest'
 import { prisma as testPrisma } from '@/tests/setup.integration'
 import { GetCertificateEmissionUseCase } from './get-certificate-emission-use-case'
+import { PrismaCertificateEmissionsRepositoryRead } from '@/backend/interface-adapters/repository/prisma/read/prisma-certificate-emissions-repository-read'
 import { CERTIFICATE_STATUS, INPUT_METHOD } from '@/backend/domain/certificate'
 import { TEMPLATE_FILE_MIME_TYPE } from '@/backend/domain/template'
 import { DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
@@ -23,7 +24,9 @@ beforeAll(() => {
 describe('GetCertificateEmissionUseCase (Integration)', () => {
     it('deve lançar erro quando certificado não for encontrado', async () => {
         await expect(
-            new GetCertificateEmissionUseCase().execute({
+            new GetCertificateEmissionUseCase(
+                new PrismaCertificateEmissionsRepositoryRead(testPrisma),
+            ).execute({
                 certificateId: 'inexistente',
                 userId: 'user-1',
             }),
@@ -49,7 +52,9 @@ describe('GetCertificateEmissionUseCase (Integration)', () => {
         })
 
         await expect(
-            new GetCertificateEmissionUseCase().execute({
+            new GetCertificateEmissionUseCase(
+                new PrismaCertificateEmissionsRepositoryRead(testPrisma),
+            ).execute({
                 certificateId: 'cert-1',
                 userId: 'outro-user',
             }),
@@ -76,7 +81,9 @@ describe('GetCertificateEmissionUseCase (Integration)', () => {
             },
         })
 
-        const result = await new GetCertificateEmissionUseCase().execute({
+        const result = await new GetCertificateEmissionUseCase(
+            new PrismaCertificateEmissionsRepositoryRead(testPrisma),
+        ).execute({
             certificateId: 'cert-1',
             userId: 'user-1',
         })
@@ -169,7 +176,9 @@ describe('GetCertificateEmissionUseCase (Integration)', () => {
             },
         })
 
-        const result = await new GetCertificateEmissionUseCase().execute({
+        const result = await new GetCertificateEmissionUseCase(
+            new PrismaCertificateEmissionsRepositoryRead(testPrisma),
+        ).execute({
             certificateId: 'cert-1',
             userId: 'user-1',
         })
@@ -279,7 +288,9 @@ describe('GetCertificateEmissionUseCase (Integration)', () => {
             },
         })
 
-        const result = await new GetCertificateEmissionUseCase().execute({
+        const result = await new GetCertificateEmissionUseCase(
+            new PrismaCertificateEmissionsRepositoryRead(testPrisma),
+        ).execute({
             certificateId: 'cert-1',
             userId: 'user-1',
         })

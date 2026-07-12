@@ -1,5 +1,5 @@
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { ISessionsRepository } from './interfaces/repository/isessions-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
+import { ISessionsRepository } from './interfaces/repository/write/isessions-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { Session } from '../domain/session'
 import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'

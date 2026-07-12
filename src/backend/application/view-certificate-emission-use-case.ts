@@ -1,9 +1,9 @@
-import { IBucket } from './interfaces/cloud/ibucket'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { IBucket } from './interfaces/storage/ibucket'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
 import { DataSourceRowNotFoundError } from '../domain/error/not-found-error/data-source-row-not-found-error'
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
 import { env } from '@/env'
 
 interface ViewCertificateEmissionUseCaseInput {

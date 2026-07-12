@@ -1,16 +1,18 @@
 import { describe, it, expect, vi } from 'vitest'
 import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-google-access-token-use-case'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
-import { IGoogleAuthGateway } from '@/backend/application/interfaces/igoogle-auth-gateway'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
+import { IGoogleAuthGateway } from '@/backend/application/interfaces/gateway/igoogle-auth-gateway'
 import { GoogleAccountNotFoundError } from '@/backend/domain/error/forbidden-error/google-account-not-found-error'
 import { prisma } from '@/tests/setup.integration'
 
 const FUTURE_DATE = new Date(Date.now() + 60 * 60 * 1000)
 
-async function seedUserWithGoogleAccount(options: {
-    accessToken?: string
-    accessTokenExpiryDatetime?: Date
-} = {}) {
+async function seedUserWithGoogleAccount(
+    options: {
+        accessToken?: string
+        accessTokenExpiryDatetime?: Date
+    } = {},
+) {
     await prisma.user.create({
         data: {
             id: 'user-1',
@@ -25,7 +27,8 @@ async function seedUserWithGoogleAccount(options: {
                     email: 'google@test.com',
                     access_token: options.accessToken ?? 'token-atual',
                     refresh_token: 'refresh-token',
-                    access_token_expiry_datetime: options.accessTokenExpiryDatetime ?? FUTURE_DATE,
+                    access_token_expiry_datetime:
+                        options.accessTokenExpiryDatetime ?? FUTURE_DATE,
                 },
             },
         },
@@ -36,7 +39,10 @@ describe('RefreshGoogleAccessTokenUseCase (Integration)', () => {
     it('deve retornar o token atual sem atualizar o banco quando não está expirado', async () => {
         await seedUserWithGoogleAccount({ accessToken: 'token-atual' })
 
-        const gatewayStub: Pick<IGoogleAuthGateway, 'checkOrGetNewAccessToken'> = {
+        const gatewayStub: Pick<
+            IGoogleAuthGateway,
+            'checkOrGetNewAccessToken'
+        > = {
             checkOrGetNewAccessToken: vi.fn().mockResolvedValue(null),
         }
 
@@ -62,7 +68,10 @@ describe('RefreshGoogleAccessTokenUseCase (Integration)', () => {
         })
 
         const newExpiry = new Date(Date.now() + 3600 * 1000)
-        const gatewayStub: Pick<IGoogleAuthGateway, 'checkOrGetNewAccessToken'> = {
+        const gatewayStub: Pick<
+            IGoogleAuthGateway,
+            'checkOrGetNewAccessToken'
+        > = {
             checkOrGetNewAccessToken: vi.fn().mockResolvedValue({
                 newAccessToken: 'token-novo',
                 newAccessTokenExpiryDateTime: newExpiry,
@@ -80,7 +89,10 @@ describe('RefreshGoogleAccessTokenUseCase (Integration)', () => {
         const account = await prisma.externalUserAccount.findFirst({
             where: { user_id: 'user-1' },
         })
-        expect(account).toMatchObject({ access_token: 'token-novo', access_token_expiry_datetime: newExpiry })
+        expect(account).toMatchObject({
+            access_token: 'token-novo',
+            access_token_expiry_datetime: newExpiry,
+        })
     })
 
     it('deve lançar erro quando usuário não tem conta Google', async () => {
@@ -94,7 +106,10 @@ describe('RefreshGoogleAccessTokenUseCase (Integration)', () => {
             },
         })
 
-        const gatewayStub: Pick<IGoogleAuthGateway, 'checkOrGetNewAccessToken'> = {
+        const gatewayStub: Pick<
+            IGoogleAuthGateway,
+            'checkOrGetNewAccessToken'
+        > = {
             checkOrGetNewAccessToken: vi.fn(),
         }
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { SignUpUseCase } from '@/backend/application/sign-up-use-case'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
-import { INotificationGateway } from '@/backend/application/interfaces/inotification-gateway'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
+import { INotificationGateway } from '@/backend/application/interfaces/gateway/inotification-gateway'
 import { UserAlreadyExistsError } from '@/backend/domain/error/conflict-error/user-already-exists-error'
 import { prisma } from '@/tests/setup.integration'
 
@@ -15,7 +15,10 @@ function makeNotificationStub() {
 }
 
 function makeUseCase(notificationStub = makeNotificationStub()) {
-    return new SignUpUseCase(new PrismaUsersRepository(prisma), notificationStub)
+    return new SignUpUseCase(
+        new PrismaUsersRepository(prisma),
+        notificationStub,
+    )
 }
 
 describe('SignUpUseCase (Integration)', () => {
@@ -26,8 +29,12 @@ describe('SignUpUseCase (Integration)', () => {
             password: 'senha123',
         })
 
-        const user = await prisma.user.findFirstOrThrow({ where: { email: 'novo@test.com' } })
-        const code = await prisma.emailVerificationCode.findFirst({ where: { user_id: user.id } })
+        const user = await prisma.user.findFirstOrThrow({
+            where: { email: 'novo@test.com' },
+        })
+        const code = await prisma.emailVerificationCode.findFirst({
+            where: { user_id: user.id },
+        })
 
         expect(user).toMatchObject({
             name: 'Novo Usuário',

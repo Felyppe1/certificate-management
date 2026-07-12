@@ -1,8 +1,8 @@
 'use server'
 
 import { SignUpUseCase } from '@/backend/application/sign-up-use-case'
-import { BrevoNotificationGateway } from '@/backend/infrastructure/gateway/brevo-notification-gateway'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { BrevoNotificationGateway } from '@/backend/interface-adapters/gateway/brevo-notification-gateway'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { signUpSchema } from './schemas'
 

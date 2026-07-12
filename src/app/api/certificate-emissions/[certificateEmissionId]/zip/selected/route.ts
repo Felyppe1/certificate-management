@@ -1,8 +1,8 @@
 import { DownloadCertificateEmissionsUseCase } from '@/backend/application/download-certificate-emissions-use-case'
-import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
+import { GcpBucket } from '@/backend/interface-adapters/cloud/gcp/gcp-bucket'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
+import { PrismaCertificatesRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-certificates-repository'
+import { PrismaDataSourceRowsRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-data-source-rows-repository'
 
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'

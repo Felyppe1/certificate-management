@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, Mock } from 'vitest'
 import { CreateWriteBucketSignedUrlUseCase } from './create-write-bucket-signed-url-use-case'
-import { IBucket } from './interfaces/cloud/ibucket'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { IBucket } from './interfaces/storage/ibucket'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
 import {
     CertificateEmission,
     CERTIFICATE_STATUS,

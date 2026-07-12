@@ -1,6 +1,6 @@
 import { env } from '@/env'
-import { IBucket } from './interfaces/cloud/ibucket'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { IBucket } from './interfaces/storage/ibucket'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 import { DataSourceNotFoundError } from '../domain/error/not-found-error/data-source-not-found-error'
 import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'

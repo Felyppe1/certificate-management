@@ -1,5 +1,5 @@
-import { IUsersRepository } from '../interfaces/repository/iusers-repository'
-import { INotificationGateway } from '../interfaces/inotification-gateway'
+import { IUsersRepository } from '../interfaces/repository/write/iusers-repository'
+import { INotificationGateway } from '../interfaces/gateway/inotification-gateway'
 import { UserNotFoundError } from '../../domain/error/authentication-error/user-not-found-error'
 import { SystemLoginNotEnabledError } from '../../domain/error/validation-error/system-login-not-enabled-error'
 import { EmailAlreadyVerifiedError } from '../../domain/error/validation-error/email-already-verified-error'

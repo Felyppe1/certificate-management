@@ -6,14 +6,14 @@ import { CertificateEmittedError } from '../domain/error/validation-error/certif
 import { DataSourceImageRefreshNotAllowedError } from '../domain/error/validation-error/data-source-image-refresh-not-allowed-error'
 import { UnexistentDataSourceDriveFileIdError } from '../domain/error/validation-error/unexistent-data-source-drive-file-id-error'
 import { UnsupportedDataSourceMimetypeError } from '../domain/error/validation-error/unsupported-data-source-mimetype-error'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
-import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
-import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
+import { IGoogleAuthGateway } from './interfaces/gateway/igoogle-auth-gateway'
+import { IGoogleDriveGateway } from './interfaces/gateway/igoogle-drive-gateway'
+import { ISpreadsheetContentExtractorFactory } from './interfaces/extraction/ispreadsheet-content-extractor-factory'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { DataSourceDomainService } from '../domain/domain-service/data-source-domain-service'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
 
 interface RefreshDataSourceUseCaseInput {
     userId: string
@@ -42,7 +42,10 @@ export class RefreshDataSourceUseCase {
             ISpreadsheetContentExtractorFactory,
             'create'
         >,
-        private readonly usersRepository: Pick<IUsersRepository, 'getById' | 'update'>,
+        private readonly usersRepository: Pick<
+            IUsersRepository,
+            'getById' | 'update'
+        >,
         private readonly transactionManager: Pick<ITransactionManager, 'run'>,
     ) {}
 

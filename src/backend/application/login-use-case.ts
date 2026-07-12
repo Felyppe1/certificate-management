@@ -1,5 +1,5 @@
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { ISessionsRepository } from './interfaces/repository/isessions-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
+import { ISessionsRepository } from './interfaces/repository/write/isessions-repository'
 import { IncorrectCredentialsError } from '../domain/error/authentication-error/incorrect-credentials-error'
 import { EmailNotVerifiedError } from '../domain/error/forbidden-error/email-not-verified-error'
 import { Session } from '../domain/session'

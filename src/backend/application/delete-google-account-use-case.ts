@@ -1,6 +1,6 @@
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
 import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
-import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
+import { IGoogleAuthGateway } from './interfaces/gateway/igoogle-auth-gateway'
 
 interface DeleteAccountUseCaseInput {
     userId: string

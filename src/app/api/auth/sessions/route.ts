@@ -1,6 +1,6 @@
 import { LoginUseCase } from '@/backend/application/login-use-case'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
+import { PrismaSessionsRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'

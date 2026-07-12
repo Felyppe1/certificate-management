@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { FinishCertificateEmailSendingProcessUseCase } from './finish-certificate-email-sending-process-use-case'
-import { IEmailsRepository } from './interfaces/repository/iemails-repository'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { IEmailsRepository } from './interfaces/repository/write/iemails-repository'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import {
     Email,

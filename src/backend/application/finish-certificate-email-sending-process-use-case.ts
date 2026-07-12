@@ -1,9 +1,9 @@
 import { EMAIL_ERROR_TYPE_ENUM, PROCESSING_STATUS_ENUM } from '../domain/email'
 import { EmailNotFoundError } from '../domain/error/not-found-error/email-not-found-error'
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IEmailsRepository } from './interfaces/repository/iemails-repository'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IEmailsRepository } from './interfaces/repository/write/iemails-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 interface FinishCertificateEmailSendingProcessUseCaseInput {

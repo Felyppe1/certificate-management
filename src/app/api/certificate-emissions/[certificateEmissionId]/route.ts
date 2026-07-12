@@ -6,8 +6,9 @@ import { DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
 import { INPUT_METHOD } from '@/backend/domain/certificate'
 import { TEMPLATE_FILE_MIME_TYPE } from '@/backend/domain/template'
 
-import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
+import { PrismaCertificatesRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-certificates-repository'
+import { PrismaDataSourceRowsRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-data-source-rows-repository'
+import { PrismaCertificateEmissionsRepositoryRead } from '@/backend/interface-adapters/repository/prisma/read/prisma-certificate-emissions-repository-read'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
@@ -15,8 +16,8 @@ import {
     EMAIL_ERROR_TYPE_ENUM,
     PROCESSING_STATUS_ENUM as EMAIL_PROCESSING_STATUS_ENUM,
 } from '@/backend/domain/email'
-import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
-import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
+import { PrismaTransactionManager } from '@/backend/interface-adapters/repository/prisma/prisma-transaction-manager'
+import { GcpBucket } from '@/backend/interface-adapters/cloud/gcp/gcp-bucket'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { updateCertificateEmissionSchema } from '@/backend/infrastructure/server-actions/schemas'
 import { PROCESSING_STATUS_ENUM as DATA_SOURCE_ROW_PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
@@ -83,7 +84,9 @@ export async function GET(
     try {
         const { userId } = await validateSessionToken()
 
-        const getCertificateUseCase = new GetCertificateEmissionUseCase()
+        const getCertificateUseCase = new GetCertificateEmissionUseCase(
+            new PrismaCertificateEmissionsRepositoryRead(prisma),
+        )
 
         const certificateEmission = await getCertificateUseCase.execute({
             certificateId: certificateEmissionId,

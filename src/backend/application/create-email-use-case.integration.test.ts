@@ -1,17 +1,22 @@
 import { describe, it, expect } from 'vitest'
 import { CreateEmailUseCase } from './create-email-use-case'
-import { PrismaCertificatesRepository } from '../infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaDataSourceRowsRepository } from '../infrastructure/repository/prisma/prisma-data-source-rows-repository'
-import { PrismaEmailsRepository } from '../infrastructure/repository/prisma/prisma-emails-repository'
-import { PrismaTransactionManager } from '../infrastructure/repository/prisma/prisma-transaction-manager'
-import { IQueue } from './interfaces/cloud/iqueue'
+import { PrismaCertificatesRepository } from '../interface-adapters/repository/prisma/write/prisma-certificates-repository'
+import { PrismaDataSourceRowsRepository } from '../interface-adapters/repository/prisma/write/prisma-data-source-rows-repository'
+import { PrismaEmailsRepository } from '../interface-adapters/repository/prisma/write/prisma-emails-repository'
+import { PrismaTransactionManager } from '../interface-adapters/repository/prisma/prisma-transaction-manager'
+import { IQueue } from './interfaces/messaging/iqueue'
 import { CERTIFICATE_STATUS, INPUT_METHOD } from '../domain/certificate'
 import { prisma } from '@/tests/setup.integration'
 
 describe('CreateEmailUseCase (Integration)', () => {
     async function createBaseFixture() {
         await prisma.user.create({
-            data: { id: '1', email: 'user@example.com', name: 'User', password_hash: 'hash' },
+            data: {
+                id: '1',
+                email: 'user@example.com',
+                name: 'User',
+                password_hash: 'hash',
+            },
         })
 
         await prisma.certificateEmission.create({
@@ -26,7 +31,15 @@ describe('CreateEmailUseCase (Integration)', () => {
                         file_extension: 'xlsx',
                         google_account_email: null,
                         DataSourceFile: {
-                            create: [{ file_index: 0, file_name: 'data.xlsx', drive_file_id: null, storage_file_url: 'users/1/certificates/1/data.xlsx' }],
+                            create: [
+                                {
+                                    file_index: 0,
+                                    file_name: 'data.xlsx',
+                                    drive_file_id: null,
+                                    storage_file_url:
+                                        'users/1/certificates/1/data.xlsx',
+                                },
+                            ],
                         },
                         DataSourceColumn: {
                             create: [{ name: 'email', type: 'STRING' }],
@@ -38,7 +51,12 @@ describe('CreateEmailUseCase (Integration)', () => {
                                     processing_status: 'COMPLETED',
                                     source_row_index: 1,
                                     DataSourceValue: {
-                                        create: [{ column_name: 'email', value: 'alice@example.com' }],
+                                        create: [
+                                            {
+                                                column_name: 'email',
+                                                value: 'alice@example.com',
+                                            },
+                                        ],
                                     },
                                 },
                             ],
@@ -73,21 +91,27 @@ describe('CreateEmailUseCase (Integration)', () => {
             scheduledAt: null,
         })
 
-        const email = await prisma.email.findFirst({ where: { certificate_emission_id: '1' } })
+        const email = await prisma.email.findFirst({
+            where: { certificate_emission_id: '1' },
+        })
         expect(email).not.toBeNull()
         expect(email?.subject).toBe('Seu certificado chegou')
         expect(email?.body).toBe('Olá! Segue seu certificado.')
         expect(email?.email_column).toBe('email')
         expect(email?.status).toBe('RUNNING')
 
-        const certificate = await prisma.certificateEmission.findUnique({ where: { id: '1' } })
+        const certificate = await prisma.certificateEmission.findUnique({
+            where: { id: '1' },
+        })
         expect(certificate?.status).toBe('EMITTED')
     })
 
     it('deve reverter o salvamento do email quando falha ao atualizar a emissão na transação', async () => {
         await createBaseFixture()
 
-        const realCertificatesRepository = new PrismaCertificatesRepository(prisma)
+        const realCertificatesRepository = new PrismaCertificatesRepository(
+            prisma,
+        )
 
         class CertificatesRepositoryThrowingOnUpdate {
             constructor(private readonly real: PrismaCertificatesRepository) {}
@@ -100,7 +124,9 @@ describe('CreateEmailUseCase (Integration)', () => {
         }
 
         const useCase = new CreateEmailUseCase(
-            new CertificatesRepositoryThrowingOnUpdate(realCertificatesRepository),
+            new CertificatesRepositoryThrowingOnUpdate(
+                realCertificatesRepository,
+            ),
             new PrismaDataSourceRowsRepository(prisma),
             new PrismaEmailsRepository(prisma),
             new QueueStub(),
@@ -118,7 +144,9 @@ describe('CreateEmailUseCase (Integration)', () => {
             }),
         ).rejects.toThrow()
 
-        const email = await prisma.email.findFirst({ where: { certificate_emission_id: '1' } })
+        const email = await prisma.email.findFirst({
+            where: { certificate_emission_id: '1' },
+        })
         expect(email).toBeNull()
     })
 })

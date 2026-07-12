@@ -2,13 +2,13 @@
 
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { UpdateDataSourceColumnsUseCase } from '@/backend/application/update-data-source-columns-use-case'
-import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
-import { PrismaDataSourceRowsRepository } from '../repository/prisma/prisma-data-source-rows-repository'
+import { PrismaCertificatesRepository } from '../../interface-adapters/repository/prisma/write/prisma-certificates-repository'
+import { PrismaDataSourceRowsRepository } from '../../interface-adapters/repository/prisma/write/prisma-data-source-rows-repository'
 import { prisma } from '../repository/prisma'
 import { logoutAction } from './logout-action'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { updateDataSourceColumnsSchema } from './schemas'
-import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
+import { PrismaTransactionManager } from '../../interface-adapters/repository/prisma/prisma-transaction-manager'
 import { redirect } from 'next/navigation'
 
 export async function updateDataSourceColumnsAction(

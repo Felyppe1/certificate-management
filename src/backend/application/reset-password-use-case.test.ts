@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach, Mock } from 'vitest'
 import { ResetPasswordUseCase } from './reset-password-use-case'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
 import { UserNotFoundError } from '../domain/error/not-found-error/user-not-found-error'
 import { User, UserInput } from '../domain/user'
 import { ResetPasswordCode } from '../domain/reset-password-code'

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { ConfirmEmailChangeUseCase } from './confirm-email-change-use-case'
 import { User, UserInput } from '../domain/user'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
 import { EmailChangeCode } from '../domain/email-change-code'
 import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
 import { EmailUnavailableError } from '../domain/error/conflict-error/email-unavailable-error'

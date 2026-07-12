@@ -1,5 +1,5 @@
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 import { DataSourceNotFoundError } from '../domain/error/not-found-error/data-source-not-found-error'

@@ -1,8 +1,8 @@
 import { describe, expect, it, Mock, vi, beforeEach } from 'vitest'
 import { DownloadCertificateEmissionUseCase } from './download-certificate-emission-use-case'
-import { IBucket } from './interfaces/cloud/ibucket'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { IBucket } from './interfaces/storage/ibucket'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
 import {
     CertificateEmission,
     CERTIFICATE_STATUS,

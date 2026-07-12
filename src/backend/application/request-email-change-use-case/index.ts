@@ -1,5 +1,5 @@
-import { IUsersRepository } from '../interfaces/repository/iusers-repository'
-import { INotificationGateway } from '../interfaces/inotification-gateway'
+import { IUsersRepository } from '../interfaces/repository/write/iusers-repository'
+import { INotificationGateway } from '../interfaces/gateway/inotification-gateway'
 import { UserNotFoundError } from '../../domain/error/authentication-error/user-not-found-error'
 import { EmailUnavailableError } from '../../domain/error/conflict-error/email-unavailable-error'
 import { from, subject, buildHtml } from './email-template'

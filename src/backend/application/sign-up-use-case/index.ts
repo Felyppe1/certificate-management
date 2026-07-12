@@ -1,6 +1,6 @@
 import { UserAlreadyExistsError } from '../../domain/error/conflict-error/user-already-exists-error'
-import { IUsersRepository } from '../interfaces/repository/iusers-repository'
-import { INotificationGateway } from '../interfaces/inotification-gateway'
+import { IUsersRepository } from '../interfaces/repository/write/iusers-repository'
+import { INotificationGateway } from '../interfaces/gateway/inotification-gateway'
 import { User } from '../../domain/user'
 import { from, subject, buildHtml } from './email-template'
 

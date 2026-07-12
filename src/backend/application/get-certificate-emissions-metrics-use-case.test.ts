@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach, Mock } from 'vitest'
 import { GetCertificateEmissionsMetricsUseCase } from './get-certificate-emissions-metrics-use-case'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
 
 describe('GetCertificateEmissionsMetricsUseCase', () => {
     const USER_ID = 'user-1'

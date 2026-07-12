@@ -1,12 +1,12 @@
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { env } from '@/env'
 import { NextResponse } from 'next/server'
 import { LoginGoogleUseCase } from '@/backend/application/login-google-use-case'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
-import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
+import { PrismaSessionsRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-sessions-repository'
+import { GoogleAuthGateway } from '@/backend/interface-adapters/gateway/google-auth-gateway'
 import { AppError } from '@/backend/domain/error/app-error'
-import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
+import { PrismaTransactionManager } from '@/backend/interface-adapters/repository/prisma/prisma-transaction-manager'
 import { setSessionCookie } from '@/app/api/_utils/set-session-cookie'
 
 export async function GET(request: Request) {

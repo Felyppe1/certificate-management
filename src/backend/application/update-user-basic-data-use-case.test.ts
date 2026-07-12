@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { UpdateUserBasicDataUseCase } from './update-user-basic-data-use-case'
 import { User, UserInput } from '../domain/user'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
 import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
 
 function createUser(overrides?: Partial<UserInput>): User {

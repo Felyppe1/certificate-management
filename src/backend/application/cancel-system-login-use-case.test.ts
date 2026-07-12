@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { CancelSystemLoginUseCase } from './cancel-system-login-use-case'
 import { User, UserInput } from '../domain/user'
 import { ExternalAccount } from '../domain/external-account'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
 import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
 
 function createUser(overrides?: Partial<UserInput>): User {

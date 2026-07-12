@@ -1,11 +1,11 @@
 import { describe, expect, it, vi, beforeEach, Mock } from 'vitest'
 import { GenerateCertificatesUseCase } from './generate-certificates-use-case'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
-import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
-import { IBucket } from './interfaces/cloud/ibucket'
-import { IQueue } from './interfaces/cloud/iqueue'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
+import { IDataSourceRowsReadRepository } from './interfaces/repository/read/idata-source-rows-read-repository'
+import { IBucket } from './interfaces/storage/ibucket'
+import { IQueue } from './interfaces/messaging/iqueue'
 import {
     CertificateEmission,
     CERTIFICATE_STATUS,

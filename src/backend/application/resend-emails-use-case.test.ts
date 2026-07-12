@@ -1,9 +1,9 @@
 import { describe, expect, it, vi, beforeEach, Mock } from 'vitest'
 import { ResendEmailsUseCase } from './resend-emails-use-case'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
-import { IEmailsRepository } from './interfaces/repository/iemails-repository'
-import { IQueue } from './interfaces/cloud/iqueue'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IDataSourceRowsReadRepository } from './interfaces/repository/read/idata-source-rows-read-repository'
+import { IEmailsRepository } from './interfaces/repository/write/iemails-repository'
+import { IQueue } from './interfaces/messaging/iqueue'
 import {
     CertificateEmission,
     CERTIFICATE_STATUS,

@@ -1,6 +1,6 @@
 import { GoogleAccountNotFoundError } from '../domain/error/forbidden-error/google-account-not-found-error'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
+import { IGoogleAuthGateway } from './interfaces/gateway/igoogle-auth-gateway'
 
 interface RefreshGoogleAccessTokenUseCaseInput {
     userId: string

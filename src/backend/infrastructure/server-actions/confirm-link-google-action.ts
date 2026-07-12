@@ -1,9 +1,9 @@
 'use server'
 
 import { ConfirmLinkGoogleToSystemAccountUseCase } from '@/backend/application/confirm-link-google-to-system-account-use-case'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
-import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
+import { PrismaSessionsRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-sessions-repository'
+import { PrismaTransactionManager } from '@/backend/interface-adapters/repository/prisma/prisma-transaction-manager'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { setSessionCookie } from '@/app/api/_utils/set-session-cookie'

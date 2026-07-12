@@ -2,7 +2,7 @@
 
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { GetMeUseCase } from '@/backend/application/get-me-use-case'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { redirect } from 'next/navigation'

@@ -2,9 +2,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { CreateWriteBucketSignedUrlUseCase } from '@/backend/application/create-write-bucket-signed-url-use-case'
-import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
+import { PrismaCertificatesRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-certificates-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
+import { GcpBucket } from '@/backend/interface-adapters/cloud/gcp/gcp-bucket'
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { createWriteBucketSignedUrlSchema } from '@/backend/infrastructure/server-actions/schemas'

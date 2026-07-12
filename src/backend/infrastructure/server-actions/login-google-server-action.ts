@@ -1,15 +1,15 @@
 'use server'
 
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { LoginGoogleUseCase } from '@/backend/application/login-google-use-case'
 import { setSessionCookie } from '@/app/api/_utils/set-session-cookie'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
-import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
+import { PrismaSessionsRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-sessions-repository'
+import { GoogleAuthGateway } from '@/backend/interface-adapters/gateway/google-auth-gateway'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { logoutAction } from './logout-action'
-import { PrismaTransactionManager } from '../repository/prisma/prisma-transaction-manager'
+import { PrismaTransactionManager } from '../../interface-adapters/repository/prisma/prisma-transaction-manager'
 import { loginGoogleServerActionSchema } from './schemas'
 
 export async function loginGoogleServerAction(_: unknown, formData: FormData) {

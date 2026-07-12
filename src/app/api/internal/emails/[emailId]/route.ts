@@ -5,11 +5,11 @@ import z from 'zod'
 import { sseBroker } from '@/backend/infrastructure/sse'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/email'
 import { FinishCertificateEmailSendingProcessUseCase } from '@/backend/application/finish-certificate-email-sending-process-use-case'
-import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaEmailsRepository } from '@/backend/infrastructure/repository/prisma/prisma-emails-repository'
-import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
+import { PrismaCertificatesRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-certificates-repository'
+import { PrismaEmailsRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-emails-repository'
+import { PrismaTransactionManager } from '@/backend/interface-adapters/repository/prisma/prisma-transaction-manager'
 import { validateServiceAccountToken } from '@/app/api/_middleware/validateServiceAccountToken'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
 
 const updateEmailSchema = z.object({
     status: z.enum([

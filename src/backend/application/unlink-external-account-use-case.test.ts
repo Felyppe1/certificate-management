@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi, Mock } from 'vitest'
 import { RefreshGoogleAccessTokenUseCase } from './refresh-google-access-token-use-case'
 import { User, UserInput } from '../domain/user'
 import { ExternalAccount } from '../domain/external-account'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
+import { IGoogleAuthGateway } from './interfaces/gateway/igoogle-auth-gateway'
 import { GoogleAccountNotFoundError } from '../domain/error/forbidden-error/google-account-not-found-error'
 
 function createGoogleAccount() {

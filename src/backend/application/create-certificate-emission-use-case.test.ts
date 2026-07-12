@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { CreateCertificateEmissionUseCase } from './create-certificate-emission-use-case'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
 import { CertificateEmission } from '../domain/certificate'
 
 describe('CreateCertificateEmissionUseCase', () => {

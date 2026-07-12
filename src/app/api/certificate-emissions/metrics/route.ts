@@ -2,7 +2,7 @@
 
 import { GetCertificateEmissionsMetricsUseCase } from '@/backend/application/get-certificate-emissions-metrics-use-case'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
+import { PrismaCertificatesRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-certificates-repository'
 
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'

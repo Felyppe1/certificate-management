@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { CERTIFICATE_STATUS } from '../domain/certificate'
-import { IBucket } from './interfaces/cloud/ibucket'
-import { PrismaCertificatesRepository } from '../infrastructure/repository/prisma/prisma-certificates-repository'
+import { IBucket } from './interfaces/storage/ibucket'
+import { PrismaCertificatesRepository } from '../interface-adapters/repository/prisma/write/prisma-certificates-repository'
 import { DeleteDataSourceUseCase } from './delete-data-source-use-case'
 import { prisma } from '@/tests/setup.integration'
 
@@ -38,9 +38,7 @@ describe('DeleteDataSourceUseCase (Integration)', () => {
                             ],
                         },
                         DataSourceColumn: {
-                            create: [
-                                { name: 'name', type: 'STRING' },
-                            ],
+                            create: [{ name: 'name', type: 'STRING' }],
                         },
                         DataSourceRow: {
                             create: [
@@ -50,7 +48,10 @@ describe('DeleteDataSourceUseCase (Integration)', () => {
                                     source_row_index: 1,
                                     DataSourceValue: {
                                         create: [
-                                            { column_name: 'name', value: 'Alice' },
+                                            {
+                                                column_name: 'name',
+                                                value: 'Alice',
+                                            },
                                         ],
                                     },
                                 },

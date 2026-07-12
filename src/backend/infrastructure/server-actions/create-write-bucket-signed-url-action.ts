@@ -1,8 +1,8 @@
 'use server'
 
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import { GcpBucket } from '../cloud/gcp/gcp-bucket'
-import { PrismaCertificatesRepository } from '../repository/prisma/prisma-certificates-repository'
+import { GcpBucket } from '../../interface-adapters/cloud/gcp/gcp-bucket'
+import { PrismaCertificatesRepository } from '../../interface-adapters/repository/prisma/write/prisma-certificates-repository'
 import { prisma } from '../repository/prisma'
 import { CreateWriteBucketSignedUrlUseCase } from '@/backend/application/create-write-bucket-signed-url-use-case'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'

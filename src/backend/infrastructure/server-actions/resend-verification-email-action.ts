@@ -1,8 +1,8 @@
 'use server'
 
 import { ResendVerificationEmailUseCase } from '@/backend/application/resend-verification-email-use-case'
-import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
-import { BrevoNotificationGateway } from '../gateway/brevo-notification-gateway'
+import { PrismaUsersRepository } from '../../interface-adapters/repository/prisma/write/prisma-users-repository'
+import { BrevoNotificationGateway } from '../../interface-adapters/gateway/brevo-notification-gateway'
 import { prisma } from '../repository/prisma'
 
 export async function resendVerificationEmailAction(

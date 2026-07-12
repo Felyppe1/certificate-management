@@ -1,6 +1,6 @@
 import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-google-access-token-use-case'
-import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { GoogleAuthGateway } from '@/backend/interface-adapters/gateway/google-auth-gateway'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import { NextRequest, NextResponse } from 'next/server'

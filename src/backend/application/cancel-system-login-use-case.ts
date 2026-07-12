@@ -1,4 +1,4 @@
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
 import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
 
 interface Input {

@@ -1,5 +1,5 @@
 import { CertificateEmission } from '../domain/certificate'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
 
 interface CreateUseCaseEmissionUseCaseInput {
     name: string

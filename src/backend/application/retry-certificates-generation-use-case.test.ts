@@ -1,9 +1,9 @@
 import { describe, expect, it, vi, beforeEach, Mock } from 'vitest'
 import { RetryCertificatesGenerationUseCase } from './retry-certificates-generation-use-case'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
-import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
-import { IQueue } from './interfaces/cloud/iqueue'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
+import { IDataSourceRowsReadRepository } from './interfaces/repository/read/idata-source-rows-read-repository'
+import { IQueue } from './interfaces/messaging/iqueue'
 import {
     CertificateEmission,
     CERTIFICATE_STATUS,

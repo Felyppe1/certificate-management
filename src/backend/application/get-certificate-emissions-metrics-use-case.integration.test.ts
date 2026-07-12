@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { GetCertificateEmissionsMetricsUseCase } from './get-certificate-emissions-metrics-use-case'
-import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
+import { PrismaCertificatesRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-certificates-repository'
 import { prisma } from '@/tests/setup.integration'
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 

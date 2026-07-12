@@ -5,12 +5,12 @@ import { UnsupportedDataSourceMimetypeError } from '../domain/error/validation-e
 import { DataSourceImageFilesExceededError } from '../domain/error/validation-error/data-source-image-files-exceeded-error'
 import { DataSourceAllFilesNotImagesError } from '../domain/error/validation-error/data-source-all-files-not-images-error'
 
-import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
+import { IGoogleDriveGateway } from './interfaces/gateway/igoogle-drive-gateway'
 
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
-import { IBucket } from './interfaces/cloud/ibucket'
-import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
+import { IBucket } from './interfaces/storage/ibucket'
+import { ISpreadsheetContentExtractorFactory } from './interfaces/extraction/ispreadsheet-content-extractor-factory'
 import { INPUT_METHOD } from '../domain/certificate'
 import {
     DATA_SOURCE_MIME_TYPE,
@@ -18,9 +18,9 @@ import {
     MAX_IMAGE_FILES,
 } from '../domain/data-source'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
 import { DataSourceDomainService } from '../domain/domain-service/data-source-domain-service'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
 import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 
 interface AddDataSourceByUrlUseCaseInput {

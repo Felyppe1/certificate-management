@@ -4,21 +4,21 @@ import { TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
 import {
     GetFileMetadataOutput,
     IGoogleDriveGateway,
-} from './interfaces/igoogle-drive-gateway'
+} from './interfaces/gateway/igoogle-drive-gateway'
 import {
     CheckOrRefreshAccessTokenOuput,
     IGoogleAuthGateway,
-} from './interfaces/igoogle-auth-gateway'
+} from './interfaces/gateway/igoogle-auth-gateway'
 import {
     IFileContentExtractorFactory,
     IFileContentExtractorStrategy,
-} from './interfaces/ifile-content-extractor-factory'
-import { IBucket } from './interfaces/cloud/ibucket'
-import { IStringVariableExtractor } from './interfaces/istring-variable-extractor'
-import { PrismaCertificatesRepository } from '../infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaDataSourceRowsRepository } from '../infrastructure/repository/prisma/prisma-data-source-rows-repository'
-import { PrismaTransactionManager } from '../infrastructure/repository/prisma/prisma-transaction-manager'
-import { PrismaUsersRepository } from '../infrastructure/repository/prisma/prisma-users-repository'
+} from './interfaces/extraction/ifile-content-extractor-factory'
+import { IBucket } from './interfaces/storage/ibucket'
+import { IStringVariableExtractor } from './interfaces/extraction/istring-variable-extractor'
+import { PrismaCertificatesRepository } from '../interface-adapters/repository/prisma/write/prisma-certificates-repository'
+import { PrismaDataSourceRowsRepository } from '../interface-adapters/repository/prisma/write/prisma-data-source-rows-repository'
+import { PrismaTransactionManager } from '../interface-adapters/repository/prisma/prisma-transaction-manager'
+import { PrismaUsersRepository } from '../interface-adapters/repository/prisma/write/prisma-users-repository'
 import { AddTemplateByDrivePickerUseCase } from './add-template-by-drive-picker-use-case'
 import { prisma } from '@/tests/setup.integration'
 
@@ -55,8 +55,7 @@ describe('AddTemplateByDrivePickerUseCase (Integration)', () => {
         })
 
         class GoogleAuthGatewayStub
-            implements
-                Pick<IGoogleAuthGateway, 'checkOrGetNewAccessToken'>
+            implements Pick<IGoogleAuthGateway, 'checkOrGetNewAccessToken'>
         {
             async checkOrGetNewAccessToken(): Promise<CheckOrRefreshAccessTokenOuput | null> {
                 return null
@@ -139,7 +138,12 @@ describe('AddTemplateByDrivePickerUseCase (Integration)', () => {
 
     it('deve reverter alterações no banco quando a última operação da transação falhar', async () => {
         await prisma.user.create({
-            data: { id: '1', email: 'user@gmail.com', password_hash: 'password', name: 'User' },
+            data: {
+                id: '1',
+                email: 'user@gmail.com',
+                password_hash: 'password',
+                name: 'User',
+            },
         })
 
         await prisma.externalUserAccount.create({
@@ -166,12 +170,33 @@ describe('AddTemplateByDrivePickerUseCase (Integration)', () => {
                         file_extension: 'xlsx',
                         google_account_email: null,
                         DataSourceFile: {
-                            create: [{ file_index: 0, file_name: 'data.xlsx', drive_file_id: null, storage_file_url: null }],
+                            create: [
+                                {
+                                    file_index: 0,
+                                    file_name: 'data.xlsx',
+                                    drive_file_id: null,
+                                    storage_file_url: null,
+                                },
+                            ],
                         },
-                        DataSourceColumn: { create: [{ name: 'name', type: 'STRING' }] },
+                        DataSourceColumn: {
+                            create: [{ name: 'name', type: 'STRING' }],
+                        },
                         DataSourceRow: {
                             create: [
-                                { id: 'row-1', processing_status: 'COMPLETED', source_row_index: 1, DataSourceValue: { create: [{ column_name: 'name', value: 'Alice' }] } },
+                                {
+                                    id: 'row-1',
+                                    processing_status: 'COMPLETED',
+                                    source_row_index: 1,
+                                    DataSourceValue: {
+                                        create: [
+                                            {
+                                                column_name: 'name',
+                                                value: 'Alice',
+                                            },
+                                        ],
+                                    },
+                                },
                             ],
                         },
                     },
@@ -188,10 +213,15 @@ describe('AddTemplateByDrivePickerUseCase (Integration)', () => {
         }
 
         class GoogleDriveGatewayStub
-            implements Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
+            implements
+                Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
         {
             async getFileMetadata(): Promise<GetFileMetadataOutput> {
-                return { name: 'template.docx', fileMimeType: TEMPLATE_FILE_MIME_TYPE.DOCX, thumbnailUrl: null }
+                return {
+                    name: 'template.docx',
+                    fileMimeType: TEMPLATE_FILE_MIME_TYPE.DOCX,
+                    thumbnailUrl: null,
+                }
             }
             async downloadFile(): Promise<Buffer> {
                 return Buffer.from('content')
@@ -202,26 +232,41 @@ describe('AddTemplateByDrivePickerUseCase (Integration)', () => {
             implements Pick<IFileContentExtractorFactory, 'create'>
         {
             create(): IFileContentExtractorStrategy {
-                return { async extractText(): Promise<string> { return '{{name}}' } }
+                return {
+                    async extractText(): Promise<string> {
+                        return '{{name}}'
+                    },
+                }
             }
         }
 
         class BucketStub implements Pick<IBucket, 'uploadObject'> {
-            async uploadObject(): Promise<string> { return '' }
+            async uploadObject(): Promise<string> {
+                return ''
+            }
         }
 
         class CertificatesRepositoryThrowingOnUpdate {
             constructor(private readonly real: PrismaCertificatesRepository) {}
-            async getById(id: string) { return this.real.getById(id) }
-            async update(): Promise<void> { throw new Error('database failure') }
+            async getById(id: string) {
+                return this.real.getById(id)
+            }
+            async update(): Promise<void> {
+                throw new Error('database failure')
+            }
         }
 
-        const stringVariableExtractorStub: Pick<IStringVariableExtractor, 'extractVariables'> = {
+        const stringVariableExtractorStub: Pick<
+            IStringVariableExtractor,
+            'extractVariables'
+        > = {
             extractVariables: () => ['name'],
         }
 
         const useCase = new AddTemplateByDrivePickerUseCase(
-            new CertificatesRepositoryThrowingOnUpdate(new PrismaCertificatesRepository(prisma)),
+            new CertificatesRepositoryThrowingOnUpdate(
+                new PrismaCertificatesRepository(prisma),
+            ),
             new GoogleDriveGatewayStub(),
             new FileContentExtractorFactoryStub(),
             new PrismaUsersRepository(prisma),
@@ -233,10 +278,16 @@ describe('AddTemplateByDrivePickerUseCase (Integration)', () => {
         )
 
         await expect(
-            useCase.execute({ certificateId: '1', fileId: 'drive-file-id', userId: '1' }),
+            useCase.execute({
+                certificateId: '1',
+                fileId: 'drive-file-id',
+                userId: '1',
+            }),
         ).rejects.toThrow()
 
-        const rows = await prisma.dataSourceRow.findMany({ where: { data_source_id: '1' } })
+        const rows = await prisma.dataSourceRow.findMany({
+            where: { data_source_id: '1' },
+        })
         expect(rows.every(r => r.processing_status === 'COMPLETED')).toBe(true)
     })
 })

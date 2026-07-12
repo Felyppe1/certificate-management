@@ -1,23 +1,23 @@
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { RefreshTemplateUseCase } from './refresh-template-use-case'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
-import { IStringVariableExtractor } from './interfaces/istring-variable-extractor'
-import { IBucket } from './interfaces/cloud/ibucket'
+import { IStringVariableExtractor } from './interfaces/extraction/istring-variable-extractor'
+import { IBucket } from './interfaces/storage/ibucket'
 import {
     GetFileMetadataOutput,
     IGoogleDriveGateway,
-} from './interfaces/igoogle-drive-gateway'
+} from './interfaces/gateway/igoogle-drive-gateway'
 import {
     CheckOrRefreshAccessTokenOuput,
     IGoogleAuthGateway,
-} from './interfaces/igoogle-auth-gateway'
+} from './interfaces/gateway/igoogle-auth-gateway'
 import {
     IFileContentExtractorFactory,
     IFileContentExtractorStrategy,
-} from './interfaces/ifile-content-extractor-factory'
+} from './interfaces/extraction/ifile-content-extractor-factory'
 import {
     CertificateEmission,
     CERTIFICATE_STATUS,

@@ -1,10 +1,10 @@
 import { env } from '@/env'
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 import { TemplateNotFoundError } from '../domain/error/not-found-error/template-not-found-error'
-import { IBucket } from './interfaces/cloud/ibucket'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { IBucket } from './interfaces/storage/ibucket'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
 import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
 import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 

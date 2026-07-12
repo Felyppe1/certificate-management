@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { DeleteAccountUseCase } from './delete-google-account-use-case'
 import { User, UserInput } from '../domain/user'
 import { ExternalAccount } from '../domain/external-account'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
+import { IGoogleAuthGateway } from './interfaces/gateway/igoogle-auth-gateway'
 import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
 
 const REFRESH_TOKEN = 'google-refresh-token'
@@ -42,8 +42,10 @@ describe('DeleteAccountUseCase', () => {
             getById: vi.fn().mockResolvedValue(null),
             delete: vi.fn(),
         }
-        const googleAuthGateway: Pick<IGoogleAuthGateway, 'revokeRefreshToken'> =
-            { revokeRefreshToken: vi.fn() }
+        const googleAuthGateway: Pick<
+            IGoogleAuthGateway,
+            'revokeRefreshToken'
+        > = { revokeRefreshToken: vi.fn() }
 
         const useCase = new DeleteAccountUseCase(
             usersRepository,
@@ -64,8 +66,10 @@ describe('DeleteAccountUseCase', () => {
             getById: vi.fn().mockResolvedValue(user),
             delete: vi.fn(),
         }
-        const googleAuthGateway: Pick<IGoogleAuthGateway, 'revokeRefreshToken'> =
-            { revokeRefreshToken: vi.fn() }
+        const googleAuthGateway: Pick<
+            IGoogleAuthGateway,
+            'revokeRefreshToken'
+        > = { revokeRefreshToken: vi.fn() }
 
         const useCase = new DeleteAccountUseCase(
             usersRepository,
@@ -86,8 +90,10 @@ describe('DeleteAccountUseCase', () => {
             getById: vi.fn().mockResolvedValue(user),
             delete: vi.fn(),
         }
-        const googleAuthGateway: Pick<IGoogleAuthGateway, 'revokeRefreshToken'> =
-            { revokeRefreshToken: vi.fn().mockResolvedValue(undefined) }
+        const googleAuthGateway: Pick<
+            IGoogleAuthGateway,
+            'revokeRefreshToken'
+        > = { revokeRefreshToken: vi.fn().mockResolvedValue(undefined) }
 
         const useCase = new DeleteAccountUseCase(
             usersRepository,

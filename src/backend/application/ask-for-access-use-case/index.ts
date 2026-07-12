@@ -1,4 +1,4 @@
-import { INotificationGateway } from '../interfaces/inotification-gateway'
+import { INotificationGateway } from '../interfaces/gateway/inotification-gateway'
 import { to, from, subject, buildHtml } from './email-template'
 
 interface AskForAccessInput {

@@ -1,8 +1,8 @@
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
 import { EmailVerificationCodeNotFoundError } from '../domain/error/not-found-error/email-verification-code-not-found-error'
 import { Session } from '../domain/session'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
-import { ISessionsRepository } from './interfaces/repository/isessions-repository'
+import { ISessionsRepository } from './interfaces/repository/write/isessions-repository'
 
 interface Input {
     email: string

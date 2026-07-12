@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { DeleteTemplateUseCase } from './delete-template-use-case'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import {
     CertificateEmission,
@@ -10,7 +10,7 @@ import {
 } from '../domain/certificate'
 import { Template, TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
 import { DataSource, DATA_SOURCE_MIME_TYPE } from '../domain/data-source'
-import { IBucket } from './interfaces/cloud/ibucket'
+import { IBucket } from './interfaces/storage/ibucket'
 import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 import { TemplateNotFoundError } from '../domain/error/not-found-error/template-not-found-error'

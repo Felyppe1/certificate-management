@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { prisma } from '@/tests/setup.integration'
 import { ConfirmEmailChangeUseCase } from '@/backend/application/confirm-email-change-use-case'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
 import { EmailUnavailableError } from '@/backend/domain/error/conflict-error/email-unavailable-error'
 
 describe('ConfirmEmailChangeUseCase (Integração)', () => {

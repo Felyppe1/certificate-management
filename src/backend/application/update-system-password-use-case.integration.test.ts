@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import bcrypt from 'bcrypt'
 import { prisma } from '@/tests/setup.integration'
 import { UpdateSystemPasswordUseCase } from '@/backend/application/update-system-password-use-case'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
 
 describe('UpdateSystemPasswordUseCase (Integração)', () => {
     it('deve atualizar o hash da senha no banco', async () => {

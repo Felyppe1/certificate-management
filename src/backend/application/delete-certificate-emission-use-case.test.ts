@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { DeleteCertificateEmissionUseCase } from './delete-certificate-emission-use-case'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IBucket } from './interfaces/cloud/ibucket'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IBucket } from './interfaces/storage/ibucket'
 import {
     CertificateEmission,
     CERTIFICATE_STATUS,

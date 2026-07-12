@@ -1,7 +1,7 @@
 import { NotAdminError } from '../../domain/error/forbidden-error/not-admin-error'
 import { UserNotFoundError } from '../../domain/error/not-found-error/user-not-found-error'
-import { INotificationGateway } from '../interfaces/inotification-gateway'
-import { IUsersRepository } from '../interfaces/repository/iusers-repository'
+import { INotificationGateway } from '../interfaces/gateway/inotification-gateway'
+import { IUsersRepository } from '../interfaces/repository/write/iusers-repository'
 import {
     from,
     subject,

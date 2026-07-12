@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { FinishCertificateEmailSendingProcessUseCase } from './finish-certificate-email-sending-process-use-case'
-import { PrismaEmailsRepository } from '../infrastructure/repository/prisma/prisma-emails-repository'
-import { PrismaCertificatesRepository } from '../infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaUsersRepository } from '../infrastructure/repository/prisma/prisma-users-repository'
-import { PrismaTransactionManager } from '../infrastructure/repository/prisma/prisma-transaction-manager'
+import { PrismaEmailsRepository } from '../interface-adapters/repository/prisma/write/prisma-emails-repository'
+import { PrismaCertificatesRepository } from '../interface-adapters/repository/prisma/write/prisma-certificates-repository'
+import { PrismaUsersRepository } from '../interface-adapters/repository/prisma/write/prisma-users-repository'
+import { PrismaTransactionManager } from '../interface-adapters/repository/prisma/prisma-transaction-manager'
 import { PROCESSING_STATUS_ENUM, EMAIL_ERROR_TYPE_ENUM } from '../domain/email'
 import { CERTIFICATE_STATUS, INPUT_METHOD } from '../domain/certificate'
 import { prisma } from '@/tests/setup.integration'
@@ -11,7 +11,12 @@ import { prisma } from '@/tests/setup.integration'
 describe('FinishCertificateEmailSendingProcessUseCase (Integration)', () => {
     async function createBaseFixture() {
         await prisma.user.create({
-            data: { id: '1', email: 'user@example.com', name: 'User', password_hash: 'hash' },
+            data: {
+                id: '1',
+                email: 'user@example.com',
+                name: 'User',
+                password_hash: 'hash',
+            },
         })
 
         await prisma.certificateEmission.create({
@@ -26,7 +31,15 @@ describe('FinishCertificateEmailSendingProcessUseCase (Integration)', () => {
                         file_extension: 'xlsx',
                         google_account_email: null,
                         DataSourceFile: {
-                            create: [{ file_index: 0, file_name: 'data.xlsx', drive_file_id: null, storage_file_url: 'users/1/certificates/1/data.xlsx' }],
+                            create: [
+                                {
+                                    file_index: 0,
+                                    file_name: 'data.xlsx',
+                                    drive_file_id: null,
+                                    storage_file_url:
+                                        'users/1/certificates/1/data.xlsx',
+                                },
+                            ],
                         },
                         DataSourceColumn: {
                             create: [{ name: 'email', type: 'STRING' }],
@@ -65,10 +78,14 @@ describe('FinishCertificateEmailSendingProcessUseCase (Integration)', () => {
             userId: '1',
         })
 
-        const email = await prisma.email.findUnique({ where: { id: 'email-1' } })
+        const email = await prisma.email.findUnique({
+            where: { id: 'email-1' },
+        })
         expect(email?.status).toBe('COMPLETED')
 
-        const dailyUsage = await prisma.dailyUsage.findFirst({ where: { user_id: '1' } })
+        const dailyUsage = await prisma.dailyUsage.findFirst({
+            where: { user_id: '1' },
+        })
         expect(dailyUsage?.emails_sent_count).toBe(3)
     })
 
@@ -88,11 +105,17 @@ describe('FinishCertificateEmailSendingProcessUseCase (Integration)', () => {
                 status: PROCESSING_STATUS_ENUM.FAILED,
             })
 
-            const email = await prisma.email.findUnique({ where: { id: 'email-1' } })
+            const email = await prisma.email.findUnique({
+                where: { id: 'email-1' },
+            })
             expect(email?.status).toBe('FAILED')
-            expect(email?.email_error_type).toBe(EMAIL_ERROR_TYPE_ENUM.INTERNAL_ERROR)
+            expect(email?.email_error_type).toBe(
+                EMAIL_ERROR_TYPE_ENUM.INTERNAL_ERROR,
+            )
 
-            const certificate = await prisma.certificateEmission.findUnique({ where: { id: '1' } })
+            const certificate = await prisma.certificateEmission.findUnique({
+                where: { id: '1' },
+            })
             expect(certificate?.status).toBe('GENERATED')
         })
 
@@ -125,7 +148,9 @@ describe('FinishCertificateEmailSendingProcessUseCase (Integration)', () => {
                 }),
             ).rejects.toThrow()
 
-            const certificate = await prisma.certificateEmission.findUnique({ where: { id: '1' } })
+            const certificate = await prisma.certificateEmission.findUnique({
+                where: { id: '1' },
+            })
             expect(certificate?.status).toBe('EMITTED')
         })
     })

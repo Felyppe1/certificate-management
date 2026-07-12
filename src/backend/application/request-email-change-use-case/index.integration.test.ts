@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { prisma } from '@/tests/setup.integration'
 import { RequestEmailChangeUseCase } from '@/backend/application/request-email-change-use-case'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
-import { INotificationGateway } from '@/backend/application/interfaces/inotification-gateway'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
+import { INotificationGateway } from '@/backend/application/interfaces/gateway/inotification-gateway'
 import { EmailUnavailableError } from '@/backend/domain/error/conflict-error/email-unavailable-error'
 
 class NotificationStub implements Pick<INotificationGateway, 'sendEmail'> {

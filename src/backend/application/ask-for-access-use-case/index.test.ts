@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { AskForAccessUseCase } from './index'
-import { INotificationGateway } from '../interfaces/inotification-gateway'
+import { INotificationGateway } from '../interfaces/gateway/inotification-gateway'
 import { buildHtml } from './email-template'
 
 describe('AskForAccessUseCase', () => {

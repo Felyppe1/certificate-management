@@ -4,7 +4,7 @@ import { MissingSessionError } from '@/backend/domain/error/authentication-error
 import { SessionNotFoundError } from '@/backend/domain/error/authentication-error/session-not-found-error'
 import { SessionExpiredError } from '@/backend/domain/error/authentication-error/session-expired-error'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { PrismaSessionsRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-sessions-repository'
 import { cookies } from 'next/headers'
 import { NextRequest } from 'next/server'
 

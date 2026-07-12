@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 import { LoginGoogleUseCase } from '@/backend/application/login-google-use-case'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
-import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
-import { IGoogleAuthGateway } from '@/backend/application/interfaces/igoogle-auth-gateway'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
+import { PrismaSessionsRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-sessions-repository'
+import { PrismaTransactionManager } from '@/backend/interface-adapters/repository/prisma/prisma-transaction-manager'
+import { IGoogleAuthGateway } from '@/backend/application/interfaces/gateway/igoogle-auth-gateway'
 import { UserNotFoundError } from '@/backend/domain/error/authentication-error/user-not-found-error'
 import { ExternalAccountAlreadyExistsError } from '@/backend/domain/error/conflict-error/external-account-already-exists-error'
 import { prisma } from '@/tests/setup.integration'
@@ -34,12 +34,18 @@ function makeGatewayStub(overrides?: {
     user?: Partial<typeof GOOGLE_USER>
 }): Pick<IGoogleAuthGateway, 'getToken' | 'getUserInfo'> {
     return {
-        getToken: vi.fn().mockResolvedValue({ ...GOOGLE_TOKEN, ...overrides?.token }),
-        getUserInfo: vi.fn().mockResolvedValue({ ...GOOGLE_USER, ...overrides?.user }),
+        getToken: vi
+            .fn()
+            .mockResolvedValue({ ...GOOGLE_TOKEN, ...overrides?.token }),
+        getUserInfo: vi
+            .fn()
+            .mockResolvedValue({ ...GOOGLE_USER, ...overrides?.user }),
     }
 }
 
-function makeUseCase(gatewayStub: Pick<IGoogleAuthGateway, 'getToken' | 'getUserInfo'>) {
+function makeUseCase(
+    gatewayStub: Pick<IGoogleAuthGateway, 'getToken' | 'getUserInfo'>,
+) {
     return new LoginGoogleUseCase(
         new PrismaUsersRepository(prisma),
         new PrismaSessionsRepository(prisma),
@@ -74,13 +80,23 @@ describe('LoginGoogleUseCase (Integration)', () => {
     describe('primeiro acesso via Google', () => {
         it('deve salvar o novo usuário, a conta Google e a sessão no banco com os dados corretos', async () => {
             const gateway = makeGatewayStub()
-            await makeUseCase(gateway).execute({ code: 'auth-code', reAuthenticate: false })
+            await makeUseCase(gateway).execute({
+                code: 'auth-code',
+                reAuthenticate: false,
+            })
 
             const account = await prisma.externalUserAccount.findFirstOrThrow({
-                where: { provider_user_id: GOOGLE_USER.providerUserId, provider: 'GOOGLE' },
+                where: {
+                    provider_user_id: GOOGLE_USER.providerUserId,
+                    provider: 'GOOGLE',
+                },
             })
-            const user = await prisma.user.findUniqueOrThrow({ where: { id: account.user_id } })
-            const session = await prisma.session.findFirst({ where: { user_id: account.user_id } })
+            const user = await prisma.user.findUniqueOrThrow({
+                where: { id: account.user_id },
+            })
+            const session = await prisma.session.findFirst({
+                where: { user_id: account.user_id },
+            })
 
             expect(user).toMatchObject({
                 name: GOOGLE_USER.name,
@@ -95,7 +111,8 @@ describe('LoginGoogleUseCase (Integration)', () => {
                 email: GOOGLE_USER.email,
                 access_token: GOOGLE_TOKEN.accessToken,
                 refresh_token: GOOGLE_TOKEN.refreshToken,
-                access_token_expiry_datetime: GOOGLE_TOKEN.accessTokenExpiryDateTime,
+                access_token_expiry_datetime:
+                    GOOGLE_TOKEN.accessTokenExpiryDateTime,
             })
 
             expect(session!.token).toBeTruthy()
@@ -108,9 +125,15 @@ describe('LoginGoogleUseCase (Integration)', () => {
 
             const newExpiry = new Date(Date.now() + 2 * 60 * 60 * 1000)
             const gateway = makeGatewayStub({
-                token: { accessToken: 'token-novo', accessTokenExpiryDateTime: newExpiry },
+                token: {
+                    accessToken: 'token-novo',
+                    accessTokenExpiryDateTime: newExpiry,
+                },
             })
-            await makeUseCase(gateway).execute({ code: 'auth-code', reAuthenticate: false })
+            await makeUseCase(gateway).execute({
+                code: 'auth-code',
+                reAuthenticate: false,
+            })
 
             const account = await prisma.externalUserAccount.findFirst({
                 where: { provider_user_id: 'g-123' },
@@ -133,7 +156,10 @@ describe('LoginGoogleUseCase (Integration)', () => {
             })
 
             const gateway = makeGatewayStub()
-            const result = await makeUseCase(gateway).execute({ code: 'auth-code', reAuthenticate: false })
+            const result = await makeUseCase(gateway).execute({
+                code: 'auth-code',
+                reAuthenticate: false,
+            })
 
             expect(result.suggestLinkingEmail).toBe(GOOGLE_USER.email)
         })
@@ -151,7 +177,9 @@ describe('LoginGoogleUseCase (Integration)', () => {
                 },
             })
 
-            const gateway = makeGatewayStub({ user: { providerUserId: 'g-novo' } })
+            const gateway = makeGatewayStub({
+                user: { providerUserId: 'g-novo' },
+            })
             await makeUseCase(gateway).execute({
                 code: 'auth-code',
                 reAuthenticate: true,
@@ -161,7 +189,9 @@ describe('LoginGoogleUseCase (Integration)', () => {
             const account = await prisma.externalUserAccount.findFirst({
                 where: { user_id: 'user-sistema', provider: 'GOOGLE' },
             })
-            const session = await prisma.session.findFirst({ where: { user_id: 'user-sistema' } })
+            const session = await prisma.session.findFirst({
+                where: { user_id: 'user-sistema' },
+            })
 
             expect(account).toMatchObject({
                 provider: 'GOOGLE',
@@ -169,7 +199,8 @@ describe('LoginGoogleUseCase (Integration)', () => {
                 email: GOOGLE_USER.email,
                 access_token: GOOGLE_TOKEN.accessToken,
                 refresh_token: GOOGLE_TOKEN.refreshToken,
-                access_token_expiry_datetime: GOOGLE_TOKEN.accessTokenExpiryDateTime,
+                access_token_expiry_datetime:
+                    GOOGLE_TOKEN.accessTokenExpiryDateTime,
             })
 
             expect(session!.token).toBeTruthy()
@@ -182,7 +213,10 @@ describe('LoginGoogleUseCase (Integration)', () => {
 
             const newExpiry = new Date(Date.now() + 2 * 60 * 60 * 1000)
             const gateway = makeGatewayStub({
-                token: { accessToken: 'token-reauth', accessTokenExpiryDateTime: newExpiry },
+                token: {
+                    accessToken: 'token-reauth',
+                    accessTokenExpiryDateTime: newExpiry,
+                },
             })
             await makeUseCase(gateway).execute({
                 code: 'auth-code',

@@ -1,9 +1,9 @@
 import { DataSourceRowNotFoundError } from '../domain/error/not-found-error/data-source-row-not-found-error'
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 import { FileBytesMissingError } from '../domain/error/validation-error/file-bytes-missing-error'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 
 interface FinishCertificatesGenerationUseCaseInput {

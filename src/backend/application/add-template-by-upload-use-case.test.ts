@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { AddTemplateByUploadUseCase } from './add-template-by-upload-use-case'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
-import { IStringVariableExtractor } from './interfaces/istring-variable-extractor'
+import { IStringVariableExtractor } from './interfaces/extraction/istring-variable-extractor'
 import {
     IFileContentExtractorFactory,
     IFileContentExtractorStrategy,
-} from './interfaces/ifile-content-extractor-factory'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { IBucket } from './interfaces/cloud/ibucket'
+} from './interfaces/extraction/ifile-content-extractor-factory'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
+import { IBucket } from './interfaces/storage/ibucket'
 import {
     CertificateEmission,
     CERTIFICATE_STATUS,

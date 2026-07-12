@@ -1,7 +1,7 @@
 'use server'
 
 import { ValidateResetPasswordCodeUseCase } from '@/backend/application/valida-reset-password-code-use-case'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 
 export async function validateResetPasswordCodeAction(

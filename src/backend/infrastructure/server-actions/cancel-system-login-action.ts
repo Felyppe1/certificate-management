@@ -3,7 +3,7 @@
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { CancelSystemLoginUseCase } from '@/backend/application/cancel-system-login-use-case'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
+import { PrismaUsersRepository } from '../../interface-adapters/repository/prisma/write/prisma-users-repository'
 import { prisma } from '../repository/prisma'
 import { logoutAction } from './logout-action'
 import { redirect } from 'next/navigation'

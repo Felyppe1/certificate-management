@@ -4,17 +4,17 @@ import { DATA_SOURCE_MIME_TYPE } from '../domain/data-source'
 import {
     GetFileMetadataOutput,
     IGoogleDriveGateway,
-} from './interfaces/igoogle-drive-gateway'
+} from './interfaces/gateway/igoogle-drive-gateway'
 import {
     ExtractColumns,
     ISpreadsheetContentExtractorFactory,
     ISpreadsheetContentExtractorStrategy,
-} from './interfaces/ispreadsheet-content-extractor-factory'
-import { IBucket } from './interfaces/cloud/ibucket'
-import { PrismaCertificatesRepository } from '../infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaDataSourceRowsRepository } from '../infrastructure/repository/prisma/prisma-data-source-rows-repository'
-import { PrismaTransactionManager } from '../infrastructure/repository/prisma/prisma-transaction-manager'
-import { PrismaUsersRepository } from '../infrastructure/repository/prisma/prisma-users-repository'
+} from './interfaces/extraction/ispreadsheet-content-extractor-factory'
+import { IBucket } from './interfaces/storage/ibucket'
+import { PrismaCertificatesRepository } from '../interface-adapters/repository/prisma/write/prisma-certificates-repository'
+import { PrismaDataSourceRowsRepository } from '../interface-adapters/repository/prisma/write/prisma-data-source-rows-repository'
+import { PrismaTransactionManager } from '../interface-adapters/repository/prisma/prisma-transaction-manager'
+import { PrismaUsersRepository } from '../interface-adapters/repository/prisma/write/prisma-users-repository'
 import { AddDataSourceByUrlUseCase } from './add-data-source-by-url-use-case'
 import { prisma } from '@/tests/setup.integration'
 
@@ -56,10 +56,12 @@ describe('AddDataSourceByUrlUseCase (Integration)', () => {
         }
 
         class SpreadsheetContentExtractorFactoryStub
-            implements
-                Pick<ISpreadsheetContentExtractorFactory, 'create'>
+            implements Pick<ISpreadsheetContentExtractorFactory, 'create'>
         {
-            create(): Pick<ISpreadsheetContentExtractorStrategy, 'extractColumns'> {
+            create(): Pick<
+                ISpreadsheetContentExtractorStrategy,
+                'extractColumns'
+            > {
                 return {
                     async extractColumns(): Promise<ExtractColumns> {
                         return {
@@ -116,7 +118,12 @@ describe('AddDataSourceByUrlUseCase (Integration)', () => {
 
     it('deve reverter alterações no banco quando a última operação da transação falhar', async () => {
         await prisma.user.create({
-            data: { id: '1', email: 'user@gmail.com', password_hash: 'password', name: 'User' },
+            data: {
+                id: '1',
+                email: 'user@gmail.com',
+                password_hash: 'password',
+                name: 'User',
+            },
         })
 
         await prisma.certificateEmission.create({
@@ -131,13 +138,46 @@ describe('AddDataSourceByUrlUseCase (Integration)', () => {
                         file_extension: 'xlsx',
                         google_account_email: null,
                         DataSourceFile: {
-                            create: [{ file_index: 0, file_name: 'data.xlsx', drive_file_id: 'old-file-id', storage_file_url: null }],
+                            create: [
+                                {
+                                    file_index: 0,
+                                    file_name: 'data.xlsx',
+                                    drive_file_id: 'old-file-id',
+                                    storage_file_url: null,
+                                },
+                            ],
                         },
-                        DataSourceColumn: { create: [{ name: 'name', type: 'STRING' }] },
+                        DataSourceColumn: {
+                            create: [{ name: 'name', type: 'STRING' }],
+                        },
                         DataSourceRow: {
                             create: [
-                                { id: 'row-1', processing_status: 'PENDING', source_row_index: 1, DataSourceValue: { create: [{ column_name: 'name', value: 'OldRow1' }] } },
-                                { id: 'row-2', processing_status: 'PENDING', source_row_index: 2, DataSourceValue: { create: [{ column_name: 'name', value: 'OldRow2' }] } },
+                                {
+                                    id: 'row-1',
+                                    processing_status: 'PENDING',
+                                    source_row_index: 1,
+                                    DataSourceValue: {
+                                        create: [
+                                            {
+                                                column_name: 'name',
+                                                value: 'OldRow1',
+                                            },
+                                        ],
+                                    },
+                                },
+                                {
+                                    id: 'row-2',
+                                    processing_status: 'PENDING',
+                                    source_row_index: 2,
+                                    DataSourceValue: {
+                                        create: [
+                                            {
+                                                column_name: 'name',
+                                                value: 'OldRow2',
+                                            },
+                                        ],
+                                    },
+                                },
                             ],
                         },
                     },
@@ -146,10 +186,15 @@ describe('AddDataSourceByUrlUseCase (Integration)', () => {
         })
 
         class GoogleDriveGatewayStub
-            implements Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
+            implements
+                Pick<IGoogleDriveGateway, 'getFileMetadata' | 'downloadFile'>
         {
             async getFileMetadata(): Promise<GetFileMetadataOutput> {
-                return { name: 'data.xlsx', fileMimeType: DATA_SOURCE_MIME_TYPE.XLSX, thumbnailUrl: null }
+                return {
+                    name: 'data.xlsx',
+                    fileMimeType: DATA_SOURCE_MIME_TYPE.XLSX,
+                    thumbnailUrl: null,
+                }
             }
             async downloadFile(): Promise<Buffer> {
                 return Buffer.from('content')
@@ -159,7 +204,10 @@ describe('AddDataSourceByUrlUseCase (Integration)', () => {
         class SpreadsheetContentExtractorFactoryStub
             implements Pick<ISpreadsheetContentExtractorFactory, 'create'>
         {
-            create(): Pick<ISpreadsheetContentExtractorStrategy, 'extractColumns'> {
+            create(): Pick<
+                ISpreadsheetContentExtractorStrategy,
+                'extractColumns'
+            > {
                 return {
                     async extractColumns(): Promise<ExtractColumns> {
                         return { columns: ['name'], rows: [{ name: 'NewRow' }] }
@@ -173,7 +221,9 @@ describe('AddDataSourceByUrlUseCase (Integration)', () => {
         }
 
         class DataSourceRowsRepositoryThrowingOnSave {
-            constructor(private readonly real: PrismaDataSourceRowsRepository) {}
+            constructor(
+                private readonly real: PrismaDataSourceRowsRepository,
+            ) {}
 
             async deleteManyByCertificateEmissionId(id: string) {
                 return this.real.deleteManyByCertificateEmissionId(id)
@@ -186,7 +236,9 @@ describe('AddDataSourceByUrlUseCase (Integration)', () => {
 
         const useCase = new AddDataSourceByUrlUseCase(
             new PrismaCertificatesRepository(prisma),
-            new DataSourceRowsRepositoryThrowingOnSave(new PrismaDataSourceRowsRepository(prisma)),
+            new DataSourceRowsRepositoryThrowingOnSave(
+                new PrismaDataSourceRowsRepository(prisma),
+            ),
             new GoogleDriveGatewayStub(),
             new SpreadsheetContentExtractorFactoryStub(),
             new BucketStub(),
@@ -195,10 +247,16 @@ describe('AddDataSourceByUrlUseCase (Integration)', () => {
         )
 
         await expect(
-            useCase.execute({ certificateId: '1', fileUrls: ['https://drive.google.com/file/d/abc123/view'], userId: '1' }),
+            useCase.execute({
+                certificateId: '1',
+                fileUrls: ['https://drive.google.com/file/d/abc123/view'],
+                userId: '1',
+            }),
         ).rejects.toThrow()
 
-        const rows = await prisma.dataSourceRow.findMany({ where: { data_source_id: '1' } })
+        const rows = await prisma.dataSourceRow.findMany({
+            where: { data_source_id: '1' },
+        })
         expect(rows).toHaveLength(2)
     })
 })

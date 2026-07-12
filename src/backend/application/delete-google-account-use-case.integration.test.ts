@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { prisma } from '@/tests/setup.integration'
 import { DeleteAccountUseCase } from '@/backend/application/delete-google-account-use-case'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
-import { IGoogleAuthGateway } from '@/backend/application/interfaces/igoogle-auth-gateway'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
+import { IGoogleAuthGateway } from '@/backend/application/interfaces/gateway/igoogle-auth-gateway'
 
-class GoogleGatewayStub implements Pick<IGoogleAuthGateway, 'revokeRefreshToken'> {
+class GoogleGatewayStub
+    implements Pick<IGoogleAuthGateway, 'revokeRefreshToken'>
+{
     async revokeRefreshToken(_refreshToken: string): Promise<void> {}
 }
 

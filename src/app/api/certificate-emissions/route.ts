@@ -1,7 +1,8 @@
 import { GetAllCertificateEmissionsUseCase } from '@/backend/application/get-all-certificate-emissions-use-case'
 import { CreateCertificateEmissionUseCase } from '@/backend/application/create-certificate-emission-use-case'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
-import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
+import { PrismaSessionsRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-sessions-repository'
+import { PrismaCertificatesRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-certificates-repository'
+import { PrismaCertificateEmissionsRepositoryRead } from '@/backend/interface-adapters/repository/prisma/read/prisma-certificate-emissions-repository-read'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
@@ -27,8 +28,9 @@ export async function GET(
     try {
         const { userId } = await validateSessionToken(request)
 
-        const getAllCertificatesUseCase =
-            new GetAllCertificateEmissionsUseCase()
+        const getAllCertificatesUseCase = new GetAllCertificateEmissionsUseCase(
+            new PrismaCertificateEmissionsRepositoryRead(prisma),
+        )
 
         const certificateEmissions = await getAllCertificatesUseCase.execute({
             userId,

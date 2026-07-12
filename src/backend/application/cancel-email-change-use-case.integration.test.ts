@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { prisma } from '@/tests/setup.integration'
 import { CancelEmailChangeUseCase } from '@/backend/application/cancel-email-change-use-case'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
 
 describe('CancelEmailChangeUseCase (Integração)', () => {
     it('deve remover a solicitação de troca de e-mail pendente do banco', async () => {

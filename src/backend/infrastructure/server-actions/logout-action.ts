@@ -3,7 +3,7 @@
 import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
 
 import { LogoutUseCase } from '@/backend/application/logout-use-case'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { PrismaSessionsRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { cookies } from 'next/headers'
 

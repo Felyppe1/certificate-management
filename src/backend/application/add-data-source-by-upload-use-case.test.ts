@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { AddDataSourceByUploadUseCase } from './add-data-source-by-upload-use-case'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
-import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
+import { ISpreadsheetContentExtractorFactory } from './interfaces/extraction/ispreadsheet-content-extractor-factory'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { IBucket } from './interfaces/cloud/ibucket'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
+import { IBucket } from './interfaces/storage/ibucket'
 import {
     CertificateEmission,
     CERTIFICATE_STATUS,

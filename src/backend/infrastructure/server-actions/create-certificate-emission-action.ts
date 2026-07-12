@@ -2,7 +2,7 @@
 
 import { CreateCertificateEmissionUseCase } from '@/backend/application/create-certificate-emission-use-case'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
+import { PrismaCertificatesRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-certificates-repository'
 
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { logoutAction } from './logout-action'

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { prisma } from '@/tests/setup.integration'
 import { GetMeUseCase } from '@/backend/application/get-me-use-case'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
 
 describe('GetMeUseCase (Integração)', () => {
     it('deve retornar os dados completos do perfil incluindo conta externa e troca de e-mail pendente', async () => {

@@ -1,5 +1,5 @@
 import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
 
 interface GetMeUseCaseInput {
     userId: string

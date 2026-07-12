@@ -1,10 +1,10 @@
 'use server'
 
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
+import { PrismaCertificatesRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-certificates-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { logoutAction } from './logout-action'
-import { GcpBucket } from '../cloud/gcp/gcp-bucket'
+import { GcpBucket } from '../../interface-adapters/cloud/gcp/gcp-bucket'
 import { DeleteDataSourceUseCase } from '@/backend/application/delete-data-source-use-case'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { deleteDataSourceSchema } from './schemas'

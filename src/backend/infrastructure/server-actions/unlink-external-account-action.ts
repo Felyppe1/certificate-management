@@ -3,12 +3,12 @@
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { UnlinkExternalAccountUseCase } from '@/backend/application/unlink-external-account-use-case'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
+import { PrismaUsersRepository } from '../../interface-adapters/repository/prisma/write/prisma-users-repository'
 import { prisma } from '../repository/prisma'
 import { logoutAction } from './logout-action'
 import { redirect } from 'next/navigation'
 import { unlinkExternalAccountSchema } from './schemas'
-import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
+import { GoogleAuthGateway } from '../../interface-adapters/gateway/google-auth-gateway'
 
 export async function unlinkExternalAccountAction(
     _: unknown,

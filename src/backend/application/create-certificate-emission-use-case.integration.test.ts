@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { CreateCertificateEmissionUseCase } from './create-certificate-emission-use-case'
-import { PrismaCertificatesRepository } from '../infrastructure/repository/prisma/prisma-certificates-repository'
+import { PrismaCertificatesRepository } from '../interface-adapters/repository/prisma/write/prisma-certificates-repository'
 import { prisma } from '@/tests/setup.integration'
 
 describe('CreateCertificateEmissionUseCase (Integration)', () => {
@@ -18,7 +18,10 @@ describe('CreateCertificateEmissionUseCase (Integration)', () => {
             new PrismaCertificatesRepository(prisma),
         )
 
-        const id = await useCase.execute({ name: 'Meu Certificado', userId: '1' })
+        const id = await useCase.execute({
+            name: 'Meu Certificado',
+            userId: '1',
+        })
 
         const record = await prisma.certificateEmission.findUnique({
             where: { id },

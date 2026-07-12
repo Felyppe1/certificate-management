@@ -1,9 +1,9 @@
 'use server'
 
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
-import { PrismaUsersRepository } from '../repository/prisma/prisma-users-repository'
+import { PrismaUsersRepository } from '../../interface-adapters/repository/prisma/write/prisma-users-repository'
 import { prisma } from '../repository/prisma'
-import { GoogleAuthGateway } from '../gateway/google-auth-gateway'
+import { GoogleAuthGateway } from '../../interface-adapters/gateway/google-auth-gateway'
 import { RefreshGoogleAccessTokenUseCase } from '@/backend/application/refresh-google-access-token-use-case'
 import { logoutAction } from './logout-action'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'

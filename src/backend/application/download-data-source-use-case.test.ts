@@ -1,7 +1,7 @@
 import { describe, expect, it, Mock, vi, beforeEach } from 'vitest'
 import { DownloadDataSourceUseCase } from './download-data-source-use-case'
-import { IBucket } from './interfaces/cloud/ibucket'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { IBucket } from './interfaces/storage/ibucket'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
 import {
     CertificateEmission,
     CERTIFICATE_STATUS,

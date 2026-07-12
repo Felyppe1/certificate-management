@@ -1,7 +1,7 @@
 import { MissingTokenError } from '@/backend/domain/error/authentication-error/missing-token-error'
 import { InvalidServiceTokenError } from '@/backend/domain/error/authentication-error/invalid-service-token-error'
 import { InvalidServiceAccountError } from '@/backend/domain/error/authentication-error/invalid-service-account-error'
-import { GoogleAuthGateway } from '@/backend/infrastructure/gateway/google-auth-gateway'
+import { GoogleAuthGateway } from '@/backend/interface-adapters/gateway/google-auth-gateway'
 import { env } from '@/env'
 import { LoginTicket } from 'google-auth-library'
 import { NextRequest } from 'next/server'

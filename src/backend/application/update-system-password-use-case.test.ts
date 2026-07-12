@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { UpdateSystemPasswordUseCase } from './update-system-password-use-case'
 import { User, UserInput } from '../domain/user'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
 import { UserNotFoundError } from '../domain/error/authentication-error/user-not-found-error'
 import { CurrentPasswordIncorrectError } from '../domain/error/validation-error/current-password-incorrect-error'
 import bcrypt from 'bcrypt'

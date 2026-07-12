@@ -1,20 +1,20 @@
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { AddTemplateByDrivePickerUseCase } from './add-template-by-drive-picker-use-case'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import {
     IFileContentExtractorFactory,
     IFileContentExtractorStrategy,
-} from './interfaces/ifile-content-extractor-factory'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { IBucket } from './interfaces/cloud/ibucket'
+} from './interfaces/extraction/ifile-content-extractor-factory'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
+import { IBucket } from './interfaces/storage/ibucket'
 import {
     GetFileMetadataOutput,
     IGoogleDriveGateway,
-} from './interfaces/igoogle-drive-gateway'
-import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
-import { IStringVariableExtractor } from './interfaces/istring-variable-extractor'
+} from './interfaces/gateway/igoogle-drive-gateway'
+import { IGoogleAuthGateway } from './interfaces/gateway/igoogle-auth-gateway'
+import { IStringVariableExtractor } from './interfaces/extraction/istring-variable-extractor'
 import {
     CertificateEmission,
     CERTIFICATE_STATUS,

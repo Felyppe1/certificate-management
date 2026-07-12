@@ -5,6 +5,8 @@ import { GetCertificateEmissionUseCase } from '@/backend/application/get-certifi
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { NotFoundError } from '@/backend/domain/error/not-found-error'
 import { ForbiddenError } from '@/backend/domain/error/forbidden-error'
+import { PrismaCertificateEmissionsRepositoryRead } from '@/backend/interface-adapters/repository/prisma/read/prisma-certificate-emissions-repository-read'
+import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { notFound, redirect } from 'next/navigation'
 import { GetCertificateEmissionResponse } from '@/app/api/certificate-emissions/[certificateEmissionId]/route'
 
@@ -14,7 +16,9 @@ export async function getCertificateEmissionAction(
     try {
         const { userId } = await validateSessionToken()
 
-        const useCase = new GetCertificateEmissionUseCase()
+        const useCase = new GetCertificateEmissionUseCase(
+            new PrismaCertificateEmissionsRepositoryRead(prisma),
+        )
         const certificateEmission = await useCase.execute({
             certificateId,
             userId,

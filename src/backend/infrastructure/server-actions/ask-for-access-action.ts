@@ -1,7 +1,7 @@
 'use server'
 
 import { AskForAccessUseCase } from '@/backend/application/ask-for-access-use-case'
-import { BrevoNotificationGateway } from '@/backend/infrastructure/gateway/brevo-notification-gateway'
+import { BrevoNotificationGateway } from '@/backend/interface-adapters/gateway/brevo-notification-gateway'
 import { ActionResponse } from '@/types'
 import z from 'zod'
 

@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { VerifyEmailUseCase } from '@/backend/application/verify-email-use-case'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
-import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
+import { PrismaSessionsRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-sessions-repository'
+import { PrismaTransactionManager } from '@/backend/interface-adapters/repository/prisma/prisma-transaction-manager'
 import { EmailVerificationCodeNotFoundError } from '@/backend/domain/error/not-found-error/email-verification-code-not-found-error'
 import { VerificationCodeExpiredError } from '@/backend/domain/error/forbidden-error/verification-code-expired-error'
 import { VerificationCodeInvalidError } from '@/backend/domain/error/forbidden-error/verification-code-invalid-error'
@@ -21,7 +21,9 @@ function makeUseCase() {
     )
 }
 
-async function seedUserWithCode(options: { expiresAt: Date; code?: string } = { expiresAt: FUTURE_DATE }) {
+async function seedUserWithCode(
+    options: { expiresAt: Date; code?: string } = { expiresAt: FUTURE_DATE },
+) {
     await prisma.user.create({
         data: {
             id: 'user-1',
@@ -47,8 +49,12 @@ describe('VerifyEmailUseCase (Integration)', () => {
         await makeUseCase().execute({ email: EMAIL, code: CODE })
 
         const user = await prisma.user.findUnique({ where: { id: 'user-1' } })
-        const session = await prisma.session.findFirst({ where: { user_id: 'user-1' } })
-        const code = await prisma.emailVerificationCode.findFirst({ where: { user_id: 'user-1' } })
+        const session = await prisma.session.findFirst({
+            where: { user_id: 'user-1' },
+        })
+        const code = await prisma.emailVerificationCode.findFirst({
+            where: { user_id: 'user-1' },
+        })
 
         expect(user).toMatchObject({ is_email_verified: true })
         expect(session!.token).toBeTruthy()
@@ -59,7 +65,10 @@ describe('VerifyEmailUseCase (Integration)', () => {
 
     it('deve lançar erro quando usuário não existe', async () => {
         await expect(
-            makeUseCase().execute({ email: 'inexistente@test.com', code: CODE }),
+            makeUseCase().execute({
+                email: 'inexistente@test.com',
+                code: CODE,
+            }),
         ).rejects.toThrow(EmailVerificationCodeNotFoundError)
     })
 

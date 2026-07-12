@@ -1,6 +1,7 @@
 import { vi, describe, it, expect, beforeAll } from 'vitest'
 import { prisma as testPrisma } from '@/tests/setup.integration'
 import { GetAllCertificateEmissionsUseCase } from './get-all-certificate-emissions-use-case'
+import { PrismaCertificateEmissionsRepositoryRead } from '@/backend/interface-adapters/repository/prisma/read/prisma-certificate-emissions-repository-read'
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
 
 const prismaRef = vi.hoisted(() => ({ current: null as any }))
@@ -26,7 +27,9 @@ describe('GetAllCertificateEmissionsUseCase (Integration)', () => {
             },
         })
 
-        const result = await new GetAllCertificateEmissionsUseCase().execute({
+        const result = await new GetAllCertificateEmissionsUseCase(
+            new PrismaCertificateEmissionsRepositoryRead(testPrisma),
+        ).execute({
             userId: 'user-1',
         })
 
@@ -62,7 +65,9 @@ describe('GetAllCertificateEmissionsUseCase (Integration)', () => {
             },
         })
 
-        const result = await new GetAllCertificateEmissionsUseCase().execute({
+        const result = await new GetAllCertificateEmissionsUseCase(
+            new PrismaCertificateEmissionsRepositoryRead(testPrisma),
+        ).execute({
             userId: 'user-1',
         })
 
@@ -92,7 +97,9 @@ describe('GetAllCertificateEmissionsUseCase (Integration)', () => {
             },
         })
 
-        const result = await new GetAllCertificateEmissionsUseCase().execute({
+        const result = await new GetAllCertificateEmissionsUseCase(
+            new PrismaCertificateEmissionsRepositoryRead(testPrisma),
+        ).execute({
             userId: 'user-1',
         })
 
@@ -140,7 +147,9 @@ describe('GetAllCertificateEmissionsUseCase (Integration)', () => {
             ],
         })
 
-        const result = await new GetAllCertificateEmissionsUseCase().execute({
+        const result = await new GetAllCertificateEmissionsUseCase(
+            new PrismaCertificateEmissionsRepositoryRead(testPrisma),
+        ).execute({
             userId: 'user-1',
         })
 

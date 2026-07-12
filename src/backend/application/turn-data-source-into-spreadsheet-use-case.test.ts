@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { TurnDataSourceIntoSpreadsheetUseCase } from './turn-data-source-into-spreadsheet-use-case'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
-import { IBucket } from './interfaces/cloud/ibucket'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IDataSourceRowsReadRepository } from './interfaces/repository/read/idata-source-rows-read-repository'
+import { IBucket } from './interfaces/storage/ibucket'
 import {
     ISpreadsheetGeneratorFactory,
     ISpreadsheetContentExtractorStrategy,
-} from './interfaces/ispreadsheet-content-extractor-factory'
-import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
+} from './interfaces/extraction/ispreadsheet-content-extractor-factory'
+import { IGoogleDriveGateway } from './interfaces/gateway/igoogle-drive-gateway'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
+import { IGoogleAuthGateway } from './interfaces/gateway/igoogle-auth-gateway'
 import {
     CertificateEmission,
     CERTIFICATE_STATUS,

@@ -2,12 +2,12 @@ import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-ce
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 import { TemplateNotFoundError } from '../domain/error/not-found-error/template-not-found-error'
 import { DataSourceNotFoundError } from '../domain/error/not-found-error/data-source-not-found-error'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
 import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
 import { NoFailedDataSourceRowsError } from '../domain/error/validation-error/no-failed-data-source-rows-error'
-import { IQueue } from './interfaces/cloud/iqueue'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
-import { IDataSourceRowsReadRepository } from './interfaces/repository/idata-source-rows-read-repository'
+import { IQueue } from './interfaces/messaging/iqueue'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
+import { IDataSourceRowsReadRepository } from './interfaces/repository/read/idata-source-rows-read-repository'
 import { PROCESSING_STATUS_ENUM } from '../domain/data-source-row'
 
 interface RetryCertificatesGenerationUseCaseInput {

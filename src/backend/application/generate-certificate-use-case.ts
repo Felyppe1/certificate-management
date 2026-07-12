@@ -1,9 +1,9 @@
 import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 import { DataSourceNotFoundError } from '../domain/error/not-found-error/data-source-not-found-error'
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IQueue } from './interfaces/cloud/iqueue'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IQueue } from './interfaces/messaging/iqueue'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
 import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
 
 interface RetryDataSourceRowUseCaseInput {

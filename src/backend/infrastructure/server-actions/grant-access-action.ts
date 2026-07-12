@@ -1,8 +1,8 @@
 'use server'
 
 import { GrantAccessUseCase } from '@/backend/application/grant-access-use-case'
-import { BrevoNotificationGateway } from '@/backend/infrastructure/gateway/brevo-notification-gateway'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { BrevoNotificationGateway } from '@/backend/interface-adapters/gateway/brevo-notification-gateway'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'

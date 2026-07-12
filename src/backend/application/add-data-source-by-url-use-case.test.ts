@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { AddDataSourceByUrlUseCase } from './add-data-source-by-url-use-case'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
 import {
     IGoogleDriveGateway,
     GetFileMetadataOutput,
-} from './interfaces/igoogle-drive-gateway'
-import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
-import { IBucket } from './interfaces/cloud/ibucket'
+} from './interfaces/gateway/igoogle-drive-gateway'
+import { ISpreadsheetContentExtractorFactory } from './interfaces/extraction/ispreadsheet-content-extractor-factory'
+import { IBucket } from './interfaces/storage/ibucket'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
 import {
     CertificateEmission,
     CERTIFICATE_STATUS,

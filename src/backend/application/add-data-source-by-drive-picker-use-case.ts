@@ -1,11 +1,11 @@
 import { INPUT_METHOD } from '../domain/certificate'
-import { IGoogleDriveGateway } from './interfaces/igoogle-drive-gateway'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
+import { IGoogleDriveGateway } from './interfaces/gateway/igoogle-drive-gateway'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
-import { IGoogleAuthGateway } from './interfaces/igoogle-auth-gateway'
-import { IBucket } from './interfaces/cloud/ibucket'
-import { ISpreadsheetContentExtractorFactory } from './interfaces/ispreadsheet-content-extractor-factory'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
+import { IGoogleAuthGateway } from './interfaces/gateway/igoogle-auth-gateway'
+import { IBucket } from './interfaces/storage/ibucket'
+import { ISpreadsheetContentExtractorFactory } from './interfaces/extraction/ispreadsheet-content-extractor-factory'
 import {
     DATA_SOURCE_MIME_TYPE,
     DataSource,
@@ -15,7 +15,7 @@ import { CertificateEmittedError } from '../domain/error/validation-error/certif
 import { UnsupportedDataSourceMimetypeError } from '../domain/error/validation-error/unsupported-data-source-mimetype-error'
 import { DataSourceImageFilesExceededError } from '../domain/error/validation-error/data-source-image-files-exceeded-error'
 import { DataSourceAllFilesNotImagesError } from '../domain/error/validation-error/data-source-all-files-not-images-error'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
 import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 import { GoogleAccountNotFoundError } from '../domain/error/forbidden-error/google-account-not-found-error'

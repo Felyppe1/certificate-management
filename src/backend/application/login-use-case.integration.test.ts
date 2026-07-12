@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import bcrypt from 'bcrypt'
 import { LoginUseCase } from '@/backend/application/login-use-case'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
+import { PrismaSessionsRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-sessions-repository'
 import { IncorrectCredentialsError } from '@/backend/domain/error/authentication-error/incorrect-credentials-error'
 import { EmailNotVerifiedError } from '@/backend/domain/error/forbidden-error/email-not-verified-error'
 import { prisma } from '@/tests/setup.integration'
@@ -37,12 +37,18 @@ describe('LoginUseCase (Integration)', () => {
 
         const result = await makeUseCase().execute(EMAIL, SENHA)
 
-        const session = await prisma.session.findFirst({ where: { user_id: 'user-1' } })
+        const session = await prisma.session.findFirst({
+            where: { user_id: 'user-1' },
+        })
         expect(session!.token).toBeTruthy()
         expect(session).toMatchObject({ user_id: 'user-1' })
         expect(session!.expires_at.getTime()).toBeGreaterThan(Date.now())
         expect(result.token).toBeTruthy()
-        expect(result.user).toMatchObject({ id: 'user-1', email: EMAIL, name: 'Usuário Teste' })
+        expect(result.user).toMatchObject({
+            id: 'user-1',
+            email: EMAIL,
+            name: 'Usuário Teste',
+        })
     })
 
     it('deve lançar erro quando e-mail não existe', async () => {

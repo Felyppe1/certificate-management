@@ -1,27 +1,18 @@
-import { CERTIFICATE_STATUS } from '../domain/certificate'
-import { prisma } from '../infrastructure/repository/prisma'
+import { ICertificateEmissionsReadRepository } from './interfaces/repository/read/icertificate-emissions-read-repository'
 
 interface GetAllCertificateEmissionsUseCaseInput {
     userId: string
 }
 
 export class GetAllCertificateEmissionsUseCase {
-    async execute({ userId }: GetAllCertificateEmissionsUseCaseInput) {
-        const certificateEmissions = await prisma.certificateEmission.findMany({
-            where: {
-                user_id: userId,
-            },
-            orderBy: {
-                created_at: 'desc',
-            },
-        })
+    constructor(
+        private readonly certificateEmissionsReadRepository: Pick<
+            ICertificateEmissionsReadRepository,
+            'listByOwner'
+        >,
+    ) {}
 
-        return certificateEmissions.map(certificate => ({
-            id: certificate.id,
-            name: certificate.title,
-            userId: certificate.user_id,
-            status: certificate.status as CERTIFICATE_STATUS,
-            createdAt: certificate.created_at,
-        }))
+    async execute({ userId }: GetAllCertificateEmissionsUseCaseInput) {
+        return this.certificateEmissionsReadRepository.listByOwner(userId)
     }
 }

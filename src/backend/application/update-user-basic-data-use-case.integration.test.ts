@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { prisma } from '@/tests/setup.integration'
 import { UpdateUserBasicDataUseCase } from '@/backend/application/update-user-basic-data-use-case'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
 
 describe('UpdateUserBasicDataUseCase (Integração)', () => {
     it('deve salvar o nome atualizado no banco', async () => {

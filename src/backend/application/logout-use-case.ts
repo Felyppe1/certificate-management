@@ -1,5 +1,5 @@
 import { SessionNotFoundError } from '../domain/error/authentication-error/session-not-found-error'
-import { ISessionsRepository } from './interfaces/repository/isessions-repository'
+import { ISessionsRepository } from './interfaces/repository/write/isessions-repository'
 
 export class LogoutUseCase {
     constructor(

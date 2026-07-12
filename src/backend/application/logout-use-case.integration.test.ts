@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { LogoutUseCase } from '@/backend/application/logout-use-case'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { PrismaSessionsRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-sessions-repository'
 import { SessionNotFoundError } from '@/backend/domain/error/authentication-error/session-not-found-error'
 import { prisma } from '@/tests/setup.integration'
 
@@ -14,10 +14,20 @@ function makeUseCase() {
 describe('LogoutUseCase (Integration)', () => {
     it('deve remover a sessão do banco', async () => {
         await prisma.user.create({
-            data: { id: 'user-1', name: 'Usuário', email: null, password_hash: null, credits: 300 },
+            data: {
+                id: 'user-1',
+                name: 'Usuário',
+                email: null,
+                password_hash: null,
+                credits: 300,
+            },
         })
         await prisma.session.create({
-            data: { token: SESSION_TOKEN, user_id: 'user-1', expires_at: FUTURE_DATE },
+            data: {
+                token: SESSION_TOKEN,
+                user_id: 'user-1',
+                expires_at: FUTURE_DATE,
+            },
         })
 
         await makeUseCase().execute(SESSION_TOKEN)
@@ -29,8 +39,8 @@ describe('LogoutUseCase (Integration)', () => {
     })
 
     it('deve lançar erro quando a sessão não existe', async () => {
-        await expect(makeUseCase().execute('token-inexistente')).rejects.toThrow(
-            SessionNotFoundError,
-        )
+        await expect(
+            makeUseCase().execute('token-inexistente'),
+        ).rejects.toThrow(SessionNotFoundError)
     })
 })

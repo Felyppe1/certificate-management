@@ -1,6 +1,6 @@
 import { GetMeUseCase } from '@/backend/application/get-me-use-case'
 import { Provider } from '@/backend/domain/external-account'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'

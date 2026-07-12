@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, Mock, vi } from 'vitest'
 import { AddTemplateByUrlUseCase } from './add-template-by-url-use-case'
-import { ICertificatesRepository } from './interfaces/repository/icertificates-repository'
-import { IDataSourceRowsRepository } from './interfaces/repository/idata-source-rows-repository'
-import { IUsersRepository } from './interfaces/repository/iusers-repository'
+import { ICertificatesRepository } from './interfaces/repository/write/icertificates-repository'
+import { IDataSourceRowsRepository } from './interfaces/repository/write/idata-source-rows-repository'
+import { IUsersRepository } from './interfaces/repository/write/iusers-repository'
 import { ITransactionManager } from './interfaces/repository/itransaction-manager'
-import { IStringVariableExtractor } from './interfaces/istring-variable-extractor'
+import { IStringVariableExtractor } from './interfaces/extraction/istring-variable-extractor'
 import {
     CertificateEmission,
     CERTIFICATE_STATUS,
@@ -16,18 +16,18 @@ import { ExternalAccount } from '../domain/external-account'
 import {
     GetFileMetadataOutput,
     IGoogleDriveGateway,
-} from './interfaces/igoogle-drive-gateway'
+} from './interfaces/gateway/igoogle-drive-gateway'
 import { TEMPLATE_FILE_MIME_TYPE } from '../domain/template'
 import {
     IFileContentExtractorStrategy,
     IFileContentExtractorFactory,
-} from './interfaces/ifile-content-extractor-factory'
+} from './interfaces/extraction/ifile-content-extractor-factory'
 import { NotCertificateOwnerError } from '../domain/error/forbidden-error/not-certificate-owner-error'
 import { CertificateNotFoundError } from '../domain/error/not-found-error/certificate-not-found-error'
 import { CertificateEmittedError } from '../domain/error/validation-error/certificate-emitted-error'
 import { UnexistentTemplateDriveFileIdError } from '../domain/error/validation-error/unexistent-template-drive-file-id-error'
 import { UnsupportedTemplateMimetypeError } from '../domain/error/validation-error/unsupported-template-mimetype-error'
-import { IBucket } from './interfaces/cloud/ibucket'
+import { IBucket } from './interfaces/storage/ibucket'
 
 describe('AddTemplateByUrlUseCase', () => {
     const USER_ID = '1'

@@ -2,19 +2,19 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { AddTemplateByUploadUseCase } from '@/backend/application/add-template-by-upload-use-case'
-import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
-import { PrismaSessionsRepository } from '@/backend/infrastructure/repository/prisma/prisma-sessions-repository'
+import { PrismaCertificatesRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-certificates-repository'
+import { PrismaSessionsRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-sessions-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
-import { GcpBucket } from '@/backend/infrastructure/cloud/gcp/gcp-bucket'
-import { FileContentExtractorFactory } from '@/backend/infrastructure/factory/file-content-extractor-factory'
+import { GcpBucket } from '@/backend/interface-adapters/cloud/gcp/gcp-bucket'
+import { FileContentExtractorFactory } from '@/backend/interface-adapters/factory/file-content-extractor-factory'
 import z from 'zod'
 import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
-import { PrismaDataSourceRowsRepository } from '@/backend/infrastructure/repository/prisma/prisma-data-source-rows-repository'
-import { PrismaTransactionManager } from '@/backend/infrastructure/repository/prisma/prisma-transaction-manager'
+import { PrismaDataSourceRowsRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-data-source-rows-repository'
+import { PrismaTransactionManager } from '@/backend/interface-adapters/repository/prisma/prisma-transaction-manager'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
-import { LiquidStringVariableExtractor } from '@/backend/infrastructure/string-variable-extractor/liquidjs'
+import { LiquidStringVariableExtractor } from '@/backend/interface-adapters/string-variable-extractor/liquidjs'
 import { gcpStorage } from '@/backend/infrastructure/cloud/gcp'
-import { PrismaUsersRepository } from '@/backend/infrastructure/repository/prisma/prisma-users-repository'
+import { PrismaUsersRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-users-repository'
 
 const MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
 

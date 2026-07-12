@@ -2,7 +2,7 @@
 
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { GetCertificateEmissionsMetricsUseCase } from '@/backend/application/get-certificate-emissions-metrics-use-case'
-import { PrismaCertificatesRepository } from '@/backend/infrastructure/repository/prisma/prisma-certificates-repository'
+import { PrismaCertificatesRepository } from '@/backend/interface-adapters/repository/prisma/write/prisma-certificates-repository'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { AuthenticationError } from '@/backend/domain/error/authentication-error'
 import { redirect } from 'next/navigation'
