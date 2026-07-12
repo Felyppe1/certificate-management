@@ -23,16 +23,23 @@ export async function setup() {
     process.env.TEST_DB_URI = postgresContainer.getConnectionUri()
     process.env.TEST_DB_NAME = postgresContainer.getDatabase()
 
+    const prismaEnv = {
+        ...process.env,
+        DB_URL: process.env.TEST_DB_URI,
+        DB_DIRECT_URL: process.env.TEST_DB_URI,
+    }
+
     execSync(
         'npx prisma db push --schema src/backend/infrastructure/repository/prisma/schema.prisma',
-        {
-            stdio: 'inherit',
-            env: {
-                ...process.env,
-                DB_URL: process.env.TEST_DB_URI,
-                DB_DIRECT_URL: process.env.TEST_DB_URI,
-            },
-        },
+        { stdio: 'inherit', env: prismaEnv },
+    )
+
+    // Regenerates the Prisma Client with TypedSQL (`--sql`) against this
+    // container: typed SQL functions need a live, schema-pushed database to
+    // introspect column types at generate time, unlike a plain `prisma generate`.
+    execSync(
+        'npx prisma generate --sql --schema src/backend/infrastructure/repository/prisma/schema.prisma',
+        { stdio: 'inherit', env: prismaEnv },
     )
 
     return async () => {
