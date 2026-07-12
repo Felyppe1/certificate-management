@@ -9,6 +9,22 @@ resource "google_artifact_registry_repository" "docker_repository" {
   ]
 
   cleanup_policies {
+    id     = "delete-tagged"
+    action = "DELETE"
+    condition {
+      tag_state = "TAGGED"
+    }
+  }
+
+  cleanup_policies {
+    id     = "delete-untagged"
+    action = "DELETE"
+    condition {
+      tag_state = "UNTAGGED"
+    }
+  }
+
+  cleanup_policies {
     id     = "keep-last-5"
     action = "KEEP"
     most_recent_versions {
