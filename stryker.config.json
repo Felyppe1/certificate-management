@@ -8,11 +8,18 @@
   },
   "coverageAnalysis": "perTest",
   "mutate": [
-    "src/backend/domain/**/*.ts",
+    "src/backend/application/**",
+    "!src/backend/application/**/*.test.ts",
+    "!src/backend/application/**/email-template.ts",
+    "!src/backend/application/**/generate-certificate-use-case.ts",
+    "!src/backend/application/**/download-all-certificate-emissions-use-case.ts",
+    "!src/backend/application/**/update-data-source-rows-use-case.ts",
+    "src/backend/domain/**",
     "!src/backend/domain/**/*.test.ts",
     "!src/backend/domain/primitives/**",
     "!src/backend/domain/error/**",
-    "!src/backend/domain/events/**"
+    "!src/backend/domain/events/**",
+    "!src/backend/domain/domain-service/**"
   ],
   "ignorePatterns": [
     "cloud-functions/**",
