@@ -1,7 +1,7 @@
 import { BrowserContext, Page, expect } from '@playwright/test'
 import { PrismaClient } from '@/backend/infrastructure/repository/prisma/client/client'
 import { SESSION_COOKIE_NAME } from '@/app/api/_utils/constants'
-import { TIPS_STORAGE_KEY } from '@/app/(system)/certificados/[id]/_components/CertificatePageClient/components/TipsButton'
+import { TIPS_STORAGE_KEY } from '@/app/(system)/certificados/[id]/CertificatePageClient/TipsButton'
 import { createId } from '@paralleldrive/cuid2'
 import crypto from 'crypto'
 import bcrypt from 'bcrypt'
