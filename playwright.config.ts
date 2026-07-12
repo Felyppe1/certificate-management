@@ -4,20 +4,9 @@ import { APP_PORT, BASE_URL, DB_URL } from './src/tests/e2e/config';
 
 dotenv.config({ path: '.env.test' });
 
-// webServer command: builds, copies the assets required by `output: 'standalone'`
-// (Next refuses `next start` in that mode) and starts the standalone server. The
-// `rm -rf` keeps the copies idempotent across runs.
-const startServerCommand = [
-  'npm run build',
-  'rm -rf .next/standalone/.next/static .next/standalone/public',
-  'cp -r .next/static .next/standalone/.next/static',
-  'cp -r public .next/standalone/public',
-  // Overwrites the standalone-traced node_modules with the full one: tracing does
-  // not capture external packages' data files (e.g. @google-cloud/tasks'
-  // protos.json, listed in serverExternalPackages), breaking at runtime.
-  'cp -rf node_modules/. .next/standalone/node_modules/',
-  'node .next/standalone/server.js',
-].join(' && ');
+// webServer command: delegates to start-server.ts, which ensures the E2E database
+// is up before building (see that file for why the database must come first).
+const startServerCommand = 'npx tsx src/tests/e2e/start-server.ts';
 
 export default defineConfig({
   testDir: './src/tests/e2e',
@@ -38,11 +27,6 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'setup db',
-      testMatch: /global-setup\.ts/,
-      teardown: 'cleanup db',
-    },
-    {
       name: 'cleanup db',
       testMatch: /global-teardown\.ts/,
     },
@@ -50,7 +34,9 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
       testMatch: /.*\.e2e\.test\.ts/,
-      dependencies: ['setup db'],
+      // Runs once after all chromium tests finish — the database itself is
+      // ensured by `webServer.command` (start-server.ts), not by a project here.
+      teardown: 'cleanup db',
     },
   ],
   webServer: { // Guarantee the server is running before starting the tests

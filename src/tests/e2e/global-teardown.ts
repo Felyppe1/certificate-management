@@ -6,7 +6,7 @@ import { Storage } from '@google-cloud/storage'
 import { GcpBucket } from '@/backend/interface-adapters/cloud/gcp/gcp-bucket'
 import { DB_URL } from './config'
 
-// `cleanup db` project (teardown of the `setup db` project): runs once after all
+// `cleanup db` project (teardown of the `chromium` project): runs once after all
 // browser tests. Safety net for whatever per-test cleanup missed (e.g. a worker
 // crash). Does NOT stop the container (kept warm via `withReuse()`).
 teardown('limpa banco e arquivos residuais', async () => {
