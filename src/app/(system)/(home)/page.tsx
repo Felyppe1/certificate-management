@@ -1,35 +1,22 @@
+import { Suspense } from 'react'
 import { CertificateEmissionsList } from './CertificateEmissionsList'
-import { Metrics } from './Metrics'
-import {
-    dehydrate,
-    HydrationBoundary,
-    QueryClient,
-} from '@tanstack/react-query'
-import { queryKeys } from '@/lib/query-keys'
+import { MetricsSection } from './MetricsSection'
+import { MetricsSkeleton } from './MetricsSection/MetricsSkeleton'
 import { Metadata } from 'next'
-import { getCertificateEmissionsAction } from '@/backend/infrastructure/server-actions/get-all-certificate-emissions-action'
-import { getCertificateEmissionsMetricsAction } from '@/backend/infrastructure/server-actions/get-certificate-emissions-metrics-action'
 
 export const metadata: Metadata = {
     title: 'Início',
 }
 
-export default async function Home() {
-    const queryClient = new QueryClient()
+interface HomePageProps {
+    searchParams: Promise<{ search?: string }>
+}
 
-    const [certificateEmissionsResult, metrics] = await Promise.all([
-        getCertificateEmissionsAction(),
-        getCertificateEmissionsMetricsAction(),
-    ])
-
-    queryClient.setQueryData(
-        queryKeys.certificateEmissions(),
-        certificateEmissionsResult,
-    )
-    queryClient.setQueryData(queryKeys.certificateEmissionsMetrics(), metrics)
+export default async function Home({ searchParams }: HomePageProps) {
+    const { search } = await searchParams
 
     return (
-        <HydrationBoundary state={dehydrate(queryClient)}>
+        <>
             <div className="mb-6 sm:mb-8 md:mb-10">
                 <h1 className="text-3xl sm:text-4xl font-bold mb-2 sm:mb-4 text-foreground">
                     Dashboard
@@ -39,9 +26,11 @@ export default async function Home() {
                 </p>
             </div>
 
-            <Metrics />
+            <Suspense fallback={<MetricsSkeleton />}>
+                <MetricsSection />
+            </Suspense>
 
-            <CertificateEmissionsList />
-        </HydrationBoundary>
+            <CertificateEmissionsList search={search ?? ''} />
+        </>
     )
 }

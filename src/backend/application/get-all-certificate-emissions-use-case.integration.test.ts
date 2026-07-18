@@ -156,4 +156,42 @@ describe('GetAllCertificateEmissionsUseCase (Integration)', () => {
         expect(result).toHaveLength(1)
         expect(result[0].id).toBe('cert-1')
     })
+
+    it('deve filtrar certificados pelo nome quando search é informado', async () => {
+        await testPrisma.user.create({
+            data: {
+                id: 'user-1',
+                email: 'u@test.com',
+                name: 'Usuário',
+                credits: 300,
+            },
+        })
+
+        await testPrisma.certificateEmission.createMany({
+            data: [
+                {
+                    id: 'cert-1',
+                    title: 'Curso de React',
+                    user_id: 'user-1',
+                    status: CERTIFICATE_STATUS.DRAFT,
+                },
+                {
+                    id: 'cert-2',
+                    title: 'Curso de Node',
+                    user_id: 'user-1',
+                    status: CERTIFICATE_STATUS.DRAFT,
+                },
+            ],
+        })
+
+        const result = await new GetAllCertificateEmissionsUseCase(
+            new PrismaCertificateEmissionsRepositoryRead(testPrisma),
+        ).execute({
+            userId: 'user-1',
+            search: 'react',
+        })
+
+        expect(result).toHaveLength(1)
+        expect(result[0].id).toBe('cert-1')
+    })
 })

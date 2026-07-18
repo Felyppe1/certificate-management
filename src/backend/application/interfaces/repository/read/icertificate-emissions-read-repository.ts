@@ -74,7 +74,10 @@ export interface GetCertificateEmissionsMetricsByUserIdOutput {
 }
 
 export interface ICertificateEmissionsReadRepository {
-    listByOwner(userId: string): Promise<CertificateEmissionListItemOutput[]>
+    listByOwner(
+        userId: string,
+        search?: string,
+    ): Promise<CertificateEmissionListItemOutput[]>
     getDetailsById(
         certificateId: string,
     ): Promise<CertificateEmissionDetailsOutput | null>

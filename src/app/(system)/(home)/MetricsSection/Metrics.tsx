@@ -2,7 +2,6 @@
 
 import { useCertificateEmissionsMetrics } from '@/custom-hooks/use-certificate-emissions-metrics'
 import { Card } from '@/components/ui/card'
-import { MetricsSkeleton } from './MetricsSkeleton'
 import { MetricChart, MetricChartDataPoint } from './MetricChart'
 import {
     Popover,
@@ -19,9 +18,7 @@ function formatDate(isoDate: string): string {
 }
 
 export function Metrics() {
-    const { data, isLoading } = useCertificateEmissionsMetrics()
-
-    if (isLoading) return <MetricsSkeleton />
+    const { data } = useCertificateEmissionsMetrics()
 
     const { certificateEmissionsMetrics } = data
 

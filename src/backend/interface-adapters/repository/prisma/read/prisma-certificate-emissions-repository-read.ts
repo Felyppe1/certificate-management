@@ -39,11 +39,19 @@ export class PrismaCertificateEmissionsRepositoryRead
         }
     }
 
-    async listByOwner(userId: string) {
+    async listByOwner(userId: string, search?: string) {
         const certificateEmissions =
             await this.prisma.certificateEmission.findMany({
                 where: {
                     user_id: userId,
+                    ...(search
+                        ? {
+                              title: {
+                                  contains: search,
+                                  mode: 'insensitive',
+                              },
+                          }
+                        : {}),
                 },
                 orderBy: {
                     created_at: 'desc',

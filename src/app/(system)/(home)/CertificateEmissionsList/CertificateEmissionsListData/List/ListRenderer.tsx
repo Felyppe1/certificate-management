@@ -2,7 +2,6 @@
 
 import { GetCertificateEmissionsResponse } from '@/app/api/certificate-emissions/route'
 import { Badge } from '@/components/ui/badge'
-import { useCertificatesStore } from '@/lib/certificatesStore'
 import { queryKeys } from '@/lib/query-keys'
 import { useQueryClient } from '@tanstack/react-query'
 import { ChevronRight } from 'lucide-react'
@@ -15,26 +14,26 @@ export const STATUS_MAPPING = {
     EMITTED: 'Emitido',
 }
 
-interface ListRendererProps extends GetCertificateEmissionsResponse {}
+interface ListRendererProps extends GetCertificateEmissionsResponse {
+    search: string
+}
 
-export function ListRenderer({ certificateEmissions }: ListRendererProps) {
+export function ListRenderer({
+    certificateEmissions,
+    search,
+}: ListRendererProps) {
     const queryClient = useQueryClient()
-    const inputValue = useCertificatesStore(state => state.inputValue)
 
-    const filteredEmissions = certificateEmissions.filter((certificate: any) =>
-        certificate.name.toLowerCase().includes(inputValue.toLowerCase() || ''),
-    )
-
-    if (filteredEmissions.length === 0) {
+    if (certificateEmissions.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-16 px-6">
                 <h3 className="text-lg sm:text-xl font-semibold text-foreground text-center mb-2">
-                    {inputValue
+                    {search
                         ? 'Nenhuma emissão encontrada'
                         : 'Nenhuma emissão de certificado criada'}
                 </h3>
                 <p className="text-muted-foreground text-center max-w-md text-sm sm:text-base">
-                    {inputValue
+                    {search
                         ? 'Tente buscar por outro nome'
                         : 'Comece criando sua primeira emissão de certificado clicando no botão acima'}
                 </p>
@@ -44,7 +43,7 @@ export function ListRenderer({ certificateEmissions }: ListRendererProps) {
 
     return (
         <ul className="divide-y divide-border">
-            {filteredEmissions.map((certificate: any) => (
+            {certificateEmissions.map((certificate: any) => (
                 <li key={certificate.id}>
                     <Link
                         href={`/certificados/${certificate.id}`}

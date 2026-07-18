@@ -6,11 +6,14 @@ import {
     InputGroupInput,
 } from '@/components/ui/input-group'
 import { Search } from 'lucide-react'
-import { useCertificatesStore } from '@/lib/certificatesStore'
+import { useDebouncedSearchParam } from '@/custom-hooks/useDebouncedSearchParam'
 
-export default function SearchBox() {
-    const inputValue = useCertificatesStore(state => state.inputValue)
-    const setInputValue = useCertificatesStore(state => state.setInputValue)
+interface SearchBoxProps {
+    search: string
+}
+
+export default function SearchBox({ search }: SearchBoxProps) {
+    const [searchInput, setSearchInput] = useDebouncedSearchParam(search)
 
     return (
         <InputGroup className="max-w-[20rem] w-full">
@@ -20,10 +23,10 @@ export default function SearchBox() {
 
             <InputGroupInput
                 placeholder="Pesquisar emissão"
-                value={inputValue}
+                value={searchInput}
                 onChange={e => {
                     const v = e.target.value
-                    setInputValue(v)
+                    setSearchInput(v)
                 }}
             />
         </InputGroup>

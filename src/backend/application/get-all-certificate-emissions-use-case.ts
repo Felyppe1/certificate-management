@@ -2,6 +2,7 @@ import { ICertificateEmissionsReadRepository } from './interfaces/repository/rea
 
 interface GetAllCertificateEmissionsUseCaseInput {
     userId: string
+    search?: string
 }
 
 export class GetAllCertificateEmissionsUseCase {
@@ -12,7 +13,10 @@ export class GetAllCertificateEmissionsUseCase {
         >,
     ) {}
 
-    async execute({ userId }: GetAllCertificateEmissionsUseCaseInput) {
-        return this.certificateEmissionsReadRepository.listByOwner(userId)
+    async execute({ userId, search }: GetAllCertificateEmissionsUseCaseInput) {
+        return this.certificateEmissionsReadRepository.listByOwner(
+            userId,
+            search,
+        )
     }
 }

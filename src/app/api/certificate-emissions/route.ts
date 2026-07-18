@@ -20,6 +20,10 @@ export interface GetCertificateEmissionsResponse {
     }[]
 }
 
+export interface GetCertificateEmissionsParams {
+    search?: string
+}
+
 export async function GET(
     request: NextRequest,
 ): Promise<
@@ -28,12 +32,15 @@ export async function GET(
     try {
         const { userId } = await validateSessionToken(request)
 
+        const search = request.nextUrl.searchParams.get('search') ?? undefined
+
         const getAllCertificatesUseCase = new GetAllCertificateEmissionsUseCase(
             new PrismaCertificateEmissionsRepositoryRead(prisma),
         )
 
         const certificateEmissions = await getAllCertificatesUseCase.execute({
             userId,
+            search,
         })
 
         return NextResponse.json({ certificateEmissions })

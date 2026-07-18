@@ -1,11 +1,17 @@
 import { Suspense } from 'react'
-import { List } from './List'
+import { CertificateEmissionsListData } from './CertificateEmissionsListData'
 import { CreationForm } from './CreationForm'
 import { Card, CardTitle } from '@/components/ui/card'
 import { ListLoading } from './ListLoading'
 import SearchBox from './SearchBox'
 
-export function CertificateEmissionsList() {
+interface CertificateEmissionsListProps {
+    search: string
+}
+
+export function CertificateEmissionsList({
+    search,
+}: CertificateEmissionsListProps) {
     return (
         <Card className="gap-0">
             <div className="pb-6 sm:pb-8 border-b">
@@ -18,14 +24,14 @@ export function CertificateEmissionsList() {
                     </div>
 
                     <div className="flex items-center gap-[3%] xs:gap-4">
-                        <SearchBox />
+                        <SearchBox search={search} />
 
                         <CreationForm />
                     </div>
                 </div>
             </div>
             <Suspense fallback={<ListLoading />}>
-                <List />
+                <CertificateEmissionsListData search={search} />
             </Suspense>
         </Card>
     )
