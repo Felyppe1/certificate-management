@@ -60,7 +60,8 @@ export function MetricChart({ data, color, valueLabel }: MetricChartProps) {
     if (uniqueDays < 2) {
         return (
             <div className="w-full mt-3 min-h-[5rem] flex items-center justify-center text-sm text-muted-foreground border border-dashed border-border rounded-md bg-muted/20 text-center px-4">
-                Não há dados suficientes para exibir o gráfico
+                É necessário ter dados de pelo menos 2 dias diferentes para
+                exibir o gráfico
             </div>
         )
     }

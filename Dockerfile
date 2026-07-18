@@ -17,6 +17,11 @@ RUN npm ci
 
 # Etapa 2: Build
 FROM node:20-slim AS builder
+
+RUN apt-get update \
+  && apt-get install -y openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -32,6 +37,11 @@ RUN SKIP_ENV_VALIDATION=1 DB_URL=$DB_URL NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_
 
 # Etapa 3: Runner
 FROM node:20-slim AS runner
+
+RUN apt-get update \
+  && apt-get install -y openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # ARG DB_URL
