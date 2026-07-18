@@ -2,10 +2,20 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
 import { fetchCertificateEmissions } from '@/requests/client-side/fetchCertificateEmissions'
 
-export function useCertificateEmissions(search: string) {
+interface UseCertificateEmissionsParams {
+    search: string
+    sort: string
+    status: string
+}
+
+export function useCertificateEmissions({
+    search,
+    sort,
+    status,
+}: UseCertificateEmissionsParams) {
     const result = useSuspenseQuery({
-        queryKey: queryKeys.certificateEmissions(search),
-        queryFn: () => fetchCertificateEmissions(search),
+        queryKey: queryKeys.certificateEmissions({ search, sort, status }),
+        queryFn: () => fetchCertificateEmissions({ search, sort, status }),
     })
 
     if (result.isError) {

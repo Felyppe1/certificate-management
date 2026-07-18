@@ -10,9 +10,15 @@ import { AuthenticationError } from '@/backend/domain/error/authentication-error
 import { PrismaCertificateEmissionsRepositoryRead } from '@/backend/interface-adapters/repository/prisma/read/prisma-certificate-emissions-repository-read'
 import { prisma } from '@/backend/infrastructure/repository/prisma'
 import { redirect } from 'next/navigation'
+import {
+    parseCertificateEmissionsSort,
+    parseCertificateEmissionsStatuses,
+} from '@/app/api/certificate-emissions/parse-query'
 
 export async function getCertificateEmissionsAction({
     search,
+    sort,
+    status,
 }: GetCertificateEmissionsParams = {}): Promise<GetCertificateEmissionsResponse> {
     try {
         const { userId } = await validateSessionToken()
@@ -23,6 +29,8 @@ export async function getCertificateEmissionsAction({
         const certificateEmissions = await useCase.execute({
             userId,
             search,
+            sort: parseCertificateEmissionsSort(sort),
+            statuses: parseCertificateEmissionsStatuses(status),
         })
 
         return { certificateEmissions }

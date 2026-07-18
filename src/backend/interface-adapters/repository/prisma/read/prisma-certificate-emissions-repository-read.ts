@@ -1,4 +1,7 @@
-import { ICertificateEmissionsReadRepository } from '@/backend/application/interfaces/repository/read/icertificate-emissions-read-repository'
+import {
+    CertificateEmissionSortCriteria,
+    ICertificateEmissionsReadRepository,
+} from '@/backend/application/interfaces/repository/read/icertificate-emissions-read-repository'
 import { CERTIFICATE_STATUS, INPUT_METHOD } from '@/backend/domain/certificate'
 import { DATA_SOURCE_MIME_TYPE } from '@/backend/domain/data-source'
 import { TEMPLATE_FILE_MIME_TYPE } from '@/backend/domain/template'
@@ -39,7 +42,14 @@ export class PrismaCertificateEmissionsRepositoryRead
         }
     }
 
-    async listByOwner(userId: string, search?: string) {
+    async listByOwner(
+        userId: string,
+        search?: string,
+        sort?: CertificateEmissionSortCriteria,
+        statuses?: CERTIFICATE_STATUS[],
+    ) {
+        const orderByColumn = sort?.field === 'name' ? 'title' : 'created_at'
+
         const certificateEmissions =
             await this.prisma.certificateEmission.findMany({
                 where: {
@@ -52,9 +62,10 @@ export class PrismaCertificateEmissionsRepositoryRead
                               },
                           }
                         : {}),
+                    ...(statuses?.length ? { status: { in: statuses } } : {}),
                 },
                 orderBy: {
-                    created_at: 'desc',
+                    [orderByColumn]: sort?.order ?? 'desc',
                 },
             })
 

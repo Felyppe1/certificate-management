@@ -9,19 +9,26 @@ import { List } from './List'
 
 interface CertificateEmissionsListDataProps {
     search: string
+    sort: string
+    status: string
 }
 
 export async function CertificateEmissionsListData({
     search,
+    sort,
+    status,
 }: CertificateEmissionsListDataProps) {
-    const result = await getCertificateEmissionsAction({ search })
+    const result = await getCertificateEmissionsAction({ search, sort, status })
 
     const queryClient = new QueryClient()
-    queryClient.setQueryData(queryKeys.certificateEmissions(search), result)
+    queryClient.setQueryData(
+        queryKeys.certificateEmissions({ search, sort, status }),
+        result,
+    )
 
     return (
         <HydrationBoundary state={dehydrate(queryClient)}>
-            <List search={search} />
+            <List search={search} sort={sort} status={status} />
         </HydrationBoundary>
     )
 }

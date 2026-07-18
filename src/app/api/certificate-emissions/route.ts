@@ -9,6 +9,10 @@ import { handleError, HandleErrorResponse } from '@/app/api/_utils/handle-error'
 import { validateSessionToken } from '@/app/api/_middleware/validateSessionToken'
 import { createCertificateEmissionSchema } from '@/backend/infrastructure/server-actions/schemas'
 import { CERTIFICATE_STATUS } from '@/backend/domain/certificate'
+import {
+    parseCertificateEmissionsSort,
+    parseCertificateEmissionsStatuses,
+} from './parse-query'
 
 export interface GetCertificateEmissionsResponse {
     certificateEmissions: {
@@ -22,6 +26,8 @@ export interface GetCertificateEmissionsResponse {
 
 export interface GetCertificateEmissionsParams {
     search?: string
+    sort?: string
+    status?: string
 }
 
 export async function GET(
@@ -33,6 +39,12 @@ export async function GET(
         const { userId } = await validateSessionToken(request)
 
         const search = request.nextUrl.searchParams.get('search') ?? undefined
+        const sort = parseCertificateEmissionsSort(
+            request.nextUrl.searchParams.get('sort'),
+        )
+        const statuses = parseCertificateEmissionsStatuses(
+            request.nextUrl.searchParams.get('status'),
+        )
 
         const getAllCertificatesUseCase = new GetAllCertificateEmissionsUseCase(
             new PrismaCertificateEmissionsRepositoryRead(prisma),
@@ -41,6 +53,8 @@ export async function GET(
         const certificateEmissions = await getAllCertificatesUseCase.execute({
             userId,
             search,
+            sort,
+            statuses,
         })
 
         return NextResponse.json({ certificateEmissions })

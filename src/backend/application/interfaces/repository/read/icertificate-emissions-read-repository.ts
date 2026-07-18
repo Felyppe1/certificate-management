@@ -16,6 +16,13 @@ export interface CertificateEmissionListItemOutput {
     createdAt: Date
 }
 
+export const CERTIFICATE_EMISSION_SORT_FIELDS = ['name', 'createdAt'] as const
+
+export interface CertificateEmissionSortCriteria {
+    field: (typeof CERTIFICATE_EMISSION_SORT_FIELDS)[number]
+    order: 'asc' | 'desc'
+}
+
 export interface CertificateEmissionDetailsOutput {
     id: string
     name: string
@@ -77,6 +84,8 @@ export interface ICertificateEmissionsReadRepository {
     listByOwner(
         userId: string,
         search?: string,
+        sort?: CertificateEmissionSortCriteria,
+        statuses?: CERTIFICATE_STATUS[],
     ): Promise<CertificateEmissionListItemOutput[]>
     getDetailsById(
         certificateId: string,

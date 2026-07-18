@@ -16,7 +16,7 @@ export default function SearchBox({ search }: SearchBoxProps) {
     const [searchInput, setSearchInput] = useDebouncedSearchParam(search)
 
     return (
-        <InputGroup className="max-w-[20rem] w-full">
+        <InputGroup className="min-w-[12rem] flex-1">
             <InputGroupAddon>
                 <Search className="text-muted-foreground" />
             </InputGroupAddon>

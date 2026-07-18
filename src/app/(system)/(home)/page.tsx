@@ -9,11 +9,11 @@ export const metadata: Metadata = {
 }
 
 interface HomePageProps {
-    searchParams: Promise<{ search?: string }>
+    searchParams: Promise<{ search?: string; sort?: string; status?: string }>
 }
 
 export default async function Home({ searchParams }: HomePageProps) {
-    const { search } = await searchParams
+    const { search, sort, status } = await searchParams
 
     return (
         <>
@@ -30,7 +30,11 @@ export default async function Home({ searchParams }: HomePageProps) {
                 <MetricsSection />
             </Suspense>
 
-            <CertificateEmissionsList search={search ?? ''} />
+            <CertificateEmissionsList
+                search={search ?? ''}
+                sort={sort ?? 'createdAt:desc'}
+                status={status ?? ''}
+            />
         </>
     )
 }
