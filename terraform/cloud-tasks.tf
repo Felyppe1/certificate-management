@@ -8,7 +8,7 @@ resource "google_cloud_tasks_queue" "generate_pdfs_queue" {
   }
 
   retry_config {
-    max_attempts = 50
+    max_attempts = local.generate_pdfs_max_attempts
     # max_retry_duration = "0s" // Unlimited
     min_backoff = "1s"
     max_backoff = "3600s"

@@ -62,8 +62,9 @@ resource "google_cloudfunctions2_function" "generate_certificates_function" {
       GOOGLE_REFRESH_TOKEN = var.google_refresh_token
       GOOGLE_CLIENT_ID = var.google_client_id
       GOOGLE_CLIENT_SECRET = var.google_client_secret
+      MAX_ATTEMPTS = tostring(local.generate_pdfs_max_attempts)
     }
-    
+
     service_account_email = google_service_account.app_service_account.email
   }
 

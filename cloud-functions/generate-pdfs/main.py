@@ -33,6 +33,7 @@ GOOGLE_DRIVE_FOLDER_ID = os.getenv('GOOGLE_DRIVE_FOLDER_ID')
 GOOGLE_REFRESH_TOKEN = os.getenv('GOOGLE_REFRESH_TOKEN')
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
+MAX_ATTEMPTS = int(os.getenv('MAX_ATTEMPTS', '50'))
 
 for var_name, var_value in {
     "APP_BASE_URL": APP_BASE_URL,
@@ -603,18 +604,26 @@ class TriggerGenerateCertificatePDFsInput(BaseModel):
     certificateEmission: CertificateEmissionModel
     row: DataSourceRowModel
 
+class NonRetryableError(Exception):
+    """Raised for errors that retrying will never fix (bad input, unsupported business case)."""
+
 @functions_framework.http
 def main(request):
     print('Generate PDFs function invoked via Pub/Sub Push')
     
-    raw_data = request.get_json(silent=True)
-    if raw_data is None:
-        return {"error": "JSON body is required"}, 400
-
-    data_source_row_id = raw_data.get('row', {}).get('id')
+    data_source_row_id = None
     user_id = None
-    
+
+    retry_count_header = request.headers.get('X-CloudTasks-TaskRetryCount')
+    is_last_attempt = retry_count_header is None or (int(retry_count_header) + 1) >= MAX_ATTEMPTS
+
     try:
+        raw_data = request.get_json(silent=True)
+        if raw_data is None:
+            raise NonRetryableError('JSON body is required')
+
+        data_source_row_id = raw_data.get('row', {}).get('id')
+
         input_data = TriggerGenerateCertificatePDFsInput(**raw_data)
         
         certificate_emission = input_data.certificateEmission
@@ -638,7 +647,7 @@ def main(request):
             is_docx = False
             file_extension_str = 'pptx'
         else:
-            raise Exception(f'Unsupported template file extension: {file_mime_type}')
+            raise NonRetryableError(f'Unsupported template file extension: {file_mime_type}')
 
         print('Loading template from bucket: ', template.storageFileUrl)
         template_bytes = get_template_cached(template.storageFileUrl)
@@ -752,19 +761,33 @@ def main(request):
         
         if data_source_row_id and user_id:
             finish_certificates_generation(data_source_row_id, False)
-            
+
         return {"error": friendly_errors}, 200
-    
+
+    except NonRetryableError as e:
+        print('Non-retryable error:', str(e))
+
+        if data_source_row_id and user_id:
+            finish_certificates_generation(data_source_row_id, False)
+
+        return {
+            'title': 'Failed to generate certificates',
+            'details': str(e)
+        }, 200
+
     except Exception as e:
         original_error = str(e)
         update_error = None
 
-        try:
-            print('Sending error status update...')
-            if data_source_row_id and user_id:
-                finish_certificates_generation(data_source_row_id, False)
-        except Exception as inner_e:
-            update_error = str(inner_e)
+        if is_last_attempt:
+            try:
+                print('Sending error status update (final attempt)...')
+                if data_source_row_id and user_id:
+                    finish_certificates_generation(data_source_row_id, False)
+            except Exception as inner_e:
+                update_error = str(inner_e)
+        else:
+            print(f'Retryable error on attempt {retry_count_header}, Cloud Tasks will retry — not updating status yet.')
 
         details = original_error if not update_error else f'Original error: {original_error}; Update error: {update_error}'
 
@@ -772,4 +795,4 @@ def main(request):
         return {
             'title': 'Failed to generate certificates',
             'details': details
-        }, 200
+        }, 500

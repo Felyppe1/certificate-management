@@ -2,6 +2,7 @@ locals {
   suffix = var.branch == "main" ? "" : "-${var.branch}"
   project_id_hash = substr(md5(var.project_id), 0, 8)
   pubsub_service_account = "service-${data.google_project.project.number}@gcp-sa-pubsub.iam.gserviceaccount.com" # Internally managed by Google
+  generate_pdfs_max_attempts = 50 # To keep queue's retry config and function value in sync
 }
 
 variable "project_id" {
