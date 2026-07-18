@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { grantAccessAction } from '@/backend/infrastructure/server-actions/grant-access-action'
-import { useMe } from '@/custom-hooks/use-me'
+import { useMe } from '@/custom-hooks/useMe'
 
 const ADMIN_EMAILS = ['felyppe.nunes1@gmail.com', 'luizfelyppe@id.uff.br']
 

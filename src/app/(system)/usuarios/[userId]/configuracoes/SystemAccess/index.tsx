@@ -1,7 +1,7 @@
 'use client'
 
 import { useQueryClient } from '@tanstack/react-query'
-import { useMe } from '@/custom-hooks/use-me'
+import { useMe } from '@/custom-hooks/useMe'
 import { queryKeys } from '@/lib/query-keys'
 import { SetupSystemAccess } from './SetupSystemAccess'
 import { ManageSystemAccess } from './ManageSystemAccess'

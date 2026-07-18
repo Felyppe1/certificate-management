@@ -9,8 +9,8 @@ import { GenerateCertificatesSection } from './GenerateCertificatesSection'
 import { PROCESSING_STATUS_ENUM } from '@/backend/domain/data-source-row'
 import { TipsButton } from './TipsButton'
 import { CertificateHeader } from './CertificateHeader'
-import { useCertificateEmission } from '@/custom-hooks/use-certificate-emission'
-import { useMe } from '@/custom-hooks/use-me'
+import { useCertificateEmission } from '@/custom-hooks/useCertificateEmission'
+import { useMe } from '@/custom-hooks/useMe'
 
 export function CertificatePageClient({
     certificateId,

@@ -9,7 +9,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
-import { useMe } from '@/custom-hooks/use-me'
+import { useMe } from '@/custom-hooks/useMe'
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useMutation } from '@tanstack/react-query'

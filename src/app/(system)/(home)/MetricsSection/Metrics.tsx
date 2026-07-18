@@ -1,6 +1,6 @@
 'use client'
 
-import { useCertificateEmissionsMetrics } from '@/custom-hooks/use-certificate-emissions-metrics'
+import { useCertificateEmissionsMetrics } from '@/custom-hooks/useCertificateEmissionsMetrics'
 import { Card } from '@/components/ui/card'
 import { MetricChart, MetricChartDataPoint } from './MetricChart'
 import {

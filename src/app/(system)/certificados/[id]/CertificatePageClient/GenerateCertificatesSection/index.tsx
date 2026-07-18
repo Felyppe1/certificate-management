@@ -12,7 +12,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
-import { useSSE } from '@/custom-hooks/use-sse'
+import { useSSE } from '@/custom-hooks/useSSE'
 import {
     FileCheck,
     Loader2,

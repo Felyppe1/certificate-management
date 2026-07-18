@@ -11,7 +11,7 @@ import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useMe } from '@/custom-hooks/use-me'
+import { useMe } from '@/custom-hooks/useMe'
 import { queryKeys } from '@/lib/query-keys'
 import { updateUserBasicDataAction } from '@/backend/infrastructure/server-actions/update-user-basic-data-action'
 

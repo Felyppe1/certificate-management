@@ -1,7 +1,7 @@
 'use client'
 
 import { ListRenderer } from './ListRenderer'
-import { useCertificateEmissions } from '@/custom-hooks/use-certificate-emissions'
+import { useCertificateEmissions } from '@/custom-hooks/useCertificateEmissions'
 
 interface ListProps {
     search: string
