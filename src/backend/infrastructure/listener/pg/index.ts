@@ -9,7 +9,7 @@ export async function getPostgresListener() {
     if (client) return client
 
     client = new Client({
-        connectionString: env.DB_URL,
+        connectionString: env.DB_DIRECT_URL,
         application_name: 'certificate-management-listener',
         // ...(env.NODE_ENV === 'production'
         //     ? {
